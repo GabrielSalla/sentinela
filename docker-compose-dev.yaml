@@ -1,0 +1,38 @@
+services:
+  postgres:
+    image: postgres:16.4-alpine
+    ports:
+      - 5432:5432
+    environment:
+      - POSTGRES_PASSWORD=postgres
+
+  motoserver:
+    image: ghcr.io/getmoto/motoserver:latest
+    ports:
+      - 5000:5000
+    healthcheck:
+      test: curl --fail localhost:5000 || exit 1
+      interval: 5s
+      timeout: 1s
+      retries: 3
+      start_period: 5s
+
+  sentinela-dev:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: sentinela_dev
+    image: sentinela-dev:latest
+    ports:
+      - 8000:8000
+    environment:
+      SAMPLE_SLACK_CHANNEL: C07NCL94SDT
+      SAMPLE_SLACK_MENTION: U07NFGGMB98
+    env_file:
+      - .env.secrets
+    volumes:
+      - .:/app:Z
+    depends_on:
+      - postgres
+      - motoserver
+    command: python3 . controller executor

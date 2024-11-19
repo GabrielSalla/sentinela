@@ -1,0 +1,100 @@
+name: Run code check and tests
+
+on:
+  pull_request:
+    branches:
+      - main
+  push:
+    branches:
+      - main
+
+jobs:
+  build-image:
+    name: Build image
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+      - name: Install Docker
+        run: sudo apt install docker docker-compose
+      - name: Build image
+        run: make build-dev
+      - name: Save Docker image
+        run: docker save sentinela-dev:latest > /tmp/sentinela_image.tar
+      - name: Upload Docker image
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ github.sha }}
+          path: /tmp/sentinela_image.tar
+
+  run-linter:
+    name: Run linter
+    runs-on: ubuntu-latest
+    needs: build-image
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+      - name: Install Docker
+        run: sudo apt install docker docker-compose
+      - name: Download Docker image
+        uses: actions/download-artifact@v4
+        with:
+          name: ${{ github.sha }}
+          path: /tmp
+      - name: Load Docker image
+        run: docker load --input /tmp/sentinela_image.tar
+      - name: Run linter
+        run: make linter
+
+  run-mypy:
+    name: Run mypy
+    runs-on: ubuntu-latest
+    needs: build-image
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+      - name: Install Docker
+        run: sudo apt install docker docker-compose
+      - name: Download Docker image
+        uses: actions/download-artifact@v4
+        with:
+          name: ${{ github.sha }}
+          path: /tmp
+      - name: Load Docker image
+        run: docker load --input /tmp/sentinela_image.tar
+      - name: Run mypy
+        run: make mypy
+
+  run-tests:
+    name: Run tests
+    runs-on: ubuntu-latest
+    needs: build-image
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+      - name: Install Docker
+        run: sudo apt install docker docker-compose
+      - name: Download Docker image
+        uses: actions/download-artifact@v4
+        with:
+          name: ${{ github.sha }}
+          path: /tmp
+      - name: Load Docker image
+        run: docker load --input /tmp/sentinela_image.tar
+      - name: Run tests
+        run: |
+          make pull-dev
+          make test-dev
+
+  delete-artifacts:
+    name: Delete artifacts
+    runs-on: ubuntu-latest
+    if: always()
+    needs:
+      - run-linter
+      - run-mypy
+      - run-tests
+    steps:
+      - uses: geekyeggo/delete-artifact@v5
+        with:
+          name: ${{ github.sha }}

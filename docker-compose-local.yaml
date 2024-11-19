@@ -1,0 +1,33 @@
+services:
+  postgres:
+    image: postgres:16.4-alpine
+    ports:
+      - 5432:5432
+    environment:
+      - POSTGRES_PASSWORD=postgres
+
+  sentinela-local:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: sentinela
+    image: sentinela-local:latest
+    ports:
+      - 8000:8000
+    healthcheck:
+      test: curl --fail localhost:8000/status || exit 1
+      interval: 10s
+      timeout: 1s
+      retries: 3
+      start_period: 2s
+    environment:
+      SAMPLE_SLACK_CHANNEL: C07NCL94SDT
+      SAMPLE_SLACK_MENTION: U07NFGGMB98
+    env_file:
+      - .env.secrets
+    volumes:
+      - ./monitors:/app/monitors:Z
+      - ./internal_monitors:/app/internal_monitors:Z
+    depends_on:
+      - postgres
+    command: python3 . controller executor

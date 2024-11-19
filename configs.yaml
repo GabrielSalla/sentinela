@@ -1,0 +1,107 @@
+# Flag to enable the sample monitors
+load_sample_monitors: true
+# Path relative to the main file where the sample monitors are stored
+sample_monitors_path: sample_monitors
+# Path relative to the main file where the internal monitors are stored
+internal_monitors_path: internal_monitors
+# Schedule to reload monitors from the database
+monitors_load_schedule: "*/5 * * * *"
+
+# Application logging settings
+logging:
+  # Logging mode. Can be "friendly" or "json", which is indicated to be consumed by logging applications
+  mode: friendly
+  # Settings for formatting the "friendly" logs
+  use_colors: true
+  format: "%(asctime)s [%(levelname)s] %(name)s.%(funcName)s.%(lineno)d: %(message)s"
+  # Fields to include in the "json" logs
+  fields:
+    timestamp: created
+    level: levelname
+    file_path: pathname
+    logger_name: name
+    function_name: funcName
+    line_number: lineno
+    message: message
+
+# Application database pool settings
+application_database_settings:
+  pool_size: 10
+
+# Queue to be used. Can be "internal" os "sqs".
+application_queue:
+  type: internal
+
+# Settings for SQS queue
+# application_queue:
+#   type: sqs
+#   name: app
+#   url: http://motoserver:5000/123456789012/app
+#   region: us-east-1
+#   # 'create_queue' should be set to 'false' or not specified in production environment
+#   create_queue: true
+
+# Time, in seconds, to wait for a message
+# Higher values will increase in the application's shutdown time
+queue_wait_message_time: 2
+# Time to wait, in seconds, to change a message visibility in the queue
+# Must be lower than the default queue's visibility time or a message will become visible before
+# it finishes processing
+queue_visibility_time: 15
+
+# HTTP server settings
+http_server:
+  port: 8000
+
+# Time zone to use for cron scheduling and notification messages
+time_zone: America/Sao_Paulo
+
+# Controller settings
+# Schedule to check if monitors need to be processed
+controller_process_schedule: "* * * * *"
+# How many monitors can be processed at the same time by the Controller
+controller_concurrency: 5
+# Enable or disable the Slack websocket
+# The websocket is used to receive the mentions and button presses from notification messages
+slack_websocket_enabled: true
+
+# Executor settings
+# How many tasks can be executed at the same time by each Executor
+executor_concurrency: 5
+# Fow how much time the Executor will sleep when there're no tasks in the queue
+executor_sleep: 5
+# Timeout, in seconds, for Executor tasks (monitor execution, reactions and requests)
+executor_monitor_timeout: 60
+executor_reaction_timeout: 5
+executor_request_timeout: 2
+
+# How many issues can be created by each monitor in a single search
+# Can be overridden by the monitors' configuration
+max_issues_creation: 100
+
+# Default settings to databases that the application can access
+# Timeout to acquire a connection
+database_default_acquire_timeout: 30
+# Timeout to execute a query
+database_default_query_timeout: 30
+# Timeout to close all connections
+database_close_timeout: 30
+# Setting to log query the metrics, useful for debugging slow monitors
+database_log_query_metrics: false
+
+# Settings for specific database pools
+databases_pools_configs:
+  local:
+    min_size: 0
+    max_size: 5
+    timeout: 10
+    max_inactive_connection_lifetime: 120
+    server_settings:
+      application_name: sentinela
+
+# Flag if should log all events, even if they don't have a reaction set for them
+# Events that have a reaction set will always be logged
+log_all_events: false
+
+# Maximum number of issues that will be shown in a notification
+notifications_issue_show_limit: 10
