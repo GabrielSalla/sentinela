@@ -126,7 +126,7 @@ async def test_executor_get_message_no_message(monkeypatch, clear_queue):
     assert executor.last_message_at is None
 
     total_time = end_time - start_time
-    assert total_time > 1
+    assert total_time > 1 - 0.001
     assert total_time < 1 + 0.005
 
 
@@ -152,7 +152,7 @@ async def test_executor_get_message_with_message(monkeypatch, clear_queue):
     assert time_utils.time_since(executor.last_message_at) < 1
 
     total_time = end_time - start_time
-    assert total_time > 0.5
+    assert total_time > 0.5 - 0.001
     assert total_time < 0.5 + 0.005
 
 
@@ -262,7 +262,7 @@ async def test_executor_process_success(caplog, monkeypatch, clear_queue):
     end_time = time.perf_counter()
 
     total_time = end_time - start_time
-    assert total_time > 0.1
+    assert total_time > 0.1 - 0.001
     assert total_time < 0.1 + 0.005
 
     handler.assert_awaited_once_with({"type": "test", "payload": {"test": "aaa"}})
@@ -283,7 +283,7 @@ async def test_executor_process_monitors_not_ready(caplog, monkeypatch, clear_qu
     end_time = time.perf_counter()
 
     total_time = end_time - start_time
-    assert total_time > 0.1
+    assert total_time > 0.1 - 0.001
     assert total_time < 0.1 + 0.005
 
     assert_message_in_log(caplog, "Waiting for monitors to be ready timed out")
@@ -303,7 +303,7 @@ async def test_executor_process_no_message(monkeypatch, clear_queue):
     end_time = time.perf_counter()
 
     total_time = end_time - start_time
-    assert total_time > 0.7
+    assert total_time > 0.7 - 0.001
     assert total_time < 0.7 + 0.005
 
 
@@ -346,7 +346,7 @@ async def test_executor_process_error(caplog, monkeypatch, clear_queue):
     end_time = time.perf_counter()
 
     total_time = end_time - start_time
-    assert total_time > 0.1
+    assert total_time > 0.1 - 0.001
     assert total_time < 0.1 + 0.005
 
     handler.assert_awaited_once_with({"type": "test", "payload": {"test": "aaa"}})

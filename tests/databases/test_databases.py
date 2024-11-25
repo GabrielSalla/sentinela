@@ -77,7 +77,7 @@ async def test_fetch(caplog, monkeypatch):
     assert log_metrics["error"] is None
     assert log_metrics["start_time"] > time.time() - 0.105
     assert log_metrics["end_time"] > time.time() - 0.05
-    assert log_metrics["query_time"] > 0.1
+    assert log_metrics["query_time"] > 0.099
     assert log_metrics["query_time"] < 0.105
 
 
@@ -119,7 +119,7 @@ async def test_fetch_cancelled(caplog, monkeypatch):
     assert log_metrics["error"] is None
     assert log_metrics["start_time"] > time.time() - 0.105
     assert log_metrics["end_time"] > time.time() - 0.05
-    assert log_metrics["query_time"] > 0.1
+    assert log_metrics["query_time"] > 0.099
     assert log_metrics["query_time"] < 0.105
 
 

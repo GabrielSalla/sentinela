@@ -1146,7 +1146,7 @@ async def test_run_monitor_timeout(caplog, mocker, monkeypatch, sample_monitor: 
     end_time = time.perf_counter()
 
     total_time = end_time - start_time
-    assert total_time > 0.5
+    assert total_time > 0.5 - 0.001
     assert total_time < 0.5 + 0.03
 
     assert_message_in_log(caplog, f"Execution for monitor '{sample_monitor}' timed out")

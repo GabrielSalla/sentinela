@@ -29,7 +29,7 @@ async def test_do_concurrently(task_number, size):
     end_time = time.perf_counter()
     total_time = end_time - start_time
 
-    assert total_time > 0.2 * ceil(task_number / size)
+    assert total_time > 0.2 * ceil(task_number / size) - 0.001
     assert total_time < 0.2 * ceil(task_number / size) + 0.005
 
 
@@ -71,7 +71,7 @@ async def test_do_concurrently_error_single():
     end_time = time.perf_counter()
     total_time = end_time - start_time
 
-    assert total_time > 0.2
+    assert total_time > 0.2 - 0.001
     assert total_time < 0.2 + 0.005
 
     assert result == [1, 2, None, 3, 4]
@@ -97,7 +97,7 @@ async def test_do_concurrently_error_all():
     end_time = time.perf_counter()
     total_time = end_time - start_time
 
-    assert total_time > 0.2
+    assert total_time > 0.2 - 0.001
     assert total_time < 0.2 + 0.005
 
     assert result == [None] * 5

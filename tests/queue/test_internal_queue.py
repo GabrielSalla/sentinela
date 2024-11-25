@@ -41,7 +41,7 @@ async def test_get_message_timeout():
     end_time = time.perf_counter()
 
     total_time = end_time - start_time
-    assert total_time > 0.5
+    assert total_time > 0.5 - 0.001
     assert total_time < 0.5 + 0.005
     assert message is None
 

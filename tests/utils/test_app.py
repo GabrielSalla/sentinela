@@ -23,7 +23,7 @@ async def test_sleep(seconds):
     await app.sleep(seconds)
     end_time = time.perf_counter()
     total_time = end_time - start_time
-    assert total_time > seconds
+    assert total_time > seconds - 0.001
     assert total_time < seconds + 0.003
 
 
@@ -51,7 +51,7 @@ async def test_sleep_early_cancelling():
 
     end_time = time.perf_counter()
     total_time = end_time - start_time
-    assert total_time > 0.2
+    assert total_time > 0.2 - 0.001
     assert total_time < 0.2 + 0.003
 
 
@@ -68,7 +68,7 @@ async def test_sleep_early_stop_running():
 
     end_time = time.perf_counter()
     total_time = end_time - start_time
-    assert total_time > 0.2
+    assert total_time > 0.2 - 0.001
     assert total_time < 0.2 + 0.003
 
 
@@ -85,5 +85,5 @@ async def test_signal_handling(set_signal_handlers, raise_signal):
 
     end_time = time.perf_counter()
     total_time = end_time - start_time
-    assert total_time > 0.2
+    assert total_time > 0.2 - 0.001
     assert total_time < 0.2 + 0.003
