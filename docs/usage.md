@@ -11,7 +11,6 @@ For the secrets, the application expects them to be set as environment variables
 - Every variable that starts with `DATABASE`, besides the application database, will have a connection pool instantiated, that can be used in the monitors to query data from them.
 - `SLACK_TOKEN` and `SLACK_APP_TOKEN` will be used as the token to send messages to Slack and to start the websocket, to receive the events from interactions with the Sentinela Slack app.
 - `AWS_ENDPOINT_URL`: The AWS endpoint to be used for local testing, without the need of a real SQS queue. When using the `motoserver` container as an AWS mock, it should be `http://motoserver:5000`. Don't set this environment variable when using a real SQS queue.
-- `AWS_REGION_NAME`: The AWS region where the SQS queue is.
 - `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY` and `AWS_SESSION_TOKEN`: The service credentials to access the AWS SQS queue.
 
 ## Development execution

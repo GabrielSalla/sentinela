@@ -1,0 +1,38 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: motoserver
+  labels:
+    app: motoserver
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: motoserver
+  template:
+    metadata:
+      labels:
+        app: motoserver
+    spec:
+      containers:
+      - name: motoserver
+        image: ghcr.io/getmoto/motoserver:latest
+        ports:
+        - containerPort: 5000
+        env:
+        - name: POSTGRES_PASSWORD
+          value: motoserver
+
+---
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: motoserver
+spec:
+  selector:
+    app: motoserver
+  ports:
+    - protocol: TCP
+      port: 5000
+      targetPort: 5000
