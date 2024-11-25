@@ -31,18 +31,6 @@ run-local:
 down-local:
 	docker-compose -f docker-compose-local.yaml down
 
-build-sim-prod:
-	docker-compose -f docker-compose-sim-prod.yaml build sentinela-controller sentinela-executor
-
-migrate-sim-prod:
-	docker-compose -f docker-compose-sim-prod.yaml run --rm --service-ports sentinela-controller alembic upgrade head
-
-run-sim-prod:
-	docker-compose -f docker-compose-sim-prod.yaml up sentinela-controller sentinela-executor
-
-down-sim-prod:
-	docker-compose -f docker-compose-sim-prod.yaml down
-
 linter:
 	docker-compose -f docker-compose-dev.yaml run --rm --no-deps sentinela-dev flake8 src/ tests/ monitor_utils/ internal_monitors/ sample_monitors/ tools/ __main__.py
 

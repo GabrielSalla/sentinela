@@ -1,0 +1,84 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: sentinela-controller
+  labels:
+    app: sentinela-controller
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: sentinela-controller
+  template:
+    metadata:
+      labels:
+        app: sentinela-controller
+    spec:
+      containers:
+      - name: sentinela-controller
+        image: sentinela-local:latest
+        imagePullPolicy: Never
+        command: ["python3", ".", "controller"]
+        ports:
+        - containerPort: 8000
+        env:
+        - name: CONFIGS_FILE
+          value: configs_sqs.yaml
+        - name: SAMPLE_SLACK_CHANNEL
+          value: C07NCL94SDT
+        - name: SAMPLE_SLACK_MENTION
+          value: U07NFGGMB98
+        - name: DATABASE_APPLICATION
+          valueFrom:
+            secretKeyRef:
+              name: sentinela-secrets
+              key: database_application
+        - name: SLACK_TOKEN
+          valueFrom:
+            secretKeyRef:
+              name: sentinela-secrets
+              key: slack_token
+        - name: SLACK_APP_TOKEN
+          valueFrom:
+            secretKeyRef:
+              name: sentinela-secrets
+              key: slack_app_token
+        - name: AWS_ENDPOINT_URL
+          value: http://motoserver:5000
+        - name: AWS_ACCESS_KEY_ID
+          valueFrom:
+            secretKeyRef:
+              name: sentinela-secrets
+              key: aws_access_key_id
+        - name: AWS_SECRET_ACCESS_KEY
+          valueFrom:
+            secretKeyRef:
+              name: sentinela-secrets
+              key: aws_secret_access_key
+        - name: AWS_SESSION_TOKEN
+          valueFrom:
+            secretKeyRef:
+              name: sentinela-secrets
+              key: aws_session_token
+        volumeMounts:
+        - name: sentinela-configs
+          mountPath: /app/configs_sql.yaml
+          subPath: configs_sql.yaml
+      volumes:
+      - name: sentinela-configs
+        configMap:
+          name: sentinela-configs
+
+---
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: sentinela-controller
+spec:
+  selector:
+    app: sentinela-controller
+  ports:
+    - protocol: TCP
+      port: 8000
+      targetPort: 8000
