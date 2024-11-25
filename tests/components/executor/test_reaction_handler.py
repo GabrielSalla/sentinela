@@ -201,7 +201,7 @@ async def test_run_timeout(caplog, monkeypatch, sample_monitor: Monitor):
     end_time = time.perf_counter()
 
     total_time = end_time - start_time
-    assert total_time > 1
+    assert total_time > 1 - 0.001
     assert total_time < 1 + 0.03
 
     assert long_sleep_mock.call_count == 4

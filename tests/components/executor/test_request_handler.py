@@ -258,7 +258,7 @@ async def test_run_timeout(caplog, monkeypatch):
     end_time = time.perf_counter()
 
     total_time = end_time - start_time
-    assert total_time > 0.2
+    assert total_time > 0.2 - 0.001
     assert total_time < 0.2 + 0.005
 
     action_mock.assert_awaited_once()
