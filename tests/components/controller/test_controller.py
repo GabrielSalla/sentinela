@@ -416,7 +416,7 @@ async def test_run_monitors_not_ready(caplog, monkeypatch, mocker):
     await asyncio.sleep(0.31)
     controller_task.cancel()
 
-    assert_message_in_log(caplog, "Waiting for monitors to be ready timed out", count=3)
+    assert_message_in_log(caplog, "MonitorsLoadError: Waiting for monitors to be ready timed out")
 
 
 async def test_run_monitors_not_registered(caplog, monkeypatch, mocker):

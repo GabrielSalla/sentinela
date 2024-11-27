@@ -149,8 +149,7 @@ class Executor:
     async def process(self):
         """Get a message and process it"""
         # Wait for the monitors to be ready
-        if not await registry.wait_monitors_ready():
-            return
+        await registry.wait_monitors_ready()
 
         message = await self.get_message()
         if message is None:

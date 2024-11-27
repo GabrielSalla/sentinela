@@ -167,8 +167,7 @@ async def run():
     while app.running():
         with catch_exceptions(_logger):
             # Wait for monitors to be ready
-            if not await registry.wait_monitors_ready():
-                continue
+            await registry.wait_monitors_ready()
 
             # Tasks cleaning
             tasks = [task for task in tasks if not task.done()]

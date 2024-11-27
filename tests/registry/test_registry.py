@@ -5,14 +5,13 @@ from types import ModuleType
 import pytest
 
 import src.registry.registry as registry
-from tests.test_utils import assert_message_in_log
 
 pytestmark = pytest.mark.asyncio(loop_scope="session")
 
 
 async def test_wait_monitors_ready(monkeypatch):
-    """'_wait_monitors_ready' should wait for the registry monitors to be ready and return 'True'
-    if the timeout is not reached"""
+    """'_wait_monitors_ready' should wait for the registry monitors to be ready and don't raise an
+    exception if the timeout is not reached"""
     monkeypatch.setattr(registry, "MONITORS_READY_TIMEOUT", 0.2)
     registry.monitors_ready.clear()
 
@@ -21,29 +20,29 @@ async def test_wait_monitors_ready(monkeypatch):
     await asyncio.sleep(0.1)
     assert not wait_monitors_ready_task.done()
     registry.monitors_ready.set()
-    result = await wait_monitors_ready_task
+    await wait_monitors_ready_task
     end_time = time.perf_counter()
 
-    assert result is True
-    assert end_time - start_time >= 0.1
-    assert end_time - start_time < 0.1 + 0.002
+    total_time = end_time - start_time
+    assert total_time >= 0.1 - 0.001
+    assert total_time < 0.1 + 0.005
 
 
-async def test_wait_monitors_ready_timeout(caplog, monkeypatch):
-    """'_wait_monitors_ready' should wait for the registry monitors to be ready and return 'False'
-    if the timeout is reached"""
+async def test_wait_monitors_ready_timeout(monkeypatch):
+    """'_wait_monitors_ready' should wait for the registry monitors to be ready and raise a
+    'MonitorsLoadError' exception if the timeout is reached"""
     monkeypatch.setattr(registry, "MONITORS_READY_TIMEOUT", 0.2)
     registry.monitors_ready.clear()
 
     start_time = time.perf_counter()
-    result = await registry.wait_monitors_ready()
+    exception_message = "MonitorsLoadError: Waiting for monitors to be ready timed out"
+    with pytest.raises(registry.MonitorsLoadError, match=exception_message):
+        await registry.wait_monitors_ready()
     end_time = time.perf_counter()
 
-    assert result is False
-    assert end_time - start_time >= 0.2
-    assert end_time - start_time < 0.2 + 0.002
-
-    assert_message_in_log(caplog, "Waiting for monitors to be ready timed out")
+    total_time = end_time - start_time
+    assert total_time >= 0.2 - 0.001
+    assert total_time < 0.2 + 0.005
 
 
 async def test_get_monitors():

@@ -17,6 +17,8 @@ from typing import TYPE_CHECKING, TypedDict
 
 import prometheus_client
 
+from .exceptions import MonitorsLoadError
+
 if TYPE_CHECKING:
     from src.components.monitors_loader.monitor_module_type import MonitorModule
 
@@ -40,15 +42,13 @@ prometheus_monitors_ready_timeout_count = prometheus_client.Counter(
 )
 
 
-async def wait_monitors_ready() -> bool:
+async def wait_monitors_ready():
     """Wait for the monitors to be ready, with a timeout"""
     try:
         await asyncio.wait_for(monitors_ready.wait(), timeout=MONITORS_READY_TIMEOUT)
-        return True
     except asyncio.TimeoutError:
         prometheus_monitors_ready_timeout_count.inc()
-        _logger.error("Waiting for monitors to be ready timed out")
-        return False
+        raise MonitorsLoadError("Waiting for monitors to be ready timed out")
 
 
 def get_monitors() -> list[MonitorInfo]:

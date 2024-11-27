@@ -269,9 +269,9 @@ async def test_executor_process_success(caplog, monkeypatch, clear_queue):
     assert_message_in_log(caplog, 'Got message \'{"type": "test", "payload": {"test": "aaa"}}\'')
 
 
-async def test_executor_process_monitors_not_ready(caplog, monkeypatch, clear_queue):
+async def test_executor_process_monitors_not_ready(monkeypatch, clear_queue):
     """'Executor.process' should wait for the monitors to be ready before processing any message
-    and if it times out, it should just return"""
+    and if it times out, it should propagate the exception"""
     monkeypatch.setattr(registry.registry, "MONITORS_READY_TIMEOUT", 0.1)
 
     registry.monitors_ready.clear()
@@ -279,14 +279,14 @@ async def test_executor_process_monitors_not_ready(caplog, monkeypatch, clear_qu
     ex = executor.Executor(1)
 
     start_time = time.perf_counter()
-    await ex.process()
+    expected_exception = "MonitorsLoadError: Waiting for monitors to be ready timed out"
+    with pytest.raises(registry.MonitorsLoadError, match=expected_exception):
+        await ex.process()
     end_time = time.perf_counter()
 
     total_time = end_time - start_time
     assert total_time > 0.1 - 0.001
     assert total_time < 0.1 + 0.005
-
-    assert_message_in_log(caplog, "Waiting for monitors to be ready timed out")
 
 
 async def test_executor_process_no_message(monkeypatch, clear_queue):
