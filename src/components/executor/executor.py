@@ -15,6 +15,7 @@ import src.components.executor.request_handler as request_handler
 import src.queue as queue
 import src.registry as registry
 import src.utils.app as app
+from src.base_exception import BaseSentinelaException
 from src.configs import configs
 from src.utils.exception_handling import catch_exceptions
 from src.utils.time import format_datetime_iso, now, time_since
@@ -132,6 +133,8 @@ class Executor:
             await handler(message.content)
             # Only delete the message from the queue when it's been successfully handled
             await queue.delete_message(message)
+        except BaseSentinelaException as e:
+            _logger.error(str(e))
         except Exception:
             prometheus_message_error_count.labels(message_type=message_type).inc()
 

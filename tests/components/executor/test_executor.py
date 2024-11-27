@@ -14,6 +14,7 @@ import src.queue as queue
 import src.registry as registry
 import src.utils.app as app
 import src.utils.time as time_utils
+from src.base_exception import BaseSentinelaException
 from src.configs import configs
 from tests.test_utils import assert_message_in_log, assert_message_not_in_log
 
@@ -198,6 +199,42 @@ async def test_executor_process_message_success(caplog, mocker, monkeypatch):
     handler.assert_awaited_once_with(message.content)
     delete_message_spy.assert_called_once_with(message)
     assert_message_not_in_log(caplog, "Exception caught successfully, going on")
+
+    # Assert the message's visibility was changed
+    change_visibility_spy.assert_called_once_with(message)
+
+    # Wait enough time for the visibility change task to run if it wasn't stopped
+    await asyncio.sleep(0.3)
+
+    # Assert the message's visibility change task stopped after the completion of the process
+    change_visibility_spy.assert_called_once_with(message)
+
+
+async def test_executor_process_message_sentinela_error(caplog, mocker, monkeypatch):
+    """'Executor.process_message' should process the message with the provided handler, catching
+    Sentinela exceptions that might occur and logging them properly. The message shouldn't be
+    deleted from the queue"""
+    monkeypatch.setattr(configs, "queue_visibility_time", 0.1)
+    change_visibility_spy: MagicMock = mocker.spy(queue, "change_visibility")
+    delete_message_spy: MagicMock = mocker.spy(queue, "delete_message")
+
+    class SomeError(BaseSentinelaException):
+        pass
+
+    async def sleep_error(message):
+        await asyncio.sleep(0.1)
+        raise SomeError("Something went wrong")
+
+    handler = AsyncMock(side_effect=sleep_error)
+    message = queue.Message(json.dumps({"type": "test", "payload": "payload"}))
+    ex = executor.Executor(1)
+    ex._current_message_type = "test"
+
+    await ex.process_message(handler, message)
+
+    handler.assert_awaited_once_with(message.content)
+    delete_message_spy.assert_not_called()
+    assert_message_in_log(caplog, "SomeError: Something went wrong")
 
     # Assert the message's visibility was changed
     change_visibility_spy.assert_called_once_with(message)
