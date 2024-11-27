@@ -6,6 +6,8 @@ from typing import Any, cast
 
 import prometheus_client
 
+import src.registry as registry
+from src.base_exception import BaseSentinelaException
 from src.internal_database import get_session
 from src.models import Alert, Issue, Monitor
 from src.utils.async_tools import do_concurrently
@@ -304,10 +306,11 @@ async def run(message: dict[Any, Any]):
 
     monitor_id = message_payload["monitor_id"]
     monitor = await Monitor.get_by_id(monitor_id)
-
     if monitor is None:
         _logger.error(f"Monitor {monitor_id} not found. Skipping message")
         return
+
+    await registry.wait_monitor_loaded(monitor_id)
 
     # Skip executing the monitor if it's already running
     if monitor.running:
@@ -335,6 +338,8 @@ async def run(message: dict[Any, Any]):
         monitor_timeout_count.inc()
 
         _logger.warning(f"Execution for monitor '{monitor}' timed out")
+    except BaseSentinelaException as e:
+        raise e
     except Exception:
         monitor_error_count = prometheus_monitor_error_count.labels(**prometheus_labels)
         monitor_error_count.inc()
