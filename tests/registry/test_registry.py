@@ -45,6 +45,18 @@ async def test_wait_monitors_ready_timeout(monkeypatch):
     assert total_time < 0.2 + 0.005
 
 
+async def test_is_monitor_registered():
+    """'is_monitor_registered' should return True if the monitor is registered"""
+    registry.add_monitor(1, "Monitor 1", ModuleType(name="MockMonitorModule1"))
+    registry.add_monitor(2, "Monitor 2", ModuleType(name="MockMonitorModule2"))
+    registry.add_monitor(3, "Monitor 3", ModuleType(name="MockMonitorModule3"))
+
+    assert registry.is_monitor_registered(1)
+    assert registry.is_monitor_registered(2)
+    assert registry.is_monitor_registered(3)
+    assert not registry.is_monitor_registered(4)
+
+
 async def test_get_monitors():
     """'get_monitors' should return all the registered monitors"""
     registry.add_monitor(1, "Monitor 1", ModuleType(name="MockMonitorModule1"))
@@ -76,18 +88,6 @@ async def test_get_monitor_module():
     assert registry._monitors[3]["name"] == "Monitor 3"
     assert registry._monitors[3]["module"] == module_3
     assert registry.get_monitor_module(3) == module_3
-
-
-async def test_is_monitor_registered():
-    """'is_monitor_registered' should return True if the monitor is registered"""
-    registry.add_monitor(1, "Monitor 1", ModuleType(name="MockMonitorModule1"))
-    registry.add_monitor(2, "Monitor 2", ModuleType(name="MockMonitorModule2"))
-    registry.add_monitor(3, "Monitor 3", ModuleType(name="MockMonitorModule3"))
-
-    assert registry.is_monitor_registered(1)
-    assert registry.is_monitor_registered(2)
-    assert registry.is_monitor_registered(3)
-    assert not registry.is_monitor_registered(4)
 
 
 async def test_init():

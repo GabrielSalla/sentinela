@@ -51,6 +51,11 @@ async def wait_monitors_ready():
         raise MonitorsLoadError("Waiting for monitors to be ready timed out")
 
 
+def is_monitor_registered(monitor_id: int) -> bool:
+    """Check if a monitor is registered"""
+    return monitor_id in _monitors
+
+
 def get_monitors() -> list[MonitorInfo]:
     """Get all the monitors"""
     return list(_monitors.values())
@@ -59,11 +64,6 @@ def get_monitors() -> list[MonitorInfo]:
 def get_monitor_module(monitor_id: int) -> MonitorModule:
     """Get the monitor module"""
     return _monitors[monitor_id]["module"]
-
-
-def is_monitor_registered(monitor_id: int) -> bool:
-    """Check if a monitor is registered"""
-    return monitor_id in _monitors
 
 
 def add_monitor(monitor_id: int, monitor_name: str, monitor_module: MonitorModule):
