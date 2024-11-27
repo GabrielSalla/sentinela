@@ -16,6 +16,7 @@ import src.queue as queue
 import src.registry as registry
 import src.utils.app as app
 from src.configs import configs
+from src.utils.exception_handling import catch_exceptions
 from src.utils.time import format_datetime_iso, now, time_since
 
 _logger = logging.getLogger("executor")
@@ -169,7 +170,8 @@ class Executor:
         self._logger.info("Executor running")
 
         while app.running():
-            await self.process()
+            with catch_exceptions():
+                await self.process()
 
         self._logger.info("Finishing")
 

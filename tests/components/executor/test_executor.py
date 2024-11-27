@@ -377,6 +377,31 @@ async def test_executor_run(monkeypatch):
     assert process_mock.call_count == 5
 
 
+async def test_executor_run_exception(caplog, monkeypatch):
+    """'Executor.run' should keep calling the 'process' method recurrently until the app finishes.
+    Even though error handling is done in it's internal calls, it should catch any exceptions
+    protecting the loop from breaking"""
+    registry.monitors_ready.set()
+
+    async def sleep_error():
+        await asyncio.sleep(0.1)
+        raise TypeError("Another thing went wrong")
+
+    process_mock = AsyncMock(side_effect=sleep_error)
+    monkeypatch.setattr(executor.Executor, "process", process_mock)
+
+    ex = executor.Executor(1)
+    run_task = asyncio.create_task(ex.run())
+    await asyncio.sleep(0.11)
+    assert not run_task.done()
+
+    app.stop()
+    await asyncio.wait_for(run_task, timeout=0.5)
+
+    assert process_mock.call_count == 2
+    assert_message_in_log(caplog, "TypeError: Another thing went wrong", count=2)
+
+
 async def test_run(monkeypatch):
     """Integration test of the 'run' method. It should start all the executors and start them.
     When the app stops, it should stop automatically"""
