@@ -7,6 +7,7 @@ from .registry import (
     is_monitor_registered,
     monitors_pending,
     monitors_ready,
+    wait_monitor_loaded,
     wait_monitors_ready,
 )
 
@@ -20,5 +21,6 @@ __all__ = [
     "is_monitor_registered",
     "monitors_pending",
     "monitors_ready",
+    "wait_monitor_loaded",
     "wait_monitors_ready",
 ]
