@@ -7,6 +7,8 @@ from unittest.mock import AsyncMock, MagicMock
 import pytest
 
 import src.components.executor.reaction_handler as reaction_handler
+import src.registry.registry as registry
+from src.base_exception import BaseSentinelaException
 from src.configs import configs
 from src.models import Monitor
 from src.options import ReactionOptions
@@ -21,6 +23,35 @@ async def test_run_monitor_not_found(caplog):
         {"payload": {"event_source_monitor_id": 999999999, "event_name": "alert_created"}}
     )
     assert_message_in_log(caplog, "Monitor 999999999 not found. Skipping message")
+
+
+async def test_run_monitor_not_registered(caplog, monkeypatch, sample_monitor: Monitor):
+    """'run' should handle raise a 'MonitorNotRegisteredError' exception if the monitor is not
+    registered"""
+    monkeypatch.setattr(registry, "MONITORS_READY_TIMEOUT", 0.2)
+    del registry._monitors[sample_monitor.id]
+
+    run_task = asyncio.create_task(
+        reaction_handler.run({
+            "payload": {
+                "event_source_monitor_id": sample_monitor.id,
+                "event_name": "alert_created"
+            }
+        })
+    )
+
+    start_time = time.perf_counter()
+    await asyncio.sleep(0.1)
+    registry.monitors_ready.set()
+    registry.monitors_pending.clear()
+
+    with pytest.raises(registry.MonitorNotRegisteredError):
+        await run_task
+    end_time = time.perf_counter()
+
+    total_time = end_time - start_time
+    assert total_time > 0.1 - 0.001
+    assert total_time < 0.1 + 0.03
 
 
 async def test_run_no_reactions(monkeypatch, sample_monitor: Monitor):
@@ -208,3 +239,26 @@ async def test_run_timeout(caplog, monkeypatch, sample_monitor: Monitor):
     assert_message_in_log(caplog, "Timed out executing reaction", count=4)
 
     assert short_sleep_mock.call_count == 2
+
+
+async def test_run_sentinela_exception(monkeypatch, sample_monitor: Monitor):
+    """'run' should re-raise Sentinela exceptions"""
+    class SomeException(BaseSentinelaException):
+        pass
+
+    async def error(message_payload):
+        raise SomeException("Some Sentinela exception")
+
+    monkeypatch.setattr(
+        sample_monitor.code,
+        "reaction_options",
+        ReactionOptions(alert_created=[error]),
+        raising=False,
+    )
+
+    message_payload = {
+        "payload": {"event_source_monitor_id": sample_monitor.id, "event_name": "alert_created"}
+    }
+
+    with pytest.raises(SomeException):
+        await reaction_handler.run(message_payload)
