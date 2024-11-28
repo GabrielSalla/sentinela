@@ -1,4 +1,7 @@
 # Sentinela monitoring platform
+> [!WARNING]
+> This is a **work in progress** project and many things are still not ideal to be used
+
 > [!IMPORTANT]
 > **This application is not intended to replace, and will not replace, your current observability stack.**
 
