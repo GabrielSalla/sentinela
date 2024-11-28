@@ -4,6 +4,8 @@ import logging
 import traceback
 from typing import Any
 
+import src.registry as registry
+from src.base_exception import BaseSentinelaException
 from src.configs import configs
 from src.models import Alert, Issue, Notification, NotificationStatus
 from src.services.slack import clear_slack_notification
@@ -19,6 +21,7 @@ async def alert_acknowledge(message_payload: dict[Any, Any]):
     if alert is None:
         _logger.info(f"Alert '{alert_id}' not found")
         return
+    await registry.wait_monitor_loaded(alert.monitor_id)
     await alert.acknowledge()
 
 
@@ -29,6 +32,7 @@ async def alert_lock(message_payload: dict[Any, Any]):
     if alert is None:
         _logger.info(f"Alert '{alert_id}' not found")
         return
+    await registry.wait_monitor_loaded(alert.monitor_id)
     await alert.lock()
 
 
@@ -39,6 +43,7 @@ async def alert_solve(message_payload: dict[Any, Any]):
     if alert is None:
         _logger.info(f"Alert '{alert_id}' not found")
         return
+    await registry.wait_monitor_loaded(alert.monitor_id)
     await alert.solve_issues()
 
 
@@ -49,6 +54,7 @@ async def issue_drop(message_payload: dict[Any, Any]):
     if issue is None:
         _logger.info(f"Issue '{issue_id}' not found")
         return
+    await registry.wait_monitor_loaded(issue.monitor_id)
     await issue.drop()
 
 
@@ -64,6 +70,10 @@ async def resend_slack_notifications(message_payload: dict[Any, Any]):
 
     if len(notifications) == 0:
         return
+
+    monitors_ids = {notification.monitor_id for notification in notifications}
+    for monitor_id in monitors_ids:
+        await registry.wait_monitor_loaded(monitor_id)
 
     await do_concurrently(*[
         clear_slack_notification(notification)
@@ -99,6 +109,8 @@ async def run(message: dict[Any, Any]):
         await asyncio.wait_for(action(message_payload), configs.executor_request_timeout)
     except asyncio.TimeoutError:
         _logger.error(f"Timed out executing request '{json.dumps(message_payload)}'")
+    except BaseSentinelaException as e:
+        raise e
     except Exception:
         _logger.error(f"Error executing request '{json.dumps(message_payload)}'")
         _logger.error(traceback.format_exc().strip())

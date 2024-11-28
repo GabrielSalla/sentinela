@@ -3,6 +3,8 @@ import logging
 import traceback
 from contextlib import contextmanager
 
+from src.base_exception import BaseSentinelaException
+
 
 @contextmanager
 def catch_exceptions(
@@ -19,6 +21,8 @@ def catch_exceptions(
     except asyncio.TimeoutError:
         if timeout_message:
             logger.error(timeout_message)
+    except BaseSentinelaException as e:
+        logger.error(str(e))
     except Exception:
         logger.error(traceback.format_exc().strip())
         if error_message:

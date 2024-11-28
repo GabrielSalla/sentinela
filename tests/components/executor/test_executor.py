@@ -14,6 +14,7 @@ import src.queue as queue
 import src.registry as registry
 import src.utils.app as app
 import src.utils.time as time_utils
+from src.base_exception import BaseSentinelaException
 from src.configs import configs
 from tests.test_utils import assert_message_in_log, assert_message_not_in_log
 
@@ -209,6 +210,42 @@ async def test_executor_process_message_success(caplog, mocker, monkeypatch):
     change_visibility_spy.assert_called_once_with(message)
 
 
+async def test_executor_process_message_sentinela_error(caplog, mocker, monkeypatch):
+    """'Executor.process_message' should process the message with the provided handler, catching
+    Sentinela exceptions that might occur and logging them properly. The message shouldn't be
+    deleted from the queue"""
+    monkeypatch.setattr(configs, "queue_visibility_time", 0.1)
+    change_visibility_spy: MagicMock = mocker.spy(queue, "change_visibility")
+    delete_message_spy: MagicMock = mocker.spy(queue, "delete_message")
+
+    class SomeError(BaseSentinelaException):
+        pass
+
+    async def sleep_error(message):
+        await asyncio.sleep(0.1)
+        raise SomeError("Something went wrong")
+
+    handler = AsyncMock(side_effect=sleep_error)
+    message = queue.Message(json.dumps({"type": "test", "payload": "payload"}))
+    ex = executor.Executor(1)
+    ex._current_message_type = "test"
+
+    await ex.process_message(handler, message)
+
+    handler.assert_awaited_once_with(message.content)
+    delete_message_spy.assert_not_called()
+    assert_message_in_log(caplog, "SomeError: Something went wrong")
+
+    # Assert the message's visibility was changed
+    change_visibility_spy.assert_called_once_with(message)
+
+    # Wait enough time for the visibility change task to run if it wasn't stopped
+    await asyncio.sleep(0.3)
+
+    # Assert the message's visibility change task stopped after the completion of the process
+    change_visibility_spy.assert_called_once_with(message)
+
+
 async def test_executor_process_message_error(caplog, mocker, monkeypatch):
     """'Executor.process_message' should process the message with the provided handler, catching
     exceptions that might occur and logging them properly. The message shouldn't be deleted from
@@ -269,9 +306,9 @@ async def test_executor_process_success(caplog, monkeypatch, clear_queue):
     assert_message_in_log(caplog, 'Got message \'{"type": "test", "payload": {"test": "aaa"}}\'')
 
 
-async def test_executor_process_monitors_not_ready(caplog, monkeypatch, clear_queue):
+async def test_executor_process_monitors_not_ready(monkeypatch, clear_queue):
     """'Executor.process' should wait for the monitors to be ready before processing any message
-    and if it times out, it should just return"""
+    and if it times out, it should propagate the exception"""
     monkeypatch.setattr(registry.registry, "MONITORS_READY_TIMEOUT", 0.1)
 
     registry.monitors_ready.clear()
@@ -279,14 +316,14 @@ async def test_executor_process_monitors_not_ready(caplog, monkeypatch, clear_qu
     ex = executor.Executor(1)
 
     start_time = time.perf_counter()
-    await ex.process()
+    expected_exception = "MonitorsLoadError: Waiting for monitors to be ready timed out"
+    with pytest.raises(registry.MonitorsLoadError, match=expected_exception):
+        await ex.process()
     end_time = time.perf_counter()
 
     total_time = end_time - start_time
     assert total_time > 0.1 - 0.001
     assert total_time < 0.1 + 0.005
-
-    assert_message_in_log(caplog, "Waiting for monitors to be ready timed out")
 
 
 async def test_executor_process_no_message(monkeypatch, clear_queue):
@@ -375,6 +412,31 @@ async def test_executor_run(monkeypatch):
     await asyncio.wait_for(run_task, timeout=0.5)
 
     assert process_mock.call_count == 5
+
+
+async def test_executor_run_exception(caplog, monkeypatch):
+    """'Executor.run' should keep calling the 'process' method recurrently until the app finishes.
+    Even though error handling is done in it's internal calls, it should catch any exceptions
+    protecting the loop from breaking"""
+    registry.monitors_ready.set()
+
+    async def sleep_error():
+        await asyncio.sleep(0.1)
+        raise TypeError("Another thing went wrong")
+
+    process_mock = AsyncMock(side_effect=sleep_error)
+    monkeypatch.setattr(executor.Executor, "process", process_mock)
+
+    ex = executor.Executor(1)
+    run_task = asyncio.create_task(ex.run())
+    await asyncio.sleep(0.11)
+    assert not run_task.done()
+
+    app.stop()
+    await asyncio.wait_for(run_task, timeout=0.5)
+
+    assert process_mock.call_count == 2
+    assert_message_in_log(caplog, "TypeError: Another thing went wrong", count=2)
 
 
 async def test_run(monkeypatch):

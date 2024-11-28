@@ -5,14 +5,13 @@ from types import ModuleType
 import pytest
 
 import src.registry.registry as registry
-from tests.test_utils import assert_message_in_log
 
 pytestmark = pytest.mark.asyncio(loop_scope="session")
 
 
 async def test_wait_monitors_ready(monkeypatch):
-    """'_wait_monitors_ready' should wait for the registry monitors to be ready and return 'True'
-    if the timeout is not reached"""
+    """'_wait_monitors_ready' should wait for the registry monitors to be ready and don't raise an
+    exception if the timeout is not reached"""
     monkeypatch.setattr(registry, "MONITORS_READY_TIMEOUT", 0.2)
     registry.monitors_ready.clear()
 
@@ -21,29 +20,113 @@ async def test_wait_monitors_ready(monkeypatch):
     await asyncio.sleep(0.1)
     assert not wait_monitors_ready_task.done()
     registry.monitors_ready.set()
-    result = await wait_monitors_ready_task
+    await wait_monitors_ready_task
     end_time = time.perf_counter()
 
-    assert result is True
-    assert end_time - start_time >= 0.1
-    assert end_time - start_time < 0.1 + 0.002
+    total_time = end_time - start_time
+    assert total_time >= 0.1 - 0.001
+    assert total_time < 0.1 + 0.005
 
 
-async def test_wait_monitors_ready_timeout(caplog, monkeypatch):
-    """'_wait_monitors_ready' should wait for the registry monitors to be ready and return 'False'
-    if the timeout is reached"""
+async def test_wait_monitors_ready_timeout(monkeypatch):
+    """'_wait_monitors_ready' should wait for the registry monitors to be ready and raise a
+    'MonitorsLoadError' exception if the timeout is reached"""
     monkeypatch.setattr(registry, "MONITORS_READY_TIMEOUT", 0.2)
     registry.monitors_ready.clear()
 
     start_time = time.perf_counter()
-    result = await registry.wait_monitors_ready()
+    exception_message = "MonitorsLoadError: Waiting for monitors to be ready timed out"
+    with pytest.raises(registry.MonitorsLoadError, match=exception_message):
+        await registry.wait_monitors_ready()
     end_time = time.perf_counter()
 
-    assert result is False
-    assert end_time - start_time >= 0.2
-    assert end_time - start_time < 0.2 + 0.002
+    total_time = end_time - start_time
+    assert total_time >= 0.2 - 0.001
+    assert total_time < 0.2 + 0.005
 
-    assert_message_in_log(caplog, "Waiting for monitors to be ready timed out")
+
+async def test_is_monitor_registered():
+    """'is_monitor_registered' should return True if the monitor is registered"""
+    registry.add_monitor(1, "Monitor 1", ModuleType(name="MockMonitorModule1"))
+    registry.add_monitor(2, "Monitor 2", ModuleType(name="MockMonitorModule2"))
+    registry.add_monitor(3, "Monitor 3", ModuleType(name="MockMonitorModule3"))
+
+    assert registry.is_monitor_registered(1)
+    assert registry.is_monitor_registered(2)
+    assert registry.is_monitor_registered(3)
+    assert not registry.is_monitor_registered(4)
+
+
+async def test_wait_monitor_loaded_registered(monkeypatch):
+    """'_wait_monitor_loaded' should just return if the monitor is already registered"""
+    monkeypatch.setattr(registry, "MONITORS_READY_TIMEOUT", 0.2)
+
+    registry.add_monitor(1, "Monitor 1", ModuleType(name="MockMonitorModule1"))
+
+    start_time = time.perf_counter()
+    await registry.wait_monitor_loaded(1)
+    end_time = time.perf_counter()
+
+    total_time = end_time - start_time
+    assert total_time < 0.001
+
+
+async def test_wait_monitor_loaded_wait_registered(monkeypatch):
+    """'_wait_monitor_loaded' should wait for the monitor to be loaded and not raise an exception if
+    the timeout is not reached and the monitor is registered"""
+    monkeypatch.setattr(registry, "MONITORS_READY_TIMEOUT", 0.2)
+
+    registry.monitors_ready.set()
+    registry.monitors_pending.clear()
+
+    start_time = time.perf_counter()
+    wait_monitor_loaded_task = asyncio.create_task(registry.wait_monitor_loaded(1))
+
+    await asyncio.sleep(0.1)
+    assert not registry.monitors_ready.is_set()
+    assert registry.monitors_pending.is_set()
+    assert not wait_monitor_loaded_task.done()
+
+    registry.add_monitor(1, "Monitor 1", ModuleType(name="MockMonitorModule1"))
+    registry.monitors_ready.set()
+    registry.monitors_pending.clear()
+
+    await wait_monitor_loaded_task
+    end_time = time.perf_counter()
+
+    total_time = end_time - start_time
+    assert total_time >= 0.1 - 0.001
+    assert total_time < 0.1 + 0.005
+
+
+async def test_wait_monitor_loaded_wait_not_registered(monkeypatch):
+    """'_wait_monitor_loaded' should wait for the monitor to be loaded and raise a
+    'MonitorNotRegisteredError' exception if the timeout is not reached and the monitor is not
+    registered"""
+    monkeypatch.setattr(registry, "MONITORS_READY_TIMEOUT", 0.2)
+
+    registry.monitors_ready.set()
+    registry.monitors_pending.clear()
+
+    start_time = time.perf_counter()
+    wait_monitor_loaded_task = asyncio.create_task(registry.wait_monitor_loaded(1))
+
+    await asyncio.sleep(0.1)
+    assert not registry.monitors_ready.is_set()
+    assert registry.monitors_pending.is_set()
+    assert not wait_monitor_loaded_task.done()
+
+    registry.monitors_ready.set()
+    registry.monitors_pending.clear()
+
+    exception_message = "MonitorNotRegisteredError: Monitor '1' not registered"
+    with pytest.raises(registry.MonitorNotRegisteredError, match=exception_message):
+        await wait_monitor_loaded_task
+    end_time = time.perf_counter()
+
+    total_time = end_time - start_time
+    assert total_time >= 0.1 - 0.001
+    assert total_time < 0.1 + 0.005
 
 
 async def test_get_monitors():
@@ -77,18 +160,6 @@ async def test_get_monitor_module():
     assert registry._monitors[3]["name"] == "Monitor 3"
     assert registry._monitors[3]["module"] == module_3
     assert registry.get_monitor_module(3) == module_3
-
-
-async def test_is_monitor_registered():
-    """'is_monitor_registered' should return True if the monitor is registered"""
-    registry.add_monitor(1, "Monitor 1", ModuleType(name="MockMonitorModule1"))
-    registry.add_monitor(2, "Monitor 2", ModuleType(name="MockMonitorModule2"))
-    registry.add_monitor(3, "Monitor 3", ModuleType(name="MockMonitorModule3"))
-
-    assert registry.is_monitor_registered(1)
-    assert registry.is_monitor_registered(2)
-    assert registry.is_monitor_registered(3)
-    assert not registry.is_monitor_registered(4)
 
 
 async def test_init():

@@ -4,6 +4,7 @@ from unittest.mock import MagicMock
 
 import pytest
 
+from src.base_exception import BaseSentinelaException
 from src.utils.exception_handling import catch_exceptions
 from tests.test_utils import assert_message_in_log, assert_message_not_in_log
 
@@ -39,6 +40,18 @@ async def test_catch_exceptions_timeout(caplog, mocker, logger):
 
     if logger is not None:
         logger_error_spy.assert_called_once_with("error function timed out")
+
+
+async def test_catch_exceptions_base_exception(caplog):
+    """'catch_exceptions' should log the exception message if an exception inherited from
+    'BaseSentinelaException' is raised"""
+    class CustomException(BaseSentinelaException):
+        pass
+
+    with catch_exceptions():
+        raise CustomException("should be raised")
+
+    assert_message_in_log(caplog, "CustomException: should be raised")
 
 
 @pytest.mark.parametrize("logger", [None, logging.getLogger("other_logger")])

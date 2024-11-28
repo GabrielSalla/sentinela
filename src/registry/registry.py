@@ -17,6 +17,8 @@ from typing import TYPE_CHECKING, TypedDict
 
 import prometheus_client
 
+from .exceptions import MonitorNotRegisteredError, MonitorsLoadError
+
 if TYPE_CHECKING:
     from src.components.monitors_loader.monitor_module_type import MonitorModule
 
@@ -35,20 +37,43 @@ monitors_ready: asyncio.Event = asyncio.Event()
 monitors_pending: asyncio.Event = asyncio.Event()
 
 prometheus_monitors_ready_timeout_count = prometheus_client.Counter(
-    "controller_monitors_ready_timeout_count",
-    "Count of times the controller times out waiting for monitors to be ready",
+    "monitors_ready_timeout_count",
+    "Count of times the application timed out waiting for monitors to be ready",
+)
+prometheus_monitor_not_registered_count = prometheus_client.Counter(
+    "monitor_not_registered_count",
+    "Count of times a monitor is not registered after a load attempt",
 )
 
 
-async def wait_monitors_ready() -> bool:
+async def wait_monitors_ready():
     """Wait for the monitors to be ready, with a timeout"""
     try:
         await asyncio.wait_for(monitors_ready.wait(), timeout=MONITORS_READY_TIMEOUT)
-        return True
     except asyncio.TimeoutError:
         prometheus_monitors_ready_timeout_count.inc()
-        _logger.error("Waiting for monitors to be ready timed out")
-        return False
+        raise MonitorsLoadError("Waiting for monitors to be ready timed out")
+
+
+def is_monitor_registered(monitor_id: int) -> bool:
+    """Check if a monitor is registered"""
+    return monitor_id in _monitors
+
+
+async def wait_monitor_loaded(monitor_id: int):
+    """Wait for a monitor to be loaded and raise an 'MonitorNotRegisteredError' if it fails to
+    load"""
+    if is_monitor_registered(monitor_id):
+        return
+
+    # Signal for the monitors to be reloaded
+    monitors_ready.clear()
+    monitors_pending.set()
+    await wait_monitors_ready()
+
+    if not is_monitor_registered(monitor_id):
+        prometheus_monitor_not_registered_count.inc()
+        raise MonitorNotRegisteredError(f"Monitor '{monitor_id}' not registered")
 
 
 def get_monitors() -> list[MonitorInfo]:
@@ -59,11 +84,6 @@ def get_monitors() -> list[MonitorInfo]:
 def get_monitor_module(monitor_id: int) -> MonitorModule:
     """Get the monitor module"""
     return _monitors[monitor_id]["module"]
-
-
-def is_monitor_registered(monitor_id: int) -> bool:
-    """Check if a monitor is registered"""
-    return monitor_id in _monitors
 
 
 def add_monitor(monitor_id: int, monitor_name: str, monitor_module: MonitorModule):

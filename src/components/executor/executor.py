@@ -15,7 +15,9 @@ import src.components.executor.request_handler as request_handler
 import src.queue as queue
 import src.registry as registry
 import src.utils.app as app
+from src.base_exception import BaseSentinelaException
 from src.configs import configs
+from src.utils.exception_handling import catch_exceptions
 from src.utils.time import format_datetime_iso, now, time_since
 
 _logger = logging.getLogger("executor")
@@ -131,6 +133,8 @@ class Executor:
             await handler(message.content)
             # Only delete the message from the queue when it's been successfully handled
             await queue.delete_message(message)
+        except BaseSentinelaException as e:
+            _logger.error(str(e))
         except Exception:
             prometheus_message_error_count.labels(message_type=message_type).inc()
 
@@ -149,8 +153,7 @@ class Executor:
     async def process(self):
         """Get a message and process it"""
         # Wait for the monitors to be ready
-        if not await registry.wait_monitors_ready():
-            return
+        await registry.wait_monitors_ready()
 
         message = await self.get_message()
         if message is None:
@@ -170,7 +173,8 @@ class Executor:
         self._logger.info("Executor running")
 
         while app.running():
-            await self.process()
+            with catch_exceptions():
+                await self.process()
 
         self._logger.info("Finishing")
 

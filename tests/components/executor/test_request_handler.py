@@ -5,6 +5,8 @@ from unittest.mock import AsyncMock
 import pytest
 
 import src.components.executor.request_handler as request_handler
+import src.registry as registry
+from src.base_exception import BaseSentinelaException
 from src.configs import configs
 from src.models import Alert, AlertStatus, Issue, IssueStatus, Monitor, Notification
 from tests.test_utils import assert_message_in_log
@@ -14,6 +16,7 @@ pytestmark = pytest.mark.asyncio(loop_scope="session")
 
 async def test_alert_acknowledge(mocker, sample_monitor: Monitor):
     """'alert_acknowledge' should acknowledge the provided alert"""
+    wait_monitor_loaded_spy: AsyncMock = mocker.spy(registry, "wait_monitor_loaded")
     acknowledge_spy: AsyncMock = mocker.spy(Alert, "acknowledge")
 
     alert = await Alert.create(
@@ -26,6 +29,7 @@ async def test_alert_acknowledge(mocker, sample_monitor: Monitor):
     await alert.refresh()
 
     assert alert.acknowledged
+    wait_monitor_loaded_spy.assert_awaited_once_with(sample_monitor.id)
     acknowledge_spy.assert_awaited_once()
 
 
@@ -41,6 +45,7 @@ async def test_alert_acknowledge_alert_not_found(caplog, mocker):
 
 async def test_alert_lock(mocker, sample_monitor: Monitor):
     """'alert_lock' should lock the provided alert"""
+    wait_monitor_loaded_spy: AsyncMock = mocker.spy(registry, "wait_monitor_loaded")
     lock_spy: AsyncMock = mocker.spy(Alert, "lock")
 
     alert = await Alert.create(
@@ -53,6 +58,7 @@ async def test_alert_lock(mocker, sample_monitor: Monitor):
     await alert.refresh()
 
     assert alert.locked
+    wait_monitor_loaded_spy.assert_awaited_once_with(sample_monitor.id)
     lock_spy.assert_awaited_once()
 
 
@@ -68,6 +74,7 @@ async def test_alert_lock_alert_not_found(caplog, mocker):
 
 async def test_alert_solve(mocker, monkeypatch, sample_monitor: Monitor):
     """'alert_solve' should solve all the alert's issues and update it's status"""
+    wait_monitor_loaded_spy: AsyncMock = mocker.spy(registry, "wait_monitor_loaded")
     monkeypatch.setattr(sample_monitor.code.issue_options, "solvable", False)
     solve_spy: AsyncMock = mocker.spy(Alert, "solve")
 
@@ -81,6 +88,7 @@ async def test_alert_solve(mocker, monkeypatch, sample_monitor: Monitor):
     await alert.refresh()
 
     assert alert.status == AlertStatus.solved
+    wait_monitor_loaded_spy.assert_awaited_once_with(sample_monitor.id)
     solve_spy.assert_awaited_once()
 
 
@@ -96,6 +104,7 @@ async def test_alert_solve_alert_not_found(caplog, mocker):
 
 async def test_issue_drop(mocker, sample_monitor: Monitor):
     """'issue_drop' should drop the provided issue"""
+    wait_monitor_loaded_spy: AsyncMock = mocker.spy(registry, "wait_monitor_loaded")
     drop_spy: AsyncMock = mocker.spy(Issue, "drop")
 
     issue = await Issue.create(monitor_id=sample_monitor.id, model_id="1", data={"id": 1})
@@ -106,6 +115,7 @@ async def test_issue_drop(mocker, sample_monitor: Monitor):
     await issue.refresh()
 
     assert issue.status == IssueStatus.dropped
+    wait_monitor_loaded_spy.assert_awaited_once_with(sample_monitor.id)
     drop_spy.assert_awaited_once()
 
 
@@ -122,6 +132,7 @@ async def test_issue_drop_issue_not_found(caplog, mocker):
 async def test_resend_slack_notifications(mocker, sample_monitor: Monitor):
     """'resend_slack_notifications' should clear all notifications for the provided channel and
     update all alerts"""
+    wait_monitor_loaded_spy: AsyncMock = mocker.spy(registry, "wait_monitor_loaded")
     alert_update_spy: AsyncMock = mocker.spy(Alert, "update")
 
     alert_test_channel = await Alert.create(
@@ -159,6 +170,7 @@ async def test_resend_slack_notifications(mocker, sample_monitor: Monitor):
         "ts": "123",
     }
 
+    wait_monitor_loaded_spy.assert_awaited_once_with(sample_monitor.id)
     alert_update_spy.assert_awaited_once()
     call_args = alert_update_spy.call_args
     assert call_args[0][0].id == alert_test_channel.id
@@ -170,6 +182,7 @@ async def test_resend_slack_notifications_no_notifications_in_channel(
 ):
     """'resend_slack_notifications' should just return when there are no notifications for the
     provided channel"""
+    wait_monitor_loaded_spy: AsyncMock = mocker.spy(registry, "wait_monitor_loaded")
     alert_update_spy: AsyncMock = mocker.spy(Alert, "update")
 
     alert_other_channel = await Alert.create(
@@ -193,6 +206,7 @@ async def test_resend_slack_notifications_no_notifications_in_channel(
         "ts": "123",
     }
 
+    wait_monitor_loaded_spy.assert_not_called()
     alert_update_spy.assert_not_called()
 
 
@@ -226,23 +240,6 @@ async def test_run_unknown_action(caplog):
     )
 
 
-async def test_run_error(caplog, monkeypatch):
-    """'run' should handle errors when executing requests"""
-    async def error(message_payload):
-        raise ValueError("Nothing good happens")
-
-    action_mock = AsyncMock(side_effect=error)
-    monkeypatch.setitem(request_handler.actions, "test", action_mock)
-
-    await request_handler.run({"payload": {"action": "test", "target_id": 1}})
-
-    assert_message_in_log(
-        caplog,
-        "Error executing request '{\"action\": \"test\", \"target_id\": 1}'"
-    )
-    assert_message_in_log(caplog, "ValueError: Nothing good happens")
-
-
 async def test_run_timeout(caplog, monkeypatch):
     """'run' should timeout the request if it takes too long to execute"""
     monkeypatch.setattr(configs, "executor_request_timeout", 0.2)
@@ -264,3 +261,35 @@ async def test_run_timeout(caplog, monkeypatch):
     action_mock.assert_awaited_once()
 
     assert_message_in_log(caplog, "Timed out executing request")
+
+
+async def test_run_sentinela_exception(monkeypatch):
+    """'run' should re-raise Sentinela exceptions"""
+    class SomeException(BaseSentinelaException):
+        pass
+
+    async def error(message_payload):
+        raise SomeException("Some Sentinela exception")
+
+    action_mock = AsyncMock(side_effect=error)
+    monkeypatch.setitem(request_handler.actions, "test", action_mock)
+
+    with pytest.raises(SomeException):
+        await request_handler.run({"payload": {"action": "test", "target_id": 1}})
+
+
+async def test_run_error(caplog, monkeypatch):
+    """'run' should handle errors when executing requests"""
+    async def error(message_payload):
+        raise ValueError("Nothing good happens")
+
+    action_mock = AsyncMock(side_effect=error)
+    monkeypatch.setitem(request_handler.actions, "test", action_mock)
+
+    await request_handler.run({"payload": {"action": "test", "target_id": 1}})
+
+    assert_message_in_log(
+        caplog,
+        "Error executing request '{\"action\": \"test\", \"target_id\": 1}'"
+    )
+    assert_message_in_log(caplog, "ValueError: Nothing good happens")

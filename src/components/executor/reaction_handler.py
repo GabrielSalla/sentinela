@@ -7,6 +7,8 @@ from typing import Any
 
 import prometheus_client
 
+import src.registry as registry
+from src.base_exception import BaseSentinelaException
 from src.configs import configs
 from src.models import Monitor
 
@@ -37,10 +39,11 @@ async def run(message: dict[Any, Any]):
     event_name = message_payload["event_name"]
 
     monitor = await Monitor.get_by_id(monitor_id)
-
     if monitor is None:
         _logger.error(f"Monitor {monitor_id} not found. Skipping message")
         return
+
+    await registry.wait_monitor_loaded(monitor_id)
 
     prometheus_labels = {
         "monitor_id": monitor.id,
@@ -70,6 +73,8 @@ async def run(message: dict[Any, Any]):
                 f"Timed out executing reaction '{reaction_name}' with payload "
                 f"'{json.dumps(message_payload)}'"
             )
+        except BaseSentinelaException as e:
+            raise e
         except Exception:
             prometheus_reaction_error_count.labels(**prometheus_labels).inc()
             _logger.error(

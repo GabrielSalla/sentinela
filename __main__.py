@@ -12,8 +12,8 @@ import src.databases as databases
 import src.internal_database as internal_database
 import src.queue as queue
 import src.registry as registry
-import src.utils.log as log
 import src.utils.app as app
+import src.utils.log as log
 
 _logger = logging.getLogger("main")
 

@@ -6,6 +6,8 @@ from unittest.mock import AsyncMock, MagicMock
 import pytest
 
 import src.components.executor.monitor_handler as monitor_handler
+import src.registry.registry as registry
+from src.base_exception import BaseSentinelaException
 from src.models import Alert, AlertPriority, AlertStatus, Issue, IssueStatus, Monitor
 from src.options import AlertOptions, CountRule, IssueOptions, PriorityLevels
 from src.utils.time import time_since
@@ -1101,6 +1103,32 @@ async def test_run_monitor_not_found(caplog):
     assert_message_in_log(caplog, "Monitor 999999999 not found. Skipping message")
 
 
+async def test_run_monitor_not_registered(monkeypatch, sample_monitor: Monitor):
+    """'run' should handle raise a 'MonitorNotRegisteredError' exception if the monitor is not
+    registered"""
+    monkeypatch.setattr(registry, "MONITORS_READY_TIMEOUT", 0.2)
+    del registry._monitors[sample_monitor.id]
+
+    run_task = asyncio.create_task(
+        monitor_handler.run(
+            {"payload": {"monitor_id": sample_monitor.id, "tasks": ["search"]}}
+        )
+    )
+
+    start_time = time.perf_counter()
+    await asyncio.sleep(0.1)
+    registry.monitors_ready.set()
+    registry.monitors_pending.clear()
+
+    with pytest.raises(registry.MonitorNotRegisteredError):
+        await run_task
+    end_time = time.perf_counter()
+
+    total_time = end_time - start_time
+    assert total_time > 0.1 - 0.001
+    assert total_time < 0.1 + 0.03
+
+
 async def test_run_monitor_skip_running(mocker, sample_monitor: Monitor):
     """'run' should skip running the monitor if it's 'running' flag is 'True'"""
     sample_monitor.set_running(True)
@@ -1150,6 +1178,35 @@ async def test_run_monitor_timeout(caplog, mocker, monkeypatch, sample_monitor: 
     assert total_time < 0.5 + 0.03
 
     assert_message_in_log(caplog, f"Execution for monitor '{sample_monitor}' timed out")
+
+    assert set_running_spy.call_count == 2
+    assert set_running_spy.call_args_list[0].args[0].id == sample_monitor.id
+    assert set_running_spy.call_args_list[0].args[1] is True
+    assert set_running_spy.call_args_list[1].args[0].id == sample_monitor.id
+    assert set_running_spy.call_args_list[1].args[1] is False
+
+    set_queued_spy.assert_called_once()
+    assert set_queued_spy.call_args_list[0].args[0].id == sample_monitor.id
+    assert set_queued_spy.call_args_list[0].args[1] is False
+
+
+async def test_run_monitor_sentinela_exception(mocker, monkeypatch, sample_monitor: Monitor):
+    """'run' should re-raise Sentinela exceptions"""
+    class SomeException(BaseSentinelaException):
+        pass
+
+    async def error(monitor, tasks):
+        raise SomeException("Something is not right")
+
+    monkeypatch.setattr(monitor_handler, "_run_routines", error)
+
+    set_running_spy: AsyncMock = mocker.spy(Monitor, "set_running")
+    set_queued_spy: AsyncMock = mocker.spy(Monitor, "set_queued")
+
+    with pytest.raises(SomeException):
+        await monitor_handler.run(
+            {"payload": {"monitor_id": sample_monitor.id, "tasks": ["search"]}}
+        )
 
     assert set_running_spy.call_count == 2
     assert set_running_spy.call_args_list[0].args[0].id == sample_monitor.id
