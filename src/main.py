@@ -11,6 +11,7 @@ import components.monitors_loader as monitors_loader
 import databases as databases
 import internal_database as internal_database
 import message_queue as message_queue
+import plugins as plugins
 import registry as registry
 import utils.app as app
 import utils.log as log
@@ -23,6 +24,25 @@ async def protected_task(task):
         await task
     except Exception:
         _logger.warning(f"Exception with task '{task}'")
+
+
+async def init_plugins_services(controller_enabled: bool, executor_enabled: bool):
+    """Initialize the plugins services"""
+    for plugin_name, plugin in plugins.loaded_plugins.items():
+        _logger.info(f"Loading plugin '{plugin_name}'")
+
+        plugin_services = getattr(plugin, "services", None)
+        if plugin_services is None:
+            _logger.info(f"Plugin '{plugin_name}' has no services")
+            continue
+
+        for service_name in plugin_services.__all__:
+            service = getattr(plugin_services, service_name)
+            if hasattr(service, "init"):
+                await service.init(controller_enabled, executor_enabled)
+                _logger.info(f"Service '{plugin_name}.{service_name}' initialized")
+            else:
+                _logger.warning(f"Service '{plugin_name}.{service_name}' has no 'init' function")
 
 
 async def init(controller_enabled: bool, executor_enabled: bool):
@@ -38,6 +58,24 @@ async def init(controller_enabled: bool, executor_enabled: bool):
     await message_queue.init()
     await http_server.init(controller_enabled)
 
+    plugins.load_plugins()
+    await init_plugins_services(controller_enabled, executor_enabled)
+
+
+async def stop_plugins_services():
+    """Stop the plugins services"""
+    for plugin_name, plugin in plugins.loaded_plugins.items():
+        _logger.info(f"Stopping plugin '{plugin_name}'")
+
+        plugin_services = getattr(plugin, "services", None)
+        if plugin_services is None:
+            continue
+
+        for service_name in plugin_services.__all__:
+            service = getattr(plugin_services, service_name)
+            if hasattr(service, "stop"):
+                await protected_task(service.stop())
+
 
 async def finish():
     """Finish the application, making sure any exception won't impact other closing tasks"""
@@ -45,6 +83,7 @@ async def finish():
     await protected_task(monitors_loader.wait_stop())
     await protected_task(databases.close())
     await protected_task(internal_database.close())
+    await protected_task(stop_plugins_services())
 
 
 async def main():
