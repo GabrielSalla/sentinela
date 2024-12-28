@@ -335,6 +335,9 @@ async def _send_mention(
 
 async def _delete_mention(notification: Notification):
     """Send a mention message to a message thread"""
+    if notification.data is None:
+        return
+
     channel = notification.data.get("channel")
     mention_ts = notification.data.get("mention_ts")
 
@@ -354,6 +357,12 @@ async def notification_mention(
     """Send a mention to the notification's message thread, to alert who needs to be alerted. The
     mention message will be deleted if it's not necessary anymore"""
     if notification_options.mention is None:
+        return
+
+    if notification.data is None:
+        return
+
+    if notification.data.get("ts") is None:
         return
 
     # Check if should have a mention message
