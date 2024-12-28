@@ -1,4 +1,5 @@
 from . import actions, services
+from .notifications.slack_notification import SlackNotification
 from .slack import (
     MessageButton,
     build_attachments,
@@ -10,12 +11,10 @@ from .slack import (
     send,
     update,
 )
-from .slack_notification import SlackNotification, clear_slack_notification
 
 __all__ = [
     "actions",
     "build_attachments",
-    "clear_slack_notification",
     "delete",
     "get_actions_block",
     "get_context_block",

@@ -4,7 +4,7 @@ import registry
 from models import Alert, Notification, NotificationStatus
 from utils.async_tools import do_concurrently
 
-from ..slack_notification import clear_slack_notification
+from ..notifications.slack_notification import clear_slack_notification
 
 
 async def resend_notifications(message_payload: dict[Any, Any]):
