@@ -3,8 +3,8 @@ from unittest.mock import AsyncMock
 import pytest
 
 import external_requests as external_requests
+import plugins.slack.services.websocket as websocket
 import plugins.slack.slack as slack
-import plugins.slack.websocket as websocket
 
 pytestmark = pytest.mark.asyncio(loop_scope="session")
 

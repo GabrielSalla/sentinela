@@ -1,14 +1,18 @@
 import inspect
+import json
 import re
 from unittest.mock import MagicMock
 
 import pytest
 
 import external_requests as external_requests
-import plugins.slack.pattern_match as pattern_match
+import message_queue as message_queue
+import plugins.slack.services.pattern_match as pattern_match
+
+pytestmark = pytest.mark.asyncio(loop_scope="session")
 
 
-def test_disable_monitor(mocker):
+async def test_disable_monitor(mocker):
     """'disable_monitor' should return the coroutine to disable the monitor"""
     disable_monitor_spy: MagicMock = mocker.spy(external_requests, "disable_monitor")
 
@@ -25,7 +29,7 @@ def test_disable_monitor(mocker):
     action.close()
 
 
-def test_enable_monitor(mocker):
+async def test_enable_monitor(mocker):
     """'enable_monitor' should return the coroutine to enable the monitor"""
     enable_monitor_spy: MagicMock = mocker.spy(external_requests, "enable_monitor")
 
@@ -42,7 +46,7 @@ def test_enable_monitor(mocker):
     action.close()
 
 
-def test_alert_acknowledge(mocker):
+async def test_alert_acknowledge(mocker):
     """'alert_acknowledge' should return the coroutine to acknowledge the alert"""
     alert_acknowledge_spy: MagicMock = mocker.spy(external_requests, "alert_acknowledge")
 
@@ -59,7 +63,7 @@ def test_alert_acknowledge(mocker):
     action.close()
 
 
-def test_alert_lock(mocker):
+async def test_alert_lock(mocker):
     """'alert_lock' should return the coroutine to lock the alert"""
     alert_lock_spy: MagicMock = mocker.spy(external_requests, "alert_lock")
 
@@ -76,7 +80,7 @@ def test_alert_lock(mocker):
     action.close()
 
 
-def test_alert_solve(mocker):
+async def test_alert_solve(mocker):
     """'alert_solve' should return the coroutine to solve the alert"""
     alert_solve_spy: MagicMock = mocker.spy(external_requests, "alert_solve")
 
@@ -93,7 +97,7 @@ def test_alert_solve(mocker):
     action.close()
 
 
-def test_issue_drop(mocker):
+async def test_issue_drop(mocker):
     """'issue_drop' should return the coroutine to drop the issue"""
     issue_drop_spy: MagicMock = mocker.spy(external_requests, "issue_drop")
 
@@ -110,22 +114,29 @@ def test_issue_drop(mocker):
     action.close()
 
 
-def test_resend_slack_notifications(mocker):
-    """'resend_slack_notifications' should return the coroutine to resend the slack notifications"""
-    resend_slack_notifications_spy: MagicMock = mocker.spy(
-        external_requests, "resend_slack_notifications")
-
-    action = pattern_match.resend_slack_notifications(
+@pytest.mark.parametrize("slack_channel", ["C1234567890", "C2345678901", "C3456789012"])
+async def test_resend_notifications(clear_queue, slack_channel):
+    """'resend_notifications' should queue a 'plugin.slack.resend_notifications' action request"""
+    await pattern_match.resend_notifications(
         message_match=re.match(r"resend notifications", "resend notifications"),
-        context={"channel": "C1234567890"},
+        context={"channel": slack_channel},
     )
 
-    assert action is not None
-    assert inspect.isawaitable(action)
+    queue_items = []
+    while not message_queue.internal_queue._queue.empty():
+        queue_items.append(message_queue.internal_queue._queue.get_nowait())
 
-    resend_slack_notifications_spy.assert_called_with("C1234567890")
-
-    action.close()
+    assert queue_items == [
+        json.dumps(
+            {
+                "type": "request",
+                "payload": {
+                    "action": "plugin.slack.resend_notifications",
+                    "slack_channel": slack_channel,
+                },
+            }
+        )
+    ]
 
 
 @pytest.mark.parametrize(
@@ -154,12 +165,13 @@ def test_resend_slack_notifications(mocker):
         ("solve    12345", "alert_solve"),
         ("drop issue 12345", "issue_drop"),
         ("drop issue    12345", "issue_drop"),
-        ("resend notifications", "resend_slack_notifications"),
     ],
 )
-def test_get_message_reques_match(mocker, message_user_group, message_command, expected_request):
+async def test_get_message_request_match_external(
+    mocker, message_user_group, message_command, expected_request
+):
     """'get_message_request' should return the correct request coroutine based on the received
-    message"""
+    message, using the external requests"""
     action_spy: MagicMock = mocker.spy(external_requests, expected_request)
 
     context = {
@@ -176,7 +188,41 @@ def test_get_message_reques_match(mocker, message_user_group, message_command, e
     action.close()
 
 
-def test_get_message_reques_not_match(mocker):
+@pytest.mark.parametrize(
+    "message_user_group",
+    [
+        "<@aaa>",
+        "<@bbb>",
+        "<@aaa> ",
+        "<@bbb> ",
+        "",
+        " ",
+    ],
+)
+@pytest.mark.parametrize(
+    "message_command, expected_request",
+    [
+        ("resend notifications", "resend_notifications"),
+    ],
+)
+async def test_get_message_request_match_plugin(
+    mocker, message_user_group, message_command, expected_request
+):
+    """'get_message_request' should return the correct request coroutine based on the received
+    message, using the plugin requests"""
+    context = {
+        "channel": "C1234567890",
+    }
+
+    action = pattern_match.get_message_request(message_user_group + message_command, context)
+
+    assert action is not None
+    assert inspect.isawaitable(action)
+
+    action.close()
+
+
+async def test_get_message_reques_not_match(mocker):
     """'get_message_request' should return 'None' if the message didn't match with any pattern"""
     result = pattern_match.get_message_request("test 123", {})
 

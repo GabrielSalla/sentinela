@@ -8,12 +8,12 @@ from slack_bolt.adapter.socket_mode.async_handler import AsyncSocketModeHandler
 from slack_bolt.async_app import AsyncApp
 from slack_sdk.web.async_client import AsyncWebClient
 
-from . import slack
+from .. import slack
 from .pattern_match import get_message_request
 
 _logger = logging.getLogger("slack_websocket")
 
-_handler: AsyncSocketModeHandler
+_handler: AsyncSocketModeHandler | None
 
 
 async def app_mention(body):
@@ -59,8 +59,12 @@ async def command(ack, body, say):
         await action
 
 
-async def init():  # pragma: no cover
+async def init(controller_enabled: bool, executor_enabled: bool):  # pragma: no cover
     global _handler
+
+    if not controller_enabled:
+        _handler = None
+        return
 
     ssl_context = ssl.create_default_context(cafile=certifi.where())
     client = AsyncWebClient(token=os.environ["SLACK_APP_TOKEN"], ssl=ssl_context)
@@ -76,7 +80,9 @@ async def init():  # pragma: no cover
     await _handler.connect_async()
 
 
-async def close():  # pragma: no cover
+async def stop():  # pragma: no cover
     global _handler
-    _logger.info("Stopping Slack websocket")
-    await _handler.close_async()
+
+    if _handler is not None:
+        _logger.info("Stopping Slack websocket")
+        await _handler.close_async()

@@ -96,7 +96,7 @@ async def init(monkeypatch):
     async def do_nothing(): ...
 
     monkeypatch.setattr(slack_websocket, "init", do_nothing)
-    monkeypatch.setattr(slack_websocket, "close", do_nothing)
+    monkeypatch.setattr(slack_websocket, "stop", do_nothing)
 
     app = web.Application()
     app.add_routes(base_routes)

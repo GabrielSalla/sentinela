@@ -1,4 +1,4 @@
-from . import actions, websocket
+from . import actions, services
 from .slack import (
     MessageButton,
     build_attachments,
@@ -25,5 +25,5 @@ __all__ = [
     "send",
     "SlackNotification",
     "update",
-    "websocket",
+    "services",
 ]
