@@ -6,15 +6,16 @@ from datetime import datetime
 from pathlib import Path
 from typing import Generator, cast
 
-import src.module_loader as module_loader
-import src.registry as registry
-import src.utils.app as app
-from src.components.monitors_loader.monitor_module_type import MonitorModule
-from src.configs import configs
-from src.models import CodeModule, Monitor
-from src.options import ReactionOptions
-from src.utils.exception_handling import catch_exceptions
-from src.utils.time import now, time_since, time_until_next_trigger
+import module_loader as module_loader
+import registry as registry
+import utils.app as app
+from configs import configs
+from models import CodeModule, Monitor
+from options import ReactionOptions
+from utils.exception_handling import catch_exceptions
+from utils.time import now, time_since, time_until_next_trigger
+
+from .monitor_module_type import MonitorModule
 
 _logger = logging.getLogger("monitor_loader")
 

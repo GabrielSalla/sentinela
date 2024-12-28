@@ -3,7 +3,7 @@ from typing import Any, Callable, Coroutine
 
 from dataclass_type_validator import dataclass_validate
 
-from src.configs import configs
+from configs import configs
 
 
 @dataclass_validate(strict=True)

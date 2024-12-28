@@ -6,7 +6,7 @@ from pathlib import Path
 import pytest
 from dataclass_type_validator import TypeValidationError
 
-import src.module_loader.loader as loader
+import module_loader.loader as loader
 from tests.test_utils import assert_message_in_log
 
 
@@ -68,12 +68,14 @@ def test_create_module_files(module_name, module_code, additional_files):
     )
     assert isinstance(module_path, Path)
 
-    with open(module_path, "r") as file:
+    relative_module_path = Path("src") / module_path
+
+    with open(relative_module_path, "r") as file:
         assert file.read() == module_code
 
     if additional_files:
         for file_name, file_content in additional_files.items():
-            file_path = module_path.parent / file_name
+            file_path = relative_module_path.parent / file_name
             with open(file_path, "r") as file:
                 assert file.read() == file_content
 

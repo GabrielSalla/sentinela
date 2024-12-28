@@ -4,7 +4,7 @@ import time
 
 import pytest
 
-import src.utils.app as app
+import utils.app as app
 
 pytestmark = pytest.mark.asyncio(loop_scope="session")
 

@@ -1,7 +1,7 @@
 import re
 from typing import Any, Coroutine
 
-import src.external_requests as external_requests
+import external_requests as external_requests
 
 
 def disable_monitor(

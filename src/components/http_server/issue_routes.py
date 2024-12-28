@@ -1,7 +1,7 @@
 from aiohttp import web
 
-import src.external_requests as external_requests
-from src.models import Issue
+import external_requests as external_requests
+from models import Issue
 
 issue_routes = web.RouteTableDef()
 base_route = "/issue"

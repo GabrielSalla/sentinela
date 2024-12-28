@@ -1,10 +1,9 @@
 import random
 from typing import TypedDict
 
+# Importing "configs" for testing purposes
+from configs import configs
 from monitor_utils import IssueOptions, MonitorOptions
-
-# Importing "src" for testing purposes
-from src.configs import configs
 
 configs.application_queue
 

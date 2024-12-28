@@ -3,11 +3,11 @@ from unittest.mock import MagicMock
 
 import pytest
 
-import src.models.utils.priority as priority
-import src.utils.time as time_utils
-from src.models import Issue, Monitor
-from src.models.utils.priority import AlertPriority
-from src.options import AgeRule, CountRule, PriorityLevels, ValueRule
+import models.utils.priority as priority
+import utils.time as time_utils
+from models import Issue, Monitor
+from models.utils.priority import AlertPriority
+from options import AgeRule, CountRule, PriorityLevels, ValueRule
 
 pytestmark = pytest.mark.asyncio(loop_scope="session")
 

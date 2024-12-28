@@ -6,12 +6,12 @@ from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 
-import src.components.executor.reaction_handler as reaction_handler
-import src.registry.registry as registry
-from src.base_exception import BaseSentinelaException
-from src.configs import configs
-from src.models import Monitor
-from src.options import ReactionOptions
+import components.executor.reaction_handler as reaction_handler
+import registry.registry as registry
+from base_exception import BaseSentinelaException
+from configs import configs
+from models import Monitor
+from options import ReactionOptions
 from tests.test_utils import assert_message_in_log
 
 pytestmark = pytest.mark.asyncio(loop_scope="session")

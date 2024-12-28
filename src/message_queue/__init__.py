@@ -1,15 +1,15 @@
 from typing import Any
 
-from src.configs import configs
+from configs import configs
 
 queue_type = configs.application_queue["type"]
 
 match queue_type:
     case "internal":
-        import src.queue.internal_queue as queue
+        import message_queue.internal_queue as queue
     case "sqs":  # pragma: no cover
         # As the 'queue' variable is being redefined, ignore the typing and linter errors
-        import src.queue.sqs_queue as queue  # type: ignore[no-redef] # noqa: F811
+        import message_queue.sqs_queue as queue  # type: ignore[no-redef] # noqa: F811
     case _:  # pragma: no cover
         raise ValueError(f"Invalid queue type '{queue_type}'")
 

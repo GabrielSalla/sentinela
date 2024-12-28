@@ -3,7 +3,7 @@ import logging
 import traceback
 from contextlib import contextmanager
 
-from src.base_exception import BaseSentinelaException
+from base_exception import BaseSentinelaException
 
 
 @contextmanager

@@ -3,10 +3,10 @@ from unittest.mock import AsyncMock
 
 import pytest
 
-import src.components.monitors_loader as monitors_loader
-import src.external_requests.requests as requests
-import src.queue as queue
-from src.models import CodeModule, Monitor
+import components.monitors_loader as monitors_loader
+import external_requests.requests as requests
+import message_queue as message_queue
+from models import CodeModule, Monitor
 
 pytestmark = pytest.mark.asyncio(loop_scope="session")
 
@@ -91,8 +91,8 @@ async def test_alert_acknowledge(clear_queue, target_id):
     await requests.alert_acknowledge(target_id)
 
     queue_items = []
-    while not queue.internal_queue._queue.empty():
-        queue_items.append(queue.internal_queue._queue.get_nowait())
+    while not message_queue.internal_queue._queue.empty():
+        queue_items.append(message_queue.internal_queue._queue.get_nowait())
 
     assert queue_items == [
         json.dumps(
@@ -113,8 +113,8 @@ async def test_alert_lock(clear_queue, target_id):
     await requests.alert_lock(target_id)
 
     queue_items = []
-    while not queue.internal_queue._queue.empty():
-        queue_items.append(queue.internal_queue._queue.get_nowait())
+    while not message_queue.internal_queue._queue.empty():
+        queue_items.append(message_queue.internal_queue._queue.get_nowait())
 
     assert queue_items == [
         json.dumps(
@@ -135,8 +135,8 @@ async def test_alert_solve(clear_queue, target_id):
     await requests.alert_solve(target_id)
 
     queue_items = []
-    while not queue.internal_queue._queue.empty():
-        queue_items.append(queue.internal_queue._queue.get_nowait())
+    while not message_queue.internal_queue._queue.empty():
+        queue_items.append(message_queue.internal_queue._queue.get_nowait())
 
     assert queue_items == [
         json.dumps(
@@ -157,8 +157,8 @@ async def test_issue_drop(clear_queue, target_id):
     await requests.issue_drop(target_id)
 
     queue_items = []
-    while not queue.internal_queue._queue.empty():
-        queue_items.append(queue.internal_queue._queue.get_nowait())
+    while not message_queue.internal_queue._queue.empty():
+        queue_items.append(message_queue.internal_queue._queue.get_nowait())
 
     assert queue_items == [
         json.dumps(
@@ -179,8 +179,8 @@ async def test_resend_slack_notifications(clear_queue, slack_channel):
     await requests.resend_slack_notifications(slack_channel)
 
     queue_items = []
-    while not queue.internal_queue._queue.empty():
-        queue_items.append(queue.internal_queue._queue.get_nowait())
+    while not message_queue.internal_queue._queue.empty():
+        queue_items.append(message_queue.internal_queue._queue.get_nowait())
 
     assert queue_items == [
         json.dumps(

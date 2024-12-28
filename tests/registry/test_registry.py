@@ -4,7 +4,7 @@ from types import ModuleType
 
 import pytest
 
-import src.registry.registry as registry
+import registry.registry as registry
 
 pytestmark = pytest.mark.asyncio(loop_scope="session")
 

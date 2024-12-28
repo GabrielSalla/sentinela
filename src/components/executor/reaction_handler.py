@@ -7,10 +7,10 @@ from typing import Any
 
 import prometheus_client
 
-import src.registry as registry
-from src.base_exception import BaseSentinelaException
-from src.configs import configs
-from src.models import Monitor
+import registry as registry
+from base_exception import BaseSentinelaException
+from configs import configs
+from models import Monitor
 
 _logger = logging.getLogger("reaction_handler")
 

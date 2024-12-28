@@ -4,9 +4,9 @@ from unittest.mock import MagicMock
 
 import pytest
 
-from src.base_exception import BaseSentinelaException
-from src.utils.exception_handling import catch_exceptions
+from base_exception import BaseSentinelaException
 from tests.test_utils import assert_message_in_log, assert_message_not_in_log
+from utils.exception_handling import catch_exceptions
 
 pytestmark = pytest.mark.asyncio(loop_scope="session")
 

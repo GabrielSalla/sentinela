@@ -4,11 +4,11 @@ from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 
-import src.models.utils.priority as priority_utils
-import src.utils.time as time_utils
-from src.models import Alert, AlertPriority, AlertStatus, Issue, IssueStatus, Monitor
-from src.options import AgeRule, AlertOptions, IssueOptions, PriorityLevels
-from src.registry import registry
+import models.utils.priority as priority_utils
+import utils.time as time_utils
+from models import Alert, AlertPriority, AlertStatus, Issue, IssueStatus, Monitor
+from options import AgeRule, AlertOptions, IssueOptions, PriorityLevels
+from registry import registry
 from tests.test_utils import assert_message_in_log, assert_message_not_in_log
 
 pytestmark = pytest.mark.asyncio(loop_scope="session")

@@ -3,7 +3,7 @@ import json
 import logging
 from typing import Any
 
-from src.configs import configs
+from configs import configs
 
 _logger = logging.getLogger("internal_queue")
 _queue: asyncio.Queue

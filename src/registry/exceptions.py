@@ -1,4 +1,4 @@
-from src.base_exception import BaseSentinelaException
+from base_exception import BaseSentinelaException
 
 
 class MonitorsLoadError(BaseSentinelaException):

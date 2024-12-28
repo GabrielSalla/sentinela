@@ -1,7 +1,7 @@
 from aiohttp import web
 
-import src.external_requests as external_requests
-from src.models import Alert
+import external_requests as external_requests
+from models import Alert
 
 alert_routes = web.RouteTableDef()
 base_route = "/alert"

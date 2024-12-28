@@ -2,7 +2,7 @@ import asyncio
 import logging
 from typing import Any, Awaitable
 
-from src.utils.exception_handling import catch_exceptions
+from utils.exception_handling import catch_exceptions
 
 _logger = logging.getLogger("async_tools")
 

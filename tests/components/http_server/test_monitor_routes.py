@@ -4,10 +4,10 @@ import aiohttp
 import pytest
 import pytest_asyncio
 
-import src.components.controller.controller as controller
-import src.components.http_server as http_server
-import src.external_requests as external_requests
-from src.models import CodeModule, Monitor
+import components.controller.controller as controller
+import components.http_server as http_server
+import external_requests as external_requests
+from models import CodeModule, Monitor
 
 pytestmark = pytest.mark.asyncio(loop_scope="session")
 

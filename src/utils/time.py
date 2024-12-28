@@ -4,7 +4,7 @@ from math import ceil
 from croniter import croniter
 from pytz import timezone
 
-from src.configs import configs
+from configs import configs
 
 
 def now():

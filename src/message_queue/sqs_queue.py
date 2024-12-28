@@ -8,7 +8,7 @@ import aioboto3
 from aiobotocore.session import AioBaseClient
 from botocore.exceptions import ClientError
 
-from src.configs import configs
+from configs import configs
 
 _logger = logging.getLogger("sqs_queue")
 

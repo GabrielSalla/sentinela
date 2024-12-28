@@ -7,10 +7,10 @@ import time
 import traceback
 from typing import Coroutine, cast
 
-import src.databases.postgresql_pools as postgresql_pools
-from src.configs import configs
-from src.data_types.issue_data_types import IssueDataType
-from src.utils.async_tools import do_concurrently
+import databases.postgresql_pools as postgresql_pools
+from configs import configs
+from data_types.issue_data_types import IssueDataType
+from utils.async_tools import do_concurrently
 
 _logger = logging.getLogger("database")
 

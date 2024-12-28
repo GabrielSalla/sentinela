@@ -6,15 +6,16 @@ from typing import TYPE_CHECKING, Callable
 from sqlalchemy import Boolean, DateTime, Integer, String
 from sqlalchemy.orm import Mapped, mapped_column, reconstructor
 
-import src.utils.time as time_utils
-from src.models.alert import Alert, AlertStatus
-from src.models.base import Base
-from src.models.issue import Issue, IssueStatus
-from src.options import AlertOptions, IssueOptions, MonitorOptions, ReactionOptions
-from src.registry import get_monitor_module
+import utils.time as time_utils
+from options import AlertOptions, IssueOptions, MonitorOptions, ReactionOptions
+from registry import get_monitor_module
+
+from .alert import Alert, AlertStatus
+from .base import Base
+from .issue import Issue, IssueStatus
 
 if TYPE_CHECKING:
-    from src.components.monitors_loader.monitor_module_type import MonitorModule
+    from components.monitors_loader.monitor_module_type import MonitorModule
 
 
 class Monitor(Base):

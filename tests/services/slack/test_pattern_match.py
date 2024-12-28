@@ -4,8 +4,8 @@ from unittest.mock import MagicMock
 
 import pytest
 
-import src.external_requests as external_requests
-import src.services.slack.pattern_match as pattern_match
+import external_requests as external_requests
+import services.slack.pattern_match as pattern_match
 
 
 def test_disable_monitor(mocker):

@@ -4,12 +4,12 @@ import logging
 import traceback
 from typing import Any
 
-import src.registry as registry
-from src.base_exception import BaseSentinelaException
-from src.configs import configs
-from src.models import Alert, Issue, Notification, NotificationStatus
-from src.services.slack import clear_slack_notification
-from src.utils.async_tools import do_concurrently
+import registry as registry
+from base_exception import BaseSentinelaException
+from configs import configs
+from models import Alert, Issue, Notification, NotificationStatus
+from services.slack import clear_slack_notification
+from utils.async_tools import do_concurrently
 
 _logger = logging.getLogger("request_handler")
 

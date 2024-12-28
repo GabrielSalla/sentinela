@@ -4,8 +4,8 @@ import traceback
 from aiohttp import web
 from dataclass_type_validator import TypeValidationError
 
-import src.external_requests as external_requests
-from src.components.monitors_loader import MonitorValidationError
+import external_requests as external_requests
+from components.monitors_loader import MonitorValidationError
 
 _logger = logging.getLogger("monitor_routes")
 

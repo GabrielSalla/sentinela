@@ -9,16 +9,15 @@ from typing import Any, Callable, Coroutine
 
 import prometheus_client
 
-import src.components.executor.monitor_handler as monitor_handler
-import src.components.executor.reaction_handler as reaction_handler
-import src.components.executor.request_handler as request_handler
-import src.queue as queue
-import src.registry as registry
-import src.utils.app as app
-from src.base_exception import BaseSentinelaException
-from src.configs import configs
-from src.utils.exception_handling import catch_exceptions
-from src.utils.time import format_datetime_iso, now, time_since
+import message_queue as message_queue
+import registry as registry
+import utils.app as app
+from base_exception import BaseSentinelaException
+from configs import configs
+from utils.exception_handling import catch_exceptions
+from utils.time import format_datetime_iso, now, time_since
+
+from . import monitor_handler, reaction_handler, request_handler
 
 _logger = logging.getLogger("executor")
 
@@ -61,11 +60,11 @@ async def diagnostics() -> tuple[dict[str, Any], list[str]]:
     return status, issues
 
 
-async def _change_visibility_loop(message: queue.Message):
+async def _change_visibility_loop(message: message_queue.Message):
     """Change the message visibility while it's been processed"""
     try:
         while app.running():
-            await queue.change_visibility(message)
+            await message_queue.change_visibility(message)
             await app.sleep(configs.queue_visibility_time)
     except asyncio.CancelledError:
         return
@@ -89,18 +88,18 @@ class Executor:
         """Create the internal loop task"""
         self.task = asyncio.create_task(self.run())
 
-    async def get_message(self) -> queue.Message | None:
+    async def get_message(self) -> message_queue.Message | None:
         """Try to get a message from the queue"""
         global last_message_at
 
-        message = await queue.get_message()
+        message = await message_queue.get_message()
         if message is not None:
             last_message_at = now()
 
         return message
 
     def get_message_handler(
-        self, message: queue.Message
+        self, message: message_queue.Message
     ) -> Callable[[dict[Any, Any]], Coroutine[Any, Any, Any]] | None:
         """Get the correct handler for the message"""
         handler = self._handlers.get(message.content["type"])
@@ -113,7 +112,9 @@ class Executor:
         return handler
 
     async def process_message(
-        self, handler: Callable[[dict[Any, Any]], Coroutine[Any, Any, Any]], message: queue.Message
+        self,
+        handler: Callable[[dict[Any, Any]], Coroutine[Any, Any, Any]],
+        message: message_queue.Message
     ):
         """Process the message with the provided handler, protecting from possible exceptions.
         During the message processing, another task will be spawned to change it's visibility in
@@ -132,7 +133,7 @@ class Executor:
             # Handle the message accordingly
             await handler(message.content)
             # Only delete the message from the queue when it's been successfully handled
-            await queue.delete_message(message)
+            await message_queue.delete_message(message)
         except BaseSentinelaException as e:
             _logger.error(str(e))
         except Exception:

@@ -5,13 +5,13 @@ from typing import Any
 import prometheus_client
 from aiohttp import web
 
-import src.components.controller.controller as controller
-import src.components.executor.executor as executor
-import src.registry as registry
-from src.components.http_server.alert_routes import alert_routes
-from src.components.http_server.issue_routes import issue_routes
-from src.components.http_server.monitor_routes import monitor_routes
-from src.configs import configs
+import components.controller.controller as controller
+import components.executor.executor as executor
+import registry as registry
+from components.http_server.alert_routes import alert_routes
+from components.http_server.issue_routes import issue_routes
+from components.http_server.monitor_routes import monitor_routes
+from configs import configs
 
 _logger = logging.getLogger("api_server")
 

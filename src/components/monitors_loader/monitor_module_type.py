@@ -1,8 +1,8 @@
 from types import ModuleType
 from typing import TypedDict
 
-from src.notifications import BaseNotification
-from src.options import AlertOptions, IssueOptions, MonitorOptions, ReactionOptions
+from notifications import BaseNotification
+from options import AlertOptions, IssueOptions, MonitorOptions, ReactionOptions
 
 
 class MonitorModule(ModuleType):  # pragma: no cover

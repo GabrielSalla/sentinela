@@ -64,8 +64,8 @@ The deployment should set the necessary environment variables for all the instan
 Controllers and executors can be started passing them as parameters.
 ```shell
 # Controller
-python3 . controller
+python3 src/main.py controller
 
 # Executor
-python3 . executor
+python3 src/main.py executor
 ```

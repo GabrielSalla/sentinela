@@ -4,16 +4,16 @@ import sys
 
 import uvloop
 
-import src.components.controller as controller
-import src.components.executor as executor
-import src.components.http_server as http_server
-import src.components.monitors_loader as monitors_loader
-import src.databases as databases
-import src.internal_database as internal_database
-import src.queue as queue
-import src.registry as registry
-import src.utils.app as app
-import src.utils.log as log
+import components.controller as controller
+import components.executor as executor
+import components.http_server as http_server
+import components.monitors_loader as monitors_loader
+import databases as databases
+import internal_database as internal_database
+import message_queue as message_queue
+import registry as registry
+import utils.app as app
+import utils.log as log
 
 _logger = logging.getLogger("main")
 
@@ -35,7 +35,7 @@ async def init(controller_enabled: bool, executor_enabled: bool):
     await databases.init()
     # Depends on internal database migrated
     await monitors_loader.init(controller_enabled)
-    await queue.init()
+    await message_queue.init()
     await http_server.init(controller_enabled)
 
 

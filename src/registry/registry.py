@@ -20,7 +20,7 @@ import prometheus_client
 from .exceptions import MonitorNotRegisteredError, MonitorsLoadError
 
 if TYPE_CHECKING:
-    from src.components.monitors_loader.monitor_module_type import MonitorModule
+    from components.monitors_loader.monitor_module_type import MonitorModule
 
 MONITORS_READY_TIMEOUT = 5
 

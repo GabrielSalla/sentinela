@@ -5,15 +5,15 @@ from unittest.mock import AsyncMock
 
 import pytest
 
-import src.components.controller.controller as controller
-import src.components.monitors_loader.monitors_loader as monitors_loader
-import src.queue as queue
-import src.registry as registry
-import src.services.slack.websocket as slack_websocket
-import src.utils.app as app
-import src.utils.time as time_utils
-from src.configs import configs
-from src.models import Monitor
+import components.controller.controller as controller
+import components.monitors_loader.monitors_loader as monitors_loader
+import message_queue as message_queue
+import registry as registry
+import services.slack.websocket as slack_websocket
+import utils.app as app
+import utils.time as time_utils
+from configs import configs
+from models import Monitor
 from tests.test_utils import assert_message_in_log
 
 pytestmark = pytest.mark.asyncio(loop_scope="session")
@@ -141,8 +141,8 @@ async def test_queue_task(clear_queue, sample_monitor, tasks):
     await controller._queue_task(sample_monitor, tasks)
 
     queue_items = []
-    while not queue.internal_queue._queue.empty():
-        queue_items.append(queue.internal_queue._queue.get_nowait())
+    while not message_queue.internal_queue._queue.empty():
+        queue_items.append(message_queue.internal_queue._queue.get_nowait())
 
     assert queue_items == [
         json.dumps(
@@ -161,7 +161,7 @@ async def test_queue_task_error(caplog, monkeypatch, clear_queue, sample_monitor
     async def send_error(type, payload):
         raise ValueError("something went wrong")
 
-    monkeypatch.setattr(queue, "send_message", send_error)
+    monkeypatch.setattr(message_queue, "send_message", send_error)
 
     assert not sample_monitor.queued
 
@@ -346,7 +346,7 @@ async def test_run(monkeypatch, clear_queue, clear_database):
     await asyncio.sleep(0.2)
 
     # Controller is still waiting for the monitors to be ready, so no messages were queued
-    assert queue.internal_queue._queue.empty()
+    assert message_queue.internal_queue._queue.empty()
 
     # Load the monitors and wait for a while
     await monitors_loader._load_monitors()
@@ -364,8 +364,8 @@ async def test_run(monkeypatch, clear_queue, clear_database):
 
     # Assert the tasks were queued
     queue_items = set()
-    while not queue.internal_queue._queue.empty():
-        queue_items.add(queue.internal_queue._queue.get_nowait())
+    while not message_queue.internal_queue._queue.empty():
+        queue_items.add(message_queue.internal_queue._queue.get_nowait())
 
     assert queue_items == set(
         [
