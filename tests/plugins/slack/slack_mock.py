@@ -5,8 +5,8 @@ from aiohttp import web
 from aiohttp.web_request import Request
 from slack_sdk.web.async_client import AsyncWebClient
 
-import services.slack.slack as slack
-import services.slack.websocket as slack_websocket
+import plugins.slack.services.websocket as slack_websocket
+import plugins.slack.slack as slack
 
 _logger = logging.getLogger("slack_mock")
 

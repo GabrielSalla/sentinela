@@ -8,7 +8,7 @@ import registry as registry
 from base_exception import BaseSentinelaException
 from configs import configs
 from models import Alert, Issue, Notification, NotificationStatus
-from services.slack import clear_slack_notification
+from plugins.slack import clear_slack_notification
 from utils.async_tools import do_concurrently
 
 _logger = logging.getLogger("request_handler")

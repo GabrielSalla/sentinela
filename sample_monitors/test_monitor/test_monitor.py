@@ -2,14 +2,8 @@ import os
 import random
 from typing import TypedDict
 
-from monitor_utils import (
-    AlertOptions,
-    CountRule,
-    IssueOptions,
-    MonitorOptions,
-    PriorityLevels,
-    SlackNotification,
-)
+from monitor_utils import AlertOptions, CountRule, IssueOptions, MonitorOptions, PriorityLevels
+from plugins.slack import SlackNotification
 
 monitor_options = MonitorOptions(
     update_cron="* * * * *",

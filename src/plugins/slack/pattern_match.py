@@ -2,6 +2,7 @@ import re
 from typing import Any, Coroutine
 
 import external_requests as external_requests
+import message_queue as message_queue
 
 
 def disable_monitor(
@@ -46,7 +47,13 @@ def resend_slack_notifications(
     message_match: re.Match, context: dict[str, Any]
 ) -> Coroutine[Any, Any, Any]:
     """Get the resend slack notifications action"""
-    return external_requests.resend_slack_notifications(context["channel"])
+    return message_queue.send_message(
+        type="request",
+        payload={
+            "action": "resend_slack_notifications",
+            "slack_channel": context["channel"],
+        },
+    )
 
 
 PATTERNS = {

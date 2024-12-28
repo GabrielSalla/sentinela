@@ -13,7 +13,6 @@ from options import (
     ReactionOptions,
     ValueRule,
 )
-from services.slack import SlackNotification
 
 from .read_file import read_file
 
@@ -23,7 +22,6 @@ __all__ = [
     "CountRule",
     "IssueOptions",
     "MonitorOptions",
-    "SlackNotification",
     "PriorityLevels",
     "query",
     "ReactionOptions",
