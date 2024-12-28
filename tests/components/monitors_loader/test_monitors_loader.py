@@ -322,6 +322,48 @@ async def test_register_monitors_from_path_internal(clear_database):
     assert {monitor.name for monitor in registered_monitors} == expected_monitors
 
 
+async def test_register_monitors_from_path_validation_error(caplog, monkeypatch, clear_database):
+    """'_register_monitors_from_path' should log the errors if a monitor was not loaded and not
+    register the monitor"""
+    async def register_monitor_error_mock(monitor_name, monitor_code, additional_files):
+        raise monitors_loader.MonitorValidationError(monitor_name="monitor", errors_found=[])
+
+    monkeypatch.setattr(monitors_loader, "register_monitor", register_monitor_error_mock)
+
+    registered_monitors = await Monitor.get_all()
+
+    assert len(registered_monitors) == 0
+
+    await monitors_loader._register_monitors_from_path("tests/sample_monitors")
+
+    registered_monitors = await Monitor.get_all()
+    assert len(registered_monitors) == 0
+
+    assert_message_in_log(caplog, "Monitor 'monitor_1' not registered")
+    assert_message_in_log(caplog, "Monitor 'monitor_2' not registered")
+    assert_message_in_log(caplog, "Monitor 'monitor_3' not registered")
+
+
+async def test_register_monitors_from_path_error(caplog, monkeypatch, clear_database):
+    """'_register_monitors_from_path' should log the errors if a monitor was not loaded and not
+    register the monitor"""
+    async def register_monitor_error_mock(monitor_name, monitor_code, additional_files):
+        raise ValueError("Some error")
+
+    monkeypatch.setattr(monitors_loader, "register_monitor", register_monitor_error_mock)
+
+    registered_monitors = await Monitor.get_all()
+
+    assert len(registered_monitors) == 0
+
+    await monitors_loader._register_monitors_from_path("tests/sample_monitors")
+
+    registered_monitors = await Monitor.get_all()
+    assert len(registered_monitors) == 0
+
+    assert_message_in_log(caplog, "ValueError: Some error", count=3)
+
+
 async def test_register_monitors(monkeypatch, clear_database):
     """'register_monitors' should register all the internal and sample monitors if enabled,
     including their additional files"""

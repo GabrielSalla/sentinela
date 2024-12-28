@@ -148,11 +148,14 @@ async def _register_monitors_from_path(
                 additional_files[additional_file.name] = file.read()
 
         with catch_exceptions(_logger):
-            await register_monitor(
-                monitor_name=monitor_name,
-                monitor_code=monitor_code,
-                additional_files=additional_files,
-            )
+            try:
+                await register_monitor(
+                    monitor_name=monitor_name,
+                    monitor_code=monitor_code,
+                    additional_files=additional_files,
+                )
+            except MonitorValidationError:
+                _logger.error(f"Monitor '{monitor_name}' not registered")
 
 
 async def _register_monitors():
