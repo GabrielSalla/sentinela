@@ -78,14 +78,3 @@ async def issue_drop(issue_id: int):
             "target_id": issue_id,
         },
     )
-
-
-async def resend_slack_notifications(slack_channel: str):
-    """Queue an 'resend_slack_notifications' request for a specific channel"""
-    await message_queue.send_message(
-        type="request",
-        payload={
-            "action": "resend_slack_notifications",
-            "slack_channel": slack_channel,
-        },
-    )

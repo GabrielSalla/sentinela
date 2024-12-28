@@ -7,9 +7,7 @@ from typing import Any
 import registry as registry
 from base_exception import BaseSentinelaException
 from configs import configs
-from models import Alert, Issue, Notification, NotificationStatus
-from plugins.slack import clear_slack_notification
-from utils.async_tools import do_concurrently
+from models import Alert, Issue
 
 _logger = logging.getLogger("request_handler")
 
@@ -58,39 +56,11 @@ async def issue_drop(message_payload: dict[Any, Any]):
     await issue.drop()
 
 
-async def resend_slack_notifications(message_payload: dict[Any, Any]):
-    """Clear all the notifications for the channel and update all active alerts to queue events to
-    send the notifications again"""
-    # Get all active notifications for the channel
-    notifications = await Notification.get_all(
-        Notification.status == NotificationStatus.active,
-        Notification.target == "slack",
-        Notification.data["channel"].astext == message_payload["slack_channel"],
-    )
-
-    if len(notifications) == 0:
-        return
-
-    monitors_ids = {notification.monitor_id for notification in notifications}
-    for monitor_id in monitors_ids:
-        await registry.wait_monitor_loaded(monitor_id)
-
-    await do_concurrently(*[
-        clear_slack_notification(notification)
-        for notification in notifications
-    ])
-
-    alert_ids = list({notification.alert_id for notification in notifications})
-    alerts = await Alert.get_all(Alert.id.in_(alert_ids))
-    await do_concurrently(*[alert.update() for alert in alerts])
-
-
 actions = {
     "alert_acknowledge": alert_acknowledge,
     "alert_lock": alert_lock,
     "alert_solve": alert_solve,
     "issue_drop": issue_drop,
-    "resend_slack_notifications": resend_slack_notifications,
 }
 
 

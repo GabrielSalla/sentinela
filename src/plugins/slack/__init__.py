@@ -1,4 +1,4 @@
-from . import websocket
+from . import actions, websocket
 from .slack import (
     MessageButton,
     build_attachments,
@@ -13,6 +13,7 @@ from .slack import (
 from .slack_notification import SlackNotification, clear_slack_notification
 
 __all__ = [
+    "actions",
     "build_attachments",
     "clear_slack_notification",
     "delete",
