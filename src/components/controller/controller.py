@@ -11,8 +11,6 @@ import registry as registry
 import utils.app as app
 from configs import configs
 from models import Monitor
-from services.slack import websocket as slack_websocket
-from utils.async_tools import do_concurrently
 from utils.exception_handling import catch_exceptions
 from utils.time import format_datetime_iso, is_triggered, now, time_since, time_until_next_trigger
 
@@ -56,13 +54,6 @@ async def diagnostics() -> tuple[dict[str, Any], list[str]]:
         issues.append("no_recent_monitor_processed")
 
     return status, issues
-
-
-async def _init():
-    """Initialize the controller components"""
-    # Start the Slack websocket only at the controller
-    if configs.slack_websocket_enabled:
-        await slack_websocket.init()
 
 
 async def _queue_task(monitor: Monitor, tasks: list[str]):
@@ -148,8 +139,6 @@ async def run():
 
     _logger.info("Controller running")
 
-    await _init()
-
     # Load configs
     controller_process_schedule = configs.controller_process_schedule
 
@@ -182,4 +171,3 @@ async def run():
 
     # Wait for Slack websocket and all tasks to finish
     _logger.info("Finishing")
-    await do_concurrently(slack_websocket.close(), *tasks)
