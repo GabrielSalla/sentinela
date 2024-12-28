@@ -139,7 +139,7 @@ async def test_monitor_enable_error(mocker, clear_database):
 ])
 async def test_monitor_register(mocker, clear_database, monitor_name):
     """The 'monitor register' route should register a new monitor with the provided module code if
-    it not exists. The monitor name should replace any dots with underscores"""
+    it doesn't exists. The monitor name should replace any dots with underscores"""
     monitor_register_spy: AsyncMock = mocker.spy(external_requests, "monitor_register")
 
     monitor = await Monitor.get(Monitor.name == monitor_name)
@@ -153,7 +153,6 @@ async def test_monitor_register(mocker, clear_database, monitor_name):
     url = BASE_URL + f"/register/{monitor_name}"
     async with aiohttp.ClientSession() as session:
         async with session.post(url, json=request_payload) as response:
-            print(await response.text())
             response_data = await response.json()
 
     cleaned_monitor_name = monitor_name.replace(".", "_")
@@ -169,6 +168,32 @@ async def test_monitor_register(mocker, clear_database, monitor_name):
     code_module = await CodeModule.get(CodeModule.monitor_id == monitor.id)
     assert code_module is not None
     assert code_module.code == monitor_code
+
+
+async def test_monitor_register_batch(mocker, clear_database):
+    """The 'monitor register' route should register a batch of monitors when multiple requests are
+    received in a small time frame"""
+    with open("tests/sample_monitors/others/monitor_1/monitor_1.py", "r") as file:
+        monitor_code = file.read()
+
+    request_payload = {"monitor_code": monitor_code}
+
+    for i in range(50):
+        monitor_name = f"register_batch_{i}"
+        monitor = await Monitor.get(Monitor.name == monitor_name)
+        assert monitor is None
+
+        url = BASE_URL + f"/register/{monitor_name}"
+        async with aiohttp.ClientSession() as session:
+            async with session.post(url, json=request_payload) as response:
+                response_data = await response.json()
+
+        monitor = await Monitor.get(Monitor.name == monitor_name)
+        assert monitor is not None
+        assert response_data == {
+            "status": "monitor_registered",
+            "monitor_id": monitor.id,
+        }
 
 
 async def test_monitor_register_additional_files(mocker, clear_database):
