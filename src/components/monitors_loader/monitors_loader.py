@@ -19,6 +19,7 @@ from .monitor_module_type import MonitorModule
 
 _logger = logging.getLogger("monitor_loader")
 
+RELATIVE_PATH = "src"
 MONITORS_PATH = "_monitors"
 MONITORS_LOAD_PATH = "_monitors_load"
 COOL_DOWN_TIME = 2
@@ -281,5 +282,5 @@ async def wait_stop():
     global _task
     await _task
     _logger.info("Removing temporary monitors paths")
-    shutil.rmtree(MONITORS_LOAD_PATH, ignore_errors=True)
-    shutil.rmtree(MONITORS_PATH, ignore_errors=True)
+    shutil.rmtree(Path(RELATIVE_PATH) / MONITORS_LOAD_PATH, ignore_errors=True)
+    shutil.rmtree(Path(RELATIVE_PATH) / MONITORS_PATH, ignore_errors=True)
