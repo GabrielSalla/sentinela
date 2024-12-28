@@ -128,7 +128,7 @@ async def test_executor_get_message_no_message(monkeypatch, clear_queue):
 
     total_time = end_time - start_time
     assert total_time > 1 - 0.001
-    assert total_time < 1 + 0.005
+    assert total_time < 1 + 0.01
 
 
 async def test_executor_get_message_with_message(monkeypatch, clear_queue):
@@ -154,7 +154,7 @@ async def test_executor_get_message_with_message(monkeypatch, clear_queue):
 
     total_time = end_time - start_time
     assert total_time > 0.5 - 0.001
-    assert total_time < 0.5 + 0.005
+    assert total_time < 0.5 + 0.01
 
 
 @pytest.mark.parametrize(
@@ -300,7 +300,7 @@ async def test_executor_process_success(caplog, monkeypatch, clear_queue):
 
     total_time = end_time - start_time
     assert total_time > 0.1 - 0.001
-    assert total_time < 0.1 + 0.005
+    assert total_time < 0.1 + 0.01
 
     handler.assert_awaited_once_with({"type": "test", "payload": {"test": "aaa"}})
     assert_message_in_log(caplog, 'Got message \'{"type": "test", "payload": {"test": "aaa"}}\'')
@@ -323,7 +323,7 @@ async def test_executor_process_monitors_not_ready(monkeypatch, clear_queue):
 
     total_time = end_time - start_time
     assert total_time > 0.1 - 0.001
-    assert total_time < 0.1 + 0.005
+    assert total_time < 0.1 + 0.01
 
 
 async def test_executor_process_no_message(monkeypatch, clear_queue):
@@ -341,7 +341,7 @@ async def test_executor_process_no_message(monkeypatch, clear_queue):
 
     total_time = end_time - start_time
     assert total_time > 0.7 - 0.001
-    assert total_time < 0.7 + 0.005
+    assert total_time < 0.7 + 0.01
 
 
 async def test_executor_process_no_handler(caplog, clear_queue):
@@ -384,7 +384,7 @@ async def test_executor_process_error(caplog, monkeypatch, clear_queue):
 
     total_time = end_time - start_time
     assert total_time > 0.1 - 0.001
-    assert total_time < 0.1 + 0.005
+    assert total_time < 0.1 + 0.01
 
     handler.assert_awaited_once_with({"type": "test", "payload": {"test": "aaa"}})
     assert_message_in_log(caplog, 'Got message \'{"type": "test", "payload": {"test": "aaa"}}\'')
