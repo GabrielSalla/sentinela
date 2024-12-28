@@ -4,6 +4,7 @@ import logging
 import traceback
 from typing import Any
 
+import plugins
 import registry as registry
 from base_exception import BaseSentinelaException
 from configs import configs
@@ -64,12 +65,37 @@ actions = {
 }
 
 
+def get_action(action_name: str):
+    """Get the action function by its name, checking if it is a plugin action"""
+    if action_name.startswith("plugin."):
+        plugin_name, action_name = action_name.split(".")[1:3]
+
+        plugin = plugins.loaded_plugins.get(plugin_name)
+        if plugin is None:
+            _logger.warning(f"Plugin '{plugin_name}' unknown")
+            return None
+
+        plugin_actions = getattr(plugin, "actions", None)
+        if plugin_actions is None:
+            _logger.warning(f"Plugin '{plugin_name}' doesn't have actions")
+            return None
+
+        action = getattr(plugin_actions, action_name, None)
+        if action is None:
+            _logger.warning(f"Action '{plugin_name}.{action_name}' unknown")
+            return None
+
+        return action
+
+    return actions.get(action_name)
+
+
 async def run(message: dict[Any, Any]):
     """Process a received request"""
     message_payload = message["payload"]
     action_name = message_payload["action"]
 
-    action = actions.get(action_name)
+    action = get_action(action_name)
 
     if action is None:
         _logger.warning(f"Got request with unknown action '{json.dumps(message_payload)}'")

@@ -43,14 +43,14 @@ def issue_drop(message_match: re.Match, context: dict[str, Any]) -> Coroutine[An
     return external_requests.issue_drop(issue_id)
 
 
-def resend_slack_notifications(
+def resend_notifications(
     message_match: re.Match, context: dict[str, Any]
 ) -> Coroutine[Any, Any, Any]:
     """Get the resend slack notifications action"""
     return message_queue.send_message(
         type="request",
         payload={
-            "action": "resend_slack_notifications",
+            "action": "plugin.slack.resend_notifications",
             "slack_channel": context["channel"],
         },
     )
@@ -63,7 +63,7 @@ PATTERNS = {
     r"(?:<@\w+>)? ?lock +(\d+)": alert_lock,
     r"(?:<@\w+>)? ?solve +(\d+)": alert_solve,
     r"(?:<@\w+>)? ?drop issue +(\d+)": issue_drop,
-    r"(?:<@\w+>)? ?resend notifications": resend_slack_notifications,
+    r"(?:<@\w+>)? ?resend notifications": resend_notifications,
 }
 
 

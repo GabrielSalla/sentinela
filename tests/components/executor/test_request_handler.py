@@ -5,6 +5,7 @@ from unittest.mock import AsyncMock
 import pytest
 
 import components.executor.request_handler as request_handler
+import plugins as plugins
 import registry as registry
 from base_exception import BaseSentinelaException
 from configs import configs
@@ -127,6 +128,63 @@ async def test_issue_drop_issue_not_found(caplog, mocker):
 
     drop_spy.assert_not_called()
     assert_message_in_log(caplog, "Issue '999999999' not found")
+
+
+async def test_get_action():
+    """'get_action' should return the action function by its name"""
+    assert request_handler.get_action("alert_acknowledge") == request_handler.alert_acknowledge
+    assert request_handler.get_action("alert_lock") == request_handler.alert_lock
+    assert request_handler.get_action("alert_solve") == request_handler.alert_solve
+    assert request_handler.get_action("issue_drop") == request_handler.issue_drop
+
+
+async def test_get_action_plugin(monkeypatch):
+    """'get_action' should return the action function by its name when it's from a plugin"""
+    class Plugin:
+        class actions:
+            @staticmethod
+            async def test_action(message_payload): ...
+
+    monkeypatch.setattr(plugins, "loaded_plugins", {"plugin1": Plugin}, raising=False)
+
+    assert request_handler.get_action("plugin.plugin1.test_action") == Plugin.actions.test_action
+
+
+async def test_get_action_unknown_plugin(caplog, monkeypatch):
+    """'get_action' should return 'None' when the plugin doesn't exists"""
+    monkeypatch.setattr(plugins, "loaded_plugins", {"plugin1": "plugin1"}, raising=False)
+
+    action = request_handler.get_action("plugin.plugin2.test_action")
+
+    assert action is None
+    assert_message_in_log(caplog, "Plugin 'plugin2' unknown")
+
+
+async def test_get_action_plugin_no_actions(caplog, monkeypatch):
+    """'get_action' should return 'None' when the plugin doesn't have actions"""
+    class Plugin:
+        ...
+
+    monkeypatch.setattr(plugins, "loaded_plugins", {"plugin1": Plugin}, raising=False)
+
+    action = request_handler.get_action("plugin.plugin1.test_action")
+
+    assert action is None
+    assert_message_in_log(caplog, "Plugin 'plugin1' doesn't have actions")
+
+
+async def test_get_action_unknown_action(caplog, monkeypatch):
+    """'get_action' should return 'None' when the action doesn't exists"""
+    class Plugin:
+        class actions:
+            ...
+
+    monkeypatch.setattr(plugins, "loaded_plugins", {"plugin1": Plugin}, raising=False)
+
+    action = request_handler.get_action("plugin.plugin1.test_action")
+
+    assert action is None
+    assert_message_in_log(caplog, "Action 'plugin1.test_action' unknown")
 
 
 @pytest.mark.parametrize(
