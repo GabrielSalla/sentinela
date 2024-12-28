@@ -897,6 +897,29 @@ async def test_delete_mention_no_mention_ts(mocker, sample_monitor: Monitor):
     assert loaded_notification.data == {"channel": "channel", "ts": "33.55", "mention_ts": None}
 
 
+async def test_delete_mention_no_notification_data(mocker, sample_monitor: Monitor):
+    """'_delete_mention' should just return if the notification data is 'None'"""
+    slack_delete_spy: MagicMock = mocker.spy(slack, "delete")
+
+    alert = await Alert.create(
+        monitor_id=sample_monitor.id,
+    )
+    notification = await Notification.create(
+        monitor_id=sample_monitor.id,
+        alert_id=alert.id,
+        target="slack",
+        data=None,
+    )
+
+    await slack_notification._delete_mention(notification=notification)
+
+    slack_delete_spy.assert_not_called()
+
+    loaded_notification = await Notification.get_by_id(notification.id)
+    assert loaded_notification is not None
+    assert loaded_notification.data is None
+
+
 async def test_delete_mention_none_mention_ts(mocker, sample_monitor: Monitor):
     """'_delete_mention' should just return if the notification doesn't have a mention message"""
     slack_delete_spy: MagicMock = mocker.spy(slack, "delete")
@@ -976,6 +999,7 @@ async def test_notification_mention_no_mention(mocker, monkeypatch, sample_monit
     """'notification_mention' should not send a mention message if the 'mention' parameter is not
     set in the notification options"""
     monkeypatch.setattr(slack_notification, "_should_have_mention", lambda *args: True)
+    delete_mention_spy: AsyncMock = mocker.spy(slack_notification, "_delete_mention")
     send_mention_spy: AsyncMock = mocker.spy(slack_notification, "_send_mention")
 
     alert = await Alert.create(
@@ -999,6 +1023,115 @@ async def test_notification_mention_no_mention(mocker, monkeypatch, sample_monit
         sample_monitor, alert, notification, notification_options
     )
 
+    delete_mention_spy.assert_not_called()
+    send_mention_spy.assert_not_called()
+
+
+async def test_notification_mention_no_notification_data(
+        mocker,
+        monkeypatch,
+        sample_monitor: Monitor
+):
+    """'notification_mention' should not send a mention message if the notification data is 'None'
+    """
+    monkeypatch.setattr(slack_notification, "_should_have_mention", lambda *args: True)
+    delete_mention_spy: AsyncMock = mocker.spy(slack_notification, "_delete_mention")
+    send_mention_spy: AsyncMock = mocker.spy(slack_notification, "_send_mention")
+
+    alert = await Alert.create(
+        monitor_id=sample_monitor.id,
+    )
+    notification_options = slack_notification.SlackNotification(
+        channel="channel",
+        title="title",
+        issues_fields=["col"],
+        mention="mention",
+        min_priority_to_mention=5,
+    )
+    notification = await Notification.create(
+        monitor_id=sample_monitor.id,
+        alert_id=alert.id,
+        target="slack",
+        data=None,
+    )
+
+    await slack_notification.notification_mention(
+        sample_monitor, alert, notification, notification_options
+    )
+
+    delete_mention_spy.assert_not_called()
+    send_mention_spy.assert_not_called()
+
+
+async def test_notification_mention_notification_no_ts(
+        mocker,
+        monkeypatch,
+        sample_monitor: Monitor
+):
+    """'notification_mention' should not send a mention message if the notification doesn't have the
+    'ts' field"""
+    monkeypatch.setattr(slack_notification, "_should_have_mention", lambda *args: True)
+    delete_mention_spy: AsyncMock = mocker.spy(slack_notification, "_delete_mention")
+    send_mention_spy: AsyncMock = mocker.spy(slack_notification, "_send_mention")
+
+    alert = await Alert.create(
+        monitor_id=sample_monitor.id,
+    )
+    notification_options = slack_notification.SlackNotification(
+        channel="channel",
+        title="title",
+        issues_fields=["col"],
+        mention="mention",
+        min_priority_to_mention=5,
+    )
+    notification = await Notification.create(
+        monitor_id=sample_monitor.id,
+        alert_id=alert.id,
+        target="slack",
+        data={"channel": "channel"},
+    )
+
+    await slack_notification.notification_mention(
+        sample_monitor, alert, notification, notification_options
+    )
+
+    delete_mention_spy.assert_not_called()
+    send_mention_spy.assert_not_called()
+
+
+async def test_notification_mention_notification_none_ts(
+        mocker,
+        monkeypatch,
+        sample_monitor: Monitor
+):
+    """'notification_mention' should not send a mention message if the notification doesn't have the
+    'ts' field"""
+    monkeypatch.setattr(slack_notification, "_should_have_mention", lambda *args: True)
+    delete_mention_spy: AsyncMock = mocker.spy(slack_notification, "_delete_mention")
+    send_mention_spy: AsyncMock = mocker.spy(slack_notification, "_send_mention")
+
+    alert = await Alert.create(
+        monitor_id=sample_monitor.id,
+    )
+    notification_options = slack_notification.SlackNotification(
+        channel="channel",
+        title="title",
+        issues_fields=["col"],
+        mention="mention",
+        min_priority_to_mention=5,
+    )
+    notification = await Notification.create(
+        monitor_id=sample_monitor.id,
+        alert_id=alert.id,
+        target="slack",
+        data={"channel": "channel", "ts": None},
+    )
+
+    await slack_notification.notification_mention(
+        sample_monitor, alert, notification, notification_options
+    )
+
+    delete_mention_spy.assert_not_called()
     send_mention_spy.assert_not_called()
 
 
