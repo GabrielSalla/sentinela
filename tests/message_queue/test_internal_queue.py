@@ -3,8 +3,8 @@ import time
 import pytest
 import pytest_asyncio
 
-import src.queue.internal_queue as internal_queue
-from src.configs import configs
+import message_queue.internal_queue as internal_queue
+from configs import configs
 
 pytestmark = pytest.mark.asyncio(loop_scope="session")
 

@@ -1,9 +1,9 @@
 import enum
 from typing import Sequence
 
-from src.models.issue import Issue
-from src.options import AgeRule, CountRule, ValueRule
-from src.utils.time import time_since
+from models.issue import Issue
+from options import AgeRule, CountRule, ValueRule
+from utils.time import time_since
 
 _operators = {
     "greater_than": lambda a, b: a > b,

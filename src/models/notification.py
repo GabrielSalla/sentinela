@@ -7,8 +7,9 @@ from sqlalchemy.dialects import postgresql
 from sqlalchemy.ext.mutable import MutableDict
 from sqlalchemy.orm import Mapped, mapped_column
 
-from src.models.base import Base
-from src.utils.time import now
+from utils.time import now
+
+from .base import Base
 
 
 class NotificationStatus(enum.Enum):

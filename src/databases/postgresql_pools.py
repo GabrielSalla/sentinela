@@ -5,8 +5,8 @@ from typing import Any
 
 import asyncpg
 
-from src.configs import configs
-from src.utils.async_tools import do_concurrently
+from configs import configs
+from utils.async_tools import do_concurrently
 
 _logger = logging.getLogger("postgresql_pools")
 

@@ -50,6 +50,7 @@ max-line-length = 100
 line-length = 100
 
 [tool.mypy]
+mypy_path = "src"
 ignore_missing_imports = true
 warn_return_any = true
 check_untyped_defs = true
@@ -59,13 +60,14 @@ module = "tests.*"
 disable_error_code = ["arg-type", "empty-body", "misc", "list-item"]
 
 [tool.isort]
-src_paths = ["src", "tests", "__main__.py"]
+src_paths = ["src", "tests"]
 skip = ["alembic", "tmp", "_monitors", "_monitors_load"]
 line_length = 100
 include_trailing_comma = true
 multi_line_output = 3
 
 [tool.pytest.ini_options]
+pythonpath = "src"
 testpaths = "tests"
 addopts = "-rf --show-capture=all --color=yes --cov=src --cov-report=term-missing --cov-fail-under=100"
 

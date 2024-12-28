@@ -3,9 +3,9 @@ import pytest
 import pytest_asyncio
 from prometheus_client import parser
 
-import src.components.controller.controller as controller
-import src.components.executor.executor as executor
-import src.components.http_server as http_server
+import components.controller.controller as controller
+import components.executor.executor as executor
+import components.http_server as http_server
 
 pytestmark = pytest.mark.asyncio(loop_scope="session")
 

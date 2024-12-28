@@ -5,13 +5,13 @@ from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 
-import src.components.executor.monitor_handler as monitor_handler
-import src.registry.registry as registry
-from src.base_exception import BaseSentinelaException
-from src.models import Alert, AlertPriority, AlertStatus, Issue, IssueStatus, Monitor
-from src.options import AlertOptions, CountRule, IssueOptions, PriorityLevels
-from src.utils.time import time_since
+import components.executor.monitor_handler as monitor_handler
+import registry.registry as registry
+from base_exception import BaseSentinelaException
+from models import Alert, AlertPriority, AlertStatus, Issue, IssueStatus, Monitor
+from options import AlertOptions, CountRule, IssueOptions, PriorityLevels
 from tests.test_utils import assert_message_in_log
+from utils.time import time_since
 
 pytestmark = pytest.mark.asyncio(loop_scope="session")
 

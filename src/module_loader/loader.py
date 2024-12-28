@@ -9,6 +9,7 @@ from types import ModuleType
 
 _logger = logging.getLogger("loader")
 
+RELATIVE_PATH = "src"
 MODULES_PATH = "_monitors"
 
 
@@ -28,11 +29,12 @@ def create_module_files(
         base_path: str | None = None,
         additional_files: dict[str, str] | None = None
 ) -> Path:
-    """Create a module file with the given code and additional files, returning the module path"""
+    """Create a module file with the given code and additional files, returning the module path.
+    The files must be created relative to the "src" directory"""
     if base_path is None:
         base_path = MODULES_PATH
 
-    base_module_path = Path(base_path)
+    base_module_path = Path(RELATIVE_PATH) / base_path
     init_modules_path(base_module_path)
 
     module_name = module_name.replace(".", "_")
@@ -53,7 +55,8 @@ def create_module_files(
             with open(file_path, "w") as file:
                 file.write(file_content)
 
-    return module_path
+    # Return the path relative to "src" as it's the path used to import the module
+    return module_path.relative_to(RELATIVE_PATH)
 
 
 def load_module_from_file(module_path: Path) -> ModuleType:

@@ -6,21 +6,15 @@ from typing import Any
 
 import prometheus_client
 
-import src.queue as queue
-import src.registry as registry
-import src.utils.app as app
-from src.configs import configs
-from src.models import Monitor
-from src.services.slack import websocket as slack_websocket
-from src.utils.async_tools import do_concurrently
-from src.utils.exception_handling import catch_exceptions
-from src.utils.time import (
-    format_datetime_iso,
-    is_triggered,
-    now,
-    time_since,
-    time_until_next_trigger,
-)
+import message_queue as message_queue
+import registry as registry
+import utils.app as app
+from configs import configs
+from models import Monitor
+from services.slack import websocket as slack_websocket
+from utils.async_tools import do_concurrently
+from utils.exception_handling import catch_exceptions
+from utils.time import format_datetime_iso, is_triggered, now, time_since, time_until_next_trigger
 
 _logger = logging.getLogger("controller")
 
@@ -77,7 +71,7 @@ async def _queue_task(monitor: Monitor, tasks: list[str]):
     await monitor.save()
 
     try:
-        await queue.send_message(
+        await message_queue.send_message(
             type="process_monitor",
             payload={
                 "monitor_id": monitor.id,

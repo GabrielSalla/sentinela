@@ -1,5 +1,8 @@
 from typing import Any, TypedDict, cast
 
+from configs import configs
+from databases import query_application
+from models import Monitor
 from monitor_utils import (
     AlertOptions,
     IssueOptions,
@@ -9,10 +12,6 @@ from monitor_utils import (
     ValueRule,
     read_file,
 )
-
-from src.configs import configs
-from src.databases import query_application
-from src.models import Monitor
 
 monitor_options = MonitorOptions(
     update_cron="* * * * *",

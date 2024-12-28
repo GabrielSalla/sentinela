@@ -2,8 +2,8 @@ from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 
-from src.internal_database import get_session
-from src.models import Issue, IssueStatus, Monitor
+from internal_database import get_session
+from models import Issue, IssueStatus, Monitor
 from tests.test_utils import assert_message_in_log, assert_message_not_in_log
 
 pytestmark = pytest.mark.asyncio(loop_scope="session")

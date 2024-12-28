@@ -6,14 +6,14 @@ from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 
-import src.queue as queue
-import src.utils.time as time_utils
-from src.configs import configs
-from src.databases.databases import execute_application
-from src.internal_database import get_session
-from src.models import Alert, Issue, IssueStatus, Monitor
-from src.options import ReactionOptions
-from src.registry import registry
+import message_queue as message_queue
+import utils.time as time_utils
+from configs import configs
+from databases.databases import execute_application
+from internal_database import get_session
+from models import Alert, Issue, IssueStatus, Monitor
+from options import ReactionOptions
+from registry import registry
 from tests.test_utils import assert_message_in_log
 
 pytestmark = pytest.mark.asyncio(loop_scope="session")
@@ -92,7 +92,7 @@ async def test_create_event_queued(
     build_event_payload_spy: MagicMock = mocker.spy(sample_monitor, "_build_event_payload")
     build_event_payload_spy.return_value = {"some_event": "some_data"}
     should_queue_event_spy: MagicMock = mocker.spy(sample_monitor, "_should_queue_event")
-    queue_send_message_spy: MagicMock = mocker.spy(queue, "send_message")
+    queue_send_message_spy: MagicMock = mocker.spy(message_queue, "send_message")
 
     await sample_monitor._create_event(event_name, extra_payload)
 
@@ -120,7 +120,7 @@ async def test_create_event_not_queued(mocker, sample_monitor: Monitor, event_na
     build_event_payload_spy: MagicMock = mocker.spy(sample_monitor, "_build_event_payload")
     build_event_payload_spy.return_value = {"some_event": "some_data"}
     should_queue_event_spy: MagicMock = mocker.spy(sample_monitor, "_should_queue_event")
-    queue_send_message_spy: MagicMock = mocker.spy(queue, "send_message")
+    queue_send_message_spy: MagicMock = mocker.spy(message_queue, "send_message")
 
     await sample_monitor._create_event(event_name, extra_payload)
 
@@ -147,7 +147,7 @@ async def test_create_event_not_queued_logged(
     build_event_payload_spy: MagicMock = mocker.spy(sample_monitor, "_build_event_payload")
     build_event_payload_spy.return_value = {"some_event": "some_data"}
     should_queue_event_spy: MagicMock = mocker.spy(sample_monitor, "_should_queue_event")
-    queue_send_message_spy: MagicMock = mocker.spy(queue, "send_message")
+    queue_send_message_spy: MagicMock = mocker.spy(message_queue, "send_message")
 
     await sample_monitor._create_event(event_name, extra_payload)
 

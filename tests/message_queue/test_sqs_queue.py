@@ -7,8 +7,8 @@ import botocore.exceptions
 import pytest
 import pytest_asyncio
 
-import src.queue.sqs_queue as sqs_queue
-from src.configs import configs
+import message_queue.sqs_queue as sqs_queue
+from configs import configs
 
 pytestmark = pytest.mark.asyncio(loop_scope="session")
 

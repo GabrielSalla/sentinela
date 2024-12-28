@@ -5,13 +5,14 @@ from typing import Sequence
 from sqlalchemy import Boolean, DateTime, Enum, ForeignKey, Integer
 from sqlalchemy.orm import Mapped, mapped_column
 
-import src.models.utils.priority as priority_utils
-from src.models.base import Base
-from src.models.issue import Issue, IssueStatus
-from src.options import AgeRule, AlertOptions, CountRule, IssueOptions, ValueRule
-from src.registry import get_monitor_module
-from src.utils.async_tools import do_concurrently
-from src.utils.time import now
+import models.utils.priority as priority_utils
+from options import AgeRule, AlertOptions, CountRule, IssueOptions, ValueRule
+from registry import get_monitor_module
+from utils.async_tools import do_concurrently
+from utils.time import now
+
+from .base import Base
+from .issue import Issue, IssueStatus
 
 
 class AlertStatus(enum.Enum):

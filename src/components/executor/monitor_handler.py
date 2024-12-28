@@ -6,11 +6,11 @@ from typing import Any, cast
 
 import prometheus_client
 
-import src.registry as registry
-from src.base_exception import BaseSentinelaException
-from src.internal_database import get_session
-from src.models import Alert, Issue, Monitor
-from src.utils.async_tools import do_concurrently
+import registry as registry
+from base_exception import BaseSentinelaException
+from internal_database import get_session
+from models import Alert, Issue, Monitor
+from utils.async_tools import do_concurrently
 
 _logger = logging.getLogger("monitor_handler")
 

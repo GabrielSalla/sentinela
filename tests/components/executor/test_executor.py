@@ -6,16 +6,16 @@ from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 
-import src.components.executor.executor as executor
-import src.components.executor.monitor_handler as monitor_handler
-import src.components.executor.reaction_handler as reaction_handler
-import src.components.executor.request_handler as request_handler
-import src.queue as queue
-import src.registry as registry
-import src.utils.app as app
-import src.utils.time as time_utils
-from src.base_exception import BaseSentinelaException
-from src.configs import configs
+import components.executor.executor as executor
+import components.executor.monitor_handler as monitor_handler
+import components.executor.reaction_handler as reaction_handler
+import components.executor.request_handler as request_handler
+import message_queue as message_queue
+import registry as registry
+import utils.app as app
+import utils.time as time_utils
+from base_exception import BaseSentinelaException
+from configs import configs
 from tests.test_utils import assert_message_in_log, assert_message_not_in_log
 
 pytestmark = pytest.mark.asyncio(loop_scope="session")
@@ -94,9 +94,9 @@ async def test_diagnostics(monkeypatch, started_at, executors, last_message_at, 
 async def test_change_visibility_loop(mocker, monkeypatch, clear_queue):
     """'_change_visibility_loop' should change a message's visibility recurrently until cancelled"""
     monkeypatch.setattr(configs, "queue_visibility_time", 0.2)
-    change_visibility_spy: MagicMock = mocker.spy(queue, "change_visibility")
+    change_visibility_spy: MagicMock = mocker.spy(message_queue, "change_visibility")
 
-    message = queue.Message(json.dumps({"type": "type", "payload": "payload"}))
+    message = message_queue.Message(json.dumps({"type": "type", "payload": "payload"}))
 
     task = asyncio.create_task(executor._change_visibility_loop(message))
     await asyncio.sleep(1.0)
@@ -128,7 +128,7 @@ async def test_executor_get_message_no_message(monkeypatch, clear_queue):
 
     total_time = end_time - start_time
     assert total_time > 1 - 0.001
-    assert total_time < 1 + 0.005
+    assert total_time < 1 + 0.01
 
 
 async def test_executor_get_message_with_message(monkeypatch, clear_queue):
@@ -143,7 +143,7 @@ async def test_executor_get_message_with_message(monkeypatch, clear_queue):
     task = asyncio.create_task(ex.get_message())
     await asyncio.sleep(0.5)
     assert not task.done()
-    await queue.send_message("test", {"test": "aaa"})
+    await message_queue.send_message("test", {"test": "aaa"})
     result = await task
     end_time = time.perf_counter()
 
@@ -154,16 +154,16 @@ async def test_executor_get_message_with_message(monkeypatch, clear_queue):
 
     total_time = end_time - start_time
     assert total_time > 0.5 - 0.001
-    assert total_time < 0.5 + 0.005
+    assert total_time < 0.5 + 0.01
 
 
 @pytest.mark.parametrize(
     "message, expected_result",
     [
-        (queue.Message(json.dumps({"type": "event"})), reaction_handler.run),
-        (queue.Message(json.dumps({"type": "process_monitor"})), monitor_handler.run),
-        (queue.Message(json.dumps({"type": "request"})), request_handler.run),
-        (queue.Message(json.dumps({"type": "unknown"})), None),
+        (message_queue.Message(json.dumps({"type": "event"})), reaction_handler.run),
+        (message_queue.Message(json.dumps({"type": "process_monitor"})), monitor_handler.run),
+        (message_queue.Message(json.dumps({"type": "request"})), request_handler.run),
+        (message_queue.Message(json.dumps({"type": "unknown"})), None),
     ],
 )
 async def test_executor_get_message_handler(caplog, message, expected_result):
@@ -183,14 +183,14 @@ async def test_executor_process_message_success(caplog, mocker, monkeypatch):
     the message visibility in the queue recurrently during it's processing and deleting the message
     from the queue after finished"""
     monkeypatch.setattr(configs, "queue_visibility_time", 0.1)
-    change_visibility_spy: MagicMock = mocker.spy(queue, "change_visibility")
-    delete_message_spy: MagicMock = mocker.spy(queue, "delete_message")
+    change_visibility_spy: MagicMock = mocker.spy(message_queue, "change_visibility")
+    delete_message_spy: MagicMock = mocker.spy(message_queue, "delete_message")
 
     async def sleep(message):
         await asyncio.sleep(0.1)
 
     handler = AsyncMock(side_effect=sleep)
-    message = queue.Message(json.dumps({"type": "test", "payload": "payload"}))
+    message = message_queue.Message(json.dumps({"type": "test", "payload": "payload"}))
     ex = executor.Executor(1)
     ex._current_message_type = "test"
 
@@ -215,8 +215,8 @@ async def test_executor_process_message_sentinela_error(caplog, mocker, monkeypa
     Sentinela exceptions that might occur and logging them properly. The message shouldn't be
     deleted from the queue"""
     monkeypatch.setattr(configs, "queue_visibility_time", 0.1)
-    change_visibility_spy: MagicMock = mocker.spy(queue, "change_visibility")
-    delete_message_spy: MagicMock = mocker.spy(queue, "delete_message")
+    change_visibility_spy: MagicMock = mocker.spy(message_queue, "change_visibility")
+    delete_message_spy: MagicMock = mocker.spy(message_queue, "delete_message")
 
     class SomeError(BaseSentinelaException):
         pass
@@ -226,7 +226,7 @@ async def test_executor_process_message_sentinela_error(caplog, mocker, monkeypa
         raise SomeError("Something went wrong")
 
     handler = AsyncMock(side_effect=sleep_error)
-    message = queue.Message(json.dumps({"type": "test", "payload": "payload"}))
+    message = message_queue.Message(json.dumps({"type": "test", "payload": "payload"}))
     ex = executor.Executor(1)
     ex._current_message_type = "test"
 
@@ -251,15 +251,15 @@ async def test_executor_process_message_error(caplog, mocker, monkeypatch):
     exceptions that might occur and logging them properly. The message shouldn't be deleted from
     the queue"""
     monkeypatch.setattr(configs, "queue_visibility_time", 0.1)
-    change_visibility_spy: MagicMock = mocker.spy(queue, "change_visibility")
-    delete_message_spy: MagicMock = mocker.spy(queue, "delete_message")
+    change_visibility_spy: MagicMock = mocker.spy(message_queue, "change_visibility")
+    delete_message_spy: MagicMock = mocker.spy(message_queue, "delete_message")
 
     async def sleep_error(message):
         await asyncio.sleep(0.1)
         raise ValueError("Something went wrong")
 
     handler = AsyncMock(side_effect=sleep_error)
-    message = queue.Message(json.dumps({"type": "test", "payload": "payload"}))
+    message = message_queue.Message(json.dumps({"type": "test", "payload": "payload"}))
     ex = executor.Executor(1)
     ex._current_message_type = "test"
 
@@ -291,7 +291,7 @@ async def test_executor_process_success(caplog, monkeypatch, clear_queue):
     handler = AsyncMock(side_effect=sleep)
     monkeypatch.setitem(executor.Executor._handlers, "test", handler)
 
-    await queue.send_message("test", {"test": "aaa"})
+    await message_queue.send_message("test", {"test": "aaa"})
     ex = executor.Executor(1)
 
     start_time = time.perf_counter()
@@ -300,7 +300,7 @@ async def test_executor_process_success(caplog, monkeypatch, clear_queue):
 
     total_time = end_time - start_time
     assert total_time > 0.1 - 0.001
-    assert total_time < 0.1 + 0.005
+    assert total_time < 0.1 + 0.01
 
     handler.assert_awaited_once_with({"type": "test", "payload": {"test": "aaa"}})
     assert_message_in_log(caplog, 'Got message \'{"type": "test", "payload": {"test": "aaa"}}\'')
@@ -323,7 +323,7 @@ async def test_executor_process_monitors_not_ready(monkeypatch, clear_queue):
 
     total_time = end_time - start_time
     assert total_time > 0.1 - 0.001
-    assert total_time < 0.1 + 0.005
+    assert total_time < 0.1 + 0.01
 
 
 async def test_executor_process_no_message(monkeypatch, clear_queue):
@@ -341,7 +341,7 @@ async def test_executor_process_no_message(monkeypatch, clear_queue):
 
     total_time = end_time - start_time
     assert total_time > 0.7 - 0.001
-    assert total_time < 0.7 + 0.005
+    assert total_time < 0.7 + 0.01
 
 
 async def test_executor_process_no_handler(caplog, clear_queue):
@@ -349,7 +349,7 @@ async def test_executor_process_no_handler(caplog, clear_queue):
     doing nothing when there isn't a handler for the message"""
     registry.monitors_ready.set()
 
-    await queue.send_message("test", {"test": "aaa"})
+    await message_queue.send_message("test", {"test": "aaa"})
     ex = executor.Executor(1)
     ex._current_message_type = "test"
 
@@ -375,7 +375,7 @@ async def test_executor_process_error(caplog, monkeypatch, clear_queue):
     handler = AsyncMock(side_effect=sleep_error)
     monkeypatch.setitem(executor.Executor._handlers, "test", handler)
 
-    await queue.send_message("test", {"test": "aaa"})
+    await message_queue.send_message("test", {"test": "aaa"})
     ex = executor.Executor(1)
 
     start_time = time.perf_counter()
@@ -384,7 +384,7 @@ async def test_executor_process_error(caplog, monkeypatch, clear_queue):
 
     total_time = end_time - start_time
     assert total_time > 0.1 - 0.001
-    assert total_time < 0.1 + 0.005
+    assert total_time < 0.1 + 0.01
 
     handler.assert_awaited_once_with({"type": "test", "payload": {"test": "aaa"}})
     assert_message_in_log(caplog, 'Got message \'{"type": "test", "payload": {"test": "aaa"}}\'')

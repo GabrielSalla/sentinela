@@ -30,4 +30,4 @@ services:
       - ./internal_monitors:/app/internal_monitors:Z
     depends_on:
       - postgres
-    command: python3 . controller executor
+    command: python3 src/main.py controller executor

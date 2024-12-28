@@ -4,8 +4,8 @@ import asyncpg
 import pytest
 import pytest_asyncio
 
-import src.databases.postgresql_pools as postgresql_pools
-from src.configs import configs
+import databases.postgresql_pools as postgresql_pools
+from configs import configs
 from tests.test_utils import assert_message_in_log
 
 pytestmark = pytest.mark.asyncio(loop_scope="session")

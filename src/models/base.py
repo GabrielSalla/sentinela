@@ -10,11 +10,11 @@ from sqlalchemy.ext.asyncio import AsyncAttrs
 from sqlalchemy.orm import DeclarativeBase, InstrumentedAttribute
 from sqlalchemy.sql.expression import ColumnElement
 
-import src.queue as queue
-from src.configs import configs
-from src.internal_database import CallbackSession, get_session
-from src.registry import get_monitor_module
-from src.utils.async_tools import do_concurrently
+import message_queue as message_queue
+from configs import configs
+from internal_database import CallbackSession, get_session
+from registry import get_monitor_module
+from utils.async_tools import do_concurrently
 
 
 def format_value(value: Any):
@@ -76,7 +76,7 @@ class Base(AsyncAttrs, DeclarativeBase):
 
         if self._should_queue_event(event_name):
             self._logger.info(json.dumps(event_payload))
-            await queue.send_message(type="event", payload=event_payload)
+            await message_queue.send_message(type="event", payload=event_payload)
         elif configs.log_all_events:
             self._logger.info(json.dumps(event_payload))
 

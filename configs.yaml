@@ -1,8 +1,8 @@
 # Flag to enable the sample monitors
 load_sample_monitors: true
-# Path relative to the main file where the sample monitors are stored
+# Path relative to the project root, where the sample monitors are stored
 sample_monitors_path: sample_monitors
-# Path relative to the main file where the internal monitors are stored
+# Path relative to the project root, where the internal monitors are stored
 internal_monitors_path: internal_monitors
 # Schedule to reload monitors from the database
 monitors_load_schedule: "*/5 * * * *"

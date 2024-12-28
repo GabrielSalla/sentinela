@@ -1,7 +1,7 @@
 import json
 import logging
 
-from src.configs import configs
+from configs import configs
 
 GREY = "\x1b[38;20m"
 YELLOW = "\x1b[33;20m"

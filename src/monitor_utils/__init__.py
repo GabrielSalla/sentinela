@@ -2,8 +2,8 @@
 # all these imports should be able to be transported somewhere else, or at least there
 # should be a mock for them
 
-from src.databases import query
-from src.options import (
+from databases import query
+from options import (
     AgeRule,
     AlertOptions,
     CountRule,
@@ -13,7 +13,7 @@ from src.options import (
     ReactionOptions,
     ValueRule,
 )
-from src.services.slack import SlackNotification
+from services.slack import SlackNotification
 
 from .read_file import read_file
 

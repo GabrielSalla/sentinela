@@ -1,6 +1,6 @@
-import src.components.monitors_loader as monitors_loader
-import src.queue as queue
-from src.models import Monitor
+import components.monitors_loader as monitors_loader
+import message_queue as message_queue
+from models import Monitor
 
 
 async def monitor_register(
@@ -38,7 +38,7 @@ async def enable_monitor(monitor_name: str) -> str:
 
 async def alert_acknowledge(alert_id: int):
     """Queue an 'alert_acknowledge' request"""
-    await queue.send_message(
+    await message_queue.send_message(
         type="request",
         payload={
             "action": "alert_acknowledge",
@@ -49,7 +49,7 @@ async def alert_acknowledge(alert_id: int):
 
 async def alert_lock(alert_id: int):
     """Queue an 'alert_lock' request"""
-    await queue.send_message(
+    await message_queue.send_message(
         type="request",
         payload={
             "action": "alert_lock",
@@ -60,7 +60,7 @@ async def alert_lock(alert_id: int):
 
 async def alert_solve(alert_id: int):
     """Queue an 'alert_solve' request"""
-    await queue.send_message(
+    await message_queue.send_message(
         type="request",
         payload={
             "action": "alert_solve",
@@ -71,7 +71,7 @@ async def alert_solve(alert_id: int):
 
 async def issue_drop(issue_id: int):
     """Queue an 'issue_drop' request"""
-    await queue.send_message(
+    await message_queue.send_message(
         type="request",
         payload={
             "action": "issue_drop",
@@ -82,7 +82,7 @@ async def issue_drop(issue_id: int):
 
 async def resend_slack_notifications(slack_channel: str):
     """Queue an 'resend_slack_notifications' request for a specific channel"""
-    await queue.send_message(
+    await message_queue.send_message(
         type="request",
         payload={
             "action": "resend_slack_notifications",

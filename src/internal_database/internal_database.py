@@ -4,8 +4,8 @@ from typing import AsyncGenerator, Coroutine
 
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 
-from src.configs import configs
-from src.utils.async_tools import do_concurrently
+from configs import configs
+from utils.async_tools import do_concurrently
 
 
 class CallbackSession(AsyncSession):

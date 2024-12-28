@@ -4,16 +4,11 @@ import re
 from types import ModuleType
 from typing import Callable, Optional, _TypedDictMeta  # type: ignore[attr-defined]
 
-from src.notifications import BaseNotification
-from src.options import AlertOptions, IssueOptions, MonitorOptions, ReactionOptions
+from notifications import BaseNotification
+from options import AlertOptions, IssueOptions, MonitorOptions, ReactionOptions
 
 _logger = logging.getLogger("module_check")
 _logger.setLevel(logging.INFO)
-
-SRC_IMPORT_PATTERNS = [
-    r"import src\..*",
-    r"from src\..*",
-]
 
 ERROR_NOT_FUNCTION = "'{display_name}' must be a function"
 ERROR_NOT_ASYNC_FUNCTION = "function '{display_name}' must be asynchronous"

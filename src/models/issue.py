@@ -10,15 +10,16 @@ from sqlalchemy.dialects import postgresql
 from sqlalchemy.ext.mutable import MutableDict
 from sqlalchemy.orm import Mapped, mapped_column
 
-from src.data_types.issue_data_types import IssueDataType
-from src.internal_database import CallbackSession
-from src.models.base import Base
-from src.options import IssueOptions
-from src.registry import get_monitor_module
-from src.utils.time import now
+from data_types.issue_data_types import IssueDataType
+from internal_database import CallbackSession
+from options import IssueOptions
+from registry import get_monitor_module
+from utils.time import now
+
+from .base import Base
 
 if TYPE_CHECKING:
-    from src.models.alert import Alert
+    from .alert import Alert
 
 
 class IssueStatus(enum.Enum):

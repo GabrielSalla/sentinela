@@ -3,9 +3,9 @@ from unittest.mock import MagicMock
 
 import pytest
 
-import src.utils.time as time_utils
-from src.models import Alert, Issue, IssueStatus, Monitor
-from src.registry import registry
+import utils.time as time_utils
+from models import Alert, Issue, IssueStatus, Monitor
+from registry import registry
 from tests.test_utils import assert_message_in_log, assert_message_not_in_log
 
 pytestmark = pytest.mark.asyncio(loop_scope="session")

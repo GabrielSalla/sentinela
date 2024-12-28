@@ -5,15 +5,15 @@ from unittest.mock import AsyncMock
 
 import pytest
 
-import src.components.monitors_loader.monitors_loader as monitors_loader
-import src.databases.databases as databases
-import src.utils.app as app
-import src.utils.time as time_utils
-from src.configs import configs
-from src.models import CodeModule, Monitor
-from src.notifications import BaseNotification
-from src.options import ReactionOptions
-from src.registry import registry
+import components.monitors_loader.monitors_loader as monitors_loader
+import databases.databases as databases
+import utils.app as app
+import utils.time as time_utils
+from configs import configs
+from models import CodeModule, Monitor
+from notifications import BaseNotification
+from options import ReactionOptions
+from registry import registry
 from tests.test_utils import assert_message_in_log
 
 pytestmark = pytest.mark.asyncio(loop_scope="session")

@@ -4,14 +4,8 @@ import time
 import pytest
 from pytz import timezone
 
-from src.configs import configs
-from src.utils.time import (
-    format_datetime_iso,
-    is_triggered,
-    now,
-    time_since,
-    time_until_next_trigger,
-)
+from configs import configs
+from utils.time import format_datetime_iso, is_triggered, now, time_since, time_until_next_trigger
 
 
 @pytest.mark.parametrize("local_timezone", ["UTC", "America/Sao_Paulo", "Europe/London"])

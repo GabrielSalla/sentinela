@@ -4,7 +4,7 @@ from math import ceil
 
 import pytest
 
-from src.utils.async_tools import do_concurrently
+from utils.async_tools import do_concurrently
 
 pytestmark = pytest.mark.asyncio(loop_scope="session")
 

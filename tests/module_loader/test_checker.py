@@ -4,9 +4,9 @@ from unittest.mock import MagicMock
 
 import pytest
 
-import src.module_loader.checker as checker
-from src.notifications import BaseNotification
-from src.options import (
+import module_loader.checker as checker
+from notifications import BaseNotification
+from options import (
     AlertOptions,
     CountRule,
     IssueOptions,

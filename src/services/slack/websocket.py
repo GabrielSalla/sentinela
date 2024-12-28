@@ -8,8 +8,8 @@ from slack_bolt.adapter.socket_mode.async_handler import AsyncSocketModeHandler
 from slack_bolt.async_app import AsyncApp
 from slack_sdk.web.async_client import AsyncWebClient
 
-import src.services.slack.slack as slack
-from src.services.slack.pattern_match import get_message_request
+from . import slack
+from .pattern_match import get_message_request
 
 _logger = logging.getLogger("slack_websocket")
 

@@ -5,11 +5,11 @@ from unittest.mock import MagicMock
 
 import pytest
 
-import src.databases.databases as databases
-import src.utils.time as time_utils
-from src.models import Alert, AlertStatus, Issue, IssueStatus, Monitor
-from src.options import AlertOptions, CountRule, PriorityLevels, ReactionOptions
-from src.registry import registry
+import databases.databases as databases
+import utils.time as time_utils
+from models import Alert, AlertStatus, Issue, IssueStatus, Monitor
+from options import AlertOptions, CountRule, PriorityLevels, ReactionOptions
+from registry import registry
 
 pytestmark = pytest.mark.asyncio(loop_scope="session")
 

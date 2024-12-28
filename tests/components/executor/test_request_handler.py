@@ -4,11 +4,11 @@ from unittest.mock import AsyncMock
 
 import pytest
 
-import src.components.executor.request_handler as request_handler
-import src.registry as registry
-from src.base_exception import BaseSentinelaException
-from src.configs import configs
-from src.models import Alert, AlertStatus, Issue, IssueStatus, Monitor, Notification
+import components.executor.request_handler as request_handler
+import registry as registry
+from base_exception import BaseSentinelaException
+from configs import configs
+from models import Alert, AlertStatus, Issue, IssueStatus, Monitor, Notification
 from tests.test_utils import assert_message_in_log
 
 pytestmark = pytest.mark.asyncio(loop_scope="session")

@@ -1,5 +1,7 @@
 from typing import Any, TypedDict, cast
 
+from databases import query_application
+from models import Notification, NotificationStatus
 from monitor_utils import (
     AgeRule,
     AlertOptions,
@@ -9,9 +11,6 @@ from monitor_utils import (
     ReactionOptions,
     read_file,
 )
-
-from src.databases import query_application
-from src.models import Notification, NotificationStatus
 
 monitor_options = MonitorOptions(
     update_cron="*/5 * * * *",

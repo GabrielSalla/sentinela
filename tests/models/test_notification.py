@@ -4,8 +4,8 @@ from unittest.mock import MagicMock
 
 import pytest
 
-import src.utils.time as time_utils
-from src.models import Alert, Monitor, Notification, NotificationStatus
+import utils.time as time_utils
+from models import Alert, Monitor, Notification, NotificationStatus
 from tests.test_utils import assert_message_in_log
 
 pytestmark = pytest.mark.asyncio(loop_scope="session")

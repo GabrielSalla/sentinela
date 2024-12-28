@@ -14,15 +14,15 @@ import pytest_asyncio
 import uvloop
 from _pytest.monkeypatch import MonkeyPatch
 
-import src.components.monitors_loader.monitors_loader as monitors_loader
-import src.databases as databases
-import src.internal_database as internal_database
-import src.module_loader as module_loader
-import src.queue as queue
-import src.utils.app as app
+import components.monitors_loader.monitors_loader as monitors_loader
+import databases as databases
+import internal_database as internal_database
+import message_queue as message_queue
+import module_loader as module_loader
 import tests.services.slack.slack_mock as slack_mock
-from src.models import CodeModule, Monitor
-from src.registry import registry
+import utils.app as app
+from models import CodeModule, Monitor
+from registry import registry
 
 
 @pytest.fixture(scope="session")
@@ -113,12 +113,11 @@ async def mock_slack_requests(monkeypatch_session):
 @pytest.fixture(scope="session", autouse=True)
 def _temp_dir(monkeypatch_session):
     """Create a temporary directory for all the tests that will be removed at the end"""
-    temp_path = "tmp"
-    os.makedirs(temp_path, exist_ok=True)
-    monkeypatch_session.setattr(monitors_loader, "MONITORS_LOAD_PATH", temp_path)
-    monkeypatch_session.setattr(module_loader.loader, "MODULES_PATH", temp_path)
-    yield temp_path
-    shutil.rmtree(temp_path, ignore_errors=True)
+    os.makedirs("src/tmp", exist_ok=True)
+    monkeypatch_session.setattr(monitors_loader, "MONITORS_LOAD_PATH", "tmp")
+    monkeypatch_session.setattr(module_loader.loader, "MODULES_PATH", "tmp")
+    yield "src/tmp"
+    shutil.rmtree("src/tmp", ignore_errors=True)
 
 
 @pytest.fixture(scope="function")
@@ -146,14 +145,14 @@ def clear_monitors():
 @pytest_asyncio.fixture(loop_scope="session", scope="session", autouse=True)
 async def start_queue():
     """Start the queue"""
-    await queue.internal_queue.init()
+    await message_queue.internal_queue.init()
 
 
 @pytest.fixture(scope="function")
 def clear_queue():
     """Clear the internal queue"""
-    while not queue.internal_queue._queue.empty():
-        queue.internal_queue._queue.get_nowait()
+    while not message_queue.internal_queue._queue.empty():
+        message_queue.internal_queue._queue.get_nowait()
 
 
 @pytest.fixture(scope="session")
