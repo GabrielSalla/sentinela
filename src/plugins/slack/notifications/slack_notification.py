@@ -8,10 +8,11 @@ from dataclass_type_validator import dataclass_validate
 from pytz import timezone
 from tabulate import tabulate
 
-import services.slack as slack
 from configs import configs
 from models import Alert, AlertPriority, AlertStatus, Issue, IssueStatus, Monitor, Notification
 from notifications.base_notification import BaseNotification
+
+from .. import slack
 
 _logger = logging.getLogger("reaction_handler")
 

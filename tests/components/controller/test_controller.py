@@ -9,7 +9,6 @@ import components.controller.controller as controller
 import components.monitors_loader.monitors_loader as monitors_loader
 import message_queue as message_queue
 import registry as registry
-import services.slack.websocket as slack_websocket
 import utils.app as app
 import utils.time as time_utils
 from configs import configs
@@ -110,20 +109,6 @@ async def test_diagnostics(
 
     result = await controller.diagnostics()
     assert result == expected_result
-
-
-@pytest.mark.parametrize("slack_websocket_enabled", [True, False])
-async def test_init(mocker, monkeypatch, slack_websocket_enabled):
-    """'_init' should initialize the controller components"""
-    slack_websocket_init_spy: AsyncMock = mocker.spy(slack_websocket, "init")
-    monkeypatch.setattr(configs, "slack_websocket_enabled", slack_websocket_enabled)
-
-    await controller._init()
-
-    if slack_websocket_enabled:
-        slack_websocket_init_spy.assert_awaited_once()
-    else:
-        slack_websocket_init_spy.assert_not_called()
 
 
 @pytest.mark.parametrize(

@@ -171,25 +171,3 @@ async def test_issue_drop(clear_queue, target_id):
             }
         )
     ]
-
-
-@pytest.mark.parametrize("slack_channel", ["C1234567890", "C2345678901", "C3456789012"])
-async def test_resend_slack_notifications(clear_queue, slack_channel):
-    """'resend_slack_notifications' should queue a 'resend_slack_notifications' action request"""
-    await requests.resend_slack_notifications(slack_channel)
-
-    queue_items = []
-    while not message_queue.internal_queue._queue.empty():
-        queue_items.append(message_queue.internal_queue._queue.get_nowait())
-
-    assert queue_items == [
-        json.dumps(
-            {
-                "type": "request",
-                "payload": {
-                    "action": "resend_slack_notifications",
-                    "slack_channel": slack_channel,
-                },
-            }
-        )
-    ]

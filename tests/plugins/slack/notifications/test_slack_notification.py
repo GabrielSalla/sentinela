@@ -5,9 +5,9 @@ import pytest
 from slack_sdk.web.async_client import AsyncSlackResponse
 
 import configs.configs as configs
-import services.slack as slack
-import services.slack.slack_notification as slack_notification
-import tests.services.slack.slack_mock as slack_mock
+import plugins.slack.notifications.slack_notification as slack_notification
+import plugins.slack.slack as slack
+import tests.plugins.slack.slack_mock as slack_mock
 import utils.time as time_utils
 from models import Alert, AlertStatus, Issue, IssueStatus, Monitor, Notification, NotificationStatus
 from tests.test_utils import assert_message_in_log

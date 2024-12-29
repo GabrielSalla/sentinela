@@ -5,8 +5,8 @@ from aiohttp import web
 from aiohttp.web_request import Request
 from slack_sdk.web.async_client import AsyncWebClient
 
-import services.slack.slack as slack
-import services.slack.websocket as slack_websocket
+import plugins.slack.services.websocket as slack_websocket
+import plugins.slack.slack as slack
 
 _logger = logging.getLogger("slack_mock")
 
@@ -96,7 +96,7 @@ async def init(monkeypatch):
     async def do_nothing(): ...
 
     monkeypatch.setattr(slack_websocket, "init", do_nothing)
-    monkeypatch.setattr(slack_websocket, "close", do_nothing)
+    monkeypatch.setattr(slack_websocket, "stop", do_nothing)
 
     app = web.Application()
     app.add_routes(base_routes)

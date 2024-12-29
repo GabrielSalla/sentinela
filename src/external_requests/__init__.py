@@ -6,7 +6,6 @@ from .requests import (
     enable_monitor,
     issue_drop,
     monitor_register,
-    resend_slack_notifications,
 )
 
 __all__ = [
@@ -18,5 +17,4 @@ __all__ = [
     "get_message_request",
     "issue_drop",
     "monitor_register",
-    "resend_slack_notifications",
 ]

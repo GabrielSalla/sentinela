@@ -19,7 +19,7 @@ import databases as databases
 import internal_database as internal_database
 import message_queue as message_queue
 import module_loader as module_loader
-import tests.services.slack.slack_mock as slack_mock
+import tests.plugins.slack.slack_mock as slack_mock
 import utils.app as app
 from models import CodeModule, Monitor
 from registry import registry

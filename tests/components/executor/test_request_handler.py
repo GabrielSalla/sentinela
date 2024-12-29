@@ -5,10 +5,11 @@ from unittest.mock import AsyncMock
 import pytest
 
 import components.executor.request_handler as request_handler
+import plugins as plugins
 import registry as registry
 from base_exception import BaseSentinelaException
 from configs import configs
-from models import Alert, AlertStatus, Issue, IssueStatus, Monitor, Notification
+from models import Alert, AlertStatus, Issue, IssueStatus, Monitor
 from tests.test_utils import assert_message_in_log
 
 pytestmark = pytest.mark.asyncio(loop_scope="session")
@@ -129,85 +130,61 @@ async def test_issue_drop_issue_not_found(caplog, mocker):
     assert_message_in_log(caplog, "Issue '999999999' not found")
 
 
-async def test_resend_slack_notifications(mocker, sample_monitor: Monitor):
-    """'resend_slack_notifications' should clear all notifications for the provided channel and
-    update all alerts"""
-    wait_monitor_loaded_spy: AsyncMock = mocker.spy(registry, "wait_monitor_loaded")
-    alert_update_spy: AsyncMock = mocker.spy(Alert, "update")
-
-    alert_test_channel = await Alert.create(
-        monitor_id=sample_monitor.id,
-        priority=2,
-    )
-    notification_test_channel = await Notification.create(
-        monitor_id=alert_test_channel.monitor_id,
-        alert_id=alert_test_channel.id,
-        target="slack",
-        data={"channel": "test_resend_slack_notification", "ts": "123"},
-    )
-
-    alert_other_channel = await Alert.create(
-        monitor_id=sample_monitor.id,
-        priority=2,
-    )
-    notification_other_channel = await Notification.create(
-        monitor_id=alert_other_channel.monitor_id,
-        alert_id=alert_other_channel.id,
-        target="slack",
-        data={"channel": "test_resend_slack_notification_other", "ts": "123"},
-    )
-
-    await request_handler.resend_slack_notifications(
-        {"slack_channel": "test_resend_slack_notification"}
-    )
-
-    await notification_test_channel.refresh()
-    assert notification_test_channel.data == {"channel": None, "ts": None, "mention_ts": None}
-
-    await notification_other_channel.refresh()
-    assert notification_other_channel.data == {
-        "channel": "test_resend_slack_notification_other",
-        "ts": "123",
-    }
-
-    wait_monitor_loaded_spy.assert_awaited_once_with(sample_monitor.id)
-    alert_update_spy.assert_awaited_once()
-    call_args = alert_update_spy.call_args
-    assert call_args[0][0].id == alert_test_channel.id
+async def test_get_action():
+    """'get_action' should return the action function by its name"""
+    assert request_handler.get_action("alert_acknowledge") == request_handler.alert_acknowledge
+    assert request_handler.get_action("alert_lock") == request_handler.alert_lock
+    assert request_handler.get_action("alert_solve") == request_handler.alert_solve
+    assert request_handler.get_action("issue_drop") == request_handler.issue_drop
 
 
-async def test_resend_slack_notifications_no_notifications_in_channel(
-        mocker,
-        sample_monitor: Monitor
-):
-    """'resend_slack_notifications' should just return when there are no notifications for the
-    provided channel"""
-    wait_monitor_loaded_spy: AsyncMock = mocker.spy(registry, "wait_monitor_loaded")
-    alert_update_spy: AsyncMock = mocker.spy(Alert, "update")
+async def test_get_action_plugin(monkeypatch):
+    """'get_action' should return the action function by its name when it's from a plugin"""
+    class Plugin:
+        class actions:
+            @staticmethod
+            async def test_action(message_payload): ...
 
-    alert_other_channel = await Alert.create(
-        monitor_id=sample_monitor.id,
-        priority=2,
-    )
-    notification_other_channel = await Notification.create(
-        monitor_id=alert_other_channel.monitor_id,
-        alert_id=alert_other_channel.id,
-        target="slack",
-        data={"channel": "test_resend_slack_notification_other", "ts": "123"},
-    )
+    monkeypatch.setattr(plugins, "loaded_plugins", {"plugin1": Plugin}, raising=False)
 
-    await request_handler.resend_slack_notifications(
-        {"slack_channel": "test_resend_slack_notification"}
-    )
+    assert request_handler.get_action("plugin.plugin1.test_action") == Plugin.actions.test_action
 
-    await notification_other_channel.refresh()
-    assert notification_other_channel.data == {
-        "channel": "test_resend_slack_notification_other",
-        "ts": "123",
-    }
 
-    wait_monitor_loaded_spy.assert_not_called()
-    alert_update_spy.assert_not_called()
+async def test_get_action_unknown_plugin(caplog, monkeypatch):
+    """'get_action' should return 'None' when the plugin doesn't exists"""
+    monkeypatch.setattr(plugins, "loaded_plugins", {"plugin1": "plugin1"}, raising=False)
+
+    action = request_handler.get_action("plugin.plugin2.test_action")
+
+    assert action is None
+    assert_message_in_log(caplog, "Plugin 'plugin2' unknown")
+
+
+async def test_get_action_plugin_no_actions(caplog, monkeypatch):
+    """'get_action' should return 'None' when the plugin doesn't have actions"""
+    class Plugin:
+        ...
+
+    monkeypatch.setattr(plugins, "loaded_plugins", {"plugin1": Plugin}, raising=False)
+
+    action = request_handler.get_action("plugin.plugin1.test_action")
+
+    assert action is None
+    assert_message_in_log(caplog, "Plugin 'plugin1' doesn't have actions")
+
+
+async def test_get_action_unknown_action(caplog, monkeypatch):
+    """'get_action' should return 'None' when the action doesn't exists"""
+    class Plugin:
+        class actions:
+            ...
+
+    monkeypatch.setattr(plugins, "loaded_plugins", {"plugin1": Plugin}, raising=False)
+
+    action = request_handler.get_action("plugin.plugin1.test_action")
+
+    assert action is None
+    assert_message_in_log(caplog, "Action 'plugin1.test_action' unknown")
 
 
 @pytest.mark.parametrize(
