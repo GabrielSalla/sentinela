@@ -32,6 +32,5 @@ Sentinela is also well-suited for monitoring state machines, where it is essenti
 5. [Usage](./docs/usage.md)
 6. Interacting with Sentinela
     1. [HTTP server](./docs/http_server.md)
-    2. [Slack commands](./docs/slack_commands.md)
 7. Special cases
     1. [Dropping issues](.docs/dropping_issues.md)
