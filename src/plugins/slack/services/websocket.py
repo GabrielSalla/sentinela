@@ -11,7 +11,7 @@ from slack_sdk.web.async_client import AsyncWebClient
 from .. import slack
 from .pattern_match import get_message_request
 
-_logger = logging.getLogger("slack_websocket")
+_logger = logging.getLogger("plugin.slack.websocket")
 
 _handler: AsyncSocketModeHandler | None
 
