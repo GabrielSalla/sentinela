@@ -1,7 +1,8 @@
-import pytest
 import os
 from pathlib import Path
 from unittest.mock import MagicMock
+
+import pytest
 
 import plugins as plugins
 import plugins.plugins_loader as plugins_loader

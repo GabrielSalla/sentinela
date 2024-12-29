@@ -14,7 +14,7 @@ from notifications.base_notification import BaseNotification
 
 from .. import slack
 
-_logger = logging.getLogger("reaction_handler")
+_logger = logging.getLogger("plugin.slack.notifications")
 
 RESEND_ERRORS = [
     "message_not_found",
@@ -388,28 +388,40 @@ async def slack_notification(
     event_payload: dict[str, Any],
     notification_options: SlackNotification,
 ):
+    """Handle the Slack notification for an alert"""
     alert_data = event_payload["event_data"]
-
-    # Lower number for priority is more important, so this operation is reversed
-    if alert_data["priority"] > notification_options.min_priority_to_send:
-        return
 
     alert = await Alert.get_by_id(alert_data["id"])
     if alert is None:
         return
 
-    monitor = await Monitor.get_by_id(alert.monitor_id)
-    # This check is just to make the typing check happy, as there's a foreign key constraint in the
-    # database
-    if monitor is None:
-        return  # pragma: no cover
-
-    notification = await Notification.get_or_create(
-        monitor_id=alert.monitor_id, alert_id=alert.id, target="slack"
+    notification = await Notification.get(
+        Notification.monitor_id == alert.monitor_id,
+        Notification.alert_id == alert.id,
+        Notification.target == "slack",
     )
+
+    # Only continue if the notification already exists or if the alert priority triggers a new
+    # notification
+    if notification is None:
+        # Lower number for priority is more important, so this operation is reversed
+        if alert.priority > notification_options.min_priority_to_send:
+            return
+        if alert.status == AlertStatus.solved:
+            return
+
+        notification = await Notification.create(
+            monitor_id=alert.monitor_id, alert_id=alert.id, target="slack"
+        )
 
     if alert.status == AlertStatus.solved:
         await notification.close()
+
+    monitor = await Monitor.get_by_id(alert.monitor_id)
+    # This check is just to make the typing check happy, as the monitor must exist because of the
+    # alert's 'monitor_id' foreign key
+    if monitor is None:
+        return  # pragma: no cover
 
     attachments = await _build_attachments(monitor, alert, notification_options)
 

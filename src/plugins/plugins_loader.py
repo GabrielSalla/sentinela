@@ -2,8 +2,8 @@ import importlib
 import logging
 import os
 import traceback
-from types import ModuleType
 from pathlib import Path
+from types import ModuleType
 
 _logger = logging.getLogger("plugins_loader")
 

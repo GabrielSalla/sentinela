@@ -1,10 +1,42 @@
-from typing import Any
+import logging
+from typing import Any, cast
 
 import registry
-from models import Alert, Notification, NotificationStatus
+from models import Monitor, Notification, NotificationStatus
 from utils.async_tools import do_concurrently
 
-from ..notifications.slack_notification import clear_slack_notification
+from ..notifications import slack_notification
+
+_logger = logging.getLogger("plugin.slack.actions")
+
+
+async def _resend_notification(notification: Notification):
+    """Clear a single notification and send it again"""
+    await registry.wait_monitor_loaded(notification.monitor_id)
+
+    monitor = await Monitor.get_by_id(notification.monitor_id)
+    if monitor is None:
+        return  # pragma: no cover
+
+    # Get the SlackNotification option from the monitor code
+    notification_option = None
+    for notification_option in monitor.code.notification_options:
+        if isinstance(notification_option, slack_notification.SlackNotification):
+            break
+    if notification_option is None:
+        _logger.warning(f"No 'SlackNotification' option for {monitor}")
+        return
+
+    # Clear the notification and send it again
+    await slack_notification.clear_slack_notification(notification)
+    await slack_notification.slack_notification(
+        event_payload={
+            "event_data": {
+                "id": notification.alert_id,
+            }
+        },
+        notification_options=cast(slack_notification.SlackNotification, notification_option),
+    )
 
 
 async def resend_notifications(message_payload: dict[Any, Any]):
@@ -17,18 +49,7 @@ async def resend_notifications(message_payload: dict[Any, Any]):
         Notification.data["channel"].astext == message_payload["slack_channel"],
     )
 
-    if len(notifications) == 0:
-        return
-
-    monitors_ids = {notification.monitor_id for notification in notifications}
-    for monitor_id in monitors_ids:
-        await registry.wait_monitor_loaded(monitor_id)
-
     await do_concurrently(*[
-        clear_slack_notification(notification)
+        _resend_notification(notification)
         for notification in notifications
     ])
-
-    alert_ids = list({notification.alert_id for notification in notifications})
-    alerts = await Alert.get_all(Alert.id.in_(alert_ids))
-    await do_concurrently(*[alert.update() for alert in alerts])

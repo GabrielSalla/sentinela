@@ -1201,6 +1201,34 @@ async def test_notification_mention_already_sent(mocker, monkeypatch, sample_mon
     send_mention_spy.assert_not_called()
 
 
+async def test_slack_notification_no_alert(mocker):
+    """'slack_notification' should just return if couldn't find an alert with the provided id"""
+    send_notification_spy: MagicMock = mocker.spy(slack_notification, "send_notification")
+    update_notification_spy: MagicMock = mocker.spy(slack_notification, "update_notification")
+
+    notification_options = slack_notification.SlackNotification(
+        channel="channel",
+        title="title",
+        issues_fields=["col"],
+        min_priority_to_send=3,
+        mention="mention",
+        min_priority_to_mention=2,
+    )
+
+    await slack_notification.slack_notification(
+        event_payload={
+            "event_data": {
+                "id": 99999999,
+                "priority": 2,
+            }
+        },
+        notification_options=notification_options,
+    )
+
+    send_notification_spy.assert_not_called()
+    update_notification_spy.assert_not_called()
+
+
 async def test_slack_notification_min_priority_to_send(mocker, sample_monitor: Monitor):
     """'slack_notification' should just return if the alert priority is smaller (bigger number)
     than the 'min_priority_to_send' parameter"""
@@ -1234,11 +1262,14 @@ async def test_slack_notification_min_priority_to_send(mocker, sample_monitor: M
     update_notification_spy.assert_not_called()
 
 
-async def test_slack_notification_no_alert(mocker):
-    """'slack_notification' should just return if couldn't find an alert with the provided id"""
-    send_notification_spy: MagicMock = mocker.spy(slack_notification, "send_notification")
-    update_notification_spy: MagicMock = mocker.spy(slack_notification, "update_notification")
-
+async def test_slack_notification_no_notification_alert_solved(sample_monitor: Monitor):
+    """'slack_notification' should not create a notification if the alert is solved"""
+    alert = await Alert.create(
+        monitor_id=sample_monitor.id,
+        status=AlertStatus.solved,
+        priority=2,
+        solved_at=time_utils.now(),
+    )
     notification_options = slack_notification.SlackNotification(
         channel="channel",
         title="title",
@@ -1251,18 +1282,18 @@ async def test_slack_notification_no_alert(mocker):
     await slack_notification.slack_notification(
         event_payload={
             "event_data": {
-                "id": 99999999,
+                "id": alert.id,
                 "priority": 2,
             }
         },
         notification_options=notification_options,
     )
 
-    send_notification_spy.assert_not_called()
-    update_notification_spy.assert_not_called()
+    notification = await Notification.get(Notification.alert_id == alert.id)
+    assert notification is None
 
 
-async def test_slack_notification_solved(sample_monitor: Monitor):
+async def test_slack_notification_alert_solved(sample_monitor: Monitor):
     """'slack_notification' should close the notification if the alert is solved"""
     alert = await Alert.create(
         monitor_id=sample_monitor.id,
@@ -1340,9 +1371,6 @@ async def test_slack_notification_first_send(mocker, sample_monitor: Monitor, no
         monitor_id=sample_monitor.id,
         priority=2,
     )
-    await Notification.create(
-        monitor_id=alert.monitor_id, alert_id=alert.id, target="slack", data=notification_data
-    )
     notification_options = slack_notification.SlackNotification(
         channel="channel",
         title="title",
@@ -1399,6 +1427,45 @@ async def test_slack_notification_update(mocker, sample_monitor: Monitor, notifi
             "event_data": {
                 "id": alert.id,
                 "priority": 2,
+            }
+        },
+        notification_options=notification_options,
+    )
+
+    send_notification_spy.assert_not_called()
+    update_notification_spy.assert_called_once()
+
+
+async def test_slack_notification_update_lower_priority(mocker, sample_monitor: Monitor):
+    """'slack_notification' should update an existing notification message even if the alert
+    priority is lower (bigger number) than the 'min_priority_to_send' parameter"""
+    send_notification_spy: MagicMock = mocker.spy(slack_notification, "send_notification")
+    update_notification_spy: MagicMock = mocker.spy(slack_notification, "update_notification")
+
+    alert = await Alert.create(
+        monitor_id=sample_monitor.id,
+        priority=4,
+    )
+    await Notification.create(
+        monitor_id=alert.monitor_id,
+        alert_id=alert.id,
+        target="slack",
+        data={"channel": "channel", "ts": "11.22"},
+    )
+    notification_options = slack_notification.SlackNotification(
+        channel="channel",
+        title="title",
+        issues_fields=["col"],
+        min_priority_to_send=3,
+        mention="mention",
+        min_priority_to_mention=2,
+    )
+
+    await slack_notification.slack_notification(
+        event_payload={
+            "event_data": {
+                "id": alert.id,
+                "priority": 4,
             }
         },
         notification_options=notification_options,
