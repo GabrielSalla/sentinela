@@ -28,9 +28,6 @@ To create a monitor, import specific dependencies from `monitor_utils`. Availabl
 - [`ValueRule`](#value-rule)
 - [`PriorityLevels`](#priority-levels)
 
-**Notifications**
-- [`SlackNotification`](#slack-notification)
-
 **Functions**
 - [`query`](#query)
 - [`read_file`](#read-file)
@@ -225,33 +222,7 @@ result = await asyncio.to_thread(blocking_function)
 # Notifications
 Notifications are optional and can be configured to send notifications to different targets without needing extensive settings for ech monitor. Configure notifications by creating the `notification_options` variable with a list of the desired notifications. Each notification has it's own settings and behaviors.
 
-Available notifications are:
-- `SlackNotification`: Sends notifications to a specified Slack channel.
-
-## Slack notification
-The **SlackNotification** class manages sending notifications for alerts to a specified Slack channel.
-
-Parameters:
-- `channel`: The Slack channel where notifications will be sent.
-- `title`: A title for the notification to help users to identify the problem.
-- `issues_fields`: A list of fields from the issue data to include in the notification.
-- `mention`: Slack user or group to mention if the alert reaches a specified priority. Provide the Slack identifier for a user (e.g., `U0011223344`) or a group (e.g., `G0011223344`). Set to `None` to avoid mentioning anyone. Defaults to `None`.
-- `min_priority_to_mention`: Minimum alert priority that triggers a mention. Mentions will occur if the alert is not acknowledged at the current priority level and it's is greater than or equal to this setting. Defaults to `moderate` (P3).
-
-The Slack message will show the alert and it's issues information. The notification will persist and will be updated until the alert is solved, even if it's priority falls to P5.
-
-The notification also includes buttons to interact with the alert, allowing it to be acknowledged, locked or solved. The latest is only included if the issues setting was set as **not solvable**.
-
-```python
-notification_options = [
-    SlackNotification(
-        channel="C0011223344",
-        title="Alert name",
-        issues_fields=["id", "name"],
-        mention="U0011223344",
-    )
-]
-```
+Notifications are provided as plugins. Check the [plugins documentation](./plugins.md) for more information.
 
 # Reactions
 Reactions are optional and can be configured reactions to specific events by creating a `reaction_options` variable with an instance of the `ReactionOptions` class, available in the `monitor_utils` module.

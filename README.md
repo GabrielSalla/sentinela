@@ -25,6 +25,8 @@ Sentinela is also well-suited for monitoring state machines, where it is essenti
 # Documentation
 1. [Overview](./docs/overview.md)
 2. [Monitor](./docs/monitor.md)
+2. [Plugins](./docs/plugins.md)
+    1. [Slack](./docs/plugin_slack.md)
 3. [Querying data from databases](./docs/querying.md)
 4. [Registering a monitor](./docs/monitor_registering.md)
 5. [Usage](./docs/usage.md)
