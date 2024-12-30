@@ -145,9 +145,6 @@ def test_load_module_from_file_reload_replace_variables():
     # As python checks for the timestamp to change to reload a module, sleep for 1 second
     time.sleep(1)
 
-    # Write the second version of the file
-    module_path = loader.create_module_files(module_name, module_code)
-
     module = loader.load_module_from_file(module_path)
 
     assert module.l == []
