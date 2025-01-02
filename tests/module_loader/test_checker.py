@@ -1,11 +1,10 @@
 from types import ModuleType
-from typing import TypedDict
+from typing import Coroutine, TypedDict
 from unittest.mock import MagicMock
 
 import pytest
 
 import module_loader.checker as checker
-from notifications import BaseNotification
 from options import (
     AlertOptions,
     CountRule,
@@ -255,6 +254,13 @@ def test_check_reaction_options_wrong_type(monitor_mock):
 
 
 # Test _check_notification_options
+
+class BaseNotification:
+    """Notification class to be used in the tests"""
+    min_priority_to_send: int = 5
+
+    def reactions_list(self) -> list[tuple[str, list[Coroutine]]]:
+        return []
 
 
 def test_check_notification_options_defined(monitor_mock):

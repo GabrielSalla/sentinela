@@ -2,9 +2,9 @@ from unittest.mock import AsyncMock
 
 import pytest
 
-import registry as registry
 import plugins.slack.actions.actions as actions
 import plugins.slack.notifications.slack_notification as slack_notification
+import registry as registry
 from models import Alert, Monitor, Notification, NotificationStatus
 from tests.test_utils import assert_message_in_log
 
