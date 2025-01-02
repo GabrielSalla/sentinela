@@ -11,7 +11,6 @@ import utils.app as app
 import utils.time as time_utils
 from configs import configs
 from models import CodeModule, Monitor
-from notifications import BaseNotification
 from options import ReactionOptions
 from registry import registry
 from tests.test_utils import assert_message_in_log
@@ -454,7 +453,9 @@ async def test_configure_monitor_notifications_setup(monkeypatch, sample_monitor
 
     async def do_nothing(): ...
 
-    class MockNotification(BaseNotification):
+    class MockNotification:
+        min_priority_to_send = 5
+
         def reactions_list(self):
             return [
                 ("alert_updated", [do_nothing]),

@@ -10,7 +10,6 @@ from tabulate import tabulate
 
 from configs import configs
 from models import Alert, AlertPriority, AlertStatus, Issue, IssueStatus, Monitor, Notification
-from notifications.base_notification import BaseNotification
 
 from .. import slack
 
@@ -33,7 +32,7 @@ PRIORITY_COLOR = {
 
 @dataclass_validate(strict=True)
 @dataclass(kw_only=True)
-class SlackNotification(BaseNotification):
+class SlackNotification:
     """
     The **SlackNotification** class manages sending notifications for alerts to a specified Slack
     channel.
