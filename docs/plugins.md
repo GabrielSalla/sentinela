@@ -34,17 +34,29 @@ await plugin.my_plugin.actions.action_name({"key": "value"})
 ## Notifications
 Notifications are used by monitors, usually to notify about an event. Each notification has it's own settings and behaviors.
 
-Notifications must inherit from the `src.notifications.base_notification.BaseNotification` class. The method `reactions_list` must return a list of reactions that will trigger an action. Each reaction is a tuple with the reaction name and a list of coroutines that must be called when the reaction is triggered.
+Notifications must have the structure defined by the `src.notifications.base_notification.BaseNotification` **protocol**. The method `reactions_list` returns a list of reactions that will trigger an action. Each reaction is a tuple with the reaction name and a list of coroutines that must be called when the reaction is triggered.
 
-Example:
+Notification base structure:
 ```python
-def reactions_list(self) -> list[tuple[str, list[Coroutine | partial[Coroutine]]]]:
-    """Get a list of events that the notification will react to"""
-    return [
-        ("alert_acknowledged", [handle_event_acknowledged]),
-        ("alert_created", [handle_event_created]),
-        ("alert_solved", [handle_event_solved]),
-    ]
+class Notification:
+    min_priority_to_send: int = 5
+
+    def reactions_list(self) -> list[tuple[str, list[Coroutine | partial[Coroutine]]]]:
+        ...
+```
+
+A notification can have more parameters necessary to control their behavior. An example of a notification implementation is:
+```python
+class MyNotification:
+    min_priority_to_send: int = 5
+
+    def reactions_list(self) -> list[tuple[str, list[Coroutine | partial[Coroutine]]]]:
+        """Get a list of events that the notification will react to"""
+        return [
+            ("alert_acknowledged", [handle_event_acknowledged]),
+            ("alert_created", [handle_event_created]),
+            ("alert_solved", [handle_event_solved]),
+        ]
 ```
 
 The reaction functions must follow the same structure presented in the [Monitor](./monitors.md) documentation.
