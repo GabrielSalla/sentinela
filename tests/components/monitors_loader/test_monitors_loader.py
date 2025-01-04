@@ -446,12 +446,16 @@ async def test_configure_monitor(monkeypatch, sample_monitor: Monitor):
 async def test_configure_monitor_notifications_setup(monkeypatch, sample_monitor: Monitor):
     """'_configure_monitor' should extend the reactions in the 'reaction_options' fields with the
     reactions from the notifications from the 'notification_options'"""
+    async def do_something(): ...
+    async def do_nothing(): ...
+
     monitor_module = sample_monitor.code
     monkeypatch.setattr(
-        monitor_module, "reaction_options", ReactionOptions(alert_updated=["abc"]), raising=False
+        monitor_module,
+        "reaction_options",
+        ReactionOptions(alert_updated=[do_something]),
+        raising=False,
     )
-
-    async def do_nothing(): ...
 
     class MockNotification:
         min_priority_to_send = 5
@@ -466,7 +470,7 @@ async def test_configure_monitor_notifications_setup(monkeypatch, sample_monitor
 
     monitors_loader._configure_monitor(monitor_module)
 
-    assert monitor_module.reaction_options.alert_updated == ["abc", do_nothing]
+    assert monitor_module.reaction_options.alert_updated == [do_something, do_nothing]
     assert monitor_module.reaction_options.alert_solved == [do_nothing, "do_nothing"]
 
 

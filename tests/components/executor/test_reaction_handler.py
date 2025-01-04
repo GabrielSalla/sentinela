@@ -159,9 +159,9 @@ async def test_run_partial(monkeypatch, sample_monitor: Monitor):
 
 async def test_run_function_no_name(caplog, mocker, monkeypatch, sample_monitor: Monitor):
     """'run' should handle reactions that doesn't have a name. The function name is for logging"""
-    # Create an object that has no '__name__' attribute but is callable
     monkeypatch.setattr(configs, "executor_reaction_timeout", 0.1)
 
+    # Create an object that has no '__name__' attribute but is callable
     class Mock:
         def __call__(self, message_payload):
             async def long_sleep():

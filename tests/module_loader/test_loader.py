@@ -3,8 +3,8 @@ import sys
 import time
 from pathlib import Path
 
+import pydantic
 import pytest
-from dataclass_type_validator import TypeValidationError
 
 import module_loader.loader as loader
 from tests.test_utils import assert_message_in_log
@@ -188,14 +188,12 @@ def test_load_module_from_file_syntax_error():
 
 
 def test_load_module_from_file_dataclass_validation_error():
-    """'load_module_from_file' should raise a 'TypeValidationError' if the module initializes a
+    """'load_module_from_file' should raise a 'pydantic.ValidationError' if the module initializes a
     dataclass with invalid values"""
     module_name = "load_module_from_file_dataclass_validation_error_1"
     module_code = "\n".join([
-        "from dataclasses import dataclass",
-        "from dataclass_type_validator import dataclass_validate",
+        "from pydantic.dataclasses import dataclass",
         "\n",
-        "@dataclass_validate(strict=True)",
         "@dataclass",
         "class Data:",
         "    value: str",
@@ -204,9 +202,6 @@ def test_load_module_from_file_dataclass_validation_error():
     ])
 
     module_path = loader.create_module_files(module_name, module_code)
-    expected_error_message = (
-        "errors = {'value': \"must be an instance of <class 'str'>, "
-        "but received <class 'int'>\"}"
-    )
-    with pytest.raises(TypeValidationError, match=expected_error_message):
+
+    with pytest.raises(pydantic.ValidationError, match="1 validation error for Data"):
         loader.load_module_from_file(module_path)

@@ -1,11 +1,10 @@
 import json
 import logging
 import os
-from dataclasses import dataclass
 from functools import partial
 from typing import Any, Coroutine
 
-from dataclass_type_validator import dataclass_validate
+from pydantic.dataclasses import dataclass
 from pytz import timezone
 from tabulate import tabulate
 
@@ -31,7 +30,6 @@ PRIORITY_COLOR = {
 }
 
 
-@dataclass_validate(strict=True)
 @dataclass(kw_only=True)
 class SlackNotification:
     """

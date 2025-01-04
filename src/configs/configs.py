@@ -1,12 +1,10 @@
 import os
-from dataclasses import dataclass
 from typing import Any
 
 import yaml
-from dataclass_type_validator import dataclass_validate
+from pydantic.dataclasses import dataclass
 
 
-@dataclass_validate(strict=True)
 @dataclass
 class Configs:
     load_sample_monitors: bool

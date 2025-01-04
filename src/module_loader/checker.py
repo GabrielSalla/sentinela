@@ -140,14 +140,6 @@ def _check_reaction_functions(reaction_options: ReactionOptions) -> list[str]:
     errors: list[str] = []
 
     for field in ReactionOptions.__dataclass_fields__:
-        if not isinstance(reaction_options[field], list):
-            errors.append(
-                ERROR_FIELD_WRONG_TYPE.format(
-                    display_name=f"reaction_options.{field}", expected_type="list[Coroutine]"
-                )
-            )
-            continue
-
         # Check each item in the reactions list
         for item in reaction_options[field]:
             try:
