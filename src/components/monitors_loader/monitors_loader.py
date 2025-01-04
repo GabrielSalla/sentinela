@@ -1,10 +1,11 @@
 import asyncio
 import logging
 import shutil
-from dataclasses import dataclass
 from datetime import datetime
 from pathlib import Path
 from typing import Generator, cast
+
+from pydantic.dataclasses import dataclass
 
 import module_loader as module_loader
 import registry as registry

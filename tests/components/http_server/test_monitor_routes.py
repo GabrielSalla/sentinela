@@ -248,13 +248,11 @@ async def test_monitor_register_missing_parameter():
 
 async def test_monitor_register_dataclass_validation_error():
     """The 'monitor register' route should return an error if the provided module code has a
-    TypeValidationError"""
+    'pydantic.ValidationError'"""
     request_payload = {
         "monitor_code": "\n".join([
-            "from dataclasses import dataclass",
-            "from dataclass_type_validator import dataclass_validate",
+            "from pydantic.dataclasses import dataclass",
             "\n",
-            "@dataclass_validate(strict=True)",
             "@dataclass",
             "class Data:",
             "    value: str",
@@ -269,9 +267,13 @@ async def test_monitor_register_dataclass_validation_error():
             assert await response.json() == {
                 "status": "error",
                 "message": "Type validation error",
-                "error": {
-                    "value": "must be an instance of <class 'str'>, but received <class 'int'>"
-                },
+                "error": [
+                    {
+                        "loc": ["value"],
+                        "type": "string_type",
+                        "msg": "Input should be a valid string",
+                    },
+                ],
             }
 
 

@@ -1,12 +1,11 @@
-from dataclasses import dataclass, field
+from dataclasses import field
 from typing import Any, Callable, Coroutine
 
-from dataclass_type_validator import dataclass_validate
+from pydantic.dataclasses import dataclass
 
 from configs import configs
 
 
-@dataclass_validate(strict=True)
 @dataclass
 class MonitorOptions:
     """
@@ -24,7 +23,6 @@ class MonitorOptions:
     execution_timeout: int = configs.executor_monitor_timeout
 
 
-@dataclass_validate(strict=True)
 @dataclass
 class IssueOptions:
     """
@@ -42,7 +40,6 @@ class IssueOptions:
     unique: bool = False
 
 
-@dataclass_validate(strict=True)
 @dataclass
 class PriorityLevels:
     """
@@ -64,7 +61,6 @@ class PriorityLevels:
         return getattr(self, name)
 
 
-@dataclass_validate(strict=True)
 @dataclass
 class AgeRule:
     """
@@ -77,7 +73,6 @@ class AgeRule:
     priority_levels: PriorityLevels
 
 
-@dataclass_validate(strict=True)
 @dataclass
 class CountRule:
     """
@@ -91,7 +86,6 @@ class CountRule:
     priority_levels: PriorityLevels
 
 
-@dataclass_validate(strict=True)
 @dataclass
 class ValueRule:
     """
@@ -110,7 +104,6 @@ class ValueRule:
     priority_levels: PriorityLevels
 
 
-@dataclass_validate(strict=True)
 @dataclass
 class AlertOptions:
     """
@@ -128,7 +121,6 @@ class AlertOptions:
 reaction_function_type = Callable[[dict[str, Any]], Coroutine[Any, Any, Any]]
 
 
-@dataclass_validate(strict=True)
 @dataclass
 class ReactionOptions:
     """

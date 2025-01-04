@@ -1,7 +1,10 @@
+import inspect
+import re
 from types import ModuleType
 from typing import Coroutine, TypedDict
 from unittest.mock import MagicMock
 
+import pydantic
 import pytest
 
 import module_loader.checker as checker
@@ -147,54 +150,69 @@ def test_check_alert_options_wrong_type(monitor_mock):
 
 
 # Test _check_reaction_functions
+# Test ReactionOptions expected errors when creating the instance
 
 
-def test_check_reaction_functions_with_async_function():
-    """'_check_reaction_functions' should return no erros if all functions in the list are
-    asynchronous"""
+def test_check_reaction_options_async_function():
+    """Creating an instance of 'ReactionOptions' should return no erros if the function in the list
+    is asynchronous"""
     async def async_function(): ...
 
-    reaction_options = ReactionOptions(
+    ReactionOptions(
         alert_created=[async_function],
     )
 
-    assert checker._check_reaction_functions(reaction_options) == []
 
-
-def test_check_reaction_functions_with_many_async_functions():
-    """'_check_reaction_functions' should return no erros if all functions in the list are
-    asynchronous"""
+def test_check_reaction_options_with_many_async_functions():
+    """Creating an instance of 'ReactionOptions' should return no erros if all functions in the
+    list are asynchronous"""
     async def another_async_function(): ...
 
-    reaction_options = ReactionOptions(
+    ReactionOptions(
         alert_created=[async_function, another_async_function],
     )
 
-    assert checker._check_reaction_functions(reaction_options) == []
+
+def test_check_reaction_options_not_list():
+    """Creating an instance of 'ReactionOptions' should raise a "pydantic.ValidationError" if any
+    of the fields is not a list"""
+    with pytest.raises(pydantic.ValidationError, match="1 validation error for ReactionOptions"):
+        ReactionOptions(
+            alert_created={"func": sync_function},
+        )
 
 
-def test_check_reaction_functions_not_list(caplog):
-    """'_check_reaction_functions' should return errors if the 'reaction_options' field is not a
-    list"""
-    reaction_options = ReactionOptions(
-        alert_created={sync_function},
-    )
-
-    assert checker._check_reaction_functions(reaction_options) == [
-        "'reaction_options.alert_created' must be an instance of 'list[Coroutine]'"
-    ]
-
-
-def test_check_reaction_functions_with_sync_function(caplog):
+def test_check_reaction_options_with_sync_function(monkeypatch):
     """'_check_reaction_functions' should return errors if any function in the list is
     synchronous"""
+    monkeypatch.setattr(inspect, "isfunction", lambda _: True)
+
     reaction_options = ReactionOptions(
         alert_created=[sync_function],
     )
-
     assert checker._check_reaction_functions(reaction_options) == [
         "function 'reaction_options.alert_created.sync_function' must be asynchronous"
     ]
+
+
+def test_check_reaction_options_with_sync_function_no_name(monkeypatch):
+    """'_check_reaction_functions' should return errors if any function in the list is
+    synchronous"""
+    # As the 'MagicMock' is used as an object without the '__name__' attribute and is not a real
+    # function, the 'inspect' functions must be mocked
+    monkeypatch.setattr(inspect, "isfunction", lambda _: True)
+    monkeypatch.setattr(inspect, "iscoroutinefunction", lambda _: False)
+
+    reaction_options = ReactionOptions(
+        alert_created=[MagicMock()],
+    )
+    errors = checker._check_reaction_functions(reaction_options)
+
+    assert len(errors) == 1
+    assert re.match(
+        r"function 'reaction_options.alert_created.<MagicMock id='\d+'>' must be asynchronous",
+        errors[0],
+    ) is not None
 
 
 @pytest.mark.parametrize("functions", [
@@ -202,29 +220,13 @@ def test_check_reaction_functions_with_sync_function(caplog):
     ["string", async_function],
     [async_function, "string"],
 ])
-def test_check_reaction_functions_with_wrong_functions_type(functions):
-    """'_check_reaction_functions' should return errors if any function in the list is not a
-    function"""
-    reaction_options = ReactionOptions(
-        alert_created=functions,
-    )
-
-    assert checker._check_reaction_functions(reaction_options) == [
-        "'reaction_options.alert_created.string' must be a function"
-    ]
-
-
-def test_check_reaction_functions_with_wrong_functions_type_multiple():
-    """'_check_reaction_functions' should return errors if any item in the list is not a function"""
-    reaction_options = ReactionOptions(
-        alert_created=["string", sync_function],
-    )
-
-    assert checker._check_reaction_functions(reaction_options) == [
-        "'reaction_options.alert_created.string' must be a function",
-        "function 'reaction_options.alert_created.sync_function' must be asynchronous",
-    ]
-
+def test_check_reaction_options_with_wrong_functions_type(functions):
+    """Creating an instance of 'ReactionOptions' should raise a "pydantic.ValidationError" if any
+    of the fields has an item that is not a function"""
+    with pytest.raises(pydantic.ValidationError, match="1 validation error for ReactionOptions"):
+        ReactionOptions(
+            alert_created=functions,
+        )
 
 # Test _check_reaction_options
 

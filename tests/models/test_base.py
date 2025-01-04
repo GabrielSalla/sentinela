@@ -18,6 +18,9 @@ from tests.test_utils import assert_message_in_log
 
 pytestmark = pytest.mark.asyncio(loop_scope="session")
 
+
+async def do_nothing(): ...
+
 # To test the Base class other models will be used, because most of the methods will make
 # operations on the internal database, so there must be a table for it
 
@@ -43,7 +46,10 @@ async def test_should_queue_event_invalid_event(monkeypatch, sample_monitor: Mon
     """'Base._should_queue_event' should return 'False' if the event name is invalid"""
     monitor_code = registry._monitors[sample_monitor.id]["module"]
     monkeypatch.setattr(
-        monitor_code, "reaction_options", ReactionOptions(alert_created=["aaa"]), raising=False
+        monitor_code,
+        "reaction_options",
+        ReactionOptions(alert_created=[do_nothing]),
+        raising=False,
     )
 
     assert sample_monitor._should_queue_event(event_name) is False
@@ -63,7 +69,10 @@ async def test_should_queue_event(monkeypatch, sample_monitor: Monitor, event_na
     'reaction_options' settings"""
     monitor_code = registry._monitors[sample_monitor.id]["module"]
     monkeypatch.setattr(
-        monitor_code, "reaction_options", ReactionOptions(**{event_name: ["aaa"]}), raising=False
+        monitor_code,
+        "reaction_options",
+        ReactionOptions(**{event_name: [do_nothing]}),
+        raising=False,
     )
 
     assert sample_monitor._should_queue_event(event_name) is True
@@ -86,7 +95,10 @@ async def test_create_event_queued(
 
     monitor_code = registry._monitors[sample_monitor.id]["module"]
     monkeypatch.setattr(
-        monitor_code, "reaction_options", ReactionOptions(**{event_name: ["aaa"]}), raising=False
+        monitor_code,
+        "reaction_options",
+        ReactionOptions(**{event_name: [do_nothing]}),
+        raising=False,
     )
 
     build_event_payload_spy: MagicMock = mocker.spy(sample_monitor, "_build_event_payload")

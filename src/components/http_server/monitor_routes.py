@@ -1,8 +1,8 @@
 import logging
 import traceback
 
+import pydantic
 from aiohttp import web
-from dataclass_type_validator import TypeValidationError
 
 import external_requests as external_requests
 from components.monitors_loader import MonitorValidationError
@@ -68,6 +68,8 @@ async def monitor_register(request):
     monitor_code = request_data.get("monitor_code")
     additional_files = request_data.get("additional_files", {})
 
+    error_response: dict[str, str | list]
+
     if monitor_code is None:
         error_response = {
             "status": "error",
@@ -82,11 +84,18 @@ async def monitor_register(request):
         monitor = await external_requests.monitor_register(
             monitor_name, monitor_code, additional_files
         )
-    except TypeValidationError as e:
+    except pydantic.ValidationError as e:
         error_response = {
             "status": "error",
             "message": "Type validation error",
-            "error": e.errors,
+            "error": [
+                {
+                    "loc": list(error["loc"]),
+                    "type": error["type"],
+                    "msg": error["msg"],
+                }
+                for error in e.errors()
+            ],
         }
         return web.json_response(error_response, status=400)
     except MonitorValidationError as e:

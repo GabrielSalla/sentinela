@@ -1,7 +1,7 @@
 import os
-from dataclasses import dataclass
 from typing import Any, cast
 
+from pydantic.dataclasses import dataclass
 from slack_sdk.errors import SlackApiError
 from slack_sdk.web.async_client import AsyncSlackResponse, AsyncWebClient
 
