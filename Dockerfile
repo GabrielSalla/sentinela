@@ -8,13 +8,15 @@ WORKDIR /app
 RUN apk add curl \
     && python3 -m venv $VIRTUAL_ENV \
     && pip install --upgrade pip \
-    && pip3 install poetry
+    && pip install poetry --no-cache-dir
 
 COPY . /app/
 
-RUN poetry install --no-root --only main
+RUN poetry install --no-root --only main \
+    && poetry cache clear --no-interaction --all .
 
 
 FROM sentinela AS sentinela_dev
 
-RUN poetry install --no-root
+RUN poetry install --no-root \
+    && poetry cache clear --no-interaction --all .
