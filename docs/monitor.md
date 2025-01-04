@@ -107,21 +107,21 @@ alert_options = AlertOptions(
 )
 ```
 
-## Age rule
+### Age rule
 The **Age Rule** calculates the alert priority based on the age of the active issues. The alert level will be determined by the **oldest active issue** in the alert. The priority value represents the issue age in **seconds** that triggers each alert level.
 - `priority_levels`: Defines the values to trigger each alert level based on the issue age. The priority will be triggered when the **age of the oldest active issue is greater than the level defined** for that priority.
 
-## Count rule
+### Count rule
 The **Count Rule** calculates the alert priority based on the number of active issues linked to the alert. The alert level will be determined by the **number of active issues**. The priority value indicates how many active issues trigger each alert level.
 - `priority_levels`: Defines the values to trigger each alert level based on the number of active issues. The priority will be triggered when the **number of active issues is greater than the level defined** for that priority.
 
-## Value rule
+### Value rule
 The **Value Rule** calculates the alert priority based on a specific value from the issue's data. For each active issue the priority level will be determined by the **'value'** of the provided `value_key` in the issue data. The alert priority level will be the highest priority level triggered between all the active issues.
 - `value_key`: The **key in the issue data** that contains the numeric value. This value will be compared against the priority levels to calculate the priority level.
 - `operation`: Defines the comparison operation to use between the value and the priority levels. Can be either `greater_than` (to trigger the level when the value exceeds the value for each priority) or `lesser_than` (to trigger the level when the value is below the level for each priority). A value exactly equal to the priority level will not trigger it and will, instead, trigger a lower priority or `None` if it's the lowest priority level defined.
 - `priority_levels`: Defines the values that the issues data values will be compared to, to calculate the alert priority level.
 
-## Priority levels
+### Priority levels
 Priority levels definition. For the defined rule, what value should trigger each level.
 - `informational`: Level that triggers **informational P5** alerts.
 - `low`: Level that triggers **low P4** alerts.
@@ -296,8 +296,6 @@ The `query` function allows querying data from available databases. For more det
 
 ## Read file
 The `read_file` function reads files in the same directory as the monitor code, making it useful for accessing other resources that the monitor relies on, such as SQL query files.
-
-The `read_file` is used to read files relative to the monitor path. It's useful when there're resources used by the monitor that are not, necessarily, defined in it's code, like SQL query files.
 
 The function takes 2 parameters:
 - `file_name`: The name of the file located in the same directory as the monitor code.

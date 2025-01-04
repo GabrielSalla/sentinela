@@ -19,7 +19,7 @@ For a database named `users`, set up an environment variable `DATABASE_USERS` co
 ## PostgreSQL DSN
 Possible DSNs pattern to connect to PostgreSQL databases is:
 ```
-postgres[+asyncpg]://user:password@host:5432/database`
+postgres[+asyncpg]://user:password@host:5432/database
 ```
 
 # Querying data
