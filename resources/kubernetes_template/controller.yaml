@@ -28,6 +28,8 @@ spec:
           value: C07NCL94SDT
         - name: SAMPLE_SLACK_MENTION
           value: U07NFGGMB98
+        - name: SLACK_WEBSOCKET_ENABLED
+          value: "true"
         - name: DATABASE_APPLICATION
           valueFrom:
             secretKeyRef:

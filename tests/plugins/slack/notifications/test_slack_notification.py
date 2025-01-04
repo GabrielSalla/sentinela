@@ -306,7 +306,7 @@ async def test_build_notification_buttons(
     """'_build_notification_buttons' should return the list with the correct buttons according to
     the alert parameters and the monitor's issue options. If the slack websocket is disabled, it
     should return an empty list"""
-    monkeypatch.setattr(configs, "slack_websocket_enabled", slack_websocket_enabled)
+    monkeypatch.setenv("SLACK_WEBSOCKET_ENABLED", str(slack_websocket_enabled).lower())
     monkeypatch.setattr(sample_monitor.code.issue_options, "solvable", solvable)
     alert = await Alert.create(
         monitor_id=sample_monitor.id,
@@ -346,8 +346,10 @@ async def test_build_notification_buttons(
         index += 1
 
 
-async def test_build_notification_buttons_solved(sample_monitor: Monitor):
+async def test_build_notification_buttons_solved(monkeypatch, sample_monitor: Monitor):
     """'_build_notification_buttons' should return an empty list if the alert is solved"""
+    monkeypatch.setenv("SLACK_WEBSOCKET_ENABLED", "true")
+
     alert = await Alert.create(
         monitor_id=sample_monitor.id,
         status=AlertStatus.solved,

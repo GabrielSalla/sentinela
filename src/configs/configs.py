@@ -28,7 +28,6 @@ class Configs:
 
     controller_process_schedule: str
     controller_concurrency: int
-    slack_websocket_enabled: bool
 
     executor_concurrency: int
     executor_sleep: int
