@@ -1,5 +1,6 @@
 import json
 import logging
+import os
 from dataclasses import dataclass
 from functools import partial
 from typing import Any, Coroutine
@@ -163,7 +164,7 @@ async def _build_notification_buttons(
     """Build the buttons that will be shown in the notification message"""
     buttons: list[slack.MessageButton] = []
 
-    if not configs.slack_websocket_enabled:
+    if os.environ.get("SLACK_WEBSOCKET_ENABLED", "false") == "false":
         return buttons
 
     if alert.status == AlertStatus.solved:

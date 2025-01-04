@@ -43,7 +43,6 @@ from monitor_utils import (
     IssueOptions,
     MonitorOptions,
     PriorityLevels,
-    SlackNotification,
 )
 ```
 

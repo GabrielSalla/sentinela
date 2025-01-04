@@ -169,5 +169,4 @@ async def run():
             sleep_time = time_until_next_trigger(controller_process_schedule)
             await app.sleep(sleep_time)
 
-    # Wait for Slack websocket and all tasks to finish
     _logger.info("Finishing")

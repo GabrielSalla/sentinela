@@ -1,6 +1,12 @@
 # Slack Plugin
 The Slack plugin offers an interface to interact with Sentinela through Slack. It allows users to receive notifications from Sentinela in a Slack channel while also providing useful commands from notification buttons or Slack messages mentioning the Sentinela bot.
 
+## Environment variables
+The following environment variables are used by the Slack plugin:
+- `SLACK_TOKEN`: Used to send messages to Slack. Example: `xoxb-1234567890-1234567890123-12345678901234567890abcdef`
+- `SLACK_WEBSOCKET_ENABLED`: Used to enable the websocket to receive events from Slack. Possible values are `true` or `false`.
+- `SLACK_APP_TOKEN` Used to start the websocket, to receive the events from interactions with the Sentinela Slack app. Example: `xapp-1234567890-1234567890123-12345678901234567890abcdef`
+
 ## Slack commands
 Sentinela provides two main ways to interact through Slack:
 1. **Buttons** in notifications sent to a Slack channel.

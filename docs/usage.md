@@ -9,9 +9,11 @@ THe monitors path is also defined in the `configs.yaml` file. By default, it's s
 For the secrets, the application expects them to be set as environment variables.
 - `DATABASE_APPLICATION`: The database DSN that will be used to connect to the application database. This database will not be accessible through the databases interface for the monitors.
 - Every variable that starts with `DATABASE`, besides the application database, will have a connection pool instantiated, that can be used in the monitors to query data from them.
-- `SLACK_TOKEN` and `SLACK_APP_TOKEN` will be used as the token to send messages to Slack and to start the websocket, to receive the events from interactions with the Sentinela Slack app.
 - `AWS_ENDPOINT_URL`: The AWS endpoint to be used for local testing, without the need of a real SQS queue. When using the `motoserver` container as an AWS mock, it should be `http://motoserver:5000`. Don't set this environment variable when using a real SQS queue.
 - `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY` and `AWS_SESSION_TOKEN`: The service credentials to access the AWS SQS queue.
+
+> [!IMPORTANT]
+> Check the documentation for the plugins that are being used to see if they have environment variables of their own.
 
 ## Development execution
 Development execution should be used when developing or testing the platform features. It's not intended to be used to develop monitors as it might set variables that might interfere with the monitors execution.

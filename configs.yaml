@@ -61,9 +61,6 @@ time_zone: America/Sao_Paulo
 controller_process_schedule: "* * * * *"
 # How many monitors can be processed at the same time by the Controller
 controller_concurrency: 5
-# Enable or disable the Slack websocket
-# The websocket is used to receive the mentions and button presses from notification messages
-slack_websocket_enabled: true
 
 # Executor settings
 # How many tasks can be executed at the same time by each Executor

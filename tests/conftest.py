@@ -19,7 +19,6 @@ import databases as databases
 import internal_database as internal_database
 import message_queue as message_queue
 import module_loader as module_loader
-import tests.plugins.slack.slack_mock as slack_mock
 import utils.app as app
 from models import CodeModule, Monitor
 from registry import registry
@@ -100,14 +99,6 @@ async def clean_database_environment(init_databases):
 async def clear_database(init_databases):
     """Clear all the tables by truncating the Monitors table"""
     await databases.query_application('truncate "Monitors" cascade;')
-
-
-@pytest_asyncio.fixture(loop_scope="session", scope="session", autouse=True)
-async def mock_slack_requests(monkeypatch_session):
-    """Mock the slack requests"""
-    await slack_mock.init(monkeypatch_session)
-    yield
-    await slack_mock.stop()
 
 
 @pytest.fixture(scope="session", autouse=True)

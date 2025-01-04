@@ -62,7 +62,9 @@ async def command(ack, body, say):
 async def init(controller_enabled: bool, executor_enabled: bool):  # pragma: no cover
     global _handler
 
-    if not controller_enabled:
+    slack_websocket_enabled = os.environ.get("SLACK_WEBSOCKET_ENABLED", "false") == "true"
+
+    if not (controller_enabled and slack_websocket_enabled):
         _handler = None
         return
 
