@@ -3,7 +3,8 @@ from unittest.mock import MagicMock
 import pytest
 
 import plugins.slack.slack as slack
-import tests.plugins.slack.slack_mock as slack_mock
+
+from . import slack_mock
 
 pytestmark = pytest.mark.asyncio(loop_scope="session")
 
