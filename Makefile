@@ -2,7 +2,7 @@ build-dev:
 	docker compose -f docker-compose-dev.yaml build sentinela-dev
 
 pull-dev:
-	docker compose -f docker-compose-dev.yaml pull postgres motoserver
+	docker compose -f docker-compose-dev.yaml pull --quiet postgres motoserver
 
 migrate-dev:
 	docker compose -f docker-compose-dev.yaml run --rm --service-ports sentinela-dev alembic upgrade head

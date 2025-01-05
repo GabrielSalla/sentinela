@@ -1,7 +1,7 @@
 import asyncio
 import logging
 import shutil
-from datetime import datetime
+from datetime import datetime, timedelta
 from pathlib import Path
 from typing import Generator, cast
 
@@ -23,6 +23,7 @@ _logger = logging.getLogger("monitor_loader")
 RELATIVE_PATH = "src"
 MONITORS_PATH = "_monitors"
 MONITORS_LOAD_PATH = "_monitors_load"
+EARLY_LOAD_TIME = 5
 COOL_DOWN_TIME = 2
 
 _task: asyncio.Task
@@ -241,18 +242,26 @@ async def _load_monitors():
 
 async def _run():
     """Monitors loading loop, loading them recurrently. Stops automatically when the app stops"""
-    last_load_time: datetime | None = None
+    last_load_time: datetime
 
     while app.running():
         with catch_exceptions(_logger):
             await _load_monitors()
             last_load_time = now()
 
-            # The sleep task will start 2 seconds earlier to try to load all monitors before the
+            # The sleep task will start seconds earlier to try to load all monitors before the
             # next controller and executor loops start
-            sleep_task = asyncio.create_task(
-                app.sleep(time_until_next_trigger(configs.monitors_load_schedule) - 2)
+            # Adding the EARLY_LOAD_TIME to the datetime reference to make sure the next trigger
+            # won't be the same one that triggered the current one
+            # Example: the expected time to reload is 10:00 but 5 seconds were subtracted
+            # (the early load) from the sleep time. If the monitors were loaded in less than 5
+            # seconds, the 'time_until_next_trigger' function would return 10:00 again, instead of
+            # the expected trigger time
+            sleep_time = time_until_next_trigger(
+                configs.monitors_load_schedule,
+                datetime_reference=now() + timedelta(seconds=EARLY_LOAD_TIME)
             )
+            sleep_task = asyncio.create_task(app.sleep(sleep_time))
             registry_pending_task = asyncio.create_task(registry.monitors_pending.wait())
 
             done, pending = await asyncio.wait(
