@@ -1,4 +1,5 @@
 import asyncio
+from datetime import datetime, timezone
 from pathlib import Path
 from types import ModuleType
 from unittest.mock import AsyncMock
@@ -597,7 +598,6 @@ async def test_run_as_controller(mocker, monkeypatch, clear_database):
 
     _load_monitors_spy: AsyncMock = mocker.spy(monitors_loader, "_load_monitors")
 
-    # The monitors already exist in the database, so prevent from trying to reload them
     await monitors_loader.init(controller_enabled=True)
 
     for _ in range(3):
@@ -640,7 +640,6 @@ async def test_run_as_executor(mocker, monkeypatch, clear_database):
         "(9999457, 'def get_value(): return 10');"
     )
 
-    # The monitors already exist in the database, so prevent from trying to reload them
     await monitors_loader.init(controller_enabled=False)
 
     for _ in range(3):
@@ -684,7 +683,6 @@ async def test_run_cool_down(mocker, monkeypatch, clear_database):
         "(9999457, 'def get_value(): return 10');"
     )
 
-    # The monitors already exist in the database, so prevent from trying to reload them
     await monitors_loader.init(controller_enabled=False)
 
     for _ in range(3):
@@ -702,3 +700,47 @@ async def test_run_cool_down(mocker, monkeypatch, clear_database):
     assert len(registry._monitors) == 2
     assert isinstance(registry._monitors[9999123]["module"], ModuleType)
     assert isinstance(registry._monitors[9999456]["module"], ModuleType)
+
+
+@pytest.mark.parametrize("seconds, expected_sleep_time", [
+    (15, 40),
+    (50, 5),
+    (56, 59),
+])
+async def test_run_sleep_time(mocker, monkeypatch, clear_database, seconds, expected_sleep_time):
+    """Integration test of the 'monitors_loader' task.
+    The sleep time between the loops should consider the early loading time and should not load the
+    monitors before the next loop time"""
+    # Disable the monitor loading schedule to control using the 'monitors_pending' event
+    monkeypatch.setattr(configs, "monitors_load_schedule", "* * * * *")
+    monkeypatch.setattr(monitors_loader, "EARLY_LOAD_TIME", 5)
+    monkeypatch.setattr(monitors_loader, "COOL_DOWN_TIME", 0)
+    monkeypatch.setattr(
+        monitors_loader,
+        "now",
+        lambda: datetime(2024, 1, 1, 12, 34, seconds, tzinfo=timezone.utc)
+    )
+
+    sleep_spy: AsyncMock = mocker.spy(app, "sleep")
+
+    await databases.execute_application(
+        'insert into "Monitors"(id, name, enabled) values'
+        "(9999123, 'monitor_1', true),"
+        "(9999456, 'internal.monitor_2', true),"
+        "(9999457, 'disabled_monitor', false);"
+    )
+    await databases.execute_application(
+        'insert into "CodeModules"(monitor_id, code) values'
+        "(9999123, 'def get_value(): return 10'),"
+        "(9999456, 'def get_value(): return 10'),"
+        "(9999457, 'def get_value(): return 10');"
+    )
+
+    await monitors_loader.init(controller_enabled=False)
+    await asyncio.sleep(1)
+    app.stop()
+    await monitors_loader.wait_stop()
+
+    assert monitors_loader._task.done()
+
+    sleep_spy.assert_called_once_with(expected_sleep_time)
