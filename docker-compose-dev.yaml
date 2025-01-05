@@ -12,10 +12,10 @@ services:
       - 5000:5000
     healthcheck:
       test: curl --fail localhost:5000 || exit 1
-      interval: 5s
+      interval: 1s
       timeout: 1s
-      retries: 3
-      start_period: 5s
+      retries: 5
+      start_period: 1s
 
   sentinela-dev:
     build:
