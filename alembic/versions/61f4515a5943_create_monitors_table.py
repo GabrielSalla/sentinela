@@ -24,10 +24,12 @@ def upgrade() -> None:
         sa.Column("id", sa.Integer(), primary_key=True),
         sa.Column("name", sa.String(255), unique=True),
         sa.Column("enabled", sa.Boolean(), insert_default=True),
-        sa.Column("search_executed_at", sa.DateTime(timezone=True), nullable=True),
-        sa.Column("update_executed_at", sa.DateTime(timezone=True), nullable=True),
         sa.Column("queued", sa.Boolean(), insert_default=False),
         sa.Column("running", sa.Boolean(), insert_default=False),
+        sa.Column("queued_at", sa.DateTime(timezone=True), nullable=True),
+        sa.Column("running_at", sa.DateTime(timezone=True), nullable=True),
+        sa.Column("search_executed_at", sa.DateTime(timezone=True), nullable=True),
+        sa.Column("update_executed_at", sa.DateTime(timezone=True), nullable=True),
     )
 
 

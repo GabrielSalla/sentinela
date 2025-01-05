@@ -24,10 +24,12 @@ class Monitor(Base):
     id: Mapped[int] = mapped_column(Integer(), primary_key=True)
     name: Mapped[str] = mapped_column(String(255), unique=True, index=True)
     enabled: Mapped[bool] = mapped_column(Boolean(), insert_default=True)
-    search_executed_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=True)
-    update_executed_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=True)
     queued: Mapped[bool] = mapped_column(Boolean(), insert_default=False)
     running: Mapped[bool] = mapped_column(Boolean(), insert_default=False)
+    queued_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=True)
+    running_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=True)
+    search_executed_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=True)
+    update_executed_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=True)
 
     active_alerts: list[Alert]
     active_issues: list[Issue]
@@ -166,10 +168,14 @@ class Monitor(Base):
     def set_queued(self, value: bool):
         """Set the 'queued' to the provided value"""
         self.queued = value
+        if value:
+            self.queued_at = time_utils.now()
 
     def set_running(self, value: bool):
         """Set the 'running' to the provided value"""
         self.running = value
+        if value:
+            self.running_at = time_utils.now()
 
     def add_issues(self, issues: Issue | list[Issue]):
         """Add the provided issues to the monitor's 'active_issues' attributes"""

@@ -69,7 +69,6 @@ async def _queue_task(monitor: Monitor, tasks: list[str]):
                 "tasks": tasks,
             },
         )
-        _logger.info(str(tasks))
     except Exception:
         prometheus_task_queue_error_count.inc()
 
