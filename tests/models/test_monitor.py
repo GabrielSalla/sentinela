@@ -347,24 +347,40 @@ async def test_set_queued(sample_monitor: Monitor):
     """'Monitor.set_queued' should set the monitor's 'queued' to the provided value"""
     sample_monitor.set_queued(True)
     assert sample_monitor.queued is True
+    queued_at = sample_monitor.queued_at
+
     sample_monitor.set_queued(True)
     assert sample_monitor.queued is True
+    queued_at_2 = sample_monitor.queued_at
+    assert queued_at_2 > queued_at
+
     sample_monitor.set_queued(False)
     assert sample_monitor.queued is False
+    assert sample_monitor.queued_at == queued_at_2
+
     sample_monitor.set_queued(False)
     assert sample_monitor.queued is False
+    assert sample_monitor.queued_at == queued_at_2
 
 
 async def test_set_running(sample_monitor: Monitor):
     """'Monitor.set_running' should set the monitor's 'running' to the provided value"""
     sample_monitor.set_running(True)
     assert sample_monitor.running is True
+    running_at = sample_monitor.running_at
+
     sample_monitor.set_running(True)
     assert sample_monitor.running is True
+    running_at_2 = sample_monitor.running_at
+    assert running_at_2 > running_at
+
     sample_monitor.set_running(False)
     assert sample_monitor.running is False
+    assert sample_monitor.running_at == running_at_2
+
     sample_monitor.set_running(False)
     assert sample_monitor.running is False
+    assert sample_monitor.running_at == running_at_2
 
 
 async def test_add_issues_single(sample_monitor: Monitor):
