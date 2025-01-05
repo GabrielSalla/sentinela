@@ -114,6 +114,7 @@ def test_load_module_from_file_reload(caplog, n1, n2, expected_1, expected_2):
     module = loader.load_module_from_file(module_path)
 
     assert module.get_value() == expected_1
+    assert_message_in_log(caplog, f"Monitor '{module_name}' loaded")
 
     # As python checks for the timestamp to change to reload a module, sleep for 1 second
     time.sleep(1)
@@ -124,8 +125,7 @@ def test_load_module_from_file_reload(caplog, n1, n2, expected_1, expected_2):
     module = loader.load_module_from_file(module_path)
 
     assert module.get_value() == expected_2
-
-    assert_message_in_log(caplog, f"Monitor '{module_name}' reloaded")
+    assert_message_in_log(caplog, f"Monitor '{module_name}' loaded", count=2)
 
 
 def test_load_module_from_file_reload_replace_variables():
@@ -142,12 +142,19 @@ def test_load_module_from_file_reload_replace_variables():
     module.l.append(1)
     assert module.l == [1]
 
+    module.v = []  # type: ignore[attr-defined]
+    module.v.append(10)
+    assert module.v == [10]
+
     # As python checks for the timestamp to change to reload a module, sleep for 1 second
     time.sleep(1)
 
     module = loader.load_module_from_file(module_path)
 
     assert module.l == []
+    # The variable 'v' should not exist anymore when the module is reloaded
+    with pytest.raises(AttributeError):
+        module.v
 
 
 def test_load_module_from_file_long_load_time(caplog):

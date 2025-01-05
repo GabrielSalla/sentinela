@@ -63,6 +63,8 @@ async def run(message: dict[Any, Any]):
         except AttributeError:
             reaction_name = str(reaction)
 
+        _logger.info(f"Executing reaction '{reaction_name}' for {monitor}, event '{event_name}'")
+
         reaction_execution_time = prometheus_reaction_execution_time.labels(**prometheus_labels)
         try:
             with reaction_execution_time.time():

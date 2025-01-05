@@ -60,18 +60,17 @@ def create_module_files(
 
 
 def load_module_from_file(module_path: Path) -> ModuleType:
+    """Load a module from a path, returning the module"""
     module_name = module_path.as_posix().replace("/", ".").strip(".py")
     monitor_name = module_path.stem
 
     start_time = time.time()
 
-    module = sys.modules.get(module_name)
-    if module is None:
-        module = importlib.import_module(module_name)
-        _logger.info(f"Monitor '{monitor_name}' loaded")
-    else:
-        module = importlib.reload(module)
-        _logger.info(f"Monitor '{monitor_name}' reloaded")
+    if module_name in sys.modules:
+        del sys.modules[module_name]
+
+    module = importlib.import_module(module_name)
+    _logger.info(f"Monitor '{monitor_name}' loaded")
 
     end_time = time.time()
 
