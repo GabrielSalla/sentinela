@@ -68,7 +68,7 @@ def is_solved(issue_data: IssueDataType) -> bool:
 
 # Reactions
 
-async def reaction_issue_created(event_payload: dict[str, Any]):
+async def close_notification(event_payload: dict[str, Any]):
     """Fix the notification by closing it"""
     issue_object = event_payload["event_data"]
     notification = await Notification.get_by_id(issue_object["data"]["notification_id"])
@@ -77,6 +77,6 @@ async def reaction_issue_created(event_payload: dict[str, Any]):
 
 
 reaction_options = ReactionOptions(
-    issue_created=[reaction_issue_created],
-    issue_updated_not_solved=[reaction_issue_created],
+    issue_created=[close_notification],
+    issue_updated_not_solved=[close_notification],
 )
