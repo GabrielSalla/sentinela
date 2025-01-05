@@ -51,6 +51,7 @@ class SlackNotification:
     min_priority_to_send: int = AlertPriority.low
     mention: str | None = None
     min_priority_to_mention: int = AlertPriority.moderate
+    issue_show_limit: int = 10
 
     def reactions_list(self) -> list[tuple[str, list[Coroutine | partial[Coroutine]]]]:
         """Get a list of events that the notification will react to"""
@@ -137,7 +138,7 @@ async def _build_issues_table(
         Issue.alert_id == alert.id,
         Issue.status == IssueStatus.active,
         order_by=[Issue.created_at],
-        limit=configs.notifications_issue_show_limit,
+        limit=notification_options.issue_show_limit,
     )
 
     issues_count = await Issue.count(Issue.alert_id == alert.id, Issue.status == IssueStatus.active)
@@ -148,8 +149,8 @@ async def _build_issues_table(
     alert_content = tabulate(table, headers=notification_options.issues_fields)
 
     truncated_message = (
-        f"\n{issues_count - configs.notifications_issue_show_limit} more..."
-        if issues_count > configs.notifications_issue_show_limit
+        f"\n{issues_count - notification_options.issue_show_limit} more..."
+        if issues_count > notification_options.issue_show_limit
         else ""
     )
 

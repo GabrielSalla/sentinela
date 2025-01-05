@@ -62,6 +62,7 @@ Parameters:
 - `issues_fields`: A list of fields from the issue data to include in the notification.
 - `mention`: Slack user or group to mention if the alert reaches a specified priority. Provide the Slack identifier for a user (e.g., `U0011223344`) or a group (e.g., `G0011223344`). Set to `None` to avoid mentioning anyone. Defaults to `None`.
 - `min_priority_to_mention`: Minimum alert priority that triggers a mention. Mentions will occur if the alert is not acknowledged at the current priority level and it's is greater than or equal to this setting. Defaults to `moderate` (P3).
+- `issue_show_limit`: Maximum number of issues to show in the notification. If the limit is reached, the message `XXX more...` will be shown at the and of the issues list, where `XXX` is the number of issues that are not being shown. Defaults to 10.
 
 The Slack message will show the alert and it's issues information. The notification will persist and will be updated until the alert is solved, even if it's priority falls to P5.
 

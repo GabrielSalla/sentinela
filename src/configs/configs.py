@@ -44,8 +44,6 @@ class Configs:
 
     log_all_events: bool
 
-    notifications_issue_show_limit: int
-
 
 with open(os.environ.get("CONFIGS_FILE", "configs.yaml"), "r") as file:
     loaded_configs = yaml.load(file.read(), Loader=yaml.FullLoader)

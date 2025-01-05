@@ -225,16 +225,15 @@ async def test_build_notification_timestamps(
     ],
 )
 async def test_build_issues_table(
-    monkeypatch, sample_monitor: Monitor, status, issues_fields, issues_number
+    sample_monitor: Monitor, status, issues_fields, issues_number
 ):
     """'_build_issues_table' should return the content of the message for the notification
     message"""
-    monkeypatch.setattr(configs, "notifications_issue_show_limit", 10)
-
     notification_options = slack_notification.SlackNotification(
         channel="channel",
         title="title",
         issues_fields=issues_fields,
+        issue_show_limit=10,
     )
 
     alert = await Alert.create(monitor_id=sample_monitor.id, status=status)
