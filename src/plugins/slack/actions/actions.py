@@ -1,5 +1,5 @@
 import logging
-from typing import Any, cast
+from typing import Any
 
 import registry
 from models import Monitor, Notification, NotificationStatus
@@ -19,24 +19,24 @@ async def _resend_notification(notification: Notification):
         return  # pragma: no cover
 
     # Get the SlackNotification option from the monitor code
-    notification_option = None
     for notification_option in monitor.code.notification_options:
-        if isinstance(notification_option, slack_notification.SlackNotification):
-            break
-    if notification_option is None:
-        _logger.warning(f"No 'SlackNotification' option for {monitor}")
-        return
+        if not isinstance(notification_option, slack_notification.SlackNotification):
+            continue
 
-    # Clear the notification and send it again
-    await slack_notification.clear_slack_notification(notification)
-    await slack_notification.slack_notification(
-        event_payload={
-            "event_data": {
-                "id": notification.alert_id,
-            }
-        },
-        notification_options=cast(slack_notification.SlackNotification, notification_option),
-    )
+        if notification_option.channel == notification.data["channel"]:
+            # Clear the notification and send it again
+            await slack_notification.clear_slack_notification(notification)
+            await slack_notification.slack_notification(
+                event_payload={
+                    "event_data": {
+                        "id": notification.alert_id,
+                    }
+                },
+                notification_options=notification_option,
+            )
+            break
+    else:
+        _logger.warning(f"No 'SlackNotification' option for {monitor}")
 
 
 async def resend_notifications(message_payload: dict[Any, Any]):
