@@ -38,7 +38,8 @@ alert_options = AlertOptions(
 
 class IssueDataType(TypedDict):
     monitor_id: int
-    monitor_queued: bool
+    monitor_enabled: bool
+    monitor_pending: bool
     seconds_queued: int
 
 
@@ -68,23 +69,25 @@ async def update(issues_data: list[IssueDataType]) -> list[IssueDataType] | None
 
 def is_solved(issue_data: IssueDataType) -> bool:
     """Issue is solved when the monitor is not queued or it's been queued in the last 2 minutes"""
+    monitor_enabled = issue_data["monitor_enabled"]
+    monitor_pending = issue_data["monitor_pending"]
     issue_seconds_queued = issue_data["seconds_queued"]
-    monitor_queued = issue_data["monitor_queued"]
-    return not monitor_queued or issue_seconds_queued <= 120
+    return not monitor_enabled or not monitor_pending or issue_seconds_queued <= 120
 
 
 # Reactions
 
-async def reaction_issue_created(event_payload: dict[str, Any]):
+async def reset_monitor_state(event_payload: dict[str, Any]):
     """Fix the monitor by setting it's 'queued' value to 'false'"""
     issue_data = event_payload["event_data"]
     monitor = await Monitor.get_by_id(issue_data["data"]["monitor_id"])
     if monitor:
         monitor.set_queued(False)
+        monitor.set_running(False)
         await monitor.save()
 
 
 reaction_options = ReactionOptions(
-    issue_created=[reaction_issue_created],
-    issue_updated_not_solved=[reaction_issue_created],
+    issue_created=[reset_monitor_state],
+    issue_updated_not_solved=[reset_monitor_state],
 )

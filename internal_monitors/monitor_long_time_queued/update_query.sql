@@ -1,7 +1,8 @@
 with monitors as (
   select
     id as monitor_id,
-    queued as monitor_queued,
+    enabled as monitor_enabled
+    (queued or running) as monitor_pending,
     extract(epoch from current_timestamp - least(search_executed_at, update_executed_at)) :: int as seconds_queued
   from "Monitors"
   where
@@ -9,6 +10,7 @@ with monitors as (
 )
 select
   monitor_id,
-  monitor_queued,
+  monitor_enabled,
+  monitor_pending,
   seconds_queued
 from monitors;
