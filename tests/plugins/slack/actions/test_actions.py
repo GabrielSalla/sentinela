@@ -6,7 +6,7 @@ import plugins.slack.actions.actions as actions
 import plugins.slack.notifications.slack_notification as slack_notification
 import registry as registry
 from models import Alert, Monitor, Notification, NotificationStatus
-from tests.test_utils import assert_message_in_log
+from tests.test_utils import assert_message_in_log, assert_message_not_in_log
 
 pytestmark = pytest.mark.asyncio(loop_scope="session")
 
@@ -39,8 +39,107 @@ async def test_resend_notification_no_slack_notification_option(
     assert_message_in_log(caplog, f"No 'SlackNotification' option for {sample_monitor}")
 
 
+async def test_resend_notification_slack_notification_different_channels(
+    caplog, monkeypatch, sample_monitor: Monitor
+):
+    """'_resend_notification' should use the correct SlackNotification option when there're
+    multiple ones defined in the monitor"""
+    clear_notification_mock = AsyncMock()
+    monkeypatch.setattr(slack_notification, "clear_slack_notification", clear_notification_mock)
+    slack_notification_mock = AsyncMock()
+    monkeypatch.setattr(slack_notification, "slack_notification", slack_notification_mock)
+
+    channel_1_notification_option = slack_notification.SlackNotification(
+        channel="channel1",
+        title="title",
+        issues_fields=["col"],
+        min_priority_to_send=3,
+        mention="mention",
+        min_priority_to_mention=2,
+    )
+    channel_2_notification_option = slack_notification.SlackNotification(
+        channel="channel2",
+        title="title",
+        issues_fields=["col"],
+        min_priority_to_send=3,
+        mention="mention",
+        min_priority_to_mention=2,
+    )
+    monkeypatch.setattr(
+        sample_monitor.code,
+        "notification_options",
+        [channel_1_notification_option, channel_2_notification_option],
+        raising=False
+    )
+
+    alert = await Alert.create(
+        monitor_id=sample_monitor.id,
+        priority=2,
+    )
+    notification = await Notification.create(
+        monitor_id=alert.monitor_id,
+        alert_id=alert.id,
+        target="slack",
+        data={"channel": "channel2", "ts": "123"},
+    )
+
+    await actions._resend_notification(notification)
+
+    clear_notification_mock.assert_awaited_once_with(notification)
+    slack_notification_mock.assert_awaited_once_with(
+        event_payload={"event_data": {"id": notification.alert_id}},
+        notification_options=channel_2_notification_option,
+    )
+    assert_message_not_in_log(caplog, "No 'SlackNotification' option")
+
+
+async def test_resend_notification_other_notification_types(
+    caplog, monkeypatch, sample_monitor: Monitor
+):
+    """'_resend_notification' should ignore notifications options that are not SlackNotifications"""
+    clear_notification_mock = AsyncMock()
+    monkeypatch.setattr(slack_notification, "clear_slack_notification", clear_notification_mock)
+    slack_notification_mock = AsyncMock()
+    monkeypatch.setattr(slack_notification, "slack_notification", slack_notification_mock)
+
+    slack_notification_option = slack_notification.SlackNotification(
+        channel="channel",
+        title="title",
+        issues_fields=["col"],
+        min_priority_to_send=3,
+        mention="mention",
+        min_priority_to_mention=2,
+    )
+    monkeypatch.setattr(
+        sample_monitor.code,
+        "notification_options",
+        ["other_notification", slack_notification_option],
+        raising=False
+    )
+
+    alert = await Alert.create(
+        monitor_id=sample_monitor.id,
+        priority=2,
+    )
+    notification = await Notification.create(
+        monitor_id=alert.monitor_id,
+        alert_id=alert.id,
+        target="slack",
+        data={"channel": "channel", "ts": "123"},
+    )
+
+    await actions._resend_notification(notification)
+
+    clear_notification_mock.assert_awaited_once_with(notification)
+    slack_notification_mock.assert_awaited_once_with(
+        event_payload={"event_data": {"id": notification.alert_id}},
+        notification_options=slack_notification_option,
+    )
+    assert_message_not_in_log(caplog, "No 'SlackNotification' option")
+
+
 async def test_resend_notification(
-    mocker, monkeypatch, sample_monitor: Monitor
+    caplog, mocker, monkeypatch, sample_monitor: Monitor
 ):
     """'_resend_notification' should clear the notification and send it again"""
     wait_monitor_loaded_spy: AsyncMock = mocker.spy(registry, "wait_monitor_loaded")
@@ -76,6 +175,7 @@ async def test_resend_notification(
     wait_monitor_loaded_spy.assert_awaited_once_with(sample_monitor.id)
     clear_notification_mock.assert_awaited_once()
     slack_notification_mock.assert_awaited_once()
+    assert_message_not_in_log(caplog, "No 'SlackNotification' option")
 
 
 async def test_resend_notifications(monkeypatch, sample_monitor: Monitor):
