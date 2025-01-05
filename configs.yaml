@@ -99,6 +99,3 @@ databases_pools_configs:
 # Flag if should log all events, even if they don't have a reaction set for them
 # Events that have a reaction set will always be logged
 log_all_events: false
-
-# Maximum number of issues that will be shown in a notification
-notifications_issue_show_limit: 10
