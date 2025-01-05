@@ -19,9 +19,6 @@ spec:
         image: ghcr.io/getmoto/motoserver:latest
         ports:
         - containerPort: 5000
-        env:
-        - name: POSTGRES_PASSWORD
-          value: motoserver
 
 ---
 

@@ -18,7 +18,7 @@ spec:
       - name: sentinela-controller
         image: sentinela-local:latest
         imagePullPolicy: Never
-        command: ["python3", ".", "controller"]
+        command: ["python3", "src/main.py", "controller"]
         ports:
         - containerPort: 8000
         env:
