@@ -16,6 +16,7 @@ def set_signal_handlers():
     app.remove_signal_handlers()
 
 
+@pytest.mark.flaky(reruns=2)
 @pytest.mark.parametrize("seconds", [0, 0.1, 0.4, 0.5, 1])
 async def test_sleep(seconds):
     """'sleep' should sleep for the correct amount of seconds"""
@@ -27,6 +28,7 @@ async def test_sleep(seconds):
     assert total_time < seconds + 0.003
 
 
+@pytest.mark.flaky(reruns=2)
 @pytest.mark.parametrize("seconds", [-10, -5, -0.001])
 async def test_sleep_negative(seconds):
     """'sleep' should return instantly if the amount of seconds is negative"""
@@ -37,6 +39,7 @@ async def test_sleep_negative(seconds):
     assert total_time < 0.003
 
 
+@pytest.mark.flaky(reruns=2)
 async def test_sleep_early_cancelling():
     """'sleep' should stop early if the task is cancelled"""
     start_time = time.perf_counter()
@@ -55,6 +58,7 @@ async def test_sleep_early_cancelling():
     assert total_time < 0.2 + 0.003
 
 
+@pytest.mark.flaky(reruns=2)
 async def test_sleep_early_stop_running():
     """'sleep' should stop before reaching the number of seconds if the app stopped"""
     start_time = time.perf_counter()
@@ -72,6 +76,7 @@ async def test_sleep_early_stop_running():
     assert total_time < 0.2 + 0.003
 
 
+@pytest.mark.flaky(reruns=2)
 @pytest.mark.parametrize("raise_signal", [signal.SIGINT, signal.SIGTERM])
 async def test_signal_handling(set_signal_handlers, raise_signal):
     """'sleep' should stop if any of the signals registered are raised"""

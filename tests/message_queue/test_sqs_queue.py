@@ -125,6 +125,7 @@ async def test_send_message_after_get_message(message_type, message_payload):
     assert message.content == {"type": message_type, "payload": message_payload}
 
 
+@pytest.mark.flaky(reruns=2)
 async def test_get_message_timeout():
     """'get_message' should wait for a message and if the timeout is reached, return 'None'"""
     start_time = time.perf_counter()

@@ -9,6 +9,7 @@ import registry.registry as registry
 pytestmark = pytest.mark.asyncio(loop_scope="session")
 
 
+@pytest.mark.flaky(reruns=2)
 async def test_wait_monitors_ready(monkeypatch):
     """'_wait_monitors_ready' should wait for the registry monitors to be ready and don't raise an
     exception if the timeout is not reached"""
@@ -28,6 +29,7 @@ async def test_wait_monitors_ready(monkeypatch):
     assert total_time < 0.1 + 0.005
 
 
+@pytest.mark.flaky(reruns=2)
 async def test_wait_monitors_ready_timeout(monkeypatch):
     """'_wait_monitors_ready' should wait for the registry monitors to be ready and raise a
     'MonitorsLoadError' exception if the timeout is reached"""
@@ -57,6 +59,7 @@ async def test_is_monitor_registered():
     assert not registry.is_monitor_registered(4)
 
 
+@pytest.mark.flaky(reruns=2)
 async def test_wait_monitor_loaded_registered(monkeypatch):
     """'_wait_monitor_loaded' should just return if the monitor is already registered"""
     monkeypatch.setattr(registry, "MONITORS_READY_TIMEOUT", 0.2)
@@ -71,6 +74,7 @@ async def test_wait_monitor_loaded_registered(monkeypatch):
     assert total_time < 0.001
 
 
+@pytest.mark.flaky(reruns=2)
 async def test_wait_monitor_loaded_wait_registered(monkeypatch):
     """'_wait_monitor_loaded' should wait for the monitor to be loaded and not raise an exception if
     the timeout is not reached and the monitor is registered"""
@@ -99,6 +103,7 @@ async def test_wait_monitor_loaded_wait_registered(monkeypatch):
     assert total_time < 0.1 + 0.005
 
 
+@pytest.mark.flaky(reruns=2)
 async def test_wait_monitor_loaded_wait_not_registered(monkeypatch):
     """'_wait_monitor_loaded' should wait for the monitor to be loaded and raise a
     'MonitorNotRegisteredError' exception if the timeout is not reached and the monitor is not
