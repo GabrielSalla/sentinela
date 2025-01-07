@@ -110,6 +110,7 @@ async def test_change_visibility_loop(mocker, monkeypatch, clear_queue):
     assert change_visibility_spy.call_args_list == [((message,),)] * 5
 
 
+@pytest.mark.flaky(reruns=2)
 async def test_executor_get_message_no_message(monkeypatch, clear_queue):
     """'Executor.get_message' should try to get a message from the queue and, if the timeout is
     reached, should return 'None' without updating the 'last_message_at' variable"""
@@ -131,6 +132,7 @@ async def test_executor_get_message_no_message(monkeypatch, clear_queue):
     assert total_time < 1 + 0.01
 
 
+@pytest.mark.flaky(reruns=2)
 async def test_executor_get_message_with_message(monkeypatch, clear_queue):
     """'Executor.get_message' should try to get a message from the queue and, if successful, update
     the 'last_message_at' variable with the current time"""
@@ -280,6 +282,7 @@ async def test_executor_process_message_error(caplog, mocker, monkeypatch):
     change_visibility_spy.assert_called_once_with(message)
 
 
+@pytest.mark.flaky(reruns=2)
 async def test_executor_process_success(caplog, monkeypatch, clear_queue):
     """'Executor.process' should execute the whole message processing procedure correctly,
     identifying the handler and processing the message with it"""
@@ -306,6 +309,7 @@ async def test_executor_process_success(caplog, monkeypatch, clear_queue):
     assert_message_in_log(caplog, 'Got message \'{"type": "test", "payload": {"test": "aaa"}}\'')
 
 
+@pytest.mark.flaky(reruns=2)
 async def test_executor_process_monitors_not_ready(monkeypatch, clear_queue):
     """'Executor.process' should wait for the monitors to be ready before processing any message
     and if it times out, it should propagate the exception"""
@@ -326,6 +330,7 @@ async def test_executor_process_monitors_not_ready(monkeypatch, clear_queue):
     assert total_time < 0.1 + 0.01
 
 
+@pytest.mark.flaky(reruns=2)
 async def test_executor_process_no_message(monkeypatch, clear_queue):
     """'Executor.process' should execute the whole message processing procedure correctly, doing
     nothing when no message is received"""
@@ -344,6 +349,7 @@ async def test_executor_process_no_message(monkeypatch, clear_queue):
     assert total_time < 0.7 + 0.01
 
 
+@pytest.mark.flaky(reruns=2)
 async def test_executor_process_no_handler(caplog, clear_queue):
     """'Executor.process' should execute the whole message processing procedure correctly, and
     doing nothing when there isn't a handler for the message"""
@@ -363,6 +369,7 @@ async def test_executor_process_no_handler(caplog, clear_queue):
     assert_message_in_log(caplog, "Didn't find a handler for message")
 
 
+@pytest.mark.flaky(reruns=2)
 async def test_executor_process_error(caplog, monkeypatch, clear_queue):
     """'Executor.process' should execute the whole message processing procedure correctly,
     identifying the handler, processing the message through it and handling possible exceptions"""

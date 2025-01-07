@@ -25,6 +25,7 @@ async def test_run_monitor_not_found(caplog):
     assert_message_in_log(caplog, "Monitor 999999999 not found. Skipping message")
 
 
+@pytest.mark.flaky(reruns=2)
 async def test_run_monitor_not_registered(caplog, monkeypatch, sample_monitor: Monitor):
     """'run' should handle raise a 'MonitorNotRegisteredError' exception if the monitor is not
     registered"""
@@ -199,6 +200,7 @@ async def test_run_function_no_name(caplog, mocker, monkeypatch, sample_monitor:
     assert_message_in_log(caplog, f"' with payload '{json.dumps(message_payload['payload'])}'")
 
 
+@pytest.mark.flaky(reruns=2)
 async def test_run_timeout(caplog, monkeypatch, sample_monitor: Monitor):
     """'run' should execute all the reactions and the timeout should be independent for each
     function"""

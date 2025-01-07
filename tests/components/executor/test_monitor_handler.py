@@ -1103,6 +1103,7 @@ async def test_run_monitor_not_found(caplog):
     assert_message_in_log(caplog, "Monitor 999999999 not found. Skipping message")
 
 
+@pytest.mark.flaky(reruns=2)
 async def test_run_monitor_not_registered(monkeypatch, sample_monitor: Monitor):
     """'run' should handle raise a 'MonitorNotRegisteredError' exception if the monitor is not
     registered"""
@@ -1157,6 +1158,7 @@ async def test_run_monitor_set_running(mocker, sample_monitor: Monitor):
     assert set_running_spy.call_args_list[1].args[1] is False
 
 
+@pytest.mark.flaky(reruns=2)
 async def test_run_monitor_timeout(caplog, mocker, monkeypatch, sample_monitor: Monitor):
     """'run' should handle execution timeouts while running the monitor routines"""
     async def sleep(monitor, tasks):

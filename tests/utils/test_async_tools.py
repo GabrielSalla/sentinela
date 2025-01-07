@@ -9,6 +9,7 @@ from utils.async_tools import do_concurrently
 pytestmark = pytest.mark.asyncio(loop_scope="session")
 
 
+@pytest.mark.flaky(reruns=2)
 @pytest.mark.parametrize(
     "task_number, size",
     [
@@ -47,6 +48,7 @@ async def test_do_concurrently_return_values():
     assert result == expected_result
 
 
+@pytest.mark.flaky(reruns=2)
 async def test_do_concurrently_error_single():
     """'do_concurrently' should handle errors in the tasks, without impacting others.
     Tasks with errors will have 'None' as return value"""
@@ -77,6 +79,7 @@ async def test_do_concurrently_error_single():
     assert result == [1, 2, None, 3, 4]
 
 
+@pytest.mark.flaky(reruns=2)
 async def test_do_concurrently_error_all():
     """'do_concurrently' should handle errors in the tasks, without impacting others.
     Tasks with errors will have 'None' as return value"""

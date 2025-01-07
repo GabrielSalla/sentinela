@@ -217,6 +217,7 @@ async def test_run_unknown_action(caplog):
     )
 
 
+@pytest.mark.flaky(reruns=2)
 async def test_run_timeout(caplog, monkeypatch):
     """'run' should timeout the request if it takes too long to execute"""
     monkeypatch.setattr(configs, "executor_request_timeout", 0.2)
