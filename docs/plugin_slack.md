@@ -1,6 +1,9 @@
 # Slack Plugin
 The Slack plugin offers an interface to interact with Sentinela through Slack. It allows users to receive notifications from Sentinela in a Slack channel while also providing useful commands from notification buttons or Slack messages mentioning the Sentinela bot.
 
+## Create the Slack app
+First create a Slack app in your workspace. The provided app manifest [template](../resources/slack_app_manifest.yaml) has the basic configuration and permissions needed for the Sentinela Slack app.
+
 ## Environment variables
 The following environment variables are used by the Slack plugin:
 - `SLACK_TOKEN`: Used to send messages to Slack. Example: `xoxb-1234567890-1234567890123-12345678901234567890abcdef`
