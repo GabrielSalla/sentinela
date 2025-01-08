@@ -28,6 +28,7 @@ services:
     environment:
       SAMPLE_SLACK_CHANNEL: C07NCL94SDT
       SAMPLE_SLACK_MENTION: U07NFGGMB98
+      SLACK_WEBSOCKET_ENABLED: true
     env_file:
       - .env.secrets
     volumes:
