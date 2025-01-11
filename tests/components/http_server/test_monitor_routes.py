@@ -6,6 +6,7 @@ import pytest_asyncio
 
 import components.controller.controller as controller
 import components.http_server as http_server
+import databases as databases
 import external_requests as external_requests
 from models import CodeModule, Monitor
 
@@ -21,6 +22,73 @@ async def setup_http_server():
     await http_server.init(controller_enabled=True)
     yield
     await http_server.wait_stop()
+
+
+async def test_list_monitors(clear_database, sample_monitor: Monitor):
+    """The 'monitor list' route should return a list of all monitors"""
+    url = BASE_URL + "/list"
+    async with aiohttp.ClientSession() as session:
+        async with session.get(url) as response:
+            response_data = await response.json()
+
+    assert response_data == [
+        {
+            "id": sample_monitor.id,
+            "name": sample_monitor.name,
+            "enabled": sample_monitor.enabled,
+        },
+    ]
+
+
+async def test_get_monitor(clear_database, sample_monitor: Monitor):
+    """The 'monitor get' route should return the monitor attributes and code information"""
+    code_module = await CodeModule.get(CodeModule.monitor_id == sample_monitor.id)
+    assert code_module is not None
+
+    code_module.code = 'print("Sample code")'
+    code_module.additional_files = {"file.sql": "SELECT 1;"}
+    await code_module.save()
+
+    url = BASE_URL + f"/{sample_monitor.name}"
+    async with aiohttp.ClientSession() as session:
+        async with session.get(url) as response:
+            response_data = await response.json()
+
+    assert response_data == {
+        "id": sample_monitor.id,
+        "name": sample_monitor.name,
+        "enabled": sample_monitor.enabled,
+        "code": 'print("Sample code")',
+        "additional_files": {"file.sql": "SELECT 1;"},
+    }
+
+
+async def test_get_monitor_invalid_monitor(clear_database):
+    """The 'monitor get' route should return an error if the monitor is not found"""
+    url = BASE_URL + "/not_found"
+    async with aiohttp.ClientSession() as session:
+        async with session.get(url) as response:
+            response_data = await response.json()
+
+    assert response_data == {
+        "status": "monitor_not_found",
+    }
+
+
+async def test_get_monitor_invalid_code_module(clear_database, sample_monitor: Monitor):
+    """The 'monitor get' route should return an error if the monitor has no code module"""
+    await databases.execute_application(
+        'delete from "CodeModules" where monitor_id = $1', sample_monitor.id
+    )
+
+    url = BASE_URL + f"/{sample_monitor.name}"
+    async with aiohttp.ClientSession() as session:
+        async with session.get(url) as response:
+            response_data = await response.json()
+
+    assert response_data == {
+        "status": "monitor_code_not_found",
+    }
 
 
 async def test_monitor_disable(mocker, clear_database, sample_monitor: Monitor):
