@@ -278,6 +278,54 @@ async def test_get(sample_monitor: Monitor):
     assert not_found_monitor is None
 
 
+async def test_get_raw(sample_monitor: Monitor):
+    """'Base.get_raw' should return a list of dictionaries with the raw information for the
+    provided columns that match the provided filters"""
+    issues = await Issue.create_batch(
+        [
+            Issue(
+                monitor_id=sample_monitor.id,
+                model_id=str(i),
+                data={"id": i},
+                status=IssueStatus.active,
+            )
+            for i in range(3)
+        ]
+    )
+    issues_data = {
+        issue.id: (issue.model_id, issue.data)
+        for issue in issues
+    }
+
+    found_issues = await Issue.get_raw(
+        columns=[Issue.id, Issue.model_id, Issue.data],
+        column_filters=[Issue.monitor_id == sample_monitor.id],
+    )
+    found_issues_data = {
+        issue[0]: (issue[1], issue[2])
+        for issue in found_issues
+    }
+    assert found_issues_data == issues_data
+
+
+async def test_get_raw_no_filters(sample_monitor: Monitor):
+    """'Base.get_raw' should return a list of dictionaries with the raw information for the
+    provided columns when no filters are provided"""
+    found_issues = await Issue.get_raw(
+        columns=[Issue.id, Issue.model_id, Issue.data],
+    )
+    assert len(found_issues) >= 3
+
+
+async def test_get_raw_not_found(sample_monitor: Monitor):
+    """'Base.get_raw' should return an empty list if no instances were found"""
+    not_found_issues = await Issue.get_raw(
+        columns=[Issue.id, Issue.model_id, Issue.data],
+        column_filters=[Issue.id == -1],
+    )
+    assert not_found_issues == []
+
+
 async def test_get_by_id(sample_monitor: Monitor):
     """'Base.get_by_id' should get a single instance that has the provided 'id' or None if none was
     found"""
