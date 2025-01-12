@@ -12,7 +12,7 @@ monitor_options = MonitorOptions(
 
 issue_options = IssueOptions(
     model_id_key="id",
-    solvable=False,
+    solvable=True,
 )
 
 alert_options = AlertOptions(
