@@ -3,6 +3,7 @@ import traceback
 
 import pydantic
 from aiohttp import web
+from aiohttp.web_response import Response
 
 import external_requests as external_requests
 from components.monitors_loader import MonitorValidationError
@@ -16,7 +17,7 @@ base_route = "/monitor"
 
 @monitor_routes.post(base_route + "/{monitor_name}/disable")
 @monitor_routes.post(base_route + "/{monitor_name}/disable/")
-async def monitor_disable(request):
+async def monitor_disable(request) -> Response:
     """Route to disable a monitor"""
     monitor_name = request.match_info["monitor_name"]
 
@@ -38,7 +39,7 @@ async def monitor_disable(request):
 
 @monitor_routes.post(base_route + "/{monitor_name}/enable")
 @monitor_routes.post(base_route + "/{monitor_name}/enable/")
-async def monitor_enable(request):
+async def monitor_enable(request) -> Response:
     """Route to enable a monitor"""
     monitor_name = request.match_info["monitor_name"]
 
@@ -60,7 +61,7 @@ async def monitor_enable(request):
 
 @monitor_routes.post(base_route + "/register/{monitor_name}")
 @monitor_routes.post(base_route + "/register/{monitor_name}/")
-async def monitor_register(request):
+async def monitor_register(request) -> Response:
     """Route to register a monitor"""
     request_data = await request.json()
 
