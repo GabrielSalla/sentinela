@@ -33,6 +33,7 @@ down-local:
 
 linter:
 	docker compose -f docker-compose-dev.yaml run --rm --no-deps sentinela-dev flake8 src/ tests/ internal_monitors/ sample_monitors/ tools/
+	docker compose -f docker-compose-dev.yaml run --rm --no-deps sentinela-dev isort --check .
 
 mypy:
 	docker compose -f docker-compose-dev.yaml run --rm --no-deps sentinela-dev mypy --install-types --non-interactive src/ tests/ internal_monitors/ sample_monitors/ tools/

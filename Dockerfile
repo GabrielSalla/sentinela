@@ -5,8 +5,7 @@ ENV VIRTUAL_ENV=/opt/venv \
 
 WORKDIR /app
 
-RUN apk add curl \
-    && python3 -m venv $VIRTUAL_ENV \
+RUN python3 -m venv $VIRTUAL_ENV \
     && pip install --upgrade pip \
     && pip install poetry --no-cache-dir
 

@@ -5,7 +5,7 @@ from datetime import datetime
 from enum import Enum
 from typing import Any, Coroutine, Optional, Sequence, Type, TypeVar, cast
 
-from sqlalchemy import func, inspect, select
+from sqlalchemy import Row, func, inspect, select
 from sqlalchemy.ext.asyncio import AsyncAttrs
 from sqlalchemy.orm import DeclarativeBase, InstrumentedAttribute
 from sqlalchemy.sql.expression import ColumnElement
@@ -159,6 +159,21 @@ class Base(AsyncAttrs, DeclarativeBase):
             instance = result.scalars().first()
 
         return instance
+
+    @classmethod
+    async def get_raw(
+        cls: Type[ClassType],
+        columns: list[InstrumentedAttribute],
+        column_filters: list[ColumnElement] | None = None,
+    ) -> Sequence[Row]:
+        """Return a list of tuples with the provided columns for all instances that match the
+        provided filters"""
+        if column_filters is None:
+            column_filters = []
+
+        async with get_session() as session:
+            result = await session.execute(select(*columns).where(*column_filters))
+            return result.all()
 
     @classmethod
     async def get_by_id(cls: Type[ClassType], instance_id) -> ClassType | None:

@@ -3,9 +3,11 @@ import traceback
 
 import pydantic
 from aiohttp import web
+from aiohttp.web_response import Response
 
 import external_requests as external_requests
 from components.monitors_loader import MonitorValidationError
+from models import CodeModule, Monitor
 
 _logger = logging.getLogger("monitor_routes")
 
@@ -14,9 +16,57 @@ monitor_routes = web.RouteTableDef()
 base_route = "/monitor"
 
 
+@monitor_routes.get(base_route + "/list")
+@monitor_routes.get(base_route + "/list/")
+async def list_monitors(request) -> Response:
+    monitors = await Monitor.get_raw(
+        columns=[Monitor.id, Monitor.name, Monitor.enabled]
+    )
+    response = [
+        {
+            "id": monitor[0],
+            "name": monitor[1],
+            "enabled": monitor[2],
+        }
+        for monitor in monitors
+    ]
+    return web.json_response(response)
+
+
+@monitor_routes.get(base_route + "/{monitor_name}")
+@monitor_routes.get(base_route + "/{monitor_name}/")
+async def get_monitor(request) -> Response:
+    monitor_name = request.match_info["monitor_name"]
+
+    monitor = await Monitor.get(Monitor.name == monitor_name)
+
+    if monitor is None:
+        error_response = {
+            "status": "monitor_not_found",
+        }
+        return web.json_response(error_response, status=404)
+
+    code_module = await CodeModule.get(CodeModule.monitor_id == monitor.id)
+
+    if code_module is None:
+        error_response = {
+            "status": "monitor_code_not_found",
+        }
+        return web.json_response(error_response, status=404)
+
+    success_response = {
+        "id": monitor.id,
+        "name": monitor.name,
+        "enabled": monitor.enabled,
+        "code": code_module.code,
+        "additional_files": code_module.additional_files,
+    }
+    return web.json_response(success_response)
+
+
 @monitor_routes.post(base_route + "/{monitor_name}/disable")
 @monitor_routes.post(base_route + "/{monitor_name}/disable/")
-async def monitor_disable(request):
+async def monitor_disable(request) -> Response:
     """Route to disable a monitor"""
     monitor_name = request.match_info["monitor_name"]
 
@@ -38,7 +88,7 @@ async def monitor_disable(request):
 
 @monitor_routes.post(base_route + "/{monitor_name}/enable")
 @monitor_routes.post(base_route + "/{monitor_name}/enable/")
-async def monitor_enable(request):
+async def monitor_enable(request) -> Response:
     """Route to enable a monitor"""
     monitor_name = request.match_info["monitor_name"]
 
@@ -60,7 +110,7 @@ async def monitor_enable(request):
 
 @monitor_routes.post(base_route + "/register/{monitor_name}")
 @monitor_routes.post(base_route + "/register/{monitor_name}/")
-async def monitor_register(request):
+async def monitor_register(request) -> Response:
     """Route to register a monitor"""
     request_data = await request.json()
 
