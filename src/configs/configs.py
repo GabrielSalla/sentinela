@@ -26,6 +26,7 @@ class Configs:
 
     controller_process_schedule: str
     controller_concurrency: int
+    controller_procedures: dict[str, dict[str, Any]]
 
     executor_concurrency: int
     executor_sleep: int
