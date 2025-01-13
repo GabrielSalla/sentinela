@@ -325,6 +325,9 @@ async def test_run(monkeypatch, clear_queue, clear_database):
     monkeypatch.setattr(configs, "internal_monitors_path", "tests/sample_monitors/internal")
     monkeypatch.setattr(configs, "sample_monitors_path", "tests/sample_monitors/others")
 
+    run_procedures_mock = AsyncMock()
+    monkeypatch.setattr(controller, "run_procedures", run_procedures_mock)
+
     # Run the controller for a while then stop it
     await monitors_loader._register_monitors()
     controller_task = asyncio.create_task(controller.run())
@@ -346,6 +349,9 @@ async def test_run(monkeypatch, clear_queue, clear_database):
     # Assert the _monitors_id_name_map was populated when the monitors were created in the database
     monitors_instances = await Monitor.get_all(Monitor.enabled)
     assert len(monitors_instances) == 3
+
+    # Assert the "run_procedures" function was executed
+    run_procedures_mock.assert_awaited_once()
 
     # Assert the tasks were queued
     queue_items = set()

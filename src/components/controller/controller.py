@@ -14,6 +14,8 @@ from models import Monitor
 from utils.exception_handling import catch_exceptions
 from utils.time import format_datetime_iso, is_triggered, now, time_since, time_until_next_trigger
 
+from .procedures import run_procedures
+
 _logger = logging.getLogger("controller")
 
 running: bool = False
@@ -155,6 +157,10 @@ async def run():
             tasks = [task for task in tasks if not task.done()]
 
             last_loop_at = now()
+
+            # Run the procedures in the background
+            procedures_task = asyncio.create_task(run_procedures())
+            tasks.append(procedures_task)
 
             # Loop through all monitors
             enabled_monitors = await Monitor.get_all(Monitor.enabled.is_(True))
