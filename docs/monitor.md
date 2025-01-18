@@ -1,5 +1,33 @@
 # Creating a new monitor
-This guide will walk through the steps to set up a new monitor.
+This guide will walk through the steps to set up a new Monitor.
+
+As a demonstration, the Monitor that will be designed is intended to **search for users with invalid registration data**, specifically when their name is empty.
+
+# Modeling the problem
+The most important process when creating a Monitor is to model it. Modeling means deeply understanding what's being monitored and how to obtain the necessary information to be able to monitor it.
+
+## Understanding the problem
+The first step when building a Monitor is to define what constitutes the **unit of problem**. This refers to the entity or object that represents a single issue in your monitoring system. Here are some examples:
+- **User Registration Issues**: When monitoring user registration data, the unit of problem will likely be a **user**, identified by their internal **user ID**.
+- **Failed Transactions**: When monitoring failed transactions, the unit of problem will be a **transaction**, identified by its unique **transaction ID**.
+- **Payment Provider Conversion Rates**: When monitoring the conversion rates of different **payment providers**, the unit of problem will be the **payment provider**, identified by its **name**.
+
+While some of these examples might be more appropriately monitored using system metrics rather than Sentinela, they help demonstrate how to model the problem.
+
+This step defines the key information used to identify a unique issue. As in the first example, two different transaction IDs will result in two distinct issues. When updating the issues, the same transaction ID is used to ensure the correct issue is updated with the new information.
+
+## Obtaining the information
+After understanding the problem, the next step is to obtain the necessary information for monitoring. This step will vary significantly depending on the system and technologies in use.
+
+The key point is that throughout the monitoring process, each issue must have the information required to track and check if it's solved. In this case, to monitor users with invalid registration data, the essential information for each user includes:
+- The **user ID**, which uniquely identifies each user. This will be used to identify individual issues, as each issue corresponds to one user.
+- The **user name**, which will be checked to determine if it is missing or incorrectly configured, while also used to verify when the issue is resolved, i.e., when the user name is correctly filled in.
+
+The information gathering process can be split into two distinct use cases:
+1. **Get all the users with incorrect registration data**: This use case is intended to search for issues, returning every user whose registration data is incorrect (e.g., users with missing or invalid names).
+2. **Get the updated registration data for one or more users, based on the provided user IDs**: This use case retrieves the latest registration data for the specified user IDs. **Note that no conditions on the registration being correct or not are being applied**. This is a critical requirement, as this method will be used to fetch updated information for users, whether their registration data is incorrect or correctly filled.
+
+Once the required information to search for and update issues can be obtained, a Monitor can be implemented.
 
 # Set up the monitor directory
 To ensure proper organization and avoid conflicts between monitors, it's recommended to have a dedicated directory for each monitor. This separation prevents conflicts caused by files with identical names, ensuring that each monitor's resources remain distinct and do not overwrite one another.
@@ -81,11 +109,12 @@ In scenarios like this, the recommended configuration for `solvable` and `unique
 
 > **Note**: This example is solely for illustrating how these settings operate. The problem presented here should not be monitored in this exact way as there're better ways to do it.
 
+Considering the monitor is implemented to monitor user registration data, it's expected that the issues are `solvable`, as the registration data can be corrected. Additionally, the issue is not `unique` because a user may have invalid registration data, fix it, and later have it changed incorrectly again, indicating a new issue must be created.
 
 ```python
 issue_options = IssueOptions(
     model_id_key="id",
-    solvable=False,
+    solvable=True,
 )
 ```
 
@@ -139,10 +168,10 @@ Define a class called `IssueDataType`, that inherits from `TypedDict`, and inclu
 ```python
 class IssueDataType(TypedDict):
     id: int
-    name: int
+    name: str
 ```
 
-**Attention**: The `IssueDataType` must contain the field specified in the `model_id_key` parameter of the `IssueOptions` setting. This ensures that the issue’s unique identifier is consistently used across your monitor’s configuration.
+**Attention**: The `IssueDataType` class must contain the field specified in the `model_id_key` parameter of the `IssueOptions` setting. This ensures that the issue’s unique identifier is consistently used across your monitor’s configuration.
 
 # The functions
 There are 3 functions that control the monitor's execution. They are `search`, `update` and `is_solved`.
@@ -154,7 +183,7 @@ The **search function** is an asynchronous function that identifies and returns 
 - This function can execute any asynchronous code required to gather information, such as querying a database or making API calls.
 - The function should return all identified issues, without the need to check if they were already found in a previous iteration.
 
-Example: If no user should have a `name` equal to `null`, the search function would locate all such users and return a list of dictionaries. Each dictionary must include fields like the user `id` and `name`.
+If no user should have a `name` equal to `null`, the search function would locate all such users and return a list of dictionaries. Each dictionary must include fields like the user `id` and `name`.
 
 **Attention: all dictionaries must have the field set in the `model_id_key` parameter of the `IssueOptions` class, as they should have the same structure defined by the `IssueDataType` class. Issues without the field will be discarded.**
 
@@ -164,7 +193,8 @@ Issues that are considered as "already solved", will be discarded. Check the [**
 
 ```python
 async def search() -> list[IssueDataType] | None:
-    users = await get_user_data()  # users = [{"id": 1234, "name": none}, {"id": 2345, "name": none}]
+    # users = [{"id": 1234, "name": None}, {"id": 2345, "name": None}]
+    users = await get_invalid_users()
     return [
         user
         for user in users
@@ -181,7 +211,7 @@ The **update function** is an asynchronous function that gets the updated data f
 
 Unlike the search function, the update function does not identify new issues. While looking for new issues might be slow, getting the updated information for them, usually, is faster, as it's identifier (e.g. the ID column) allows the use of an efficient method to get the information.
 
-Example: To update the issue data with current user information, the update function can query for each user’s ID in the database, returning updated values in a dictionary for each. As the ID column in the database is a primary key, this kind of query is very fast.
+To update the issue data with current user information, the update function can query for each user’s ID in the database, returning updated values in a dictionary for each. As the ID column in the database is a primary key, this kind of query is very fast.
 
 The updated data returned by this function will be used to updated the active issues. The issues that will be updated will be identified by the `model_id_key`.
 
@@ -190,8 +220,11 @@ If no updates are needed, the function can return an empty list, `None`, or simp
 ```python
 async def update(issues_data: list[IssueDataType]) -> list[IssueDataType] | None:
     user_ids = [user["id"] for user in issues_data]
-    users = await get_users_data(user_ids)  # Getting the updated users data for the active issues
-    return users  # Return all the updated data, without any filters
+    # Getting the updated users data for the active issues
+    # updated_users = [{"id": 1234, "name": "Some name"}, {"id": 2345, "name": None}]
+    updated_users = await get_users_data(user_ids)
+    # Return all the updated data, without any filters
+    return updated_users
 ```
 
 ## Is solved function
