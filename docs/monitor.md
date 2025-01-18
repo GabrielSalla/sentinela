@@ -88,16 +88,20 @@ Parameters:
 
 ```python
 monitor_options = MonitorOptions(
-    update_cron="* * * * *",
     search_cron="* * * * *",
+    update_cron="* * * * *",
 )
 ```
+
+It is recommended to avoid excessively frequent search intervals (e.g., a cron configuration of * * * * *), as this is often unnecessary.
+
+When configuring update intervals, it is recommended to set them equal to or more frequent than the search intervals. For instance, if issues are searched every 15 minutes, updates can be performed every 5 minutes.
 
 ## Issue options
 Specify settings for issue management in the `issue_options` variable.
 
 Parameters:
-- `model_id_key`: A key that uniquely identifies each issue, such as an ID column in a database.
+- `model_id_key`: A key that uniquely identifies each issue, such as an ID column in a database. The configured key references the field in the issues data returned by the `search` and `update` functions that will identify the unique id for the issue.
 - `solvable`: Indicates if an issue can be resolved automatically. Issues set as non-solvable require manual intervention. Defaults to `true`.
 - `unique`: Ensures that only one instance of a given issue (based on the `model_id_key`) is created. Non-solvable issues are often set as unique to avoid duplicate entries. Defaults to `false`.
 
