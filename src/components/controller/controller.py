@@ -24,14 +24,14 @@ last_loop_at: datetime
 last_monitor_processed_at: datetime
 
 prometheus_monitors_processed_count = prometheus_client.Counter(
-    "monitors_processed_count", "Count of monitors processed"
+    "controller_monitors_processed_count", "Count of monitors processed by the controller"
 )
 prometheus_monitor_not_registered_count = prometheus_client.Counter(
     "controller_monitor_not_registered_count",
     "Count of times the controller tries to process a monitor that isn't registered",
 )
 prometheus_task_queue_error_count = prometheus_client.Counter(
-    "task_queue_error_count",
+    "controller_task_queue_error_count",
     "Count of times the controller fails to queue a task",
 )
 
