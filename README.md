@@ -69,7 +69,7 @@ State machine-related issues often require several data checks and conditional l
 3. [Querying data from databases](./docs/querying.md)
 4. [Registering a monitor](./docs/monitor_registering.md)
 5. [How to run](./docs/how_to_run.md)
-6. [Monitoring Sentinela](.docs/monitoring_sentinela.md)
+6. [Monitoring Sentinela](./docs/monitoring_sentinela.md)
 7. [Plugins](./docs/plugins.md)
     1. [Slack](./docs/plugin_slack.md)
 8. Interacting with Sentinela
