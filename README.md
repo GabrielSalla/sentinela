@@ -66,6 +66,7 @@ State machine-related issues often require several data checks and conditional l
 # Documentation
 1. [Overview](./docs/overview.md)
 2. [Building a Monitor](./docs/monitor.md)
+    1. [Sample Monitor](./docs/sample_monitor.md)
 3. [Querying data from databases](./docs/querying.md)
 4. [Registering a monitor](./docs/monitor_registering.md)
 5. [How to run](./docs/how_to_run.md)
