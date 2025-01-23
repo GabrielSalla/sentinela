@@ -2,6 +2,7 @@ import logging
 import os
 import re
 import ssl
+from typing import Any, Callable, Coroutine
 
 import certifi
 from slack_bolt.adapter.socket_mode.async_handler import AsyncSocketModeHandler
@@ -16,7 +17,7 @@ _logger = logging.getLogger("plugin.slack.websocket")
 _handler: AsyncSocketModeHandler | None
 
 
-async def app_mention(body):
+async def app_mention(body: dict[Any, Any]) -> None:
     message = body["event"]["text"]
     context = body["event"]
 
@@ -49,7 +50,11 @@ async def app_mention(body):
         )
 
 
-async def command(ack, body, say):
+async def command(
+    ack: Callable[..., Coroutine[None, None, None]],
+    body: dict[Any, Any],
+    say: Callable[..., Coroutine[None, None, None]],
+) -> None:
     await ack()
 
     message = body["actions"][0]["value"]
@@ -59,7 +64,7 @@ async def command(ack, body, say):
         await action
 
 
-async def init(controller_enabled: bool, executor_enabled: bool):  # pragma: no cover
+async def init(controller_enabled: bool, executor_enabled: bool) -> None:  # pragma: no cover
     global _handler
 
     slack_websocket_enabled = os.environ.get("SLACK_WEBSOCKET_ENABLED", "false") == "true"
@@ -79,12 +84,12 @@ async def init(controller_enabled: bool, executor_enabled: bool):  # pragma: no 
 
     _logger.info("Starting Slack websocket")
 
-    await _handler.connect_async()
+    await _handler.connect_async()  # type: ignore[no-untyped-call]
 
 
-async def stop():  # pragma: no cover
+async def stop() -> None:  # pragma: no cover
     global _handler
 
     if _handler is not None:
         _logger.info("Stopping Slack websocket")
-        await _handler.close_async()
+        await _handler.close_async()  # type: ignore[no-untyped-call]

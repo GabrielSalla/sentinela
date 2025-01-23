@@ -7,7 +7,7 @@ from utils.exception_handling import catch_exceptions
 _logger = logging.getLogger("async_tools")
 
 
-async def _run(semaphore: asyncio.Semaphore, task: Awaitable) -> Any:
+async def _run(semaphore: asyncio.Semaphore, task: Awaitable[Any]) -> Any:
     """Run a single task holding a lock in the semaphore. Catch and log any errors that might
     occur, protecting other tasks from breaking"""
     async with semaphore:

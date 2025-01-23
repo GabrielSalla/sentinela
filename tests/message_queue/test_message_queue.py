@@ -10,7 +10,7 @@ import message_queue.sqs_queue as sqs_queue
 pytestmark = pytest.mark.asyncio(loop_scope="session")
 
 
-def set_queue_mock(monkeypatch, queue_type, function_mock):
+def set_queue_mock(monkeypatch, queue_type, function_mock) -> tuple[AsyncMock, AsyncMock]:
     """Set the right queue mock for the given queue type"""
     if queue_type == "internal":
         monkeypatch.setattr(message_queue, "queue", internal_queue)

@@ -1,6 +1,7 @@
 import asyncio
 import logging
 import sys
+from typing import Coroutine
 
 import uvloop
 
@@ -19,14 +20,14 @@ import utils.log as log
 _logger = logging.getLogger("main")
 
 
-async def protected_task(task):
+async def protected_task(task: Coroutine[None, None, None]) -> None:
     try:
         await task
     except Exception:
         _logger.warning(f"Exception with task '{task}'")
 
 
-async def init_plugins_services(controller_enabled: bool, executor_enabled: bool):
+async def init_plugins_services(controller_enabled: bool, executor_enabled: bool) -> None:
     """Initialize the plugins services"""
     for plugin_name, plugin in plugins.loaded_plugins.items():
         _logger.info(f"Loading plugin '{plugin_name}'")
@@ -45,7 +46,7 @@ async def init_plugins_services(controller_enabled: bool, executor_enabled: bool
                 _logger.warning(f"Service '{plugin_name}.{service_name}' has no 'init' function")
 
 
-async def init(controller_enabled: bool, executor_enabled: bool):
+async def init(controller_enabled: bool, executor_enabled: bool) -> None:
     """Initialize the application dependencies. Some of the components will behave differently if
     they start with or without the controller."""
     # Log setup must be the first one
@@ -62,7 +63,7 @@ async def init(controller_enabled: bool, executor_enabled: bool):
     await init_plugins_services(controller_enabled, executor_enabled)
 
 
-async def stop_plugins_services():
+async def stop_plugins_services() -> None:
     """Stop the plugins services"""
     for plugin_name, plugin in plugins.loaded_plugins.items():
         _logger.info(f"Stopping plugin '{plugin_name}'")
@@ -77,7 +78,7 @@ async def stop_plugins_services():
                 await protected_task(service.stop())
 
 
-async def finish():
+async def finish() -> None:
     """Finish the application, making sure any exception won't impact other closing tasks"""
     await protected_task(http_server.wait_stop())
     await protected_task(monitors_loader.wait_stop())
@@ -86,7 +87,7 @@ async def finish():
     await protected_task(stop_plugins_services())
 
 
-async def main():
+async def main() -> None:
     if len(sys.argv) == 1:
         operation_modes = ["controller", "executor"]
     else:

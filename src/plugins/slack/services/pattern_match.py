@@ -6,45 +6,47 @@ import message_queue as message_queue
 
 
 def disable_monitor(
-    message_match: re.Match, context: dict[str, Any]
+    message_match: re.Match[Any], context: dict[str, Any]
 ) -> Coroutine[Any, Any, Any]:
     """Disable a monitor"""
     return external_requests.disable_monitor(message_match.group(1))
 
 
 def enable_monitor(
-    message_match: re.Match, context: dict[str, Any]
+    message_match: re.Match[Any], context: dict[str, Any]
 ) -> Coroutine[Any, Any, Any]:
     """Enable a monitor"""
     return external_requests.enable_monitor(message_match.group(1))
 
 
-def alert_acknowledge(message_match: re.Match, context: dict[str, Any]) -> Coroutine[Any, Any, Any]:
+def alert_acknowledge(
+    message_match: re.Match[Any], context: dict[str, Any]
+) -> Coroutine[Any, Any, Any]:
     """Get the alert acknowledge action"""
     alert_id = int(message_match.group(1))
     return external_requests.alert_acknowledge(alert_id)
 
 
-def alert_lock(message_match: re.Match, context: dict[str, Any]) -> Coroutine[Any, Any, Any]:
+def alert_lock(message_match: re.Match[Any], context: dict[str, Any]) -> Coroutine[Any, Any, Any]:
     """Get the alert lock action"""
     alert_id = int(message_match.group(1))
     return external_requests.alert_lock(alert_id)
 
 
-def alert_solve(message_match: re.Match, context: dict[str, Any]) -> Coroutine[Any, Any, Any]:
+def alert_solve(message_match: re.Match[Any], context: dict[str, Any]) -> Coroutine[Any, Any, Any]:
     """Get the alert solve action"""
     alert_id = int(message_match.group(1))
     return external_requests.alert_solve(alert_id)
 
 
-def issue_drop(message_match: re.Match, context: dict[str, Any]) -> Coroutine[Any, Any, Any]:
+def issue_drop(message_match: re.Match[Any], context: dict[str, Any]) -> Coroutine[Any, Any, Any]:
     """Get the issue drop action"""
     issue_id = int(message_match.group(1))
     return external_requests.issue_drop(issue_id)
 
 
 def resend_notifications(
-    message_match: re.Match, context: dict[str, Any]
+    message_match: re.Match[Any], context: dict[str, Any]
 ) -> Coroutine[Any, Any, Any]:
     """Get the resend slack notifications action"""
     return message_queue.send_message(

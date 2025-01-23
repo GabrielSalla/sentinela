@@ -2,7 +2,7 @@ import inspect
 import logging
 import re
 from types import ModuleType
-from typing import Callable, Optional, _TypedDictMeta  # type: ignore[attr-defined]
+from typing import Any, Callable, Optional, _TypedDictMeta  # type: ignore[attr-defined]
 
 from notifications import BaseNotification
 from options import AlertOptions, IssueOptions, MonitorOptions, ReactionOptions
@@ -28,7 +28,9 @@ ERROR_FUNCTION_WRONG_ARGUMENTS = "'{display_name}' function must have arguments 
 ERROR_FUNCTION_WRONG_RETURN_TYPE = "'{display_name}' function must return '{expected_type}'"
 
 
-def _check_async_function(function: Callable, display_name: Optional[str] = None) -> list[str]:
+def _check_async_function(
+    function: Callable[..., Any], display_name: Optional[str] = None
+) -> list[str]:
     """Checks if the provided object is a function and if it's async"""
     errors: list[str] = []
 
@@ -49,7 +51,9 @@ def _check_async_function(function: Callable, display_name: Optional[str] = None
     return errors
 
 
-def _check_sync_function(function: Callable, display_name: Optional[str] = None) -> list[str]:
+def _check_sync_function(
+    function: Callable[..., Any], display_name: Optional[str] = None
+) -> list[str]:
     """Checks if the provided object is a function and if it's sync"""
     errors: list[str] = []
 

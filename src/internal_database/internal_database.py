@@ -1,6 +1,6 @@
 import os
 from contextlib import asynccontextmanager
-from typing import AsyncGenerator, Coroutine
+from typing import Any, AsyncGenerator, Coroutine
 
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 
@@ -9,20 +9,20 @@ from utils.async_tools import do_concurrently
 
 
 class CallbackSession(AsyncSession):
-    _callbacks: list[Coroutine]
+    _callbacks: list[Coroutine[None, None, None]]
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args: Any, **kwargs: Any) -> None:
         super().__init__(*args, **kwargs)
-        self._callbacks: list[Coroutine] = []
+        self._callbacks = []
 
-    def add_callback(self, callback: Coroutine | None):
+    def add_callback(self, callback: Coroutine[None, None, None] | None) -> None:
         if callback is not None:
             self._callbacks.append(callback)
 
-    async def execute_callbacks(self):
+    async def execute_callbacks(self) -> None:
         await do_concurrently(*self._callbacks)
 
-    def cancel_callbacks(self):
+    def cancel_callbacks(self) -> None:
         for callback in self._callbacks:
             callback.close()
 
@@ -53,5 +53,5 @@ async def get_session() -> AsyncGenerator[CallbackSession, None]:
                 raise
 
 
-async def close():
+async def close() -> None:
     await engine.dispose(close=True)

@@ -1,8 +1,10 @@
 import logging
 import traceback
+from typing import Any
 
 import pydantic
 from aiohttp import web
+from aiohttp.web_request import Request
 from aiohttp.web_response import Response
 
 import external_requests as external_requests
@@ -18,7 +20,7 @@ base_route = "/monitor"
 
 @monitor_routes.get(base_route + "/list")
 @monitor_routes.get(base_route + "/list/")
-async def list_monitors(request) -> Response:
+async def list_monitors(request: Request) -> Response:
     monitors = await Monitor.get_raw(
         columns=[Monitor.id, Monitor.name, Monitor.enabled]
     )
@@ -35,7 +37,7 @@ async def list_monitors(request) -> Response:
 
 @monitor_routes.get(base_route + "/{monitor_name}")
 @monitor_routes.get(base_route + "/{monitor_name}/")
-async def get_monitor(request) -> Response:
+async def get_monitor(request: Request) -> Response:
     monitor_name = request.match_info["monitor_name"]
 
     monitor = await Monitor.get(Monitor.name == monitor_name)
@@ -66,7 +68,7 @@ async def get_monitor(request) -> Response:
 
 @monitor_routes.post(base_route + "/{monitor_name}/disable")
 @monitor_routes.post(base_route + "/{monitor_name}/disable/")
-async def monitor_disable(request) -> Response:
+async def monitor_disable(request: Request) -> Response:
     """Route to disable a monitor"""
     monitor_name = request.match_info["monitor_name"]
 
@@ -88,7 +90,7 @@ async def monitor_disable(request) -> Response:
 
 @monitor_routes.post(base_route + "/{monitor_name}/enable")
 @monitor_routes.post(base_route + "/{monitor_name}/enable/")
-async def monitor_enable(request) -> Response:
+async def monitor_enable(request: Request) -> Response:
     """Route to enable a monitor"""
     monitor_name = request.match_info["monitor_name"]
 
@@ -110,7 +112,7 @@ async def monitor_enable(request) -> Response:
 
 @monitor_routes.post(base_route + "/register/{monitor_name}")
 @monitor_routes.post(base_route + "/register/{monitor_name}/")
-async def monitor_register(request) -> Response:
+async def monitor_register(request: Request) -> Response:
     """Route to register a monitor"""
     request_data = await request.json()
 
@@ -118,7 +120,7 @@ async def monitor_register(request) -> Response:
     monitor_code = request_data.get("monitor_code")
     additional_files = request_data.get("additional_files", {})
 
-    error_response: dict[str, str | list]
+    error_response: dict[str, str | list[Any]]
 
     if monitor_code is None:
         error_response = {

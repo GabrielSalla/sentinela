@@ -3,7 +3,7 @@ import logging
 import shutil
 from datetime import datetime, timedelta
 from pathlib import Path
-from typing import Generator, cast
+from typing import Any, Generator, cast
 
 from pydantic.dataclasses import dataclass
 
@@ -26,7 +26,7 @@ MONITORS_LOAD_PATH = "_monitors_load"
 EARLY_LOAD_TIME = 5
 COOL_DOWN_TIME = 2
 
-_task: asyncio.Task
+_task: asyncio.Task[Any]
 
 
 @dataclass
@@ -132,7 +132,7 @@ async def _register_monitors_from_path(
         path: str,
         internal: bool = False,
         additional_file_extensions: list[str] | None = None
-):
+) -> None:
     """Register monitors from a path, including their additional files"""
     for monitor_files in _get_monitors_files_from_path(path, additional_file_extensions):
         # Add the internal prefix to the monitor name
@@ -161,7 +161,7 @@ async def _register_monitors_from_path(
                 _logger.error(f"Monitor '{monitor_name}' not registered")
 
 
-async def _register_monitors():
+async def _register_monitors() -> None:
     """Register internal monitors and sample monitors, if enabled"""
     await _register_monitors_from_path(
         configs.internal_monitors_path, internal=True, additional_file_extensions=["sql"]
@@ -171,7 +171,7 @@ async def _register_monitors():
         await _register_monitors_from_path(configs.sample_monitors_path)
 
 
-def _configure_monitor(monitor_module: MonitorModule):
+def _configure_monitor(monitor_module: MonitorModule) -> None:
     """Make the necessary configurations to the monitor's attributes"""
     # Add an empty reaction option if it was not configured
     if getattr(monitor_module, "reaction_options", None) is None:
@@ -187,7 +187,7 @@ def _configure_monitor(monitor_module: MonitorModule):
             monitor_module.reaction_options[event_name].extend(reactions)
 
 
-async def _load_monitors():
+async def _load_monitors() -> None:
     """Load all enabled monitors from the database and add them to the registry. If any of the
     monitor's modules fails to load, the monitor will not be added to the registry"""
     registry.monitors_ready.clear()
@@ -240,7 +240,7 @@ async def _load_monitors():
     registry.monitors_pending.clear()
 
 
-async def _run():
+async def _run() -> None:
     """Monitors loading loop, loading them recurrently. Stops automatically when the app stops"""
     last_load_time: datetime
 
@@ -277,7 +277,7 @@ async def _run():
                 await app.sleep(COOL_DOWN_TIME - time_since_last_load)
 
 
-async def init(controller_enabled: bool):
+async def init(controller_enabled: bool) -> None:
     """Load the internal monitors and sample monitors if controller is enabled, and start the
     monitors load task"""
     if controller_enabled:
@@ -287,7 +287,7 @@ async def init(controller_enabled: bool):
     _task = asyncio.create_task(_run())
 
 
-async def wait_stop():
+async def wait_stop() -> None:
     """Wait for the Monitors load task to finish"""
     global _task
     await _task

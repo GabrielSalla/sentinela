@@ -37,7 +37,7 @@ async def test_do_concurrently(task_number, size):
 async def test_do_concurrently_return_values():
     """'do_concurrently' should return a list of each of the task's returned values"""
 
-    async def f(value):
+    async def f(value: int) -> int:
         await asyncio.sleep(0.1)
         return value
 
@@ -53,11 +53,11 @@ async def test_do_concurrently_error_single():
     """'do_concurrently' should handle errors in the tasks, without impacting others.
     Tasks with errors will have 'None' as return value"""
 
-    async def no_error(i):
+    async def no_error(i: int) -> int:
         await asyncio.sleep(0.2)
         return i
 
-    async def error():
+    async def error() -> None:
         await asyncio.sleep(0.2)
         raise ValueError("oh no")
 
@@ -84,7 +84,7 @@ async def test_do_concurrently_error_all():
     """'do_concurrently' should handle errors in the tasks, without impacting others.
     Tasks with errors will have 'None' as return value"""
 
-    async def error():
+    async def error() -> None:
         await asyncio.sleep(0.2)
         raise ValueError("oh no")
 

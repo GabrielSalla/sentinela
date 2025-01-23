@@ -36,7 +36,7 @@ async def enable_monitor(monitor_name: str) -> str:
     return f"{monitor} enabled"
 
 
-async def alert_acknowledge(alert_id: int):
+async def alert_acknowledge(alert_id: int) -> None:
     """Queue an 'alert_acknowledge' request"""
     await message_queue.send_message(
         type="request",
@@ -47,7 +47,7 @@ async def alert_acknowledge(alert_id: int):
     )
 
 
-async def alert_lock(alert_id: int):
+async def alert_lock(alert_id: int) -> None:
     """Queue an 'alert_lock' request"""
     await message_queue.send_message(
         type="request",
@@ -58,7 +58,7 @@ async def alert_lock(alert_id: int):
     )
 
 
-async def alert_solve(alert_id: int):
+async def alert_solve(alert_id: int) -> None:
     """Queue an 'alert_solve' request"""
     await message_queue.send_message(
         type="request",
@@ -69,7 +69,7 @@ async def alert_solve(alert_id: int):
     )
 
 
-async def issue_drop(issue_id: int):
+async def issue_drop(issue_id: int) -> None:
     """Queue an 'issue_drop' request"""
     await message_queue.send_message(
         type="request",

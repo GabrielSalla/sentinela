@@ -1,7 +1,7 @@
 import inspect
 import re
 from types import ModuleType
-from typing import Coroutine, TypedDict
+from typing import Any, Coroutine, TypedDict
 from unittest.mock import MagicMock
 
 import pydantic
@@ -261,7 +261,7 @@ class BaseNotification:
     """Notification class to be used in the tests"""
     min_priority_to_send: int = 5
 
-    def reactions_list(self) -> list[tuple[str, list[Coroutine]]]:
+    def reactions_list(self) -> list[tuple[str, list[Coroutine[Any, Any, Any]]]]:
         return []
 
 

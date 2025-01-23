@@ -268,7 +268,7 @@ Reactions are defined as a list of **async functions** that are triggered when s
 Below is an example of defining a reaction function that responds to the creation of a new issue:
 
 ```python
-async def reaction_issue_created(event_payload: dict[str, Any]):
+async def reaction_issue_created(event_payload: dict[str, Any]) -> None:
     # Do something
 ```
 

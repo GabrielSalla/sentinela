@@ -31,7 +31,7 @@ prometheus_reaction_execution_time = prometheus_client.Summary(
 )
 
 
-async def run(message: dict[Any, Any]):
+async def run(message: dict[Any, Any]) -> None:
     """Process a message with type 'event' using the monitor's defined list of reactions for the
     event. The execution timeout is for each function individually"""
     message_payload = message["payload"]

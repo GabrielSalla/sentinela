@@ -10,17 +10,17 @@ def running() -> bool:
     return not _stop_event.is_set()
 
 
-def stop():
+def stop() -> None:
     _stop_event.set()
 
 
-def _stop(signal_name):
+def _stop(signal_name: str) -> None:
     """Stop the app when a signal is received"""
     _logger.info(f"Signal {signal_name} caught, finishing")
     stop()
 
 
-def setup():
+def setup() -> None:
     """Setup the signal handlers for SIGINT and SIGTERM to stop the app"""
     _stop_event.clear()
     loop = asyncio.get_event_loop()
@@ -28,14 +28,14 @@ def setup():
     loop.add_signal_handler(signal.SIGTERM, _stop, "SIGTERM")
 
 
-def remove_signal_handlers():
+def remove_signal_handlers() -> None:
     """Remove the signal handlers for SIGINT and SIGTERM"""
     loop = asyncio.get_event_loop()
     loop.remove_signal_handler(signal.SIGINT)
     loop.remove_signal_handler(signal.SIGTERM)
 
 
-async def sleep(seconds: float):
+async def sleep(seconds: float) -> None:
     """Sleep for the specified amount of seconds in steps of 0.5 seconds. If the app is stopped,
     it will break prematurely"""
     if seconds <= 0:

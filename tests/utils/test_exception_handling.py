@@ -28,7 +28,7 @@ async def test_catch_exceptions_timeout(caplog, mocker, logger):
     if logger is not None:
         logger_error_spy: MagicMock = mocker.spy(logger, "error")
 
-    async def error():
+    async def error() -> None:
         await asyncio.sleep(2)
         raise ValueError("should not be raised")
 
@@ -62,7 +62,7 @@ async def test_catch_exceptions_error(caplog, mocker, logger):
         logger_error_spy: MagicMock = mocker.spy(logger, "error")
         logger_info_spy: MagicMock = mocker.spy(logger, "info")
 
-    async def error():
+    async def error() -> None:
         await asyncio.sleep(0.1)
         raise ValueError("should be raised")
 

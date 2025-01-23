@@ -14,7 +14,7 @@ pytestmark = pytest.mark.asyncio(loop_scope="session")
 
 
 @pytest_asyncio.fixture(loop_scope="session", scope="module", autouse=True)
-async def set_queue(monkeypatch_module):
+async def set_queue(monkeypatch_module) -> None:
     monkeypatch_module.setattr(
         configs,
         "application_queue",
@@ -33,12 +33,12 @@ async def set_queue(monkeypatch_module):
 
 
 @pytest_asyncio.fixture(loop_scope="session", scope="function", autouse=True)
-async def clean_queue():
+async def clean_queue() -> None:
     async with sqs_queue._aws_client() as client:
         await client.purge_queue(QueueUrl=configs.application_queue["url"])
 
 
-async def delete_queue(queue_url):
+async def delete_queue(queue_url) -> None:
     try:
         async with sqs_queue._aws_client() as client:
             await client.delete_queue(QueueUrl=queue_url)

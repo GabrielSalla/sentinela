@@ -71,7 +71,7 @@ def _make_dict_json_compatible(data: Any) -> dict[Any, Any] | None:
     return cast(dict[Any, Any] | None, _convert_types(data))
 
 
-async def _search_routine(monitor: Monitor):
+async def _search_routine(monitor: Monitor) -> None:
     """Search routine for the monitor, executing the 'search' function and processing the returned
     data"""
     found_issues_data = await monitor.search_function()
@@ -154,7 +154,7 @@ async def _search_routine(monitor: Monitor):
     monitor.add_issues(issues)
 
 
-async def _update_routine(monitor: Monitor):
+async def _update_routine(monitor: Monitor) -> None:
     """Update routine for the monitor, executing the 'update' function and processing the returned
     data"""
     # Skip the update routine if there're no active issues
@@ -220,14 +220,14 @@ async def _update_routine(monitor: Monitor):
             await issue.update_data(raw_issue_data, session=session)
 
 
-async def _issues_solve_routine(monitor: Monitor):
+async def _issues_solve_routine(monitor: Monitor) -> None:
     """Issue solve routine for the monitor, checking all issues against the 'is_solved' function"""
     async with get_session() as session:
         for issue in monitor.active_issues:
             await issue.check_solved(session=session)
 
 
-async def _alerts_routine(monitor: Monitor):
+async def _alerts_routine(monitor: Monitor) -> None:
     """Alert routine for the monitor, creating, linking issues, updating and solving them"""
     # As 'alert_options' can be None, check it before executing
     if monitor.alert_options is None:
@@ -260,7 +260,7 @@ async def _alerts_routine(monitor: Monitor):
     await do_concurrently(*[alert.update() for alert in monitor.active_alerts])
 
 
-async def _run_routines(monitor: Monitor, tasks: list[str]):
+async def _run_routines(monitor: Monitor, tasks: list[str]) -> None:
     """Run all routines for a monitor, based on a list of tasks"""
     # Monitor instrumentation metrics
     prometheus_labels = {
@@ -299,7 +299,7 @@ async def _run_routines(monitor: Monitor, tasks: list[str]):
         await _alerts_routine(monitor)
 
 
-async def run(message: dict[Any, Any]):
+async def run(message: dict[Any, Any]) -> None:
     """Process a message with type 'process_monitor', loading the monitor and executing it's
     routines, while also detecting errors and reporting them accordingly"""
     message_payload = message["payload"]

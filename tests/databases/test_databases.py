@@ -17,14 +17,14 @@ pytestmark = pytest.mark.asyncio(loop_scope="session")
 
 
 @pytest_asyncio.fixture(loop_scope="session", scope="function")
-async def reload_databases():
+async def reload_databases() -> None:
     """Used in the tests that close the databases pools"""
     yield
     await databases.init()
 
 
 @pytest_asyncio.fixture(loop_scope="session", scope="function", autouse=True)
-async def drop_test_tables():
+async def drop_test_tables() -> None:
     try:
         await postgresql_pools.execute("application", "drop table test_table cascade")
     except asyncpg.exceptions.UndefinedTableError:
@@ -49,7 +49,7 @@ async def test_fetch(caplog, monkeypatch):
     metrics"""
     monkeypatch.setattr(configs, "database_log_query_metrics", True)
 
-    async def sleep():
+    async def sleep() -> int:
         await asyncio.sleep(0.1)
         return 10
 
@@ -86,7 +86,7 @@ async def test_fetch_cancelled(caplog, monkeypatch):
     executing"""
     monkeypatch.setattr(configs, "database_log_query_metrics", True)
 
-    async def sleep():
+    async def sleep() -> int:
         await asyncio.sleep(1)
         return 20
 
@@ -128,7 +128,7 @@ async def test_fetch_error(caplog, monkeypatch):
     metrics"""
     monkeypatch.setattr(configs, "database_log_query_metrics", True)
 
-    async def error():
+    async def error() -> None:
         raise ValueError("some error")
 
     metrics = {

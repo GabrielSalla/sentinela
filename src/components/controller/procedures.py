@@ -20,7 +20,7 @@ _logger = logging.getLogger("controller_procedures")
 SQL_FILES_PATH = Path(__file__).parent / "sql_files"
 
 
-async def _monitors_stuck():
+async def _monitors_stuck() -> None:
     with open(SQL_FILES_PATH / "monitors_stuck.sql") as file:
         query = file.read()
 
@@ -64,14 +64,14 @@ def _check_procedure_triggered(schedule: str, last_execution: datetime | None) -
 async def _execute_procedure(
         procedure_name: str,
         procedure: Callable[[], Coroutine[None, None, None]],
-):
+) -> None:
     """Execute the 'procedure' and update the 'last_executions' variable"""
     with catch_exceptions(logger=_logger):
         await procedure()
     last_executions[procedure_name] = datetime.now()
 
 
-async def run_procedures():
+async def run_procedures() -> None:
     """Check and run all procedures that are triggered"""
     for procedure_name, procedure in procedures.items():
         last_execution = last_executions.get(procedure_name)

@@ -5,11 +5,10 @@ import logging
 import os
 import time
 import traceback
-from typing import Coroutine, cast
+from typing import Any, Coroutine, cast
 
 import databases.postgresql_pools as postgresql_pools
 from configs import configs
-from data_types.issue_data_types import IssueDataType
 from utils.async_tools import do_concurrently
 
 _logger = logging.getLogger("database")
@@ -23,7 +22,7 @@ class QueryStatus(enum.Enum):
     error = "error"
 
 
-async def init():
+async def init() -> None:
     """Init all the database pools"""
     for env_var_name, env_var_value in os.environ.items():
         if not env_var_name.startswith("DATABASE_"):
@@ -38,14 +37,17 @@ async def init():
             _logger.warning(f"Invalid DSN for database pool '{env_var_name}'")
 
 
-async def _fetch(fetch_task: Coroutine, metrics: dict) -> list[IssueDataType] | None:
+async def _fetch(
+    fetch_task: Coroutine[Any, Any, list[dict[Any, Any]]],
+    metrics: dict[str, Any],
+) -> list[dict[Any, Any]] | None:
     """Await a fetch coroutine, update the metrics and log them"""
     try:
         start_time = time.time()
         metrics["start_time"] = start_time
         result = await fetch_task
         metrics["status"] = QueryStatus.success.value
-        return cast(list[IssueDataType] | None, result)
+        return cast(list[dict[Any, Any]] | None, result)
     except asyncio.CancelledError:
         metrics["status"] = QueryStatus.canceled.value
         return None
@@ -59,7 +61,7 @@ async def _fetch(fetch_task: Coroutine, metrics: dict) -> list[IssueDataType] | 
         metrics["end_time"] = end_time
         metrics["query_time"] = end_time - start_time
         if configs.database_log_query_metrics:
-            _logger.info(json.dumps(metrics))
+            _logger.info(json.dumps(metrics, default=str))
 
 
 async def query(
@@ -68,7 +70,7 @@ async def query(
     *args: str | int | float | bool | list[str] | list[int] | list[float] | None,
     acquire_timeout: int = configs.database_default_acquire_timeout,
     query_timeout: int = configs.database_default_query_timeout,
-) -> list[IssueDataType] | None:
+) -> list[dict[Any, Any]] | None:
     """Query data from a database identifying it's engine and using the correct engine pool.
     Querying from the application database is not allowed"""
     if name == "application":
@@ -103,7 +105,7 @@ async def query(
 async def execute_application(
     sql: str,
     *args: str | int | float | bool | list[str] | list[int] | list[float] | None,
-):
+) -> None:
     """Function to be used internally by the application or by the internal modules.
     Execute a query in the application database"""
     await postgresql_pools.execute("application", sql, *args)
@@ -114,7 +116,7 @@ async def query_application(
     *args: str | int | float | bool | list[str] | list[int] | list[float] | None,
     acquire_timeout: int = configs.database_default_acquire_timeout,
     query_timeout: int = configs.database_default_query_timeout,
-) -> list[IssueDataType] | None:
+) -> list[dict[Any, Any]] | None:
     """Function to be used internally by the application or by the internal modules.
     Query data from the application database"""
     fetch_task = postgresql_pools.fetch(
@@ -135,7 +137,7 @@ async def query_application(
     return await _fetch(fetch_task, metrics)
 
 
-async def close():
+async def close() -> None:
     """Close all the database pools"""
     await do_concurrently(
         *[

@@ -20,18 +20,18 @@ FORMATS = {
 
 
 class FriendlyFormatter(logging.Formatter):
-    def format(self, record):
+    def format(self, record: logging.LogRecord) -> str:
         log_format = FORMATS.get(record.levelno)
         formatter = logging.Formatter(log_format)
         return formatter.format(record)
 
 
 class JsonFormatter(logging.Formatter):
-    def __init__(self):
+    def __init__(self) -> None:
         self.fields = configs.logging["fields"] or {"message": "message"}
         self.datefmt = None
 
-    def format(self, record) -> str:
+    def format(self, record: logging.LogRecord) -> str:
         """
         Mostly the same as the parent's class method, the difference being that a dict is
         manipulated and dumped as JSON instead of a string.
@@ -53,7 +53,7 @@ class JsonFormatter(logging.Formatter):
         return json.dumps(message_dict, default=str)
 
 
-def setup():
+def setup() -> None:
     """Setup the logging"""
     stream = logging.StreamHandler()
     stream.setLevel(logging.INFO)

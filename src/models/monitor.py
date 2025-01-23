@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from datetime import datetime
-from typing import TYPE_CHECKING, Callable
+from typing import TYPE_CHECKING, Any, Callable, Coroutine
 
 from sqlalchemy import Boolean, DateTime, Integer, String
 from sqlalchemy.orm import Mapped, mapped_column, reconstructor
@@ -40,20 +40,20 @@ class Monitor(Base):
     def __repr__(self) -> str:
         return f"{self._class_name()}[{self.id}]({self.name})"
 
-    @reconstructor
-    def init_on_load(self):
+    @reconstructor  # type: ignore[misc]
+    def init_on_load(self) -> None:
         """Init the monitor internal variables. This method is not called when the monitor is
         created for the first time, only when loaded from the database"""
         self.active_alerts: list[Alert] = []
         self.active_issues: list[Issue] = []
 
-    async def _post_create(self):
+    async def _post_create(self) -> None:
         """Setup the internal variables and map itself automatically when created"""
         self.active_alerts: list[Alert] = []
         self.active_issues: list[Issue] = []
 
     @property
-    def monitor_id(self):
+    def monitor_id(self) -> int:
         """Property to be compatible with all other models"""
         return self.id
 
@@ -116,17 +116,17 @@ class Monitor(Base):
             return ReactionOptions()
 
     @property
-    def search_function(self) -> Callable:
+    def search_function(self) -> Callable[[], Coroutine[Any, Any, list[Any] | None]]:
         """Return the 'search' attribute from the monitor's code"""
         return self.code.search
 
     @property
-    def update_function(self) -> Callable:
+    def update_function(self) -> Callable[..., Coroutine[Any, Any, list[Any] | None]]:
         """Return the 'update' attribute from the monitor's code"""
         return self.code.update
 
     @property
-    def is_solved_function(self) -> Callable:
+    def is_solved_function(self) -> Callable[[Any], bool]:
         """Return the 'is_solved' attribute from the monitor's code if it's defined, otherwise
         return a lambda function that always return False. This condition exists because not
         solvable monitors don't have a 'is_solved' function"""
@@ -147,47 +147,47 @@ class Monitor(Base):
             await Alert.get_all(Alert.monitor_id == self.id, Alert.status == AlertStatus.active)
         )
 
-    async def load(self):
+    async def load(self) -> None:
         """Load all the monitor's active issues and alerts"""
         await self.load_active_issues()
         await self.load_active_alerts()
 
-    def set_search_executed_at(self):
+    def set_search_executed_at(self) -> None:
         """Set the 'search_executed_at' to the current timestamp"""
         self.search_executed_at = time_utils.now()
 
-    def set_update_executed_at(self):
+    def set_update_executed_at(self) -> None:
         """Set the 'update_executed_at' to the current timestamp"""
         self.update_executed_at = time_utils.now()
 
-    async def set_enabled(self, value: bool):
+    async def set_enabled(self, value: bool) -> None:
         """Set the 'enabled' to the provided value"""
         self.enabled = value
         await self.save()
 
-    def set_queued(self, value: bool):
+    def set_queued(self, value: bool) -> None:
         """Set the 'queued' to the provided value"""
         self.queued = value
         if value:
             self.queued_at = time_utils.now()
 
-    def set_running(self, value: bool):
+    def set_running(self, value: bool) -> None:
         """Set the 'running' to the provided value"""
         self.running = value
         if value:
             self.running_at = time_utils.now()
 
-    def add_issues(self, issues: Issue | list[Issue]):
+    def add_issues(self, issues: Issue | list[Issue]) -> None:
         """Add the provided issues to the monitor's 'active_issues' attributes"""
         if not isinstance(issues, list):
             issues = [issues]
         self.active_issues.extend(issues)
 
-    def add_alert(self, alert: Alert):
+    def add_alert(self, alert: Alert) -> None:
         """Add the provided alert to the monitor's 'active_alerts' attributes"""
         self.active_alerts.append(alert)
 
-    def clear(self):
+    def clear(self) -> None:
         """Clear the monitor's 'active_issues' and 'active_alerts' lists attributes"""
         self.active_issues.clear()
         self.active_alerts.clear()

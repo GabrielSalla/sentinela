@@ -56,10 +56,19 @@ mypy_path = "src"
 ignore_missing_imports = true
 warn_return_any = true
 check_untyped_defs = true
+disallow_any_generics = true
+disallow_incomplete_defs = true
+disallow_subclassing_any = true
+disallow_untyped_calls = true
+disallow_untyped_decorators = true
+disallow_untyped_defs = true
+no_implicit_optional = true
 
 [[tool.mypy.overrides]]
 module = "tests.*"
 disable_error_code = ["arg-type", "empty-body", "misc", "list-item"]
+disallow_incomplete_defs = false
+disallow_untyped_defs = false
 
 [tool.isort]
 src_paths = ["src", "tests"]

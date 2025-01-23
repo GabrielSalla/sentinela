@@ -1,4 +1,5 @@
 from aiohttp import web
+from aiohttp.web_request import Request
 from aiohttp.web_response import Response
 
 import external_requests as external_requests
@@ -10,7 +11,7 @@ base_route = "/alert"
 
 @alert_routes.post(base_route + "/{alert_id}/acknowledge")
 @alert_routes.post(base_route + "/{alert_id}/acknowledge/")
-async def alert_acknowledge(request) -> Response:
+async def alert_acknowledge(request: Request) -> Response:
     """Route to acknowledge an alert"""
     alert_id = int(request.match_info["alert_id"])
 
@@ -31,7 +32,7 @@ async def alert_acknowledge(request) -> Response:
 
 @alert_routes.post(base_route + "/{alert_id}/lock")
 @alert_routes.post(base_route + "/{alert_id}/lock/")
-async def alert_lock(request) -> Response:
+async def alert_lock(request: Request) -> Response:
     """Route to lock an alert"""
     alert_id = int(request.match_info["alert_id"])
 
@@ -52,7 +53,7 @@ async def alert_lock(request) -> Response:
 
 @alert_routes.post(base_route + "/{alert_id}/solve")
 @alert_routes.post(base_route + "/{alert_id}/solve/")
-async def alert_solve(request) -> Response:
+async def alert_solve(request: Request) -> Response:
     """Route to solve an alert's issues"""
     alert_id = int(request.match_info["alert_id"])
 

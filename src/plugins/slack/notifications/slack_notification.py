@@ -2,7 +2,7 @@ import json
 import logging
 import os
 from functools import partial
-from typing import Any, Coroutine
+from typing import Any, Callable, Coroutine
 
 from pydantic.dataclasses import dataclass
 from pytz import timezone
@@ -14,6 +14,8 @@ from models import Alert, AlertPriority, AlertStatus, Issue, IssueStatus, Monito
 from .. import slack
 
 _logger = logging.getLogger("plugin.slack.notifications")
+
+type async_function = Callable[[dict[str, Any]], Coroutine[Any, Any, Any]]
 
 RESEND_ERRORS = [
     "message_not_found",
@@ -53,7 +55,7 @@ class SlackNotification:
     min_priority_to_mention: int = AlertPriority.moderate
     issue_show_limit: int = 10
 
-    def reactions_list(self) -> list[tuple[str, list[Coroutine | partial[Coroutine]]]]:
+    def reactions_list(self) -> list[tuple[str, list[async_function]]]:
         """Get a list of events that the notification will react to"""
         handle_notification_function = partial(slack_notification, notification_options=self)
         return [
@@ -208,14 +210,14 @@ async def _build_attachments(
     message = await _build_issues_table(monitor, alert, notification_options)
     buttons = await _build_notification_buttons(monitor, alert, notification_options)
 
-    message_blocks = [
+    blocks = [
         slack.get_header_block(title),
         slack.get_context_block(*status) if status else None,
         slack.get_context_block(*timestamps),
         slack.get_section_block(message) if message else None,
         slack.get_actions_block(*buttons) if buttons else None,
     ]
-    message_blocks = [block for block in message_blocks if block is not None]
+    message_blocks = [block for block in blocks if block is not None]
 
     attachment_color = _get_attachment_color(alert)
 
@@ -231,7 +233,7 @@ async def send_notification(
     notification: Notification,
     channel: str,
     attachments: list[dict[Any, Any]],
-):
+) -> None:
     """Send the notification message to a Slack channel and save it's timestamp to the
     notification data"""
     response = await slack.send(
@@ -259,7 +261,7 @@ async def update_notification(
     notification: Notification,
     channel: str,
     attachments: list[dict[Any, Any]],
-):
+) -> None:
     """Update a Slack message. If the update fails but the error indicates the message should be
     re-sent, send it again, otherwise just log an error"""
     ts = notification.data["ts"]
@@ -290,7 +292,7 @@ async def update_notification(
             )
 
 
-async def _delete_notification(notification: Notification):
+async def _delete_notification(notification: Notification) -> None:
     """Delete a Slack message"""
     channel = notification.data.get("channel")
     ts = notification.data.get("ts")
@@ -315,7 +317,7 @@ def _should_have_mention(alert: Alert, notification_options: SlackNotification) 
 
 async def _send_mention(
     monitor: Monitor, notification: Notification, channel: str, title: str, mention: str
-):
+) -> None:
     """Send a mention message to a message thread"""
     response = await slack.send(
         channel=channel,
@@ -333,7 +335,7 @@ async def _send_mention(
         )
 
 
-async def _delete_mention(notification: Notification):
+async def _delete_mention(notification: Notification) -> None:
     """Send a mention message to a message thread"""
     if notification.data is None:
         return
@@ -353,7 +355,7 @@ async def notification_mention(
     alert: Alert,
     notification: Notification,
     notification_options: SlackNotification,
-):
+) -> None:
     """Send a mention to the notification's message thread, to alert who needs to be alerted. The
     mention message will be deleted if it's not necessary anymore"""
     if notification_options.mention is None:
@@ -386,7 +388,7 @@ async def notification_mention(
 async def slack_notification(
     event_payload: dict[str, Any],
     notification_options: SlackNotification,
-):
+) -> None:
     """Handle the Slack notification for an alert"""
     alert_data = event_payload["event_data"]
 
@@ -447,7 +449,7 @@ async def slack_notification(
     )
 
 
-async def clear_slack_notification(notification: Notification):
+async def clear_slack_notification(notification: Notification) -> None:
     """Delete the notification message and mention message"""
     await _delete_notification(notification)
     await _delete_mention(notification)
