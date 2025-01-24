@@ -4,6 +4,8 @@ import logging
 import traceback
 from typing import Any, Callable, Coroutine, cast
 
+import prometheus_client
+
 import plugins
 import registry as registry
 from base_exception import BaseSentinelaException
@@ -11,6 +13,22 @@ from configs import configs
 from models import Alert, Issue
 
 _logger = logging.getLogger("request_handler")
+
+prometheus_request_error_count = prometheus_client.Counter(
+    "executor_request_execution_error",
+    "Error count for requests",
+    ["action_name"],
+)
+prometheus_request_timeout_count = prometheus_client.Counter(
+    "executor_request_execution_timeout",
+    "Timeout count for requests",
+    ["action_name"],
+)
+prometheus_request_execution_time = prometheus_client.Summary(
+    "executor_request_execution_seconds",
+    "Time to run the request",
+    ["action_name"],
+)
 
 
 async def alert_acknowledge(message_payload: dict[Any, Any]) -> None:
@@ -102,11 +120,14 @@ async def run(message: dict[Any, Any]) -> None:
         return
 
     try:
-        await asyncio.wait_for(action(message_payload), configs.executor_request_timeout)
+        with prometheus_request_execution_time.labels(action_name=action_name).time():
+            await asyncio.wait_for(action(message_payload), configs.executor_request_timeout)
     except asyncio.TimeoutError:
+        prometheus_request_timeout_count.labels(action_name=action_name).inc()
         _logger.error(f"Timed out executing request '{json.dumps(message_payload)}'")
     except BaseSentinelaException as e:
         raise e
     except Exception:
+        prometheus_request_error_count.labels(action_name=action_name).inc()
         _logger.error(f"Error executing request '{json.dumps(message_payload)}'")
         _logger.error(traceback.format_exc().strip())
