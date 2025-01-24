@@ -4,10 +4,10 @@ from unittest.mock import AsyncMock, MagicMock
 import pytest
 from slack_sdk.web.async_client import AsyncSlackResponse
 
-import configs.configs as configs
 import plugins.slack.notifications.slack_notification as slack_notification
 import plugins.slack.slack as slack
 import utils.time as time_utils
+from configs import configs
 from models import Alert, AlertStatus, Issue, IssueStatus, Monitor, Notification, NotificationStatus
 from tests.test_utils import assert_message_in_log
 

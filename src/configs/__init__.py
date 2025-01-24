@@ -1,4 +1,4 @@
-from .configs import configs
+from .configs_loader import configs
 
 __all__ = [
     "configs",
