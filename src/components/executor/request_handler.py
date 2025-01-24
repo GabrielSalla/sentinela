@@ -2,7 +2,7 @@ import asyncio
 import json
 import logging
 import traceback
-from typing import Any
+from typing import Any, Callable, Coroutine, cast
 
 import plugins
 import registry as registry
@@ -13,7 +13,7 @@ from models import Alert, Issue
 _logger = logging.getLogger("request_handler")
 
 
-async def alert_acknowledge(message_payload: dict[Any, Any]):
+async def alert_acknowledge(message_payload: dict[Any, Any]) -> None:
     """Acknowledge an alert"""
     alert_id = message_payload["target_id"]
     alert = await Alert.get_by_id(alert_id)
@@ -24,7 +24,7 @@ async def alert_acknowledge(message_payload: dict[Any, Any]):
     await alert.acknowledge()
 
 
-async def alert_lock(message_payload: dict[Any, Any]):
+async def alert_lock(message_payload: dict[Any, Any]) -> None:
     """Lock an alert"""
     alert_id = message_payload["target_id"]
     alert = await Alert.get_by_id(alert_id)
@@ -35,7 +35,7 @@ async def alert_lock(message_payload: dict[Any, Any]):
     await alert.lock()
 
 
-async def alert_solve(message_payload: dict[Any, Any]):
+async def alert_solve(message_payload: dict[Any, Any]) -> None:
     """Solve all alert's issues"""
     alert_id = message_payload["target_id"]
     alert = await Alert.get_by_id(alert_id)
@@ -46,7 +46,7 @@ async def alert_solve(message_payload: dict[Any, Any]):
     await alert.solve_issues()
 
 
-async def issue_drop(message_payload: dict[Any, Any]):
+async def issue_drop(message_payload: dict[Any, Any]) -> None:
     """Drop an issue"""
     issue_id = message_payload["target_id"]
     issue = await Issue.get_by_id(issue_id)
@@ -65,7 +65,7 @@ actions = {
 }
 
 
-def get_action(action_name: str):
+def get_action(action_name: str) -> Callable[[dict[Any, Any]], Coroutine[Any, Any, None]] | None:
     """Get the action function by its name, checking if it is a plugin action"""
     if action_name.startswith("plugin."):
         plugin_name, action_name = action_name.split(".")[1:3]
@@ -85,12 +85,12 @@ def get_action(action_name: str):
             _logger.warning(f"Action '{plugin_name}.{action_name}' unknown")
             return None
 
-        return action
+        return cast(Callable[[dict[Any, Any]], Coroutine[Any, Any, None]], action)
 
     return actions.get(action_name)
 
 
-async def run(message: dict[Any, Any]):
+async def run(message: dict[Any, Any]) -> None:
     """Process a received request"""
     message_payload = message["payload"]
     action_name = message_payload["action"]

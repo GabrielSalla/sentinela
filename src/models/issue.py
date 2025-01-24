@@ -3,14 +3,13 @@ from __future__ import annotations
 import enum
 import json
 from datetime import datetime
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 from sqlalchemy import DateTime, Enum, ForeignKey, Integer, String
 from sqlalchemy.dialects import postgresql
 from sqlalchemy.ext.mutable import MutableDict
 from sqlalchemy.orm import Mapped, mapped_column
 
-from data_types.issue_data_types import IssueDataType
 from internal_database import CallbackSession
 from options import IssueOptions
 from registry import get_monitor_module
@@ -38,7 +37,7 @@ class Issue(Base):
     status: Mapped[IssueStatus] = mapped_column(
         Enum(IssueStatus, native_enum=False), insert_default=IssueStatus.active
     )
-    data: Mapped[IssueDataType] = mapped_column(
+    data: Mapped[dict[Any, Any]] = mapped_column(
         MutableDict.as_mutable(postgresql.JSON)  # type: ignore[arg-type]
     )
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), insert_default=now)
@@ -68,12 +67,12 @@ class Issue(Base):
             issue_data=self.data  # type: ignore[arg-type]
         )
 
-    async def _link_to_alert_callback(self):
+    async def _link_to_alert_callback(self) -> None:
         """Callback of the 'link_to_alert' method that queues the event"""
         await self._create_event("issue_linked")
         self._logger.debug(f"Linked to alert '{self.alert_id}'")
 
-    async def link_to_alert(self, alert: Alert, session: CallbackSession | None = None):
+    async def link_to_alert(self, alert: Alert, session: CallbackSession | None = None) -> None:
         """Link the issue to an alert if the issue's status is 'active'"""
         if self.status != IssueStatus.active:
             self._logger.info(f"Can't link to alert, status is '{self.status.value}'")
@@ -82,7 +81,7 @@ class Issue(Base):
         self.alert_id = alert.id
         await self.save(session=session, callback=self._link_to_alert_callback())
 
-    async def check_solved(self, session: CallbackSession | None = None):
+    async def check_solved(self, session: CallbackSession | None = None) -> None:
         """Check if the issue is solved if the issue's status is 'active' and solve it if
         positive"""
         if self.status != IssueStatus.active:
@@ -92,7 +91,7 @@ class Issue(Base):
         if self.is_solved:
             await self.solve(session=session)
 
-    async def drop(self):
+    async def drop(self) -> None:
         """Set the issue as dropped if the issue's status is 'active'"""
         if self.status != IssueStatus.active:
             self._logger.info(f"Can't drop, status is '{self.status.value}'")
@@ -105,12 +104,12 @@ class Issue(Base):
         await self._create_event("issue_dropped")
         self._logger.debug("Dropped")
 
-    async def _solve_callback(self):
+    async def _solve_callback(self) -> None:
         """Callback of the 'solve' method that queues the event"""
         await self._create_event("issue_solved")
         self._logger.debug("Solved")
 
-    async def solve(self, session: CallbackSession | None = None):
+    async def solve(self, session: CallbackSession | None = None) -> None:
         """Set the issue as solved if the issue's status is 'active'"""
         if self.status != IssueStatus.active:
             self._logger.info(f"Can't solve, status is '{self.status.value}'")
@@ -120,7 +119,7 @@ class Issue(Base):
         self.solved_at = now()
         await self.save(session=session, callback=self._solve_callback())
 
-    async def _update_data_callback(self):
+    async def _update_data_callback(self) -> None:
         """Callback of the 'update_data' method that queues the event"""
         # Use distinct events based on the current data, checking if it's solved or not, to allow
         # different reactions to each situation
@@ -130,7 +129,9 @@ class Issue(Base):
             await self._create_event("issue_updated_not_solved")
         self._logger.debug(f"Data updated to '{json.dumps(self.data)}'")
 
-    async def update_data(self, new_data: IssueDataType, session: CallbackSession | None = None):
+    async def update_data(
+        self, new_data: dict[Any, Any], session: CallbackSession | None = None
+    ) -> None:
         """Update the issue's data if the issue's status is 'active'"""
         if self.status != IssueStatus.active:
             self._logger.info(f"Can't update, status is '{self.status.value}'")

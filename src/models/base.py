@@ -17,7 +17,7 @@ from registry import get_monitor_module
 from utils.async_tools import do_concurrently
 
 
-def format_value(value: Any):
+def format_value(value: Any) -> Any:
     if isinstance(value, datetime):
         return value.isoformat()
     if isinstance(value, Enum):
@@ -44,7 +44,7 @@ class Base(AsyncAttrs, DeclarativeBase):
     def __repr__(self) -> str:
         return f"{self._class_name()}[{self.id}]"  # type: ignore[attr-defined]
 
-    async def _post_create(self):
+    async def _post_create(self) -> None:
         pass
 
     def _should_queue_event(self, event_name: str) -> bool:
@@ -70,7 +70,9 @@ class Base(AsyncAttrs, DeclarativeBase):
             "extra_payload": extra_payload,
         }
 
-    async def _create_event(self, event_name: str, extra_payload: dict[str, Any] | None = None):
+    async def _create_event(
+        self, event_name: str, extra_payload: dict[str, Any] | None = None
+    ) -> None:
         """Check if the event has an reaction registered to it and, if does, queue the event"""
         event_payload = self._build_event_payload(event_name, extra_payload)
 
@@ -102,7 +104,7 @@ class Base(AsyncAttrs, DeclarativeBase):
             return self._semaphore_obj
 
     @classmethod
-    async def count(cls: Type[ClassType], *column_filters: ColumnElement) -> int:
+    async def count(cls: Type[ClassType], *column_filters: ColumnElement[Any]) -> int:
         async with get_session() as session:
             result = await session.execute(
                 select(func.count(cls.id)).where(*column_filters)  # type: ignore[attr-defined]
@@ -134,7 +136,7 @@ class Base(AsyncAttrs, DeclarativeBase):
         return instances
 
     @classmethod
-    async def create(cls: Type[ClassType], **attributes) -> ClassType:
+    async def create(cls: Type[ClassType], **attributes: Any) -> ClassType:
         """Create an instance in the database with the provided attributes, calling it's
         '_post_create' methods and queueing the creation events for it"""
         async with get_session() as session:
@@ -151,7 +153,7 @@ class Base(AsyncAttrs, DeclarativeBase):
         return instance
 
     @classmethod
-    async def get(cls: Type[ClassType], *column_filters: ColumnElement) -> ClassType | None:
+    async def get(cls: Type[ClassType], *column_filters: ColumnElement[Any]) -> ClassType | None:
         """Return an instance of the model that matches the provided filters or 'None' if none was
         found"""
         async with get_session() as session:
@@ -163,9 +165,9 @@ class Base(AsyncAttrs, DeclarativeBase):
     @classmethod
     async def get_raw(
         cls: Type[ClassType],
-        columns: list[InstrumentedAttribute],
-        column_filters: list[ColumnElement] | None = None,
-    ) -> Sequence[Row]:
+        columns: list[InstrumentedAttribute[Any]],
+        column_filters: list[ColumnElement[Any]] | None = None,
+    ) -> Sequence[Row[Any]]:
         """Return a list of tuples with the provided columns for all instances that match the
         provided filters"""
         if column_filters is None:
@@ -176,7 +178,7 @@ class Base(AsyncAttrs, DeclarativeBase):
             return result.all()
 
     @classmethod
-    async def get_by_id(cls: Type[ClassType], instance_id) -> ClassType | None:
+    async def get_by_id(cls: Type[ClassType], instance_id: int) -> ClassType | None:
         """Return an instance of the model that has the provided primary key or 'None' if none was
         found"""
         async with get_session() as session:
@@ -185,8 +187,8 @@ class Base(AsyncAttrs, DeclarativeBase):
     @classmethod
     async def get_all(
         cls: Type[ClassType],
-        *column_filters: ColumnElement,
-        order_by: list[InstrumentedAttribute] | None = None,
+        *column_filters: ColumnElement[Any],
+        order_by: list[InstrumentedAttribute[Any]] | None = None,
         limit: int | None = None,
     ) -> Sequence[ClassType]:
         """Return all instances that match the the provided filters, sorted by the optional list
@@ -217,13 +219,16 @@ class Base(AsyncAttrs, DeclarativeBase):
             return cast(ClassType, instance)
         return cast(ClassType, await cls.create(**attributes))  # type: ignore[attr-defined]
 
-    async def refresh(self, attribute_names: Optional[list[str] | None] = None):
+    async def refresh(self, attribute_names: Optional[list[str] | None] = None) -> None:
         """Reload the instance's attributes from the database"""
         async with self._semaphore, get_session() as session:
             session.add(self)
             await session.refresh(self, attribute_names)
 
-    async def save(self, session: CallbackSession | None = None, callback: Coroutine | None = None):
+    async def save(
+        self, session: CallbackSession | None = None,
+        callback: Coroutine[Any, Any, Any] | None = None,
+    ) -> None:
         """Save the instance to the database. If the session was not provided, create one. Add
         itself to the session and also add the provided callbacks"""
         if session is not None:

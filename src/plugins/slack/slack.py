@@ -15,7 +15,7 @@ class MessageButton:
     value: str
 
 
-def get_header_block(text: str):
+def get_header_block(text: str) -> dict[str, Any]:
     """Build a 'header' block"""
     return {
         "type": "header",

@@ -10,7 +10,7 @@ from ..notifications import slack_notification
 _logger = logging.getLogger("plugin.slack.actions")
 
 
-async def _resend_notification(notification: Notification):
+async def _resend_notification(notification: Notification) -> None:
     """Clear a single notification and send it again"""
     await registry.wait_monitor_loaded(notification.monitor_id)
 
@@ -39,7 +39,7 @@ async def _resend_notification(notification: Notification):
         _logger.warning(f"No 'SlackNotification' option for {monitor}")
 
 
-async def resend_notifications(message_payload: dict[Any, Any]):
+async def resend_notifications(message_payload: dict[Any, Any]) -> None:
     """Clear all the notifications for the channel and update all active alerts to queue events to
     send the notifications again"""
     # Get all active notifications for the channel

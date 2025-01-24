@@ -6,13 +6,13 @@ from typing import Any
 from configs import configs
 
 _logger = logging.getLogger("internal_queue")
-_queue: asyncio.Queue
+_queue: asyncio.Queue[str]
 
 
 class Message:
     message: dict[str, Any]
 
-    def __init__(self, message: str):
+    def __init__(self, message: str) -> None:
         self.message = json.loads(message)
 
     @property
@@ -20,7 +20,7 @@ class Message:
         return self.message
 
 
-async def init():
+async def init() -> None:
     """Setup the internal queue"""
     global _queue
 
@@ -28,7 +28,7 @@ async def init():
     _queue = asyncio.Queue()
 
 
-async def send_message(type: str, payload: dict[str, Any]):
+async def send_message(type: str, payload: dict[str, Any]) -> None:
     """Send a message to the queue"""
     global _queue
     await _queue.put(
@@ -50,11 +50,11 @@ async def get_message() -> Message | None:
         return None
 
 
-async def change_visibility(message: Message):
+async def change_visibility(message: Message) -> None:
     """Not implemented in internal queue"""
     pass
 
 
-async def delete_message(message: Message):
+async def delete_message(message: Message) -> None:
     """Not implemented in internal queue"""
     pass

@@ -1,8 +1,9 @@
 import traceback
 from pathlib import Path
+from typing import Any
 
 
-def read_file(file_name: str, mode: str = "r"):
+def read_file(file_name: str, mode: str = "r") -> Any:
     """Read a file relative to where the function was called"""
     if mode not in ["r", "rb"]:
         raise ValueError("Only 'r' and 'rb' modes are allowed")

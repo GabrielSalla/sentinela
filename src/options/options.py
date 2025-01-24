@@ -1,5 +1,5 @@
 from dataclasses import field
-from typing import Any, Callable, Coroutine
+from typing import Any, Callable, Coroutine, cast
 
 from pydantic.dataclasses import dataclass
 
@@ -57,8 +57,8 @@ class PriorityLevels:
     high: int | None = None
     critical: int | None = None
 
-    def __getitem__(self, name: str):
-        return getattr(self, name)
+    def __getitem__(self, name: str) -> int | None:
+        return cast(int | None, getattr(self, name))
 
 
 @dataclass
@@ -177,5 +177,5 @@ class ReactionOptions:
     notification_closed: list[reaction_function_type] = field(default_factory=list)
     notification_created: list[reaction_function_type] = field(default_factory=list)
 
-    def __getitem__(self, name: str):
-        return getattr(self, name)
+    def __getitem__(self, name: str) -> list[reaction_function_type]:
+        return cast(list[reaction_function_type], getattr(self, name))

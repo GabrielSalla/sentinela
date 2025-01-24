@@ -16,12 +16,12 @@ match queue_type:
 Message = queue.Message
 
 
-async def init():
+async def init() -> None:
     """Initialize the queue"""
     return await queue.init()
 
 
-async def send_message(type: str, payload: dict[str, Any]):
+async def send_message(type: str, payload: dict[str, Any]) -> None:
     """Send a message to the queue"""
     return await queue.send_message(type, payload)
 
@@ -31,12 +31,12 @@ async def get_message() -> queue.Message | None:
     return await queue.get_message()
 
 
-async def change_visibility(message: queue.Message):
+async def change_visibility(message: queue.Message) -> None:
     """Change the visibility time for a message in the queue"""
     return await queue.change_visibility(message)
 
 
-async def delete_message(message: queue.Message):
+async def delete_message(message: queue.Message) -> None:
     """Delete a message from the queue"""
     return await queue.delete_message(message)
 

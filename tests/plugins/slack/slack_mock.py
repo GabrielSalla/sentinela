@@ -3,6 +3,7 @@ import time
 
 from aiohttp import web
 from aiohttp.web_request import Request
+from aiohttp.web_response import Response
 from slack_sdk.web.async_client import AsyncWebClient
 
 import plugins.slack.services.websocket as slack_websocket
@@ -21,7 +22,7 @@ response_ts: str | None = None
 
 @base_routes.post("/chat.postMessage")
 @base_routes.post("/chat.update")
-async def post_or_update_message(request: Request):
+async def post_or_update_message(request: Request) -> Response:
     """Mock the post or update message requests"""
     if error is not None:
         return web.json_response({"ok": False, "error": error})
@@ -56,7 +57,7 @@ async def post_or_update_message(request: Request):
 
 
 @base_routes.post("/chat.delete")
-async def delete_message(request: Request):
+async def delete_message(request: Request) -> Response:
     """Mock the delete message requests"""
     if error is not None:
         return web.json_response({"ok": False, "error": error})
@@ -73,7 +74,7 @@ async def delete_message(request: Request):
 
 
 @base_routes.post("/reactions.add")
-async def add_reaction(request: Request):
+async def add_reaction(request: Request) -> Response:
     """Mock the add reaction requests"""
     if error is not None:
         return web.json_response({"ok": False, "error": error})
@@ -81,7 +82,7 @@ async def add_reaction(request: Request):
     return web.json_response({"ok": True})
 
 
-async def init(monkeypatch):
+async def init(monkeypatch) -> None:
     """Init the Slack mock server, while also disabling the websocket"""
     global _runner
 
@@ -108,7 +109,7 @@ async def init(monkeypatch):
     await site.start()
 
 
-async def stop():
+async def stop() -> None:
     """Stop the Slack mock server"""
     global _runner
     await _runner.cleanup()

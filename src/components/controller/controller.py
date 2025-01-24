@@ -58,7 +58,7 @@ async def diagnostics() -> tuple[dict[str, Any], list[str]]:
     return status, issues
 
 
-async def _queue_task(monitor: Monitor, tasks: list[str]):
+async def _queue_task(monitor: Monitor, tasks: list[str]) -> None:
     """Send a message to the queue with the monitor tasks that should be executed"""
     monitor.set_queued(True)
     await monitor.save()
@@ -80,7 +80,7 @@ async def _queue_task(monitor: Monitor, tasks: list[str]):
         await monitor.save()
 
 
-async def _process_monitor(monitor: Monitor):
+async def _process_monitor(monitor: Monitor) -> None:
     """Check if the monitor triggers any task and queue them if there're any"""
     global last_monitor_processed_at
 
@@ -106,7 +106,7 @@ async def _process_monitor(monitor: Monitor):
     await _queue_task(monitor, tasks)
 
 
-async def _run_task(semaphore: asyncio.Semaphore, monitor: Monitor):
+async def _run_task(semaphore: asyncio.Semaphore, monitor: Monitor) -> None:
     """Keep one of the semaphore's lock while the monitor is being processed"""
     _logger.info(f"Processing monitor {monitor}")
     async with semaphore:
@@ -116,7 +116,7 @@ async def _run_task(semaphore: asyncio.Semaphore, monitor: Monitor):
 async def _create_process_task(
         semaphore: asyncio.Semaphore,
         monitor: Monitor
-) -> asyncio.Task | None:
+) -> asyncio.Task[Any] | None:
     """Create a task to process the monitor"""
     # Instead of registering the monitor, skip if it's not registered yet
     # If processing a monitor that is not yet registered, the executor won't have
@@ -132,7 +132,7 @@ async def _create_process_task(
         return asyncio.create_task(_run_task(semaphore, monitor))
 
 
-async def run():
+async def run() -> None:
     global last_loop_at
     global running
 
@@ -146,7 +146,7 @@ async def run():
     # Queue setup
     semaphore = asyncio.Semaphore(configs.controller_concurrency)
 
-    tasks: list[asyncio.Task] = []
+    tasks: list[asyncio.Task[Any]] = []
 
     while app.running():
         with catch_exceptions(_logger):

@@ -1,11 +1,11 @@
 import enum
-from typing import Sequence
+from typing import Callable, Sequence, cast
 
 from models.issue import Issue
 from options import AgeRule, CountRule, ValueRule
 from utils.time import time_since
 
-_operators = {
+_operators: dict[str, Callable[[int | float, int | float], bool]] = {
     "greater_than": lambda a, b: a > b,
     "lesser_than": lambda a, b: a < b,
 }
@@ -25,10 +25,10 @@ def _calculate_age_rule(rule: AgeRule, issues: list[Issue] | Sequence[Issue]) ->
     issues_ages = [time_since(issue.created_at) for issue in issues]
 
     for priority in sorted(AlertPriority):
-        if rule.priority_levels[priority.name] is None:
-            continue
-
         reference_value = rule.priority_levels[priority.name]
+
+        if reference_value is None:
+            continue
 
         for issue_age in issues_ages:
             if issue_age > reference_value:
@@ -42,10 +42,12 @@ def _calculate_count_rule(rule: CountRule, issues: list[Issue] | Sequence[Issue]
     count = len(issues)
 
     for priority in sorted(AlertPriority):
-        if rule.priority_levels[priority.name] is None:
+        reference_value = rule.priority_levels[priority.name]
+
+        if reference_value is None:
             continue
 
-        if count > rule.priority_levels[priority.name]:
+        if count > reference_value:
             return priority
 
     return None
@@ -55,14 +57,14 @@ def _calculate_value_rule(rule: ValueRule, issues: list[Issue] | Sequence[Issue]
     """Calculate the priority based on a value in the issues' data field. The highest priority is
     triggered when at least 1 issue has the 'value' of the provided 'value_key' above or below the
     priority value, based to the 'operation' parameter"""
-    issues_values = [issue.data.get(rule.value_key) for issue in issues]
+    issues_values = cast(list[int | float], [issue.data.get(rule.value_key) for issue in issues])
     operator = _operators[rule.operation]
 
     for priority in sorted(AlertPriority):
-        if rule.priority_levels[priority.name] is None:
-            continue
-
         reference_value = rule.priority_levels[priority.name]
+
+        if reference_value is None:
+            continue
 
         for issue_value in issues_values:
             priority_triggered = operator(issue_value, reference_value)

@@ -7,7 +7,7 @@ from pytz import timezone
 from configs import configs
 
 
-def now():
+def now() -> datetime.datetime:
     """Get a datetime object with the current timestamp at the configured timezone"""
     return datetime.datetime.now(tz=timezone(configs.time_zone))
 

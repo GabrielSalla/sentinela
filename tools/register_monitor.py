@@ -4,7 +4,7 @@ from pathlib import Path
 import requests
 
 
-def main():
+def main() -> None:
     """Register a monitor, sending a request to the application.
     Usage: python register_monitor.py <monitor_name> <monitor_file> [<additional_file>, ...]
     """

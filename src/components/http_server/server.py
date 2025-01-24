@@ -4,6 +4,8 @@ from typing import Any
 
 import prometheus_client
 from aiohttp import web
+from aiohttp.web_request import Request
+from aiohttp.web_response import Response
 
 import components.controller.controller as controller
 import components.executor.executor as executor
@@ -34,7 +36,7 @@ STATUS_MESSAGES = [
 @base_routes.get("/")
 @base_routes.get("/status")
 @base_routes.get("/status/")
-async def get_status(request):
+async def get_status(request: Request) -> Response:
     """Return the application status"""
     response: dict[str, Any] = {
         "status": "ok",
@@ -62,14 +64,14 @@ async def get_status(request):
 
 @base_routes.get("/metrics")
 @base_routes.get("/metrics/")
-async def get_metrics(request):
+async def get_metrics(request: Request) -> Response:
     """Return prometheus metrics"""
     response = web.Response(body=prometheus_client.generate_latest())
     response.content_type = prometheus_client.CONTENT_TYPE_LATEST
     return response
 
 
-async def init(controller_enabled: bool = False):
+async def init(controller_enabled: bool = False) -> None:
     global _runner
 
     app = web.Application()
@@ -91,6 +93,6 @@ async def init(controller_enabled: bool = False):
     _logger.info(f"Listening at port {port}")
 
 
-async def wait_stop():
+async def wait_stop() -> None:
     global _runner
     await _runner.cleanup()

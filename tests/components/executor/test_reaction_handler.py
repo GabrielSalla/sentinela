@@ -2,6 +2,7 @@ import asyncio
 import json
 import time
 from functools import partial
+from typing import Coroutine
 from unittest.mock import AsyncMock, MagicMock
 
 import pytest
@@ -164,8 +165,8 @@ async def test_run_function_no_name(caplog, mocker, monkeypatch, sample_monitor:
 
     # Create an object that has no '__name__' attribute but is callable
     class Mock:
-        def __call__(self, message_payload):
-            async def long_sleep():
+        def __call__(self, message_payload) -> Coroutine[None, None, None]:
+            async def long_sleep() -> None:
                 await asyncio.sleep(1)
 
             return long_sleep()

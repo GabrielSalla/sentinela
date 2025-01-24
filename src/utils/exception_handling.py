@@ -2,6 +2,7 @@ import asyncio
 import logging
 import traceback
 from contextlib import contextmanager
+from typing import Generator
 
 from base_exception import BaseSentinelaException
 
@@ -11,7 +12,7 @@ def catch_exceptions(
     logger: logging.Logger | None = None,
     error_message: str | None = None,
     timeout_message: str | None = None,
-):
+) -> Generator[None, None, None]:
     """Execute some code catching and logging any exceptions that might occur"""
     if logger is None:
         logger = logging.getLogger("exception_handler")

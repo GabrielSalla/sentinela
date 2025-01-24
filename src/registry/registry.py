@@ -46,7 +46,7 @@ prometheus_monitor_not_registered_count = prometheus_client.Counter(
 )
 
 
-async def wait_monitors_ready():
+async def wait_monitors_ready() -> None:
     """Wait for the monitors to be ready, with a timeout"""
     try:
         await asyncio.wait_for(monitors_ready.wait(), timeout=MONITORS_READY_TIMEOUT)
@@ -60,7 +60,7 @@ def is_monitor_registered(monitor_id: int) -> bool:
     return monitor_id in _monitors
 
 
-async def wait_monitor_loaded(monitor_id: int):
+async def wait_monitor_loaded(monitor_id: int) -> None:
     """Wait for a monitor to be loaded and raise an 'MonitorNotRegisteredError' if it fails to
     load"""
     if is_monitor_registered(monitor_id):
@@ -86,11 +86,11 @@ def get_monitor_module(monitor_id: int) -> MonitorModule:
     return _monitors[monitor_id]["module"]
 
 
-def add_monitor(monitor_id: int, monitor_name: str, monitor_module: MonitorModule):
+def add_monitor(monitor_id: int, monitor_name: str, monitor_module: MonitorModule) -> None:
     """Add a monitor to the registry"""
     _monitors[monitor_id] = {"name": monitor_name, "module": monitor_module}
 
 
-def init():
+def init() -> None:
     monitors_ready.clear()
     monitors_pending.set()

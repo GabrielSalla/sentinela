@@ -60,7 +60,7 @@ async def diagnostics() -> tuple[dict[str, Any], list[str]]:
     return status, issues
 
 
-async def _change_visibility_loop(message: message_queue.Message):
+async def _change_visibility_loop(message: message_queue.Message) -> None:
     """Change the message visibility while it's been processed"""
     try:
         while app.running():
@@ -71,7 +71,7 @@ async def _change_visibility_loop(message: message_queue.Message):
 
 
 class Executor:
-    task: asyncio.Task
+    task: asyncio.Task[Any]
     _logger: logging.Logger
 
     _handlers = {
@@ -81,10 +81,10 @@ class Executor:
     }
     _current_message_type: str
 
-    def __init__(self, number: int):
+    def __init__(self, number: int) -> None:
         self._logger = logging.getLogger(f"executor_{number}")
 
-    def init(self):
+    def init(self) -> None:
         """Create the internal loop task"""
         self.task = asyncio.create_task(self.run())
 
@@ -115,7 +115,7 @@ class Executor:
         self,
         handler: Callable[[dict[Any, Any]], Coroutine[Any, Any, Any]],
         message: message_queue.Message
-    ):
+    ) -> None:
         """Process the message with the provided handler, protecting from possible exceptions.
         During the message processing, another task will be spawned to change it's visibility in
         the queue, preventing other messages from processing it too"""
@@ -151,7 +151,7 @@ class Executor:
             change_visibility_task.cancel()
             await change_visibility_task
 
-    async def process(self):
+    async def process(self) -> None:
         """Get a message and process it"""
         # Wait for the monitors to be ready
         await registry.wait_monitors_ready()
@@ -169,7 +169,7 @@ class Executor:
 
         await self.process_message(handler, message)
 
-    async def run(self):
+    async def run(self) -> None:
         """Run the executor process continuously, until the application finishes"""
         self._logger.info("Executor running")
 
@@ -180,7 +180,7 @@ class Executor:
         self._logger.info("Finishing")
 
 
-async def run():
+async def run() -> None:
     global executors
     global running
 
