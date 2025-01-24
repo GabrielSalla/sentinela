@@ -2,7 +2,7 @@ from aiohttp import web
 from aiohttp.web_request import Request
 from aiohttp.web_response import Response
 
-import external_requests as external_requests
+import commands as commands
 from models import Alert
 
 alert_routes = web.RouteTableDef()
@@ -20,7 +20,7 @@ async def alert_acknowledge(request: Request) -> Response:
         error_response = {"status": "error", "message": f"alert '{alert_id}' not found"}
         return web.json_response(error_response, status=404)
 
-    await external_requests.alert_acknowledge(alert_id)
+    await commands.alert_acknowledge(alert_id)
 
     success_response = {
         "status": "request_queued",
@@ -41,7 +41,7 @@ async def alert_lock(request: Request) -> Response:
         error_response = {"status": "error", "message": f"alert '{alert_id}' not found"}
         return web.json_response(error_response, status=404)
 
-    await external_requests.alert_lock(alert_id)
+    await commands.alert_lock(alert_id)
 
     success_response = {
         "status": "request_queued",
@@ -62,7 +62,7 @@ async def alert_solve(request: Request) -> Response:
         error_response = {"status": "error", "message": f"alert '{alert_id}' not found"}
         return web.json_response(error_response, status=404)
 
-    await external_requests.alert_solve(alert_id)
+    await commands.alert_solve(alert_id)
 
     success_response = {
         "status": "request_queued",

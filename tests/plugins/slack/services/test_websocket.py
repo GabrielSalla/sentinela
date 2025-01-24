@@ -2,7 +2,7 @@ from unittest.mock import AsyncMock
 
 import pytest
 
-import external_requests as external_requests
+import commands as commands
 import plugins.slack.services.websocket as websocket
 import plugins.slack.slack as slack
 
@@ -18,7 +18,7 @@ pytestmark = pytest.mark.asyncio(loop_scope="session")
 async def test_app_mention(mocker, message, action_name):
     """'app_mention' should call the correct action for the event if there's an action mapped for
     it, reacting to the message with a check mark"""
-    action_spy: AsyncMock = mocker.spy(external_requests, action_name)
+    action_spy: AsyncMock = mocker.spy(commands, action_name)
     slack_add_reaction_spy: AsyncMock = mocker.spy(slack, "add_reaction")
 
     body = {
@@ -49,7 +49,7 @@ async def test_app_mention_invalid_action(mocker):
 async def test_app_mention_error(mocker):
     """'app_mention' should react to the message with an 'x' and send the error message if an
     exception is raised"""
-    action_spy: AsyncMock = mocker.spy(external_requests, "alert_acknowledge")
+    action_spy: AsyncMock = mocker.spy(commands, "alert_acknowledge")
     slack_add_reaction_spy: AsyncMock = mocker.spy(slack, "add_reaction")
     slack_send_spy: AsyncMock = mocker.spy(slack, "send")
 
@@ -77,7 +77,7 @@ async def test_command(mocker, message, action_name):
     """'command' should ack the command and call the correct action for the event if there's an
     action mapped for it"""
     ack_mock = AsyncMock()
-    action_spy: AsyncMock = mocker.spy(external_requests, action_name)
+    action_spy: AsyncMock = mocker.spy(commands, action_name)
 
     body = {
         "actions": [{"value": message}]

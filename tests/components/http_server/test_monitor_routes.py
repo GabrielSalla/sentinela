@@ -4,10 +4,10 @@ import aiohttp
 import pytest
 import pytest_asyncio
 
+import commands as commands
 import components.controller.controller as controller
 import components.http_server as http_server
 import databases as databases
-import external_requests as external_requests
 from models import CodeModule, Monitor
 
 pytestmark = pytest.mark.asyncio(loop_scope="session")
@@ -93,7 +93,7 @@ async def test_get_monitor_invalid_code_module(clear_database, sample_monitor: M
 
 async def test_monitor_disable(mocker, clear_database, sample_monitor: Monitor):
     """The 'monitor disable' route should disable a monitor"""
-    monitor_disable_spy: AsyncMock = mocker.spy(external_requests, "disable_monitor")
+    monitor_disable_spy: AsyncMock = mocker.spy(commands, "disable_monitor")
 
     assert sample_monitor.enabled
 
@@ -114,7 +114,7 @@ async def test_monitor_disable(mocker, clear_database, sample_monitor: Monitor):
 
 async def test_monitor_disable_not_found(mocker, clear_database):
     """The 'monitor disable' route should return an error if the monitor is not found"""
-    monitor_disable_spy: AsyncMock = mocker.spy(external_requests, "disable_monitor")
+    monitor_disable_spy: AsyncMock = mocker.spy(commands, "disable_monitor")
 
     url = BASE_URL + "/not_found/disable"
     async with aiohttp.ClientSession() as session:
@@ -130,7 +130,7 @@ async def test_monitor_disable_not_found(mocker, clear_database):
 
 async def test_monitor_disable_error(mocker, clear_database):
     """The 'monitor disable' route should return an error if an exception is raised"""
-    monitor_disable_spy: AsyncMock = mocker.spy(external_requests, "disable_monitor")
+    monitor_disable_spy: AsyncMock = mocker.spy(commands, "disable_monitor")
     monitor_disable_spy.side_effect = Exception("Something went wrong")
 
     url = BASE_URL + "/error/disable"
@@ -147,7 +147,7 @@ async def test_monitor_disable_error(mocker, clear_database):
 
 async def test_monitor_enable(mocker, clear_database, sample_monitor: Monitor):
     """The 'monitor enable' route should enable a monitor"""
-    monitor_enable_spy: AsyncMock = mocker.spy(external_requests, "enable_monitor")
+    monitor_enable_spy: AsyncMock = mocker.spy(commands, "enable_monitor")
 
     await sample_monitor.set_enabled(False)
     assert not sample_monitor.enabled
@@ -169,7 +169,7 @@ async def test_monitor_enable(mocker, clear_database, sample_monitor: Monitor):
 
 async def test_monitor_enable_not_found(mocker, clear_database):
     """The 'monitor enable' route should return an error if the monitor is not found"""
-    monitor_enable_spy: AsyncMock = mocker.spy(external_requests, "enable_monitor")
+    monitor_enable_spy: AsyncMock = mocker.spy(commands, "enable_monitor")
 
     url = BASE_URL + "/not_found/enable"
     async with aiohttp.ClientSession() as session:
@@ -185,7 +185,7 @@ async def test_monitor_enable_not_found(mocker, clear_database):
 
 async def test_monitor_enable_error(mocker, clear_database):
     """The 'monitor enable' route should return an error if an exception is raised"""
-    monitor_enable_spy: AsyncMock = mocker.spy(external_requests, "enable_monitor")
+    monitor_enable_spy: AsyncMock = mocker.spy(commands, "enable_monitor")
     monitor_enable_spy.side_effect = Exception("Something went wrong")
 
     url = BASE_URL + "/error/enable"
@@ -208,7 +208,7 @@ async def test_monitor_enable_error(mocker, clear_database):
 async def test_monitor_register(mocker, clear_database, monitor_name):
     """The 'monitor register' route should register a new monitor with the provided module code if
     it doesn't exists. The monitor name should replace any dots with underscores"""
-    monitor_register_spy: AsyncMock = mocker.spy(external_requests, "monitor_register")
+    monitor_register_spy: AsyncMock = mocker.spy(commands, "monitor_register")
 
     monitor = await Monitor.get(Monitor.name == monitor_name)
     assert monitor is None
@@ -267,7 +267,7 @@ async def test_monitor_register_batch(mocker, clear_database):
 async def test_monitor_register_additional_files(mocker, clear_database):
     """The 'monitor register' route should register a new monitor with the provided module code and
     additional files if it not exists"""
-    monitor_register_spy: AsyncMock = mocker.spy(external_requests, "monitor_register")
+    monitor_register_spy: AsyncMock = mocker.spy(commands, "monitor_register")
 
     monitor_name = "test_monitor_register_additional_files"
     monitor = await Monitor.get(Monitor.name == monitor_name)

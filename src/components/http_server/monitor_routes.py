@@ -7,7 +7,7 @@ from aiohttp import web
 from aiohttp.web_request import Request
 from aiohttp.web_response import Response
 
-import external_requests as external_requests
+import commands as commands
 from components.monitors_loader import MonitorValidationError
 from models import CodeModule, Monitor
 
@@ -73,7 +73,7 @@ async def monitor_disable(request: Request) -> Response:
     monitor_name = request.match_info["monitor_name"]
 
     try:
-        await external_requests.disable_monitor(monitor_name)
+        await commands.disable_monitor(monitor_name)
         success_response = {
             "status": "monitor_disabled",
             "monitor_name": monitor_name,
@@ -95,7 +95,7 @@ async def monitor_enable(request: Request) -> Response:
     monitor_name = request.match_info["monitor_name"]
 
     try:
-        await external_requests.enable_monitor(monitor_name)
+        await commands.enable_monitor(monitor_name)
         success_response = {
             "status": "monitor_enabled",
             "monitor_name": monitor_name,
@@ -133,7 +133,7 @@ async def monitor_register(request: Request) -> Response:
     monitor_name = monitor_name.replace(".", "_")
 
     try:
-        monitor = await external_requests.monitor_register(
+        monitor = await commands.monitor_register(
             monitor_name, monitor_code, additional_files
         )
     except pydantic.ValidationError as e:
