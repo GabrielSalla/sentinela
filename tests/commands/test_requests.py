@@ -5,8 +5,8 @@ import pytest
 
 import commands.requests as requests
 import components.monitors_loader as monitors_loader
-import message_queue as message_queue
 from models import CodeModule, Monitor
+from tests.message_queue.utils import get_queue_items
 
 pytestmark = pytest.mark.asyncio(loop_scope="session")
 
@@ -90,9 +90,7 @@ async def test_alert_acknowledge(clear_queue, target_id):
     """'alert_acknowledge' should queue an 'alert_acknowledge' action request"""
     await requests.alert_acknowledge(target_id)
 
-    queue_items = []
-    while not message_queue.internal_queue._queue.empty():
-        queue_items.append(message_queue.internal_queue._queue.get_nowait())
+    queue_items = get_queue_items()
 
     assert queue_items == [
         json.dumps(
@@ -112,9 +110,7 @@ async def test_alert_lock(clear_queue, target_id):
     """'alert_lock' should queue an 'alert_lock' action request"""
     await requests.alert_lock(target_id)
 
-    queue_items = []
-    while not message_queue.internal_queue._queue.empty():
-        queue_items.append(message_queue.internal_queue._queue.get_nowait())
+    queue_items = get_queue_items()
 
     assert queue_items == [
         json.dumps(
@@ -134,9 +130,7 @@ async def test_alert_solve(clear_queue, target_id):
     """'alert_solve' should queue an 'alert_solve' action request"""
     await requests.alert_solve(target_id)
 
-    queue_items = []
-    while not message_queue.internal_queue._queue.empty():
-        queue_items.append(message_queue.internal_queue._queue.get_nowait())
+    queue_items = get_queue_items()
 
     assert queue_items == [
         json.dumps(
@@ -156,9 +150,7 @@ async def test_issue_drop(clear_queue, target_id):
     """'issue_drop' should queue an 'issue_drop' action request"""
     await requests.issue_drop(target_id)
 
-    queue_items = []
-    while not message_queue.internal_queue._queue.empty():
-        queue_items.append(message_queue.internal_queue._queue.get_nowait())
+    queue_items = get_queue_items()
 
     assert queue_items == [
         json.dumps(

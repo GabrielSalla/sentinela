@@ -6,8 +6,8 @@ import pytest_asyncio
 
 import components.controller.controller as controller
 import components.http_server as http_server
-import message_queue as message_queue
 from models import Alert, Monitor
+from tests.message_queue.utils import get_queue_items
 
 pytestmark = pytest.mark.asyncio(loop_scope="session")
 
@@ -27,7 +27,8 @@ async def test_alert_acknowledge(clear_queue, sample_monitor: Monitor):
     """The 'alert acknowledge' route should queue an request to acknowledge the provided alert"""
     alert = await Alert.create(monitor_id=sample_monitor.id)
 
-    assert message_queue.internal_queue._queue.empty()
+    queue_items = get_queue_items()
+    assert len(queue_items) == 0
 
     async with aiohttp.ClientSession() as session:
         async with session.post(BASE_URL + f"/{alert.id}/acknowledge") as response:
@@ -37,9 +38,7 @@ async def test_alert_acknowledge(clear_queue, sample_monitor: Monitor):
                 "target_id": alert.id,
             }
 
-    queue_items = []
-    while not message_queue.internal_queue._queue.empty():
-        queue_items.append(message_queue.internal_queue._queue.get_nowait())
+    queue_items = get_queue_items()
 
     assert len(queue_items) == 1
     assert json.loads(queue_items[0]) == {
@@ -59,14 +58,16 @@ async def test_alert_acknowledge_alert_not_found(clear_queue):
             assert response.status == 404
             assert await response.json() == {"status": "error", "message": "alert '0' not found"}
 
-    assert message_queue.internal_queue._queue.empty()
+    queue_items = get_queue_items()
+    assert len(queue_items) == 0
 
 
 async def test_alert_lock(clear_queue, sample_monitor: Monitor):
     """The 'alert lock' route should queue an request to lock the provided alert"""
     alert = await Alert.create(monitor_id=sample_monitor.id)
 
-    assert message_queue.internal_queue._queue.empty()
+    queue_items = get_queue_items()
+    assert len(queue_items) == 0
 
     async with aiohttp.ClientSession() as session:
         async with session.post(BASE_URL + f"/{alert.id}/lock") as response:
@@ -76,9 +77,7 @@ async def test_alert_lock(clear_queue, sample_monitor: Monitor):
                 "target_id": alert.id,
             }
 
-    queue_items = []
-    while not message_queue.internal_queue._queue.empty():
-        queue_items.append(message_queue.internal_queue._queue.get_nowait())
+    queue_items = get_queue_items()
 
     assert len(queue_items) == 1
     assert json.loads(queue_items[0]) == {
@@ -97,14 +96,16 @@ async def test_alert_lock_alert_not_found(clear_queue):
             assert response.status == 404
             assert await response.json() == {"status": "error", "message": "alert '0' not found"}
 
-    assert message_queue.internal_queue._queue.empty()
+    queue_items = get_queue_items()
+    assert len(queue_items) == 0
 
 
 async def test_alert_solve(clear_queue, sample_monitor: Monitor):
     """The 'alert solve' route should queue an request to solve the provided alert"""
     alert = await Alert.create(monitor_id=sample_monitor.id)
 
-    assert message_queue.internal_queue._queue.empty()
+    queue_items = get_queue_items()
+    assert len(queue_items) == 0
 
     async with aiohttp.ClientSession() as session:
         async with session.post(BASE_URL + f"/{alert.id}/solve") as response:
@@ -114,9 +115,7 @@ async def test_alert_solve(clear_queue, sample_monitor: Monitor):
                 "target_id": alert.id,
             }
 
-    queue_items = []
-    while not message_queue.internal_queue._queue.empty():
-        queue_items.append(message_queue.internal_queue._queue.get_nowait())
+    queue_items = get_queue_items()
 
     assert len(queue_items) == 1
     assert json.loads(queue_items[0]) == {
@@ -136,4 +135,5 @@ async def test_alert_solve_alert_not_found(clear_queue):
             assert response.status == 404
             assert await response.json() == {"status": "error", "message": "alert '0' not found"}
 
-    assert message_queue.internal_queue._queue.empty()
+    queue_items = get_queue_items()
+    assert len(queue_items) == 0
