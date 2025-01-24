@@ -1,8 +1,20 @@
 import os
-from typing import Any
+from typing import Any, Literal
 
 import yaml
-from pydantic.dataclasses import dataclass
+from pydantic.dataclasses import Field, dataclass
+
+
+@dataclass
+class FriendlyLogConfig:
+    mode: Literal["friendly"]
+    format: str | None = None
+
+
+@dataclass
+class JsonLogConfig:
+    mode: Literal["json"]
+    fields: dict[str, str] | None = None
 
 
 @dataclass
@@ -11,8 +23,6 @@ class Configs:
     sample_monitors_path: str
     internal_monitors_path: str
     monitors_load_schedule: str
-
-    logging: dict[str, Any]
 
     application_database_settings: dict[str, Any]
 
@@ -44,6 +54,8 @@ class Configs:
     databases_pools_configs: dict[str, dict[str, Any]]
 
     log_all_events: bool
+
+    logging: FriendlyLogConfig | JsonLogConfig = Field(discriminator="mode")
 
 
 with open(os.environ.get("CONFIGS_FILE", "configs.yaml"), "r") as file:
