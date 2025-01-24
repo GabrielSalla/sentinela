@@ -15,17 +15,17 @@ from models import Monitor
 _logger = logging.getLogger("reaction_handler")
 
 prometheus_reaction_error_count = prometheus_client.Counter(
-    "reaction_execution_error",
+    "executor_reaction_execution_error",
     "Error count for reactions",
     ["monitor_id", "monitor_name", "event_name"],
 )
 prometheus_reaction_timeout_count = prometheus_client.Counter(
-    "reaction_execution_timeout",
+    "executor_reaction_execution_timeout",
     "Timeout count for reactions",
     ["monitor_id", "monitor_name", "event_name"],
 )
 prometheus_reaction_execution_time = prometheus_client.Summary(
-    "reaction_execution_seconds",
+    "executor_reaction_execution_seconds",
     "Time to run the reaction",
     ["monitor_id", "monitor_name", "event_name"],
 )

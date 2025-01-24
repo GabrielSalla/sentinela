@@ -15,34 +15,47 @@ from utils.async_tools import do_concurrently
 _logger = logging.getLogger("monitor_handler")
 
 prometheus_monitor_error_count = prometheus_client.Counter(
-    "monitor_execution_error", "Error count for monitors", ["monitor_id", "monitor_name"]
+    "executor_monitor_execution_error",
+    "Error count for monitors",
+    ["monitor_id", "monitor_name"],
 )
 prometheus_monitor_timeout_count = prometheus_client.Counter(
-    "monitor_execution_timeout", "Timeout count for monitors", ["monitor_id", "monitor_name"]
+    "executor_monitor_execution_timeout",
+    "Timeout count for monitors",
+    ["monitor_id", "monitor_name"],
 )
 prometheus_monitor_running = prometheus_client.Gauge(
-    "monitor_running", "Flag indicating if the monitor is running", ["monitor_id", "monitor_name"]
+    "executor_monitor_running",
+    "Flag indicating if the monitor is running",
+    ["monitor_id", "monitor_name"],
 )
 prometheus_monitor_execution_time = prometheus_client.Summary(
-    "monitor_execution_seconds", "Time to run the monitor", ["monitor_id", "monitor_name"]
+    "executor_monitor_execution_seconds",
+    "Time to run the monitor",
+    ["monitor_id", "monitor_name"],
 )
 prometheus_monitor_search_time = prometheus_client.Summary(
-    "monitor_execution_search_seconds",
+    "executor_monitor_execution_search_seconds",
     "Time to run the monitor's 'search' routine",
     ["monitor_id", "monitor_name"],
 )
+prometheus_monitor_search_issues_limit_reached = prometheus_client.Counter(
+    "executor_monitor_search_issues_limit_reached",
+    "Count of times the monitor's 'search' routine reached the issues limit",
+    ["monitor_id", "monitor_name"],
+)
 prometheus_monitor_update_time = prometheus_client.Summary(
-    "monitor_execution_update_seconds",
+    "executor_monitor_execution_update_seconds",
     "Time to run the monitor's 'update' routine",
     ["monitor_id", "monitor_name"],
 )
 prometheus_monitor_solve_time = prometheus_client.Summary(
-    "monitor_execution_solve_seconds",
+    "executor_monitor_execution_solve_seconds",
     "Time to run the monitor's 'solve' routine",
     ["monitor_id", "monitor_name"],
 )
 prometheus_monitor_alert_time = prometheus_client.Summary(
-    "monitor_execution_alert_seconds",
+    "executor_monitor_execution_alert_seconds",
     "Time to run the monitor's 'alert' routine",
     ["monitor_id", "monitor_name"],
 )
@@ -135,9 +148,15 @@ async def _search_routine(monitor: Monitor) -> None:
     # Limit the number of issues being created
     # Doing it after filtering the new issues to avoid losing newer ones
     max_issues = monitor.options.max_issues_creation
-    new_issues_data = {
-        key: new_issues_data[key] for key in list(new_issues_data.keys())[:max_issues]
-    }
+    if len(new_issues_data) > max_issues:
+        search_issues_limit_count = prometheus_monitor_search_issues_limit_reached.labels(
+            monitor_id=monitor.id, monitor_name=monitor.name
+        )
+        search_issues_limit_count.inc()
+
+        new_issues_data = {
+            key: new_issues_data[key] for key in list(new_issues_data.keys())[:max_issues]
+        }
 
     # Create the issues
     issues = [

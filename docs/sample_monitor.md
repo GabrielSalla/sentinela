@@ -42,8 +42,8 @@ Sentinela maps the updated **issues data** to their respective **Issue** objects
 
 Similar to the update process, Sentinela retrieves **issues data** for all active issues.
 
-The `is_solved` function is executed for each issue data to determine whether it is resolved.  
-   
+The `is_solved` function is executed for each issue data to determine whether it is resolved.
+
 Example of resolution checks:
 - For `{"id": 12, "value": 4}`, the function returns `False`.
 - For `{"id": 23, "value": 1}`, the function returns `True`.
