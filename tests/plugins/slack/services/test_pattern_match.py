@@ -5,7 +5,7 @@ from unittest.mock import MagicMock
 
 import pytest
 
-import external_requests as external_requests
+import commands as commands
 import message_queue as message_queue
 import plugins.slack.services.pattern_match as pattern_match
 
@@ -14,7 +14,7 @@ pytestmark = pytest.mark.asyncio(loop_scope="session")
 
 async def test_disable_monitor(mocker):
     """'disable_monitor' should return the coroutine to disable the monitor"""
-    disable_monitor_spy: MagicMock = mocker.spy(external_requests, "disable_monitor")
+    disable_monitor_spy: MagicMock = mocker.spy(commands, "disable_monitor")
 
     action = pattern_match.disable_monitor(
         message_match=re.match(r"disable monitor +(\w+)", "disable monitor abc"),
@@ -31,7 +31,7 @@ async def test_disable_monitor(mocker):
 
 async def test_enable_monitor(mocker):
     """'enable_monitor' should return the coroutine to enable the monitor"""
-    enable_monitor_spy: MagicMock = mocker.spy(external_requests, "enable_monitor")
+    enable_monitor_spy: MagicMock = mocker.spy(commands, "enable_monitor")
 
     action = pattern_match.enable_monitor(
         message_match=re.match(r"enable monitor +(\w+)", "enable monitor abc"),
@@ -48,7 +48,7 @@ async def test_enable_monitor(mocker):
 
 async def test_alert_acknowledge(mocker):
     """'alert_acknowledge' should return the coroutine to acknowledge the alert"""
-    alert_acknowledge_spy: MagicMock = mocker.spy(external_requests, "alert_acknowledge")
+    alert_acknowledge_spy: MagicMock = mocker.spy(commands, "alert_acknowledge")
 
     action = pattern_match.alert_acknowledge(
         message_match=re.match(r"ack +(\d+)", "ack 12345"),
@@ -65,7 +65,7 @@ async def test_alert_acknowledge(mocker):
 
 async def test_alert_lock(mocker):
     """'alert_lock' should return the coroutine to lock the alert"""
-    alert_lock_spy: MagicMock = mocker.spy(external_requests, "alert_lock")
+    alert_lock_spy: MagicMock = mocker.spy(commands, "alert_lock")
 
     action = pattern_match.alert_lock(
         message_match=re.match(r"lock +(\d+)", "lock 12345"),
@@ -82,7 +82,7 @@ async def test_alert_lock(mocker):
 
 async def test_alert_solve(mocker):
     """'alert_solve' should return the coroutine to solve the alert"""
-    alert_solve_spy: MagicMock = mocker.spy(external_requests, "alert_solve")
+    alert_solve_spy: MagicMock = mocker.spy(commands, "alert_solve")
 
     action = pattern_match.alert_solve(
         message_match=re.match(r"solve +(\d+)", "solve 12345"),
@@ -99,7 +99,7 @@ async def test_alert_solve(mocker):
 
 async def test_issue_drop(mocker):
     """'issue_drop' should return the coroutine to drop the issue"""
-    issue_drop_spy: MagicMock = mocker.spy(external_requests, "issue_drop")
+    issue_drop_spy: MagicMock = mocker.spy(commands, "issue_drop")
 
     action = pattern_match.issue_drop(
         message_match=re.match(r"drop issue +(\d+)", "drop issue 12345"),
@@ -172,7 +172,7 @@ async def test_get_message_request_match_external(
 ):
     """'get_message_request' should return the correct request coroutine based on the received
     message, using the external requests"""
-    action_spy: MagicMock = mocker.spy(external_requests, expected_request)
+    action_spy: MagicMock = mocker.spy(commands, expected_request)
 
     context = {
         "channel": "C1234567890",

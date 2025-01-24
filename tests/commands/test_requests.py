@@ -3,8 +3,8 @@ from unittest.mock import AsyncMock
 
 import pytest
 
+import commands.requests as requests
 import components.monitors_loader as monitors_loader
-import external_requests.requests as requests
 import message_queue as message_queue
 from models import CodeModule, Monitor
 

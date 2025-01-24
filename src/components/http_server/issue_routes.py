@@ -2,7 +2,7 @@ from aiohttp import web
 from aiohttp.web_request import Request
 from aiohttp.web_response import Response
 
-import external_requests as external_requests
+import commands as commands
 from models import Issue
 
 issue_routes = web.RouteTableDef()
@@ -20,7 +20,7 @@ async def issue_drop(request: Request) -> Response:
         error_response = {"status": "error", "message": f"issue '{issue_id}' not found"}
         return web.json_response(error_response, status=404)
 
-    await external_requests.issue_drop(issue_id)
+    await commands.issue_drop(issue_id)
 
     success_response = {
         "status": "request_queued",
