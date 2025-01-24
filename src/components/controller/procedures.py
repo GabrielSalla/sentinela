@@ -13,18 +13,17 @@ import databases
 from configs import configs
 from models import Monitor
 from utils.exception_handling import catch_exceptions
-from utils.time import is_triggered
+from utils.time import is_triggered, now
 
 _logger = logging.getLogger("controller_procedures")
 
 SQL_FILES_PATH = Path(__file__).parent / "sql_files"
 
 
-async def _monitors_stuck() -> None:
+async def _monitors_stuck(time_tolerance: int) -> None:
     with open(SQL_FILES_PATH / "monitors_stuck.sql") as file:
         query = file.read()
 
-    time_tolerance = configs.controller_procedures["monitors_stuck"]["time_tolerance"]
     result = await databases.query_application(query, time_tolerance)
 
     if result is None:
@@ -45,7 +44,7 @@ async def _monitors_stuck() -> None:
         _logger.warning(f"monitors_stuck: {monitor} was stuck and now it's fixed")
 
 
-procedures: dict[str, Callable[[], Coroutine[None, None, None]]] = {
+procedures: dict[str, Callable[..., Coroutine[None, None, None]]] = {
     "monitors_stuck": _monitors_stuck,
 }
 
@@ -64,19 +63,24 @@ def _check_procedure_triggered(schedule: str, last_execution: datetime | None) -
 async def _execute_procedure(
         procedure_name: str,
         procedure: Callable[[], Coroutine[None, None, None]],
+        procedure_settings: dict[str, str | int | float | bool | None],
 ) -> None:
     """Execute the 'procedure' and update the 'last_executions' variable"""
     with catch_exceptions(logger=_logger):
-        await procedure()
-    last_executions[procedure_name] = datetime.now()
+        await procedure(**procedure_settings)
+    last_executions[procedure_name] = now()
 
 
 async def run_procedures() -> None:
     """Check and run all procedures that are triggered"""
     for procedure_name, procedure in procedures.items():
+        procedure_settings = configs.controller_procedures[procedure_name]
+
         last_execution = last_executions.get(procedure_name)
-        procedure_schedule = configs.controller_procedures[procedure_name]["schedule"]
-        procedure_triggered = _check_procedure_triggered(procedure_schedule, last_execution)
+        procedure_triggered = _check_procedure_triggered(
+            procedure_settings["schedule"], last_execution
+        )
 
         if procedure_triggered:
-            await _execute_procedure(procedure_name, procedure)
+            procedure_params = procedure_settings.get("params", {}) or {}
+            await _execute_procedure(procedure_name, procedure, procedure_params)
