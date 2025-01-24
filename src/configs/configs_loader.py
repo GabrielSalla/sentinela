@@ -42,6 +42,12 @@ class HttpServerConfig:
 
 
 @dataclass
+class ControllerProcedureConfig:
+    schedule: str
+    params: dict[str, str | int | float | bool | None] | None = None
+
+
+@dataclass
 class Configs:
     load_sample_monitors: bool
     sample_monitors_path: str
@@ -59,7 +65,7 @@ class Configs:
 
     controller_process_schedule: str
     controller_concurrency: int
-    controller_procedures: dict[str, dict[str, Any]]
+    controller_procedures: dict[str, ControllerProcedureConfig]
 
     executor_concurrency: int
     executor_sleep: int

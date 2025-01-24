@@ -4,7 +4,7 @@ from unittest.mock import AsyncMock
 import pytest
 
 import components.controller.procedures as procedures
-from configs import configs
+from configs import ControllerProcedureConfig, configs
 from models import Monitor
 from tests.test_utils import assert_message_in_log, assert_message_not_in_log
 from utils.time import now
@@ -173,9 +173,10 @@ async def test_run_procedures(monkeypatch):
     monkeypatch.setattr(procedures, "last_executions", {})
     monkeypatch.setattr(
         configs,
-        "controller_procedures", {
-            "some_procedure": {"schedule": "* * * * *"},
-            "other_procedure": {"schedule": "* * * * *"},
+        "controller_procedures",
+        {
+            "some_procedure": ControllerProcedureConfig(schedule="* * * * *"),
+            "other_procedure": ControllerProcedureConfig(schedule="* * * * *"),
         }
     )
 
@@ -203,9 +204,10 @@ async def test_run_procedures_error(caplog, monkeypatch):
     monkeypatch.setattr(procedures, "last_executions", {})
     monkeypatch.setattr(
         configs,
-        "controller_procedures", {
-            "some_procedure": {"schedule": "* * * * *"},
-            "other_procedure": {"schedule": "* * * * *"},
+        "controller_procedures",
+        {
+            "some_procedure": ControllerProcedureConfig(schedule="* * * * *"),
+            "other_procedure": ControllerProcedureConfig(schedule="* * * * *"),
         }
     )
 

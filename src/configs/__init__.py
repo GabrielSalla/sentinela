@@ -1,5 +1,6 @@
 from .configs_loader import (
     ApplicationDatabaseConfig,
+    ControllerProcedureConfig,
     FriendlyLogConfig,
     HttpServerConfig,
     InternalQueueConfig,
@@ -11,6 +12,7 @@ from .configs_loader import (
 __all__ = [
     "ApplicationDatabaseConfig",
     "configs",
+    "ControllerProcedureConfig",
     "FriendlyLogConfig",
     "InternalQueueConfig",
     "HttpServerConfig",

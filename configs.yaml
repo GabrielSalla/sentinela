@@ -65,7 +65,8 @@ controller_procedures:
   # Fix monitors stuck in "queued" or "running" status
   monitors_stuck:
     schedule: "*/5 * * * *"
-    time_tolerance: 300
+    params:
+      time_tolerance: 300
 
 # Executor settings
 # How many tasks can be executed at the same time by each Executor
