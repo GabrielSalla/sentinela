@@ -18,13 +18,18 @@ class JsonLogConfig:
 
 
 @dataclass
+class ApplicationDatabaseConfig:
+    pool_size: int
+
+
+@dataclass
 class Configs:
     load_sample_monitors: bool
     sample_monitors_path: str
     internal_monitors_path: str
     monitors_load_schedule: str
 
-    application_database_settings: dict[str, Any]
+    application_database_settings: ApplicationDatabaseConfig
 
     application_queue: dict[str, Any]
     queue_wait_message_time: int
