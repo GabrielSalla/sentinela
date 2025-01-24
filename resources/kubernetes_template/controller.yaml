@@ -30,6 +30,10 @@ spec:
           value: U07NFGGMB98
         - name: SLACK_WEBSOCKET_ENABLED
           value: "true"
+        - name: SLACK_MAIN_CHANNEL
+          value: C07NCL94SDT
+        - name: SLACK_MAIN_MENTION
+          value: U07NFGGMB98
         - name: DATABASE_APPLICATION
           valueFrom:
             secretKeyRef:
