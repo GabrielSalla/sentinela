@@ -37,7 +37,7 @@ class SlackNotification:
     """
     The **SlackNotification** class manages sending notifications for alerts to a specified Slack
     channel.
-    - `channel`: The Slack channel where notifications will be sent.
+    - `channel`: The Slack channel where notifications will be sent (e.g., `C0011223344`).
     - `title`: A title for the notification to help users to identify the problem.
     - `issues_fields`: A list of fields from the issue data to include in the notification.
     - `mention`: Slack user or group to mention if the alert reaches a specified priority. Provide

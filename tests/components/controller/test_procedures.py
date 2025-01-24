@@ -7,14 +7,15 @@ import components.controller.procedures as procedures
 from configs import configs
 from models import Monitor
 from tests.test_utils import assert_message_in_log, assert_message_not_in_log
+from utils.time import now
 
 pytestmark = pytest.mark.asyncio(loop_scope="session")
 
 
 def get_time(reference: str) -> datetime | None:
     values = {
-        "now": datetime.now(),
-        "five_minutes_ago": datetime.now() - timedelta(seconds=301),
+        "now": now(),
+        "five_minutes_ago": now() - timedelta(seconds=301),
     }
     return values.get(reference)
 
@@ -41,7 +42,7 @@ async def test_monitors_stuck(
     sample_monitor.running_at = get_time(running_at)  # type:ignore[assignment]
     await sample_monitor.save()
 
-    await procedures._monitors_stuck()
+    await procedures._monitors_stuck(time_tolerance=300)
 
     await sample_monitor.refresh()
 
@@ -74,7 +75,7 @@ async def test_monitors_stuck_query_result_none(caplog, monkeypatch):
         procedures.databases, "query_application", AsyncMock(return_value=None)
     )
 
-    await procedures._monitors_stuck()
+    await procedures._monitors_stuck(time_tolerance=300)
 
     assert_message_in_log(caplog, "monitors_stuck: Error with query result")
 
@@ -87,7 +88,7 @@ async def test_monitors_stuck_monitor_not_found(caplog, monkeypatch):
         AsyncMock(return_value=[{"id": 99999999}])
     )
 
-    await procedures._monitors_stuck()
+    await procedures._monitors_stuck(time_tolerance=300)
 
     assert_message_in_log(caplog, "Monitor with id '99999999' not found")
 
@@ -105,7 +106,7 @@ async def test_monitors_stuck_monitor_not_found_2_results(
         AsyncMock(return_value=[{"id": 99999999}, {"id": sample_monitor.id}])
     )
 
-    await procedures._monitors_stuck()
+    await procedures._monitors_stuck(time_tolerance=300)
 
     assert_message_in_log(caplog, "Monitor with id '99999999' not found")
     assert_message_in_log(
@@ -140,11 +141,11 @@ async def test_execute_procedure(monkeypatch):
     monkeypatch.setattr(procedures, "last_executions", {})
     procedure_mock = AsyncMock()
 
-    await procedures._execute_procedure("procedure", procedure_mock)
+    await procedures._execute_procedure("procedure", procedure_mock, {"param": "value"})
 
-    procedure_mock.assert_awaited_once()
+    procedure_mock.assert_awaited_once_with(param="value")
     assert isinstance(procedures.last_executions["procedure"], datetime)
-    assert procedures.last_executions["procedure"] > datetime.now() - timedelta(seconds=1)
+    assert procedures.last_executions["procedure"] > now() - timedelta(seconds=1)
 
 
 async def test_execute_procedure_error(caplog, monkeypatch):
@@ -152,11 +153,11 @@ async def test_execute_procedure_error(caplog, monkeypatch):
     monkeypatch.setattr(procedures, "last_executions", {})
     procedure_mock = AsyncMock(side_effect=Exception("Some error"))
 
-    await procedures._execute_procedure("procedure", procedure_mock)
+    await procedures._execute_procedure("procedure", procedure_mock, {"param": "value"})
 
     procedure_mock.assert_awaited_once()
     assert isinstance(procedures.last_executions["procedure"], datetime)
-    assert procedures.last_executions["procedure"] > datetime.now() - timedelta(seconds=1)
+    assert procedures.last_executions["procedure"] > now() - timedelta(seconds=1)
     assert_message_in_log(caplog, "Exception: Some error")
 
 
@@ -186,8 +187,8 @@ async def test_run_procedures(monkeypatch):
     assert isinstance(procedures.last_executions["some_procedure"], datetime)
     assert isinstance(procedures.last_executions["other_procedure"], datetime)
 
-    assert procedures.last_executions["some_procedure"] > datetime.now() - timedelta(seconds=1)
-    assert procedures.last_executions["other_procedure"] > datetime.now() - timedelta(seconds=1)
+    assert procedures.last_executions["some_procedure"] > now() - timedelta(seconds=1)
+    assert procedures.last_executions["other_procedure"] > now() - timedelta(seconds=1)
 
 
 async def test_run_procedures_error(caplog, monkeypatch):
@@ -210,13 +211,13 @@ async def test_run_procedures_error(caplog, monkeypatch):
 
     await procedures.run_procedures()
 
-    procedure1_mock.assert_awaited_once()
-    procedure2_mock.assert_awaited_once()
+    procedure1_mock.assert_awaited_once_with()
+    procedure2_mock.assert_awaited_once_with()
 
     assert isinstance(procedures.last_executions["some_procedure"], datetime)
     assert isinstance(procedures.last_executions["other_procedure"], datetime)
 
-    assert procedures.last_executions["some_procedure"] > datetime.now() - timedelta(seconds=1)
-    assert procedures.last_executions["other_procedure"] > datetime.now() - timedelta(seconds=1)
+    assert procedures.last_executions["some_procedure"] > now() - timedelta(seconds=1)
+    assert procedures.last_executions["other_procedure"] > now() - timedelta(seconds=1)
 
     assert_message_in_log(caplog, "Exception: Some error")

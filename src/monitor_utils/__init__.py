@@ -3,6 +3,7 @@
 # should be a mock for them
 
 from databases import query
+from models.utils.priority import AlertPriority
 from options import (
     AgeRule,
     AlertOptions,
@@ -19,6 +20,7 @@ from .read_file import read_file
 __all__ = [
     "AgeRule",
     "AlertOptions",
+    "AlertPriority",
     "CountRule",
     "IssueOptions",
     "MonitorOptions",

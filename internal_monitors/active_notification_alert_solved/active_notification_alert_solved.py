@@ -1,3 +1,9 @@
+"""Active notification for solved alert
+Objective: check for active Notifications where the associated alert has already been solved.
+The Monitor tries to automatically close the issues by closing the detected Notifications. If a
+Notification is not closed successfully, the Monitor will trigger a Slack notification.
+"""
+import os
 from typing import Any, TypedDict, cast
 
 from databases import query_application
@@ -5,12 +11,14 @@ from models import Notification, NotificationStatus
 from monitor_utils import (
     AgeRule,
     AlertOptions,
+    AlertPriority,
     IssueOptions,
     MonitorOptions,
     PriorityLevels,
     ReactionOptions,
     read_file,
 )
+from plugins.slack import SlackNotification
 
 monitor_options = MonitorOptions(
     update_cron="*/5 * * * *",
@@ -25,6 +33,7 @@ issue_options = IssueOptions(
 alert_options = AlertOptions(
     rule=AgeRule(
         priority_levels=PriorityLevels(
+            low=300,
             moderate=360,
             high=420,
             critical=480,
@@ -80,3 +89,14 @@ reaction_options = ReactionOptions(
     issue_created=[close_notification],
     issue_updated_not_solved=[close_notification],
 )
+
+notification_options = [
+    SlackNotification(
+        channel=os.environ["SLACK_MAIN_CHANNEL"],
+        title="Active notification for solved alert",
+        issues_fields=["notification_id", "notification_status"],
+        mention=os.environ["SLACK_MAIN_MENTION"],
+        min_priority_to_send=AlertPriority.low,
+        min_priority_to_mention=AlertPriority.moderate,
+    )
+]
