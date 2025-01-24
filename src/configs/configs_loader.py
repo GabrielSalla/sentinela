@@ -37,6 +37,11 @@ class SQSQueueConfig:
 
 
 @dataclass
+class HttpServerConfig:
+    port: int
+
+
+@dataclass
 class Configs:
     load_sample_monitors: bool
     sample_monitors_path: str
@@ -48,7 +53,7 @@ class Configs:
     queue_wait_message_time: int
     queue_visibility_time: int
 
-    http_server: dict[str, Any]
+    http_server: HttpServerConfig
 
     time_zone: str
 

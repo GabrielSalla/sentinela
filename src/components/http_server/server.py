@@ -86,7 +86,7 @@ async def init(controller_enabled: bool = False) -> None:
     _runner = web.AppRunner(app)
     await _runner.setup()
 
-    port = configs.http_server["port"]
+    port = configs.http_server.port
     site = web.TCPSite(_runner, port=port)
     await site.start()
 

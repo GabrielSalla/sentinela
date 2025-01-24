@@ -1,6 +1,7 @@
 from .configs_loader import (
     ApplicationDatabaseConfig,
     FriendlyLogConfig,
+    HttpServerConfig,
     InternalQueueConfig,
     JsonLogConfig,
     SQSQueueConfig,
@@ -12,6 +13,7 @@ __all__ = [
     "configs",
     "FriendlyLogConfig",
     "InternalQueueConfig",
+    "HttpServerConfig",
     "JsonLogConfig",
     "SQSQueueConfig",
 ]
