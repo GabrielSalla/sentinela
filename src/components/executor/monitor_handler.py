@@ -39,6 +39,11 @@ prometheus_monitor_search_time = prometheus_client.Summary(
     "Time to run the monitor's 'search' routine",
     ["monitor_id", "monitor_name"],
 )
+prometheus_monitor_search_issues_limit_reached = prometheus_client.Counter(
+    "executor_monitor_search_issues_limit_reached",
+    "Count of times the monitor's 'search' routine reached the issues limit",
+    ["monitor_id", "monitor_name"],
+)
 prometheus_monitor_update_time = prometheus_client.Summary(
     "executor_monitor_execution_update_seconds",
     "Time to run the monitor's 'update' routine",
@@ -143,9 +148,15 @@ async def _search_routine(monitor: Monitor) -> None:
     # Limit the number of issues being created
     # Doing it after filtering the new issues to avoid losing newer ones
     max_issues = monitor.options.max_issues_creation
-    new_issues_data = {
-        key: new_issues_data[key] for key in list(new_issues_data.keys())[:max_issues]
-    }
+    if len(new_issues_data) > max_issues:
+        search_issues_limit_count = prometheus_monitor_search_issues_limit_reached.labels(
+            monitor_id=monitor.id, monitor_name=monitor.name
+        )
+        search_issues_limit_count.inc()
+
+        new_issues_data = {
+            key: new_issues_data[key] for key in list(new_issues_data.keys())[:max_issues]
+        }
 
     # Create the issues
     issues = [

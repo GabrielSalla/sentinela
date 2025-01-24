@@ -28,6 +28,8 @@ The Prometheus metrics provided by Sentinela are:
     - Labels: `monitor_id`, `monitor_name`
 - `executor_monitor_execution_search_seconds`: Summary - Time to run the monitor's 'search' routine
     - Labels: `monitor_id`, `monitor_name`
+- `executor_monitor_search_issues_limit_reached`: Counter - Count of times the monitor's 'search' routine reached the issues limit
+    - Labels: `monitor_id`, `monitor_name`
 - `executor_monitor_execution_update_seconds`: Summary - Time to run the monitor's 'update' routine
     - Labels: `monitor_id`, `monitor_name`
 - `executor_monitor_execution_solve_seconds`: Summary - Time to run the monitor's 'solve' routine
