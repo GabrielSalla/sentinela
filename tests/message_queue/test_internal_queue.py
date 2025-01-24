@@ -14,8 +14,6 @@ async def set_queue(monkeypatch_module):
     monkeypatch_module.setattr(configs, "queue_wait_message_time", 0.5)
     monkeypatch_module.setattr(configs, "queue_visibility_time", 0.5)
 
-    await internal_queue.init()
-
 
 @pytest.mark.parametrize(
     "message_type, message_payload",
@@ -27,9 +25,12 @@ async def set_queue(monkeypatch_module):
 )
 async def test_send_message(message_type, message_payload):
     """'send_message' should put a message in the queue"""
-    await internal_queue.send_message(message_type, message_payload)
+    queue = internal_queue.InternalQueue()
+    await queue.init()
 
-    message = await internal_queue.get_message()
+    await queue.send_message(message_type, message_payload)
+
+    message = await queue.get_message()
     assert message is not None
     assert message.content == {"type": message_type, "payload": message_payload}
 
@@ -37,8 +38,11 @@ async def test_send_message(message_type, message_payload):
 @pytest.mark.flaky(reruns=2)
 async def test_get_message_timeout():
     """'get_message' should wait for a message and if the timeout is reached, return 'None'"""
+    queue = internal_queue.InternalQueue()
+    await queue.init()
+
     start_time = time.perf_counter()
-    message = await internal_queue.get_message()
+    message = await queue.get_message()
     end_time = time.perf_counter()
 
     total_time = end_time - start_time
@@ -49,9 +53,15 @@ async def test_get_message_timeout():
 
 async def test_change_visibility():
     """'change_visibility' should not do anything"""
-    await internal_queue.change_visibility(None)
+    queue = internal_queue.InternalQueue()
+    await queue.init()
+
+    await queue.change_visibility(None)
 
 
 async def test_delete_message():
     """'delete_message' should not do anything"""
-    await internal_queue.delete_message(None)
+    queue = internal_queue.InternalQueue()
+    await queue.init()
+
+    await queue.delete_message(None)

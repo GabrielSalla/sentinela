@@ -16,6 +16,7 @@ import utils.app as app
 import utils.time as time_utils
 from base_exception import BaseSentinelaException
 from configs import configs
+from message_queue.internal_queue import InternalMessage
 from tests.test_utils import assert_message_in_log, assert_message_not_in_log
 
 pytestmark = pytest.mark.asyncio(loop_scope="session")
@@ -96,7 +97,7 @@ async def test_change_visibility_loop(mocker, monkeypatch, clear_queue):
     monkeypatch.setattr(configs, "queue_visibility_time", 0.2)
     change_visibility_spy: MagicMock = mocker.spy(message_queue, "change_visibility")
 
-    message = message_queue.Message(json.dumps({"type": "type", "payload": "payload"}))
+    message = InternalMessage(json.dumps({"type": "type", "payload": "payload"}))
 
     task = asyncio.create_task(executor._change_visibility_loop(message))
     await asyncio.sleep(1.0)
@@ -162,10 +163,10 @@ async def test_executor_get_message_with_message(monkeypatch, clear_queue):
 @pytest.mark.parametrize(
     "message, expected_result",
     [
-        (message_queue.Message(json.dumps({"type": "event"})), reaction_handler.run),
-        (message_queue.Message(json.dumps({"type": "process_monitor"})), monitor_handler.run),
-        (message_queue.Message(json.dumps({"type": "request"})), request_handler.run),
-        (message_queue.Message(json.dumps({"type": "unknown"})), None),
+        (InternalMessage(json.dumps({"type": "event"})), reaction_handler.run),
+        (InternalMessage(json.dumps({"type": "process_monitor"})), monitor_handler.run),
+        (InternalMessage(json.dumps({"type": "request"})), request_handler.run),
+        (InternalMessage(json.dumps({"type": "unknown"})), None),
     ],
 )
 async def test_executor_get_message_handler(caplog, message, expected_result):
@@ -192,7 +193,7 @@ async def test_executor_process_message_success(caplog, mocker, monkeypatch):
         await asyncio.sleep(0.1)
 
     handler = AsyncMock(side_effect=sleep)
-    message = message_queue.Message(json.dumps({"type": "test", "payload": "payload"}))
+    message = InternalMessage(json.dumps({"type": "test", "payload": "payload"}))
     ex = executor.Executor(1)
     ex._current_message_type = "test"
 
@@ -228,7 +229,7 @@ async def test_executor_process_message_sentinela_error(caplog, mocker, monkeypa
         raise SomeError("Something went wrong")
 
     handler = AsyncMock(side_effect=sleep_error)
-    message = message_queue.Message(json.dumps({"type": "test", "payload": "payload"}))
+    message = InternalMessage(json.dumps({"type": "test", "payload": "payload"}))
     ex = executor.Executor(1)
     ex._current_message_type = "test"
 
@@ -261,7 +262,7 @@ async def test_executor_process_message_error(caplog, mocker, monkeypatch):
         raise ValueError("Something went wrong")
 
     handler = AsyncMock(side_effect=sleep_error)
-    message = message_queue.Message(json.dumps({"type": "test", "payload": "payload"}))
+    message = InternalMessage(json.dumps({"type": "test", "payload": "payload"}))
     ex = executor.Executor(1)
     ex._current_message_type = "test"
 

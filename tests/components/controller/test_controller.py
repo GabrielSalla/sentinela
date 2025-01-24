@@ -13,6 +13,7 @@ import utils.app as app
 import utils.time as time_utils
 from configs import configs
 from models import Monitor
+from tests.message_queue.utils import get_queue_items
 from tests.test_utils import assert_message_in_log
 
 pytestmark = pytest.mark.asyncio(loop_scope="session")
@@ -125,9 +126,7 @@ async def test_queue_task(clear_queue, sample_monitor, tasks):
 
     await controller._queue_task(sample_monitor, tasks)
 
-    queue_items = []
-    while not message_queue.internal_queue._queue.empty():
-        queue_items.append(message_queue.internal_queue._queue.get_nowait())
+    queue_items = get_queue_items()
 
     assert queue_items == [
         json.dumps(
@@ -334,7 +333,8 @@ async def test_run(monkeypatch, clear_queue, clear_database):
     await asyncio.sleep(0.2)
 
     # Controller is still waiting for the monitors to be ready, so no messages were queued
-    assert message_queue.internal_queue._queue.empty()
+    queue_items = get_queue_items()
+    assert len(queue_items) == 0
 
     # Load the monitors and wait for a while
     await monitors_loader._load_monitors()
@@ -354,11 +354,9 @@ async def test_run(monkeypatch, clear_queue, clear_database):
     run_procedures_mock.assert_awaited_once()
 
     # Assert the tasks were queued
-    queue_items = set()
-    while not message_queue.internal_queue._queue.empty():
-        queue_items.add(message_queue.internal_queue._queue.get_nowait())
+    queue_items_set = set(get_queue_items())
 
-    assert queue_items == set(
+    assert queue_items_set == set(
         [
             json.dumps(
                 {

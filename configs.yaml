@@ -12,7 +12,6 @@ logging:
   # Logging mode. Can be "friendly" or "json", which is indicated to be consumed by logging applications
   mode: friendly
   # Settings for formatting the "friendly" logs
-  use_colors: true
   format: "%(asctime)s [%(levelname)s] %(name)s.%(funcName)s.%(lineno)d: %(message)s"
   # Fields to include in the "json" logs
   fields:
@@ -66,7 +65,8 @@ controller_procedures:
   # Fix monitors stuck in "queued" or "running" status
   monitors_stuck:
     schedule: "*/5 * * * *"
-    time_tolerance: 300
+    params:
+      time_tolerance: 300
 
 # Executor settings
 # How many tasks can be executed at the same time by each Executor

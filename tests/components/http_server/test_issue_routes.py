@@ -6,8 +6,8 @@ import pytest_asyncio
 
 import components.controller.controller as controller
 import components.http_server as http_server
-import message_queue as message_queue
 from models import Issue, Monitor
+from tests.message_queue.utils import get_queue_items
 
 pytestmark = pytest.mark.asyncio(loop_scope="session")
 
@@ -31,7 +31,8 @@ async def test_issue_drop(clear_queue, sample_monitor: Monitor):
         data={"id": 1},
     )
 
-    assert message_queue.internal_queue._queue.empty()
+    queue_items = get_queue_items()
+    assert len(queue_items) == 0
 
     async with aiohttp.ClientSession() as session:
         async with session.post(BASE_URL + f"/{issue.id}/drop") as response:
@@ -41,9 +42,7 @@ async def test_issue_drop(clear_queue, sample_monitor: Monitor):
                 "target_id": issue.id,
             }
 
-    queue_items = []
-    while not message_queue.internal_queue._queue.empty():
-        queue_items.append(message_queue.internal_queue._queue.get_nowait())
+    queue_items = get_queue_items()
 
     assert len(queue_items) == 1
     assert json.loads(queue_items[0]) == {
@@ -62,4 +61,5 @@ async def test_issue_drop_issue_not_found(clear_queue):
             assert response.status == 404
             assert await response.json() == {"status": "error", "message": "issue '0' not found"}
 
-    assert message_queue.internal_queue._queue.empty()
+    queue_items = get_queue_items()
+    assert len(queue_items) == 0

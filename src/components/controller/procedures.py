@@ -78,9 +78,9 @@ async def run_procedures() -> None:
 
         last_execution = last_executions.get(procedure_name)
         procedure_triggered = _check_procedure_triggered(
-            procedure_settings["schedule"], last_execution
+            procedure_settings.schedule, last_execution
         )
 
         if procedure_triggered:
-            procedure_params = procedure_settings.get("params", {}) or {}
+            procedure_params = getattr(procedure_settings, "params", None) or {}
             await _execute_procedure(procedure_name, procedure, procedure_params)

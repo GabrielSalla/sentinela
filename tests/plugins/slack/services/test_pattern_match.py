@@ -6,8 +6,8 @@ from unittest.mock import MagicMock
 import pytest
 
 import commands as commands
-import message_queue as message_queue
 import plugins.slack.services.pattern_match as pattern_match
+from tests.message_queue.utils import get_queue_items
 
 pytestmark = pytest.mark.asyncio(loop_scope="session")
 
@@ -122,9 +122,7 @@ async def test_resend_notifications(clear_queue, slack_channel):
         context={"channel": slack_channel},
     )
 
-    queue_items = []
-    while not message_queue.internal_queue._queue.empty():
-        queue_items.append(message_queue.internal_queue._queue.get_nowait())
+    queue_items = get_queue_items()
 
     assert queue_items == [
         json.dumps(

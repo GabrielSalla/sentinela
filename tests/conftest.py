@@ -22,6 +22,7 @@ import module_loader as module_loader
 import utils.app as app
 from models import CodeModule, Monitor
 from registry import registry
+from tests.message_queue.utils import get_queue_items
 
 
 @pytest.fixture(scope="session")
@@ -133,17 +134,17 @@ def clear_monitors():
     registry.init()
 
 
-@pytest_asyncio.fixture(loop_scope="session", scope="session", autouse=True)
+@pytest_asyncio.fixture(loop_scope="session", scope="module", autouse=True)
 async def start_queue():
-    """Start the queue"""
-    await message_queue.internal_queue.init()
+    """Reset the queue for each new test file"""
+    await message_queue.init()
 
 
 @pytest.fixture(scope="function")
 def clear_queue():
-    """Clear the internal queue"""
-    while not message_queue.internal_queue._queue.empty():
-        message_queue.internal_queue._queue.get_nowait()
+    """Clear the internal queue. Ignoring the 'attr-defined' error because the Protocol doesn't
+    have the attribute '_queue', but the 'InternalQueue' class does"""
+    get_queue_items()
 
 
 @pytest.fixture(scope="session")

@@ -4,12 +4,13 @@ import logging
 from typing import Any
 
 from configs import configs
+from message_queue.protocols import Message
 
 _logger = logging.getLogger("internal_queue")
-_queue: asyncio.Queue[str]
 
 
-class Message:
+class InternalMessage:
+    id: str = ""
     message: dict[str, Any]
 
     def __init__(self, message: str) -> None:
@@ -20,41 +21,38 @@ class Message:
         return self.message
 
 
-async def init() -> None:
-    """Setup the internal queue"""
-    global _queue
+class InternalQueue:
+    _queue: asyncio.Queue[str]
 
-    _logger.info("Internal queue setup")
-    _queue = asyncio.Queue()
+    async def init(self) -> None:
+        """Setup the internal queue"""
+        _logger.info("Internal queue setup")
+        self._queue = asyncio.Queue()
 
-
-async def send_message(type: str, payload: dict[str, Any]) -> None:
-    """Send a message to the queue"""
-    global _queue
-    await _queue.put(
-        json.dumps(
-            {
-                "type": type,
-                "payload": payload,
-            }
+    async def send_message(self, type: str, payload: dict[str, Any]) -> None:
+        """Send a message to the queue"""
+        await self._queue.put(
+            json.dumps(
+                {
+                    "type": type,
+                    "payload": payload,
+                }
+            )
         )
-    )
 
+    async def get_message(self) -> Message | None:
+        """Get a message from the queue"""
+        try:
+            return InternalMessage(
+                await asyncio.wait_for(self._queue.get(), configs.queue_wait_message_time)
+            )
+        except asyncio.TimeoutError:
+            return None
 
-async def get_message() -> Message | None:
-    """Get a message from the queue"""
-    global _queue
-    try:
-        return Message(await asyncio.wait_for(_queue.get(), configs.queue_wait_message_time))
-    except asyncio.TimeoutError:
-        return None
+    async def change_visibility(self, message: Message) -> None:
+        """Not implemented in internal queue"""
+        pass
 
-
-async def change_visibility(message: Message) -> None:
-    """Not implemented in internal queue"""
-    pass
-
-
-async def delete_message(message: Message) -> None:
-    """Not implemented in internal queue"""
-    pass
+    async def delete_message(self, message: Message) -> None:
+        """Not implemented in internal queue"""
+        pass

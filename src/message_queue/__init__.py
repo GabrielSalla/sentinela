@@ -1,43 +1,50 @@
 from typing import Any
 
 from configs import configs
+from message_queue.internal_queue import InternalQueue
+from message_queue.protocols import Message, Queue
+from message_queue.sqs_queue import SQSQueue
 
-queue_type = configs.application_queue["type"]
-
-match queue_type:
-    case "internal":
-        import message_queue.internal_queue as queue
-    case "sqs":  # pragma: no cover
-        # As the 'queue' variable is being redefined, ignore the typing and linter errors
-        import message_queue.sqs_queue as queue  # type: ignore[no-redef] # noqa: F811
-    case _:  # pragma: no cover
-        raise ValueError(f"Invalid queue type '{queue_type}'")
-
-Message = queue.Message
+queue: Queue
 
 
 async def init() -> None:
     """Initialize the queue"""
-    return await queue.init()
+    global queue
+
+    if configs.application_queue.type == "internal":
+        queue = InternalQueue()
+    elif configs.application_queue.type == "sqs":
+        queue = SQSQueue(configs.application_queue)
+    else:
+        raise ValueError(  # pragma: no cover
+            f"Invalid queue type '{configs.application_queue.type}'"
+        )
+
+    await queue.init()
 
 
 async def send_message(type: str, payload: dict[str, Any]) -> None:
     """Send a message to the queue"""
+    global queue
     return await queue.send_message(type, payload)
 
 
-async def get_message() -> queue.Message | None:
+async def get_message() -> Message | None:
     """Get a message from the queue"""
+    global queue
     return await queue.get_message()
 
 
-async def change_visibility(message: queue.Message) -> None:
+async def change_visibility(message: Message) -> None:
     """Change the visibility time for a message in the queue"""
+    global queue
     return await queue.change_visibility(message)
 
 
-async def delete_message(message: queue.Message) -> None:
+async def delete_message(message: Message) -> None:
     """Delete a message from the queue"""
+    global queue
     return await queue.delete_message(message)
 
 
