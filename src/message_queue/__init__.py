@@ -2,7 +2,7 @@ from typing import Any
 
 from configs import configs
 
-queue_type = configs.application_queue["type"]
+queue_type = configs.application_queue.type
 
 match queue_type:
     case "internal":

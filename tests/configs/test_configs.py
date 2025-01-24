@@ -33,3 +33,31 @@ def test_configs_logging_json(monkeypatch):
         }
     )
     assert configs_loader.Configs(**configs_loader.loaded_configs) is not None
+
+
+def test_configs_queue_internal(monkeypatch):
+    """'Configs' should be compatible with 'internal' queue"""
+    monkeypatch.setitem(
+        configs_loader.loaded_configs,
+        "queue",
+        {
+            "type": "internal"
+        }
+    )
+    assert configs_loader.Configs(**configs_loader.loaded_configs) is not None
+
+
+def test_configs_queue_sqs(monkeypatch):
+    """'Configs' should be compatible with 'SQS' queue"""
+    monkeypatch.setitem(
+        configs_loader.loaded_configs,
+        "queue",
+        {
+            "type": "sqs",
+            "name": "test",
+            "url": "http://localhost",
+            "region": "us-west-1",
+            "create_queue": False
+        }
+    )
+    assert configs_loader.Configs(**configs_loader.loaded_configs) is not None

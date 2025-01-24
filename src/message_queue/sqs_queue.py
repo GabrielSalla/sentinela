@@ -8,7 +8,7 @@ import aioboto3
 from aiobotocore.session import AioBaseClient
 from botocore.exceptions import ClientError
 
-from configs import configs
+from configs import configs, SQSQueueConfig
 
 _logger = logging.getLogger("sqs_queue")
 
@@ -29,7 +29,7 @@ class Message:
 def _get_aws_config() -> dict[str, Any]:
     """Get the AWS credentials from the environment variables"""
     aws_config = {
-        "region_name": configs.application_queue["region"],
+        "region_name": configs.application_queue.region,
         "aws_access_key_id": os.environ.get("AWS_ACCESS_KEY_ID"),
         "aws_secret_access_key": os.environ.get("AWS_SECRET_ACCESS_KEY"),
         "aws_session_token": os.environ.get("AWS_SESSION_TOKEN"),
@@ -59,7 +59,7 @@ async def init() -> None:
     """Test if the AWS SQS queue already exists and, if not, try to create if configured to"""
     _logger.info("SQS queue setup")
 
-    queue_name = configs.application_queue["name"]
+    queue_name = configs.application_queue.name
 
     async with _aws_client() as client:
         try:
@@ -69,7 +69,7 @@ async def init() -> None:
             if e.response["Error"]["Code"] != "AWS.SimpleQueueService.NonExistentQueue":
                 raise  # pragma: no cover
 
-            if not configs.application_queue["create_queue"]:
+            if not configs.application_queue.create_queue:
                 raise RuntimeError("AWS SQS queue must exist or allow the application to create")
 
             await _create_queue(client, queue_name)
@@ -79,7 +79,7 @@ async def send_message(type: str, payload: dict[str, Any]) -> None:
     """Send a message to the queue"""
     async with _aws_client() as client:
         await client.send_message(
-            QueueUrl=configs.application_queue["url"],
+            QueueUrl=configs.application_queue.url,
             MessageBody=json.dumps(
                 {
                     "type": type,
@@ -93,7 +93,7 @@ async def get_message() -> Message | None:
     """Get a message from the queue"""
     async with _aws_client() as client:
         response = await client.receive_message(
-            QueueUrl=configs.application_queue["url"],
+            QueueUrl=configs.application_queue.url,
             MaxNumberOfMessages=1,
             WaitTimeSeconds=configs.queue_wait_message_time,
             VisibilityTimeout=2 * configs.queue_visibility_time,
@@ -109,7 +109,7 @@ async def change_visibility(message: Message) -> None:
     """Change the visibility time for a message in the queue"""
     async with _aws_client() as client:
         await client.change_message_visibility(
-            QueueUrl=configs.application_queue["url"],
+            QueueUrl=configs.application_queue.url,
             ReceiptHandle=message.receipt_handle,
             VisibilityTimeout=2 * configs.queue_visibility_time,
         )
@@ -119,6 +119,6 @@ async def delete_message(message: Message) -> None:
     """Delete a message from the queue"""
     async with _aws_client() as client:
         await client.delete_message(
-            QueueUrl=configs.application_queue["url"],
+            QueueUrl=configs.application_queue.url,
             ReceiptHandle=message.receipt_handle,
         )

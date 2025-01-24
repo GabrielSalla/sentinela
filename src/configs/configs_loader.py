@@ -23,6 +23,20 @@ class ApplicationDatabaseConfig:
 
 
 @dataclass
+class InternalQueueConfig:
+    type: Literal["internal"]
+
+
+@dataclass
+class SQSQueueConfig:
+    type: Literal["sqs"]
+    name: str
+    url: str
+    region: str
+    create_queue: bool = False
+
+
+@dataclass
 class Configs:
     load_sample_monitors: bool
     sample_monitors_path: str
@@ -31,7 +45,6 @@ class Configs:
 
     application_database_settings: ApplicationDatabaseConfig
 
-    application_queue: dict[str, Any]
     queue_wait_message_time: int
     queue_visibility_time: int
 
@@ -61,6 +74,7 @@ class Configs:
     log_all_events: bool
 
     logging: FriendlyLogConfig | JsonLogConfig = Field(discriminator="mode")
+    application_queue: InternalQueueConfig | SQSQueueConfig = Field(discriminator="type")
 
 
 with open(os.environ.get("CONFIGS_FILE", "configs.yaml"), "r") as file:

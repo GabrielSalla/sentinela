@@ -8,7 +8,7 @@ import pytest
 import pytest_asyncio
 
 import message_queue.sqs_queue as sqs_queue
-from configs import configs
+from configs import SQSQueueConfig, configs
 
 pytestmark = pytest.mark.asyncio(loop_scope="session")
 
@@ -18,13 +18,13 @@ async def set_queue(monkeypatch_module) -> None:
     monkeypatch_module.setattr(
         configs,
         "application_queue",
-        {
-            "type": "sqs",
-            "name": "app",
-            "url": "http://motoserver:5000/123456789012/app",
-            "region": "us-east-1",
-            "create_queue": "true",
-        },
+        SQSQueueConfig(
+            type="sqs",
+            name="app",
+            url="http://motoserver:5000/123456789012/app",
+            region="us-east-1",
+            create_queue=True,
+        ),
     )
     monkeypatch_module.setattr(configs, "queue_wait_message_time", 1)
     monkeypatch_module.setattr(configs, "queue_visibility_time", 1)
@@ -35,7 +35,7 @@ async def set_queue(monkeypatch_module) -> None:
 @pytest_asyncio.fixture(loop_scope="session", scope="function", autouse=True)
 async def clean_queue() -> None:
     async with sqs_queue._aws_client() as client:
-        await client.purge_queue(QueueUrl=configs.application_queue["url"])
+        await client.purge_queue(QueueUrl=configs.application_queue.url)
 
 
 async def delete_queue(queue_url) -> None:
@@ -58,7 +58,7 @@ async def test_init_already_exists(mocker):
 
 async def test_init_queue_not_exists(mocker, monkeypatch):
     """'init' should create the queue if it doesn't exists and if configured to"""
-    monkeypatch.setitem(configs.application_queue, "name", "new_queue")
+    monkeypatch.setattr(configs.application_queue, "name", "new_queue")
     create_queue_spy: AsyncMock = mocker.spy(sqs_queue, "_create_queue")
 
     await delete_queue("http://motoserver:5000/123456789012/new_queue")
@@ -71,8 +71,8 @@ async def test_init_queue_not_exists(mocker, monkeypatch):
 async def test_init_queue_not_exists_not_create(mocker, monkeypatch):
     """'init' should raise an error if the queue doesn't exists and it's not configured to create
     it"""
-    monkeypatch.setitem(configs.application_queue, "name", "other_queue")
-    monkeypatch.setitem(configs.application_queue, "create_queue", False)
+    monkeypatch.setattr(configs.application_queue, "name", "other_queue")
+    monkeypatch.setattr(configs.application_queue, "create_queue", False)
     create_queue_spy: AsyncMock = mocker.spy(sqs_queue, "_create_queue")
 
     await delete_queue("http://motoserver:5000/123456789012/other_queue")
