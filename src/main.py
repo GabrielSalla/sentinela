@@ -1,3 +1,5 @@
+# Still missing tests for main.py, so it's been ignored in the .coveragerc file
+
 import asyncio
 import logging
 import sys
