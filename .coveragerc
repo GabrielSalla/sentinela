@@ -3,8 +3,6 @@ omit =
     src/_monitors/*
     src/_monitors_load/*
     src/tmp/*
-    src/main.py
-    src/utils/log.py
 exclude_lines =
     pragma: no cover
     if TYPE_CHECKING:
