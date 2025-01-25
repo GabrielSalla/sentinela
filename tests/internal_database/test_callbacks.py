@@ -12,6 +12,7 @@ pytestmark = pytest.mark.asyncio(loop_scope="session")
 @pytest.mark.parametrize("number_of_callbacks", [1, 3, 5])
 async def test_callbacks(mocker, number_of_callbacks, sample_monitor: Monitor):
     """'get_session' should execute all the callback functions after the commit"""
+
     async def do_nothing(): ...
 
     callback_mock = AsyncMock(side_effect=do_nothing)
@@ -45,6 +46,7 @@ async def test_callbacks(mocker, number_of_callbacks, sample_monitor: Monitor):
 async def test_callbacks_error(caplog, mocker, sample_monitor: Monitor):
     """'get_session' should not execute any of the callbacks and should cancel all callbacks
     coroutines if there's an error while the session is open"""
+
     async def callback_error():
         raise TypeError("callback error")
 
@@ -86,6 +88,7 @@ async def test_callbacks_error(caplog, mocker, sample_monitor: Monitor):
 
 async def test_callbacks_callback_error(caplog, mocker, sample_monitor: Monitor):
     """'get_session' should execute all the callbacks even if some of them raises exceptions"""
+
     async def callback_error():
         raise TypeError("callback error")
 
@@ -120,6 +123,7 @@ async def test_callbacks_callback_error(caplog, mocker, sample_monitor: Monitor)
 async def test_bulk_execute(mocker, sample_monitor: Monitor):
     """'get_session should return a session that will execute all operations in the database in a
     single transaction and should execute all the callbacks after the commit"""
+
     async def do_nothing(): ...
 
     callback_mock = AsyncMock(side_effect=do_nothing)

@@ -200,11 +200,14 @@ async def test_monitor_enable_error(mocker, clear_database):
     }
 
 
-@pytest.mark.parametrize("monitor_name", [
-    "test_monitor_register",
-    "test_monitor_register_different_name",
-    "test.monitor.register.name.with.dots",
-])
+@pytest.mark.parametrize(
+    "monitor_name",
+    [
+        "test_monitor_register",
+        "test_monitor_register_different_name",
+        "test.monitor.register.name.with.dots",
+    ],
+)
 async def test_monitor_register(mocker, clear_database, monitor_name):
     """The 'monitor register' route should register a new monitor with the provided module code if
     it doesn't exists. The monitor name should replace any dots with underscores"""
@@ -318,15 +321,17 @@ async def test_monitor_register_dataclass_validation_error():
     """The 'monitor register' route should return an error if the provided module code has a
     'pydantic.ValidationError'"""
     request_payload = {
-        "monitor_code": "\n".join([
-            "from pydantic.dataclasses import dataclass",
-            "\n",
-            "@dataclass",
-            "class Data:",
-            "    value: str",
-            "\n",
-            "data = Data(value=123)",
-        ]),
+        "monitor_code": "\n".join(
+            [
+                "from pydantic.dataclasses import dataclass",
+                "\n",
+                "@dataclass",
+                "class Data:",
+                "    value: str",
+                "\n",
+                "data = Data(value=123)",
+            ]
+        ),
     }
 
     url = BASE_URL + "/register/test_monitor_register_dataclass_validation_error"
@@ -359,26 +364,31 @@ async def test_monitor_register_check_fail(caplog):
             assert await response.json() == {
                 "status": "error",
                 "message": "Module didn't pass check",
-                "error": "\n".join([
-                    "Monitor 'test_monitor_register_check_fail' has the following errors:",
-                    "  'monitor_options' is required",
-                    "  'issue_options' is required",
-                    "  'IssueDataType' is required",
-                    "  'search' function is required",
-                    "  'update' function is required",
-                ]),
+                "error": "\n".join(
+                    [
+                        "Monitor 'test_monitor_register_check_fail' has the following errors:",
+                        "  'monitor_options' is required",
+                        "  'issue_options' is required",
+                        "  'IssueDataType' is required",
+                        "  'search' function is required",
+                        "  'update' function is required",
+                    ]
+                ),
             }
 
 
-@pytest.mark.parametrize("monitor_code, expected_error", [
-    ("something", "name 'something' is not defined"),
-    ("import time;\n\ntime.abc()", "module 'time' has no attribute 'abc'"),
-    (
-        "print('a",
-        "unterminated string literal (detected at line 1) "
-        "(test_monitor_register_invalid_monitor_code.py, line 1)"
-    ),
-])
+@pytest.mark.parametrize(
+    "monitor_code, expected_error",
+    [
+        ("something", "name 'something' is not defined"),
+        ("import time;\n\ntime.abc()", "module 'time' has no attribute 'abc'"),
+        (
+            "print('a",
+            "unterminated string literal (detected at line 1) "
+            "(test_monitor_register_invalid_monitor_code.py, line 1)",
+        ),
+    ],
+)
 async def test_monitor_register_invalid_monitor_code(monitor_code, expected_error):
     """The 'monitor register' route should return an error if the provided module code has any
     errors"""

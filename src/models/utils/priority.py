@@ -13,6 +13,7 @@ _operators: dict[str, Callable[[int | float, int | float], bool]] = {
 
 class AlertPriority(enum.IntEnum):
     """Alert priority levels"""
+
     critical = 1
     high = 2
     moderate = 3
@@ -80,9 +81,8 @@ def calculate_priority(
     """Calculate the priority based on the rule and the provided issues"""
     if isinstance(rule, AgeRule):
         return _calculate_age_rule(rule, issues)
-    elif isinstance(rule, CountRule):
+    if isinstance(rule, CountRule):
         return _calculate_count_rule(rule, issues)
-    elif isinstance(rule, ValueRule):
+    if isinstance(rule, ValueRule):
         return _calculate_value_rule(rule, issues)
-    else:
-        raise ValueError(f"Invalid rule value '{rule}'")
+    raise ValueError(f"Invalid rule value '{rule}'")

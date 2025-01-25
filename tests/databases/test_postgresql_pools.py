@@ -48,7 +48,7 @@ async def clear_pools(drop_test_tables):
         (
             "postgres://postgres:postgres@postgres:5432/postgres",
             "db2",
-            {"min_size": 1, "max_size": 4}
+            {"min_size": 1, "max_size": 4},
         ),
     ],
 )

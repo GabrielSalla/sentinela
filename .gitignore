@@ -1,6 +1,7 @@
-**/__pycache__
-.coverage
-.vscode
 _monitors
 _monitors_load
+.coverage
+.ruff_cache
+.vscode
+**/__pycache__
 tmp

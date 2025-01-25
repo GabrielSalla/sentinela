@@ -20,7 +20,7 @@ def plugins_directory(temp_dir: Path) -> Path:
         plugin_dir.mkdir()
         init_file_dir = plugin_dir / "__init__.py"
         with open(init_file_dir, "w") as f:
-            f.write(f"a = {i*10}")
+            f.write(f"a = {i * 10}")
 
     pycache_dir = plugins_dir / "__pycache__"
     pycache_dir.mkdir()

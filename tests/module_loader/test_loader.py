@@ -44,23 +44,18 @@ def test_init_modules_path_already_exists(mocker, temp_dir):
     os_makedirs_spy.assert_called_once_with(path)
 
 
-@pytest.mark.parametrize("module_name, module_code, additional_files", [
-    (
-        "test_create_module_files_1",
-        "import sys",
-        None
-    ),
-    (
-        "test_create_module_files_2",
-        "import random",
-        {"file_1.py": "import os"}
-    ),
-    (
-        "test_create_module_files_3",
-        "print('abc123')",
-        {"file_1.py": "print('defg456')", "file_2.py": "print('hijk789')"}
-    ),
-])
+@pytest.mark.parametrize(
+    "module_name, module_code, additional_files",
+    [
+        ("test_create_module_files_1", "import sys", None),
+        ("test_create_module_files_2", "import random", {"file_1.py": "import os"}),
+        (
+            "test_create_module_files_3",
+            "print('abc123')",
+            {"file_1.py": "print('defg456')", "file_2.py": "print('hijk789')"},
+        ),
+    ],
+)
 def test_create_module_files(module_name, module_code, additional_files):
     """'create_module_files' should create the module file and the additional files provided"""
     module_path = loader.create_module_files(
@@ -90,10 +85,7 @@ def test_load_module_from_file(caplog):
 
     assert module.sys is sys
 
-    assert_message_in_log(
-        caplog,
-        f"Monitor '{module_name}' loaded"
-    )
+    assert_message_in_log(caplog, f"Monitor '{module_name}' loaded")
 
 
 @pytest.mark.parametrize(
@@ -198,15 +190,17 @@ def test_load_module_from_file_dataclass_validation_error():
     """'load_module_from_file' should raise a 'pydantic.ValidationError' if the module initializes a
     dataclass with invalid values"""
     module_name = "load_module_from_file_dataclass_validation_error_1"
-    module_code = "\n".join([
-        "from pydantic.dataclasses import dataclass",
-        "\n",
-        "@dataclass",
-        "class Data:",
-        "    value: str",
-        "\n",
-        "data = Data(value=123)",
-    ])
+    module_code = "\n".join(
+        [
+            "from pydantic.dataclasses import dataclass",
+            "\n",
+            "@dataclass",
+            "class Data:",
+            "    value: str",
+            "\n",
+            "data = Data(value=123)",
+        ]
+    )
 
     module_path = loader.create_module_files(module_name, module_code)
 

@@ -164,8 +164,7 @@ async def test_update_priority_none(monkeypatch, sample_monitor: Monitor):
     """'Alert.update_priority' should use 'low[4]' as a priority if the 'calculate_priority'
     returned 'None'"""
     alert = await Alert.create(
-        monitor_id=sample_monitor.id,
-        priority=priority_utils.AlertPriority.critical
+        monitor_id=sample_monitor.id, priority=priority_utils.AlertPriority.critical
     )
     monitor_code = registry._monitors[sample_monitor.id]["module"]
     alert_options = AlertOptions(rule=AgeRule(priority_levels=PriorityLevels()))
@@ -559,7 +558,8 @@ async def test_acknowledge_acknowledged(caplog, mocker, sample_monitor: Monitor,
 
 
 async def test_acknowledge_already_acknowledged_lower_priority(
-        caplog, mocker, sample_monitor: Monitor):
+    caplog, mocker, sample_monitor: Monitor
+):
     """'Alert.acknowledge' should acknowledge the alert if it's already acknowledged but at a lower
     priority"""
     caplog.set_level(logging.DEBUG)

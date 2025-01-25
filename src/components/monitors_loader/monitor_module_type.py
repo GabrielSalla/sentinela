@@ -7,6 +7,7 @@ from options import AlertOptions, IssueOptions, MonitorOptions, ReactionOptions
 
 class MonitorModule(ModuleType):  # pragma: no cover
     """Class that represents a base monitor module structure to have a better code completion"""
+
     monitor_options: MonitorOptions
     issue_options: IssueOptions
     alert_options: AlertOptions

@@ -224,9 +224,7 @@ async def test_build_notification_timestamps(
         (AlertStatus.active, ["value", "something_else"], 12),
     ],
 )
-async def test_build_issues_table(
-    sample_monitor: Monitor, status, issues_fields, issues_number
-):
+async def test_build_issues_table(sample_monitor: Monitor, status, issues_fields, issues_number):
     """'_build_issues_table' should return the content of the message for the notification
     message"""
     notification_options = slack_notification.SlackNotification(
@@ -751,7 +749,7 @@ async def test_delete_notification_error(monkeypatch, sample_monitor: Monitor):
 
 
 @pytest.mark.parametrize(
-    "alert_status, priority, acknowledge_priority, " "min_priority_to_mention, expected_result",
+    "alert_status, priority, acknowledge_priority, min_priority_to_mention, expected_result",
     [
         (AlertStatus.solved, 2, 3, 4, False),
         (AlertStatus.active, 3, 2, 4, False),
@@ -1030,12 +1028,10 @@ async def test_notification_mention_no_mention(mocker, monkeypatch, sample_monit
 
 
 async def test_notification_mention_no_notification_data(
-        mocker,
-        monkeypatch,
-        sample_monitor: Monitor
+    mocker, monkeypatch, sample_monitor: Monitor
 ):
-    """'notification_mention' should not send a mention message if the notification data is 'None'
-    """
+    """'notification_mention' should not send a mention message if the notification data is
+    'None'"""
     monkeypatch.setattr(slack_notification, "_should_have_mention", lambda *args: True)
     delete_mention_spy: AsyncMock = mocker.spy(slack_notification, "_delete_mention")
     send_mention_spy: AsyncMock = mocker.spy(slack_notification, "_send_mention")
@@ -1066,9 +1062,7 @@ async def test_notification_mention_no_notification_data(
 
 
 async def test_notification_mention_notification_no_ts(
-        mocker,
-        monkeypatch,
-        sample_monitor: Monitor
+    mocker, monkeypatch, sample_monitor: Monitor
 ):
     """'notification_mention' should not send a mention message if the notification doesn't have the
     'ts' field"""
@@ -1102,9 +1096,7 @@ async def test_notification_mention_notification_no_ts(
 
 
 async def test_notification_mention_notification_none_ts(
-        mocker,
-        monkeypatch,
-        sample_monitor: Monitor
+    mocker, monkeypatch, sample_monitor: Monitor
 ):
     """'notification_mention' should not send a mention message if the notification doesn't have the
     'ts' field"""
@@ -1477,14 +1469,17 @@ async def test_slack_notification_update_lower_priority(mocker, sample_monitor: 
     update_notification_spy.assert_called_once()
 
 
-@pytest.mark.parametrize("notification_data", [
-    {},
-    {"not_ts": "11.22"},
-    {"channel": "channel", "ts": "22.33", "mention_ts": "44.55"},
-    {"ts": "22.33", "mention_ts": "44.55"},
-    {"channel": "channel", "mention_ts": "44.55"},
-    {"channel": "channel", "ts": "22.33"},
-])
+@pytest.mark.parametrize(
+    "notification_data",
+    [
+        {},
+        {"not_ts": "11.22"},
+        {"channel": "channel", "ts": "22.33", "mention_ts": "44.55"},
+        {"ts": "22.33", "mention_ts": "44.55"},
+        {"channel": "channel", "mention_ts": "44.55"},
+        {"channel": "channel", "ts": "22.33"},
+    ],
+)
 async def test_clear_slack_notification(mocker, sample_monitor: Monitor, notification_data):
     """'clear_slack_notification' should delete the notification message and mention message"""
     delete_notification_spy: AsyncMock = mocker.spy(slack_notification, "_delete_notification")

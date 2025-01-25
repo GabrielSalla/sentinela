@@ -61,9 +61,9 @@ def _check_procedure_triggered(schedule: str, last_execution: datetime | None) -
 
 
 async def _execute_procedure(
-        procedure_name: str,
-        procedure: Callable[[], Coroutine[None, None, None]],
-        procedure_settings: dict[str, str | int | float | bool | None],
+    procedure_name: str,
+    procedure: Callable[[], Coroutine[None, None, None]],
+    procedure_settings: dict[str, str | int | float | bool | None],
 ) -> None:
     """Execute the 'procedure' and update the 'last_executions' variable"""
     with catch_exceptions(logger=_logger):

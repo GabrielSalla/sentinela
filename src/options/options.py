@@ -17,6 +17,7 @@ class MonitorOptions:
     - `execution_timeout`: Sets a timeout for both search and update routines. Defaults to
     `executor_monitor_timeout` in `configs.yaml`.
     """
+
     search_cron: str | None = None
     update_cron: str | None = None
     max_issues_creation: int = configs.max_issues_creation
@@ -114,6 +115,7 @@ class AlertOptions:
     - `dismiss_acknowledge_on_new_issues` Determines if acknowledgment for an alert should be reset
     when new issues are linked to it. Defaults to `false`.
     """
+
     rule: AgeRule | CountRule | ValueRule
     dismiss_acknowledge_on_new_issues: bool = False
 
@@ -154,6 +156,7 @@ class ReactionOptions:
 
     Check the documentation for a more detailed explanation of each event.
     """
+
     alert_acknowledge_dismissed: list[reaction_function_type] = field(default_factory=list)
     alert_acknowledged: list[reaction_function_type] = field(default_factory=list)
     alert_created: list[reaction_function_type] = field(default_factory=list)

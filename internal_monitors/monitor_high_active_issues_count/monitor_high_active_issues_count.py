@@ -36,9 +36,9 @@ alert_options = AlertOptions(
         operation="greater_than",
         priority_levels=PriorityLevels(
             moderate=TRIGGER_THRESHOLD,
-            high=2*TRIGGER_THRESHOLD,
-            critical=3*TRIGGER_THRESHOLD,
-        )
+            high=2 * TRIGGER_THRESHOLD,
+            critical=3 * TRIGGER_THRESHOLD,
+        ),
     )
 )
 
@@ -52,23 +52,13 @@ class IssueDataType(TypedDict):
 async def search() -> list[IssueDataType] | None:
     sql = read_file("search_query.sql")
 
-    notifications_list = cast(
-        list[IssueDataType],
-        await query_application(sql, TRIGGER_THRESHOLD)
-    )
-
-    return notifications_list
+    return cast(list[IssueDataType], await query_application(sql, TRIGGER_THRESHOLD))
 
 
 async def update(issues_data: list[IssueDataType]) -> list[IssueDataType] | None:
     sql = read_file("search_query.sql")
 
-    notifications_list = cast(
-        list[IssueDataType],
-        await query_application(sql, TRIGGER_THRESHOLD)
-    )
-
-    return notifications_list
+    return cast(list[IssueDataType], await query_application(sql, TRIGGER_THRESHOLD))
 
 
 def is_solved(issue_data: IssueDataType) -> bool:

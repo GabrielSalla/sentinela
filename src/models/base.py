@@ -22,8 +22,7 @@ def format_value(value: Any) -> Any:
         return value.isoformat()
     if isinstance(value, Enum):
         return value.value
-    else:
-        return value
+    return value
 
 
 ClassType = TypeVar("ClassType")
@@ -158,9 +157,7 @@ class Base(AsyncAttrs, DeclarativeBase):
         found"""
         async with get_session() as session:
             result = await session.execute(select(cls).where(*column_filters))
-            instance = result.scalars().first()
-
-        return instance
+            return result.scalars().first()
 
     @classmethod
     async def get_raw(
@@ -201,9 +198,7 @@ class Base(AsyncAttrs, DeclarativeBase):
 
         async with get_session() as session:
             result = await session.execute(statement)
-            instances = result.scalars().all()
-
-        return instances
+            return result.scalars().all()
 
     @classmethod
     async def get_or_create(
@@ -226,7 +221,8 @@ class Base(AsyncAttrs, DeclarativeBase):
             await session.refresh(self, attribute_names)
 
     async def save(
-        self, session: CallbackSession | None = None,
+        self,
+        session: CallbackSession | None = None,
         callback: Coroutine[Any, Any, Any] | None = None,
     ) -> None:
         """Save the instance to the database. If the session was not provided, create one. Add

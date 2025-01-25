@@ -178,12 +178,12 @@ def test_time_since(timestamp, reference, expected_result):
         (
             "0 */2 * * *",
             timezone("UTC").localize(datetime.datetime(2024, 1, 1, 0, 3, 15)),
-            45 + 56 * 60 + 60 * 60
+            45 + 56 * 60 + 60 * 60,
         ),
         (
             "0 */3 * * *",
             timezone("America/Sao_Paulo").localize(datetime.datetime(2024, 1, 1, 0, 35, 41)),
-            19 + 24 * 60 + 2 * 60 * 60
+            19 + 24 * 60 + 2 * 60 * 60,
         ),
     ],
 )

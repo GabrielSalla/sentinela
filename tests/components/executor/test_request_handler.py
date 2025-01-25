@@ -140,6 +140,7 @@ async def test_get_action():
 
 async def test_get_action_plugin(monkeypatch):
     """'get_action' should return the action function by its name when it's from a plugin"""
+
     class Plugin:
         class actions:
             @staticmethod
@@ -162,8 +163,8 @@ async def test_get_action_unknown_plugin(caplog, monkeypatch):
 
 async def test_get_action_plugin_no_actions(caplog, monkeypatch):
     """'get_action' should return 'None' when the plugin doesn't have actions"""
-    class Plugin:
-        ...
+
+    class Plugin: ...
 
     monkeypatch.setattr(plugins, "loaded_plugins", {"plugin1": Plugin}, raising=False)
 
@@ -175,9 +176,9 @@ async def test_get_action_plugin_no_actions(caplog, monkeypatch):
 
 async def test_get_action_unknown_action(caplog, monkeypatch):
     """'get_action' should return 'None' when the action doesn't exists"""
+
     class Plugin:
-        class actions:
-            ...
+        class actions: ...
 
     monkeypatch.setattr(plugins, "loaded_plugins", {"plugin1": Plugin}, raising=False)
 
@@ -198,6 +199,7 @@ async def test_get_action_unknown_action(caplog, monkeypatch):
 )
 async def test_run_action(monkeypatch, action_name):
     """'run' should executed the requested action"""
+
     async def do_nothing(message_payload): ...
 
     action_mock = AsyncMock(side_effect=do_nothing)
@@ -212,8 +214,7 @@ async def test_run_unknown_action(caplog):
     """'run' should just return if there isn't an action mapped for the action requested"""
     await request_handler.run({"payload": {"action": "test", "target_id": 1}})
     assert_message_in_log(
-        caplog,
-        "Got request with unknown action '{\"action\": \"test\", \"target_id\": 1}'"
+        caplog, 'Got request with unknown action \'{"action": "test", "target_id": 1}\''
     )
 
 
@@ -243,6 +244,7 @@ async def test_run_timeout(caplog, monkeypatch):
 
 async def test_run_sentinela_exception(monkeypatch):
     """'run' should re-raise Sentinela exceptions"""
+
     class SomeException(BaseSentinelaException):
         pass
 
@@ -258,6 +260,7 @@ async def test_run_sentinela_exception(monkeypatch):
 
 async def test_run_error(caplog, monkeypatch):
     """'run' should handle errors when executing requests"""
+
     async def error(message_payload):
         raise ValueError("Nothing good happens")
 
@@ -266,8 +269,5 @@ async def test_run_error(caplog, monkeypatch):
 
     await request_handler.run({"payload": {"action": "test", "target_id": 1}})
 
-    assert_message_in_log(
-        caplog,
-        "Error executing request '{\"action\": \"test\", \"target_id\": 1}'"
-    )
+    assert_message_in_log(caplog, 'Error executing request \'{"action": "test", "target_id": 1}\'')
     assert_message_in_log(caplog, "ValueError: Nothing good happens")

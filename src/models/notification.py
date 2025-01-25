@@ -28,7 +28,8 @@ class Notification(Base):
         Enum(NotificationStatus, native_enum=False), insert_default=NotificationStatus.active
     )
     data: Mapped[dict[Any, Any]] = mapped_column(
-        MutableDict.as_mutable(postgresql.JSON), nullable=True  # type: ignore[arg-type]
+        MutableDict.as_mutable(postgresql.JSON),  # type: ignore[arg-type]
+        nullable=True,
     )
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), insert_default=now)
     closed_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=True)

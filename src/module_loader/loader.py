@@ -24,10 +24,10 @@ def init_modules_path(path: Path) -> None:
 
 
 def create_module_files(
-        module_name: str,
-        module_code: str,
-        base_path: str | None = None,
-        additional_files: dict[str, str] | None = None
+    module_name: str,
+    module_code: str,
+    base_path: str | None = None,
+    additional_files: dict[str, str] | None = None,
 ) -> Path:
     """Create a module file with the given code and additional files, returning the module path.
     The files must be created relative to the "src" directory"""

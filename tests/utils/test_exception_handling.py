@@ -45,6 +45,7 @@ async def test_catch_exceptions_timeout(caplog, mocker, logger):
 async def test_catch_exceptions_base_exception(caplog):
     """'catch_exceptions' should log the exception message if an exception inherited from
     'BaseSentinelaException' is raised"""
+
     class CustomException(BaseSentinelaException):
         pass
 

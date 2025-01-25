@@ -47,6 +47,7 @@ class SlackNotification:
     occur if the alert is not acknowledged at the current priority level and it's is greater than
     or equal to this setting. Defaults to `moderate` (P3).
     """
+
     channel: str
     title: str
     issues_fields: list[str]
@@ -88,7 +89,7 @@ def _alert_state_info(alert: Alert) -> str | None:
     """Get the alert state to show in the notification"""
     if alert.status == AlertStatus.solved:
         return None
-    elif alert.locked:
+    if alert.locked:
         state = "Locked"
     elif alert.is_priority_acknowledged:
         state = "Acknowledged"

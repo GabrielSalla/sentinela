@@ -49,7 +49,4 @@ async def resend_notifications(message_payload: dict[Any, Any]) -> None:
         Notification.data["channel"].astext == message_payload["slack_channel"],
     )
 
-    await do_concurrently(*[
-        _resend_notification(notification)
-        for notification in notifications
-    ])
+    await do_concurrently(*[_resend_notification(notification) for notification in notifications])

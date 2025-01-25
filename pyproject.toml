@@ -28,8 +28,6 @@ tabulate = "^0.9.0"
 uvloop = "^0.21.0"
 
 [tool.poetry.group.dev.dependencies]
-flake8 = "*"
-flake8-pyproject = "*"
 isort = "*"
 mypy = "*"
 pytest = "*"
@@ -37,6 +35,7 @@ pytest-asyncio = "*"
 pytest-cov = "*"
 pytest-mock = "*"
 pytest-rerunfailures = "*"
+ruff = "*"
 types-tabulate = "*"
 types-setuptools = "*"
 types-requests = "*"
@@ -45,14 +44,17 @@ types-pytz = "*"
 types-pymysql = "*"
 types-croniter = "*"
 
-[tool.flake8]
-max-line-length = 100
-
-[tool.black]
+[tool.ruff]
+include = ["src/**/*.py", "tests/**/*.py", "internal_monitors/**/*.py", "sample_monitors/**/*.py", "tools/**/*.py"]
+lint.extend-select = ["E", "F", "Q", "I", "RET"]
 line-length = 100
+
+[tool.ruff.lint.isort]
+case-sensitive = true
 
 [tool.mypy]
 mypy_path = "src"
+files = ["src/**/*.py", "tests/**/*.py", "internal_monitors/**/*.py", "sample_monitors/**/*.py", "tools/**/*.py"]
 ignore_missing_imports = true
 warn_return_any = true
 check_untyped_defs = true
@@ -69,13 +71,6 @@ module = "tests.*"
 disable_error_code = ["arg-type", "empty-body", "misc", "list-item"]
 disallow_incomplete_defs = false
 disallow_untyped_defs = false
-
-[tool.isort]
-src_paths = ["src", "tests"]
-skip = ["alembic", "tmp", "_monitors", "_monitors_load"]
-line_length = 100
-include_trailing_comma = true
-multi_line_output = 3
 
 [tool.pytest.ini_options]
 pythonpath = "src"
