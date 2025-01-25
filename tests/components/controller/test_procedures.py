@@ -53,7 +53,7 @@ async def test_monitors_stuck(
     elif queued_at == "now" or running_at == "now":
         triggered = False
     else:
-        triggered = (queued or running)
+        triggered = queued or running
 
     if triggered:
         assert not sample_monitor.queued
@@ -71,9 +71,7 @@ async def test_monitors_stuck(
 
 async def test_monitors_stuck_query_result_none(caplog, monkeypatch):
     """'_monitors_stuck' should log an error if the query result is None"""
-    monkeypatch.setattr(
-        procedures.databases, "query_application", AsyncMock(return_value=None)
-    )
+    monkeypatch.setattr(procedures.databases, "query_application", AsyncMock(return_value=None))
 
     await procedures._monitors_stuck(time_tolerance=300)
 
@@ -83,9 +81,7 @@ async def test_monitors_stuck_query_result_none(caplog, monkeypatch):
 async def test_monitors_stuck_monitor_not_found(caplog, monkeypatch):
     """'_monitors_stuck' should log an error if the monitor is not found"""
     monkeypatch.setattr(
-        procedures.databases,
-        "query_application",
-        AsyncMock(return_value=[{"id": 99999999}])
+        procedures.databases, "query_application", AsyncMock(return_value=[{"id": 99999999}])
     )
 
     await procedures._monitors_stuck(time_tolerance=300)
@@ -94,32 +90,31 @@ async def test_monitors_stuck_monitor_not_found(caplog, monkeypatch):
 
 
 async def test_monitors_stuck_monitor_not_found_2_results(
-    caplog,
-    monkeypatch,
-    sample_monitor: Monitor
+    caplog, monkeypatch, sample_monitor: Monitor
 ):
     """'_monitors_stuck' should log an error if one monitor is not found but should continue with
     the other monitors"""
     monkeypatch.setattr(
         procedures.databases,
         "query_application",
-        AsyncMock(return_value=[{"id": 99999999}, {"id": sample_monitor.id}])
+        AsyncMock(return_value=[{"id": 99999999}, {"id": sample_monitor.id}]),
     )
 
     await procedures._monitors_stuck(time_tolerance=300)
 
     assert_message_in_log(caplog, "Monitor with id '99999999' not found")
-    assert_message_in_log(
-        caplog, f"monitors_stuck: {sample_monitor} was stuck and now it's fixed"
-    )
+    assert_message_in_log(caplog, f"monitors_stuck: {sample_monitor} was stuck and now it's fixed")
 
 
-@pytest.mark.parametrize("last_execution, is_triggered, expected_result", [
-    (None, True, True),
-    (None, False, True),
-    ("not None", True, True),
-    ("not None", False, False),
-])
+@pytest.mark.parametrize(
+    "last_execution, is_triggered, expected_result",
+    [
+        (None, True, True),
+        (None, False, True),
+        ("not None", True, True),
+        ("not None", False, False),
+    ],
+)
 async def test_check_procedure_triggered(
     monkeypatch,
     last_execution,
@@ -129,9 +124,7 @@ async def test_check_procedure_triggered(
     """'_check_procedure_triggered' should return if the procedure is triggered"""
     monkeypatch.setattr(procedures, "is_triggered", lambda *args: is_triggered)
 
-    result = procedures._check_procedure_triggered(
-        schedule="", last_execution=last_execution
-    )
+    result = procedures._check_procedure_triggered(schedule="", last_execution=last_execution)
 
     assert result == expected_result
 
@@ -177,7 +170,7 @@ async def test_run_procedures(monkeypatch):
         {
             "some_procedure": ControllerProcedureConfig(schedule="* * * * *"),
             "other_procedure": ControllerProcedureConfig(schedule="* * * * *"),
-        }
+        },
     )
 
     await procedures.run_procedures()
@@ -208,7 +201,7 @@ async def test_run_procedures_error(caplog, monkeypatch):
         {
             "some_procedure": ControllerProcedureConfig(schedule="* * * * *"),
             "other_procedure": ControllerProcedureConfig(schedule="* * * * *"),
-        }
+        },
     )
 
     await procedures.run_procedures()

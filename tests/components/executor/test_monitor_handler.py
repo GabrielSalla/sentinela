@@ -242,6 +242,7 @@ async def test_search_routine_varying_model_id_key(
 async def test_search_routine_skip_duplicate(caplog, monkeypatch, sample_monitor: Monitor):
     """'_search_routine' should skip the items where the 'model_id' is duplicated in the return
     value of the 'search' function"""
+
     async def search_function():
         return [
             {"id": 1, "some_value": 10},
@@ -367,6 +368,7 @@ async def test_search_routine_skip_unique(monkeypatch, sample_monitor: Monitor):
 async def test_search_routine_skip_solved(monkeypatch, sample_monitor: Monitor):
     """'_search_routine' should skip the items that are considered as solved by the 'is_solved'
     function"""
+
     async def search_function():
         return [
             {"id": 1},
@@ -396,6 +398,7 @@ async def test_search_routine_skip_solved(monkeypatch, sample_monitor: Monitor):
 
 async def test_search_routine_limit_max_issues(monkeypatch, sample_monitor: Monitor):
     """'_search_routine' should limit the maximum number of issues that can be created at once"""
+
     async def search_function():
         return [{"id": i} for i in range(1, 6)]
 
@@ -451,6 +454,7 @@ async def test_search_routine_store_to_monitor(
 ):
     """'_search_routine' store the created issues into the monitor's instance so it can be easily
     accessed from other parts of the code, without needing to reload it from the database"""
+
     async def search_function():
         return [{"id": i} for i in range(number_of_issues)]
 
@@ -754,6 +758,7 @@ async def test_update_routine_not_active_model_id(caplog, monkeypatch, sample_mo
 
 async def test_issues_solve_routine_no_issues(monkeypatch, sample_monitor: Monitor):
     """'_issues_solve_routine' should do nothing if there're no active issues"""
+
     def is_solved_function(issue_data):
         return issue_data["id"] == 1
 
@@ -1025,6 +1030,7 @@ async def test_alerts_routine_solved(monkeypatch, sample_monitor: Monitor):
 )
 async def test_run_routines(monkeypatch, sample_monitor: Monitor, tasks):
     """'_run_routines' should execute the routines for the module based on the provided tasks"""
+
     async def do_nothing(monitor): ...
 
     update_routine_mock = AsyncMock(side_effect=do_nothing)
@@ -1111,9 +1117,7 @@ async def test_run_monitor_not_registered(monkeypatch, sample_monitor: Monitor):
     del registry._monitors[sample_monitor.id]
 
     run_task = asyncio.create_task(
-        monitor_handler.run(
-            {"payload": {"monitor_id": sample_monitor.id, "tasks": ["search"]}}
-        )
+        monitor_handler.run({"payload": {"monitor_id": sample_monitor.id, "tasks": ["search"]}})
     )
 
     start_time = time.perf_counter()
@@ -1161,6 +1165,7 @@ async def test_run_monitor_set_running(mocker, sample_monitor: Monitor):
 @pytest.mark.flaky(reruns=2)
 async def test_run_monitor_timeout(caplog, mocker, monkeypatch, sample_monitor: Monitor):
     """'run' should handle execution timeouts while running the monitor routines"""
+
     async def sleep(monitor, tasks):
         await asyncio.sleep(1)
 
@@ -1194,6 +1199,7 @@ async def test_run_monitor_timeout(caplog, mocker, monkeypatch, sample_monitor: 
 
 async def test_run_monitor_sentinela_exception(mocker, monkeypatch, sample_monitor: Monitor):
     """'run' should re-raise Sentinela exceptions"""
+
     class SomeException(BaseSentinelaException):
         pass
 
@@ -1223,6 +1229,7 @@ async def test_run_monitor_sentinela_exception(mocker, monkeypatch, sample_monit
 
 async def test_run_monitor_error(caplog, mocker, monkeypatch, sample_monitor: Monitor):
     """'run' should handle errors when running the monitor routines"""
+
     async def error(monitor, tasks):
         raise ValueError("Something is not right")
 

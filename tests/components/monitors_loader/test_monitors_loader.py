@@ -19,14 +19,17 @@ from tests.test_utils import assert_message_in_log
 pytestmark = pytest.mark.asyncio(loop_scope="session")
 
 
-@pytest.mark.parametrize("file, extensions, expected", [
-    ("file.py", ["py"], True),
-    ("file.py", ["txt"], False),
-    ("file.txt", ["py"], False),
-    ("file.txt", ["txt"], True),
-    ("file.txt", ["py", "txt"], True),
-    ("file.txt", ["txt", "py"], True),
-])
+@pytest.mark.parametrize(
+    "file, extensions, expected",
+    [
+        ("file.py", ["py"], True),
+        ("file.py", ["txt"], False),
+        ("file.txt", ["py"], False),
+        ("file.txt", ["txt"], True),
+        ("file.txt", ["py", "txt"], True),
+        ("file.txt", ["txt", "py"], True),
+    ],
+)
 async def test_file_has_extension(file, extensions, expected):
     """'_file_has_extension' should return True if the file has any of the given extensions"""
     assert monitors_loader._file_has_extension(file, extensions) == expected
@@ -37,9 +40,9 @@ async def test_get_monitors_files_from_path():
     monitors_files = list(monitors_loader._get_monitors_files_from_path("tests/sample_monitors"))
 
     assert len(monitors_files) == 3
-    monitors_files = list(sorted(
-        monitors_files, key=lambda monitor_files: monitor_files.monitor_name
-    ))
+    monitors_files = list(
+        sorted(monitors_files, key=lambda monitor_files: monitor_files.monitor_name)
+    )
     assert monitors_files == [
         monitors_loader.MonitorFiles(
             monitor_name="monitor_1",
@@ -62,18 +65,20 @@ async def test_get_monitors_files_from_path():
 async def test_get_monitors_files_from_path_with_additional_files():
     """'_get_monitors_files_from_path' should return all the monitors files from a path including
     their additional files"""
-    monitors_files = list(monitors_loader._get_monitors_files_from_path(
-        "tests/sample_monitors/internal", additional_file_extensions=["sql"]
-    ))
+    monitors_files = list(
+        monitors_loader._get_monitors_files_from_path(
+            "tests/sample_monitors/internal", additional_file_extensions=["sql"]
+        )
+    )
 
     assert len(monitors_files) == 2
-    monitors_files = list(sorted(
-        monitors_files, key=lambda monitor_files: monitor_files.monitor_name
-    ))
+    monitors_files = list(
+        sorted(monitors_files, key=lambda monitor_files: monitor_files.monitor_name)
+    )
     for monitor_files in monitors_files:
-        monitor_files.additional_files = list(sorted(
-            monitor_files.additional_files, key=lambda additional_file: additional_file.name
-        ))
+        monitor_files.additional_files = list(
+            sorted(monitor_files.additional_files, key=lambda additional_file: additional_file.name)
+        )
     assert monitors_files == [
         monitors_loader.MonitorFiles(
             monitor_name="monitor_2",
@@ -86,11 +91,11 @@ async def test_get_monitors_files_from_path_with_additional_files():
             additional_files=[
                 monitors_loader.AdditionalFile(
                     name="other_file.sql",
-                    path=Path("tests/sample_monitors/internal/monitor_3/other_file.sql")
+                    path=Path("tests/sample_monitors/internal/monitor_3/other_file.sql"),
                 ),
                 monitors_loader.AdditionalFile(
                     name="some_file.sql",
-                    path=Path("tests/sample_monitors/internal/monitor_3/some_file.sql")
+                    path=Path("tests/sample_monitors/internal/monitor_3/some_file.sql"),
                 ),
             ],
         ),
@@ -105,11 +110,14 @@ async def test_get_monitors_files_from_path_no_python_files():
     assert len(monitors_files) == 0
 
 
-@pytest.mark.parametrize("additional_files", [
-    None,
-    {"file_1.sql": "SELECT * FROM table_1;"},
-    {"file_1.sql": "SELECT * FROM table_1;", "file_2.sql": "SELECT * FROM table_2;"},
-])
+@pytest.mark.parametrize(
+    "additional_files",
+    [
+        None,
+        {"file_1.sql": "SELECT * FROM table_1;"},
+        {"file_1.sql": "SELECT * FROM table_1;", "file_2.sql": "SELECT * FROM table_2;"},
+    ],
+)
 async def test_register_monitor(additional_files):
     """'register_monitor' function should register a monitor with the provided name and module
     code"""
@@ -130,11 +138,14 @@ async def test_register_monitor(additional_files):
     assert code_module.additional_files == (additional_files or {})
 
 
-@pytest.mark.parametrize("additional_files", [
-    None,
-    {"file_1.sql": "SELECT * FROM table_1;"},
-    {"file_1.sql": "SELECT * FROM table_1;", "file_2.sql": "SELECT * FROM table_2;"},
-])
+@pytest.mark.parametrize(
+    "additional_files",
+    [
+        None,
+        {"file_1.sql": "SELECT * FROM table_1;"},
+        {"file_1.sql": "SELECT * FROM table_1;", "file_2.sql": "SELECT * FROM table_2;"},
+    ],
+)
 async def test_register_monitor_monitor_already_exists(additional_files):
     """'register_monitor' should update an existing monitor's module code if the monitor already
     exists, without changing other fields"""
@@ -325,6 +336,7 @@ async def test_register_monitors_from_path_internal(clear_database):
 async def test_register_monitors_from_path_validation_error(caplog, monkeypatch, clear_database):
     """'_register_monitors_from_path' should log the errors if a monitor was not loaded and not
     register the monitor"""
+
     async def register_monitor_error_mock(monitor_name, monitor_code, additional_files):
         raise monitors_loader.MonitorValidationError(monitor_name="monitor", errors_found=[])
 
@@ -347,6 +359,7 @@ async def test_register_monitors_from_path_validation_error(caplog, monkeypatch,
 async def test_register_monitors_from_path_error(caplog, monkeypatch, clear_database):
     """'_register_monitors_from_path' should log the errors if a monitor was not loaded and not
     register the monitor"""
+
     async def register_monitor_error_mock(monitor_name, monitor_code, additional_files):
         raise ValueError("Some error")
 
@@ -447,6 +460,7 @@ async def test_configure_monitor(monkeypatch, sample_monitor: Monitor):
 async def test_configure_monitor_notifications_setup(monkeypatch, sample_monitor: Monitor):
     """'_configure_monitor' should extend the reactions in the 'reaction_options' fields with the
     reactions from the notifications from the 'notification_options'"""
+
     async def do_something(): ...
     async def do_nothing(): ...
 
@@ -510,11 +524,10 @@ async def test_load_monitors_monitors_ready_flag(monkeypatch, clear_database):
     monkeypatch.setattr(Monitor, "get_all", slow_get_all)
 
     await databases.execute_application(
-        'insert into "Monitors"(id, name, enabled) values'
-        "(9999123, 'monitor_1', true);"
+        "insert into \"Monitors\"(id, name, enabled) values (9999123, 'monitor_1', true);"
     )
     await databases.execute_application(
-        'insert into "CodeModules"(monitor_id, code) values'
+        'insert into "CodeModules"(monitor_id, code) values '
         "(9999123, 'def get_value(): return 10');"
     )
 
@@ -545,8 +558,7 @@ async def test_load_monitors_monitor_without_code_module(caplog, monkeypatch, cl
     monkeypatch.setattr(Monitor, "get_all", slow_get_all)
 
     await databases.execute_application(
-        'insert into "Monitors"(id, name, enabled) values'
-        "(9999123, 'monitor_1', true);"
+        "insert into \"Monitors\"(id, name, enabled) values (9999123, 'monitor_1', true);"
     )
 
     await monitors_loader._load_monitors()
@@ -564,13 +576,13 @@ async def test_load_monitors_error(caplog, clear_database):
     registry, even if an error occurs while loading any of them. Monitors with errors will not be
     added to the registry"""
     await databases.execute_application(
-        'insert into "Monitors"(id, name, enabled) values'
-        "(9999123, 'monitor_1', true),"
+        'insert into "Monitors"(id, name, enabled) values '
+        "(9999123, 'monitor_1', true), "
         "(9999456, 'internal.monitor_2', true);"
     )
     await databases.execute_application(
-        'insert into "CodeModules"(monitor_id, code) values'
-        "(9999123, 'invalid code'),"
+        'insert into "CodeModules"(monitor_id, code) values '
+        "(9999123, 'invalid code'), "
         "(9999456, 'def get_value(): return 10');"
     )
 
@@ -628,15 +640,15 @@ async def test_run_as_executor(mocker, monkeypatch, clear_database):
     _load_monitors_spy: AsyncMock = mocker.spy(monitors_loader, "_load_monitors")
 
     await databases.execute_application(
-        'insert into "Monitors"(id, name, enabled) values'
-        "(9999123, 'monitor_1', true),"
-        "(9999456, 'internal.monitor_2', true),"
+        'insert into "Monitors"(id, name, enabled) values '
+        "(9999123, 'monitor_1', true), "
+        "(9999456, 'internal.monitor_2', true), "
         "(9999457, 'disabled_monitor', false);"
     )
     await databases.execute_application(
-        'insert into "CodeModules"(monitor_id, code) values'
-        "(9999123, 'def get_value(): return 10'),"
-        "(9999456, 'def get_value(): return 10'),"
+        'insert into "CodeModules"(monitor_id, code) values '
+        "(9999123, 'def get_value(): return 10'), "
+        "(9999456, 'def get_value(): return 10'), "
         "(9999457, 'def get_value(): return 10');"
     )
 
@@ -671,15 +683,15 @@ async def test_run_cool_down(mocker, monkeypatch, clear_database):
     _load_monitors_spy: AsyncMock = mocker.spy(monitors_loader, "_load_monitors")
 
     await databases.execute_application(
-        'insert into "Monitors"(id, name, enabled) values'
-        "(9999123, 'monitor_1', true),"
-        "(9999456, 'internal.monitor_2', true),"
+        'insert into "Monitors"(id, name, enabled) values '
+        "(9999123, 'monitor_1', true), "
+        "(9999456, 'internal.monitor_2', true), "
         "(9999457, 'disabled_monitor', false);"
     )
     await databases.execute_application(
-        'insert into "CodeModules"(monitor_id, code) values'
-        "(9999123, 'def get_value(): return 10'),"
-        "(9999456, 'def get_value(): return 10'),"
+        'insert into "CodeModules"(monitor_id, code) values '
+        "(9999123, 'def get_value(): return 10'), "
+        "(9999456, 'def get_value(): return 10'), "
         "(9999457, 'def get_value(): return 10');"
     )
 
@@ -702,11 +714,14 @@ async def test_run_cool_down(mocker, monkeypatch, clear_database):
     assert isinstance(registry._monitors[9999456]["module"], ModuleType)
 
 
-@pytest.mark.parametrize("seconds, expected_sleep_time", [
-    (15, 40),
-    (50, 5),
-    (56, 59),
-])
+@pytest.mark.parametrize(
+    "seconds, expected_sleep_time",
+    [
+        (15, 40),
+        (50, 5),
+        (56, 59),
+    ],
+)
 async def test_run_sleep_time(mocker, monkeypatch, clear_database, seconds, expected_sleep_time):
     """Integration test of the 'monitors_loader' task.
     The sleep time between the loops should consider the early loading time and should not load the
@@ -716,23 +731,21 @@ async def test_run_sleep_time(mocker, monkeypatch, clear_database, seconds, expe
     monkeypatch.setattr(monitors_loader, "EARLY_LOAD_TIME", 5)
     monkeypatch.setattr(monitors_loader, "COOL_DOWN_TIME", 0)
     monkeypatch.setattr(
-        monitors_loader,
-        "now",
-        lambda: datetime(2024, 1, 1, 12, 34, seconds, tzinfo=timezone.utc)
+        monitors_loader, "now", lambda: datetime(2024, 1, 1, 12, 34, seconds, tzinfo=timezone.utc)
     )
 
     sleep_spy: AsyncMock = mocker.spy(app, "sleep")
 
     await databases.execute_application(
-        'insert into "Monitors"(id, name, enabled) values'
-        "(9999123, 'monitor_1', true),"
-        "(9999456, 'internal.monitor_2', true),"
+        'insert into "Monitors"(id, name, enabled) values '
+        "(9999123, 'monitor_1', true), "
+        "(9999456, 'internal.monitor_2', true), "
         "(9999457, 'disabled_monitor', false);"
     )
     await databases.execute_application(
-        'insert into "CodeModules"(monitor_id, code) values'
-        "(9999123, 'def get_value(): return 10'),"
-        "(9999456, 'def get_value(): return 10'),"
+        'insert into "CodeModules"(monitor_id, code) values '
+        "(9999123, 'def get_value(): return 10'), "
+        "(9999456, 'def get_value(): return 10'), "
         "(9999457, 'def get_value(): return 10');"
     )
 

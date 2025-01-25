@@ -272,9 +272,7 @@ async def test_add_reaction(mocker):
     """'add_reaction' should add a reaction to a Slack message"""
     chat_reactions_add_spy: MagicMock = mocker.spy(slack.client, "reactions_add")
 
-    result = await slack.add_reaction(
-        channel="channel", ts="ts", reaction="ballot_box_with_check"
-    )
+    result = await slack.add_reaction(channel="channel", ts="ts", reaction="ballot_box_with_check")
 
     chat_reactions_add_spy.assert_called_once_with(
         channel="channel", timestamp="ts", name="ballot_box_with_check"

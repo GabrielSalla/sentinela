@@ -21,9 +21,7 @@ base_route = "/monitor"
 @monitor_routes.get(base_route + "/list")
 @monitor_routes.get(base_route + "/list/")
 async def list_monitors(request: Request) -> Response:
-    monitors = await Monitor.get_raw(
-        columns=[Monitor.id, Monitor.name, Monitor.enabled]
-    )
+    monitors = await Monitor.get_raw(columns=[Monitor.id, Monitor.name, Monitor.enabled])
     response = [
         {
             "id": monitor[0],
@@ -123,19 +121,14 @@ async def monitor_register(request: Request) -> Response:
     error_response: dict[str, str | list[Any]]
 
     if monitor_code is None:
-        error_response = {
-            "status": "error",
-            "message": "'monitor_code' parameter is required"
-        }
+        error_response = {"status": "error", "message": "'monitor_code' parameter is required"}
         return web.json_response(error_response, status=400)
 
     # Remove any dots from the monitor name
     monitor_name = monitor_name.replace(".", "_")
 
     try:
-        monitor = await commands.monitor_register(
-            monitor_name, monitor_code, additional_files
-        )
+        monitor = await commands.monitor_register(monitor_name, monitor_code, additional_files)
     except pydantic.ValidationError as e:
         error_response = {
             "status": "error",

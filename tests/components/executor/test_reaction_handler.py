@@ -34,12 +34,14 @@ async def test_run_monitor_not_registered(caplog, monkeypatch, sample_monitor: M
     del registry._monitors[sample_monitor.id]
 
     run_task = asyncio.create_task(
-        reaction_handler.run({
-            "payload": {
-                "event_source_monitor_id": sample_monitor.id,
-                "event_name": "alert_created"
+        reaction_handler.run(
+            {
+                "payload": {
+                    "event_source_monitor_id": sample_monitor.id,
+                    "event_name": "alert_created",
+                }
             }
-        })
+        )
     )
 
     start_time = time.perf_counter()
@@ -67,6 +69,7 @@ async def test_run_no_reactions(monkeypatch, sample_monitor: Monitor):
 
 async def test_run_single_reaction(monkeypatch, sample_monitor: Monitor):
     """'run' should execute the reaction when there's only one registered for the event"""
+
     async def do_nothing(message_payload): ...
 
     reaction_mock = AsyncMock(side_effect=do_nothing)
@@ -93,6 +96,7 @@ async def test_run_multiple_reaction(
     monkeypatch, sample_monitor: Monitor, event_name, number_of_events
 ):
     """'run' should execute the reactions when there're multiple ones registered for the event"""
+
     async def do_nothing(message_payload): ...
 
     reaction_mock = AsyncMock(side_effect=do_nothing)
@@ -114,6 +118,7 @@ async def test_run_multiple_reaction(
 
 async def test_run_multiple_reaction_error(caplog, monkeypatch, sample_monitor: Monitor):
     """'run' should execute all the reactions even if some of them raise any errors"""
+
     async def error(message_payload):
         raise ValueError("Something happened")
 
@@ -140,6 +145,7 @@ async def test_run_multiple_reaction_error(caplog, monkeypatch, sample_monitor: 
 
 async def test_run_partial(monkeypatch, sample_monitor: Monitor):
     """'run' should be able to handle partial functions, as notifications will use this feature"""
+
     async def do_nothing(message_payload, something): ...
 
     reaction_mock = AsyncMock(side_effect=do_nothing)
@@ -196,7 +202,7 @@ async def test_run_function_no_name(caplog, mocker, monkeypatch, sample_monitor:
     assert_message_in_log(
         caplog,
         "Timed out executing reaction "
-        "'<test_reaction_handler.test_run_function_no_name.<locals>.Mock object at 0x"
+        "'<test_reaction_handler.test_run_function_no_name.<locals>.Mock object at 0x",
     )
     assert_message_in_log(caplog, f"' with payload '{json.dumps(message_payload['payload'])}'")
 
@@ -246,6 +252,7 @@ async def test_run_timeout(caplog, monkeypatch, sample_monitor: Monitor):
 
 async def test_run_sentinela_exception(monkeypatch, sample_monitor: Monitor):
     """'run' should re-raise Sentinela exceptions"""
+
     class SomeException(BaseSentinelaException):
         pass
 

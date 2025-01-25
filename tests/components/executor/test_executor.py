@@ -178,7 +178,7 @@ async def test_executor_get_message_handler(caplog, message, expected_result):
     assert result == expected_result
 
     if result is None:
-        assert_message_in_log(caplog, "Didn't find a handler for message '{\"type\": \"unknown\"}'")
+        assert_message_in_log(caplog, 'Didn\'t find a handler for message \'{"type": "unknown"}\'')
 
 
 async def test_executor_process_message_success(caplog, mocker, monkeypatch):

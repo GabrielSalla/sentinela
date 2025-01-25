@@ -21,6 +21,7 @@ from options import (
 @pytest.fixture(scope="function")
 def monitor_mock():
     """Create a Monitor mock module"""
+
     class MonitorMock(ModuleType):
         pass
 
@@ -45,9 +46,7 @@ def test_check_async_function_function_types():
 
 def test_check_async_function_not_functions():
     """'_check_async_function' should return errors if the object is not a function"""
-    assert checker._check_async_function("something") == [
-        "'something' must be a function"
-    ]
+    assert checker._check_async_function("something") == ["'something' must be a function"]
 
 
 # Test _check_sync_function
@@ -64,9 +63,7 @@ def test_check_sync_function_function_types():
 
 def test_check_sync_function_not_functions():
     """'_check_sync_function' should return errors if the object is not a function"""
-    assert checker._check_sync_function("another_thing") == [
-        "'another_thing' must be a function"
-    ]
+    assert checker._check_sync_function("another_thing") == ["'another_thing' must be a function"]
 
 
 # Test _check_monitor_options
@@ -156,6 +153,7 @@ def test_check_alert_options_wrong_type(monitor_mock):
 def test_check_reaction_options_async_function():
     """Creating an instance of 'ReactionOptions' should return no erros if the function in the list
     is asynchronous"""
+
     async def async_function(): ...
 
     ReactionOptions(
@@ -166,6 +164,7 @@ def test_check_reaction_options_async_function():
 def test_check_reaction_options_with_many_async_functions():
     """Creating an instance of 'ReactionOptions' should return no erros if all functions in the
     list are asynchronous"""
+
     async def another_async_function(): ...
 
     ReactionOptions(
@@ -209,17 +208,21 @@ def test_check_reaction_options_with_sync_function_no_name(monkeypatch):
     errors = checker._check_reaction_functions(reaction_options)
 
     assert len(errors) == 1
-    assert re.match(
+    match = re.match(
         r"function 'reaction_options.alert_created.<MagicMock id='\d+'>' must be asynchronous",
         errors[0],
-    ) is not None
+    )
+    assert match is not None
 
 
-@pytest.mark.parametrize("functions", [
-    ["string"],
-    ["string", async_function],
-    [async_function, "string"],
-])
+@pytest.mark.parametrize(
+    "functions",
+    [
+        ["string"],
+        ["string", async_function],
+        [async_function, "string"],
+    ],
+)
 def test_check_reaction_options_with_wrong_functions_type(functions):
     """Creating an instance of 'ReactionOptions' should raise a "pydantic.ValidationError" if any
     of the fields has an item that is not a function"""
@@ -227,6 +230,7 @@ def test_check_reaction_options_with_wrong_functions_type(functions):
         ReactionOptions(
             alert_created=functions,
         )
+
 
 # Test _check_reaction_options
 
@@ -257,8 +261,10 @@ def test_check_reaction_options_wrong_type(monitor_mock):
 
 # Test _check_notification_options
 
+
 class BaseNotification:
     """Notification class to be used in the tests"""
+
     min_priority_to_send: int = 5
 
     def reactions_list(self) -> list[tuple[str, list[Coroutine[Any, Any, Any]]]]:
@@ -352,6 +358,7 @@ def test_check_issue_data_type_wrong_type(monitor_mock):
 def test_check_issue_data_type_no_issue_options(monitor_mock):
     """'_check_issue_data_type' should return errors if the 'IssueDataType' class is defined but
     there is no 'issue_options' field"""
+
     class IssueDataType(TypedDict):
         id: str
         a: str
@@ -386,6 +393,7 @@ def test_check_issue_data_type_missing_model_id_key(monitor_mock):
 def test_check_search_function_defined(monitor_mock):
     """'_check_search_function' should return no erros if the 'search' function is defined and it is
     an asynchronous function with the correct signature"""
+
     class IssueDataType(TypedDict):
         a: str
         b: int
@@ -405,6 +413,7 @@ def test_check_search_function_not_defined(monitor_mock):
 
 def test_check_search_function_sync_function(monitor_mock):
     """'_check_search_function' should return errors if the 'search' function is synchronous"""
+
     class IssueDataType(TypedDict):
         a: str
         b: int
@@ -421,6 +430,7 @@ def test_check_search_function_sync_function(monitor_mock):
 def test_check_search_function_no_issue_data_type(monitor_mock):
     """'_check_search_function' should return no erros if the monitor doesn't have the
     'IssueDataType' class defined"""
+
     class IssueDataType(TypedDict):
         a: str
         b: int
@@ -487,6 +497,7 @@ class Test_check_search_function_type_signature:
 def test_check_update_function_defined(monitor_mock):
     """'_check_update_function' should return no erros if the 'update' function is defined and it
     is an asynchronous function with the correct signature"""
+
     class IssueDataType(TypedDict):
         a: str
         b: int
@@ -507,6 +518,7 @@ def test_check_update_function_not_defined(monitor_mock):
 def test_check_update_function_without_issue_data(monitor_mock):
     """'_check_update_function' should return errors if the 'update' function doesn't have
     'issues_data' as argument"""
+
     class IssueDataType(TypedDict):
         a: str
         b: int
@@ -523,6 +535,7 @@ def test_check_update_function_without_issue_data(monitor_mock):
 
 def test_check_update_function_sync_function(monitor_mock):
     """'_check_update_function' should return errors if the 'update' function is synchronous"""
+
     class IssueDataType(TypedDict):
         a: str
         b: int
@@ -539,6 +552,7 @@ def test_check_update_function_sync_function(monitor_mock):
 def test_check_update_function_no_issue_data_type(monitor_mock):
     """'_check_update_function' should return no erros if the monitor doesn't have the
     'IssueDataType' class defined"""
+
     class IssueDataType(TypedDict):
         a: str
         b: int
@@ -630,6 +644,7 @@ class Test_check_update_function_type_signature:
 def test_check_is_solved_function_defined(monitor_mock):
     """'_check_is_solved_function' should return no erros if the 'is_solved' function is defined
     and it is a synchronous function with the correct signature"""
+
     class IssueDataType(TypedDict):
         a: str
         b: int
@@ -665,6 +680,7 @@ def test_check_is_solved_function_not_defined_solvable(monitor_mock):
 def test_check_is_solved_function_without_issues_data(monitor_mock):
     """'_check_is_solved_function' should return errors if the 'is_solved' function doesn't have
     the 'issue_data' as argument"""
+
     class IssueDataType(TypedDict):
         a: str
         b: int
@@ -682,6 +698,7 @@ def test_check_is_solved_function_without_issues_data(monitor_mock):
 def test_check_is_solved_function_async_function(monitor_mock):
     """'_check_is_solved_function' should return errors if the 'is_solved' function is
     asynchronous"""
+
     class IssueDataType(TypedDict):
         a: str
         b: int
@@ -698,6 +715,7 @@ def test_check_is_solved_function_async_function(monitor_mock):
 def test_check_is_solved_function_no_issue_data_type(monitor_mock):
     """'_check_is_solved_function' should return no errors if the monitor doesn't have the
     'IssueDataType' class defined"""
+
     class IssueDataType(TypedDict):
         a: str
         b: int
@@ -774,6 +792,7 @@ class Test_check_is_solved_function_type_signature:
 def test_check_module(mocker, monitor_mock):
     """'check_module' should call all the check functions with the correct arguments and return the
     list of errors. If there were no errors, the list should be empty"""
+
     class IssueDataType(TypedDict):
         id: str
         a: str
@@ -797,9 +816,7 @@ def test_check_module(mocker, monitor_mock):
     _check_issue_options_spy: MagicMock = mocker.spy(checker, "_check_issue_options")
     _check_alert_options_spy: MagicMock = mocker.spy(checker, "_check_alert_options")
     _check_reaction_options_spy: MagicMock = mocker.spy(checker, "_check_reaction_options")
-    _check_notification_options_spy: MagicMock = mocker.spy(
-        checker, "_check_notification_options"
-    )
+    _check_notification_options_spy: MagicMock = mocker.spy(checker, "_check_notification_options")
     _check_issue_data_type_spy: MagicMock = mocker.spy(checker, "_check_issue_data_type")
     _check_search_function_spy: MagicMock = mocker.spy(checker, "_check_search_function")
     _check_update_function_spy: MagicMock = mocker.spy(checker, "_check_update_function")
@@ -821,6 +838,7 @@ def test_check_module(mocker, monitor_mock):
 def test_check_module_error(mocker, monitor_mock):
     """'check_module' should call all the check functions with the correct arguments and return the
     list of errors. If there were errors, the list should not be empty"""
+
     class IssueDataType(TypedDict):
         a: str
         b: int
@@ -843,9 +861,7 @@ def test_check_module_error(mocker, monitor_mock):
     _check_issue_options_spy: MagicMock = mocker.spy(checker, "_check_issue_options")
     _check_alert_options_spy: MagicMock = mocker.spy(checker, "_check_alert_options")
     _check_reaction_options_spy: MagicMock = mocker.spy(checker, "_check_reaction_options")
-    _check_notification_options_spy: MagicMock = mocker.spy(
-        checker, "_check_notification_options"
-    )
+    _check_notification_options_spy: MagicMock = mocker.spy(checker, "_check_notification_options")
     _check_issue_data_type_spy: MagicMock = mocker.spy(checker, "_check_issue_data_type")
     _check_search_function_spy: MagicMock = mocker.spy(checker, "_check_search_function")
     _check_update_function_spy: MagicMock = mocker.spy(checker, "_check_update_function")

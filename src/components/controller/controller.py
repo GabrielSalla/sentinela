@@ -114,8 +114,7 @@ async def _run_task(semaphore: asyncio.Semaphore, monitor: Monitor) -> None:
 
 
 async def _create_process_task(
-        semaphore: asyncio.Semaphore,
-        monitor: Monitor
+    semaphore: asyncio.Semaphore, monitor: Monitor
 ) -> asyncio.Task[Any] | None:
     """Create a task to process the monitor"""
     # Instead of registering the monitor, skip if it's not registered yet

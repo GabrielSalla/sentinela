@@ -63,8 +63,7 @@ def _file_has_extension(file: str, extensions: list[str]) -> bool:
 
 
 def _get_monitors_files_from_path(
-        path: str,
-        additional_file_extensions: list[str] | None = None
+    path: str, additional_file_extensions: list[str] | None = None
 ) -> Generator[MonitorFiles, None, None]:
     """Get all the monitor files from a path, including additional files present"""
     for root, folders, files in Path(path).walk():
@@ -92,16 +91,16 @@ def _get_monitors_files_from_path(
             monitor_files = MonitorFiles(
                 monitor_name=folder_name,
                 monitor_path=monitor_path,
-                additional_files=additional_files
+                additional_files=additional_files,
             )
             yield monitor_files
 
 
 async def register_monitor(
-        monitor_name: str,
-        monitor_code: str,
-        base_path: str | None = None,
-        additional_files: dict[str, str] | None = None
+    monitor_name: str,
+    monitor_code: str,
+    base_path: str | None = None,
+    additional_files: dict[str, str] | None = None,
 ) -> Monitor:
     """Register a monitor and its additional files"""
     if base_path is None:
@@ -129,9 +128,7 @@ async def register_monitor(
 
 
 async def _register_monitors_from_path(
-        path: str,
-        internal: bool = False,
-        additional_file_extensions: list[str] | None = None
+    path: str, internal: bool = False, additional_file_extensions: list[str] | None = None
 ) -> None:
     """Register monitors from a path, including their additional files"""
     for monitor_files in _get_monitors_files_from_path(path, additional_file_extensions):
@@ -196,10 +193,7 @@ async def _load_monitors() -> None:
     monitors_ids = [monitor.id for monitor in loaded_monitors]
 
     code_modules = await CodeModule.get_all(CodeModule.monitor_id.in_(monitors_ids))
-    code_modules_map = {
-        code_module.monitor_id: code_module
-        for code_module in code_modules
-    }
+    code_modules_map = {code_module.monitor_id: code_module for code_module in code_modules}
 
     _logger.info(f"Monitors found: {len(loaded_monitors)}")
 
@@ -212,9 +206,7 @@ async def _load_monitors() -> None:
             code_module = code_modules_map.get(monitor.id)
             if code_module is None:
                 await monitor.set_enabled(False)
-                _logger.warning(
-                    f"Monitor '{monitor.name}' has no code module, it will be disabled"
-                )
+                _logger.warning(f"Monitor '{monitor.name}' has no code module, it will be disabled")
                 continue
 
             monitors_paths[monitor.id] = module_loader.create_module_files(
@@ -229,9 +221,7 @@ async def _load_monitors() -> None:
             if monitor_path is None:
                 continue
 
-            monitor_module = cast(
-                MonitorModule, module_loader.load_module_from_file(monitor_path)
-            )
+            monitor_module = cast(MonitorModule, module_loader.load_module_from_file(monitor_path))
             _configure_monitor(monitor_module)
 
             registry.add_monitor(monitor.id, monitor.name, monitor_module)
@@ -259,7 +249,7 @@ async def _run() -> None:
             # the expected trigger time
             sleep_time = time_until_next_trigger(
                 configs.monitors_load_schedule,
-                datetime_reference=now() + timedelta(seconds=EARLY_LOAD_TIME)
+                datetime_reference=now() + timedelta(seconds=EARLY_LOAD_TIME),
             )
             sleep_task = asyncio.create_task(app.sleep(sleep_time))
             registry_pending_task = asyncio.create_task(registry.monitors_pending.wait())

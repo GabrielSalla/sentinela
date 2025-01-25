@@ -4,9 +4,7 @@ from models import Monitor
 
 
 async def monitor_register(
-        monitor_name: str,
-        monitor_code: str,
-        additional_files: dict[str, str]
+    monitor_name: str, monitor_code: str, additional_files: dict[str, str]
 ) -> Monitor:
     """Register a monitor"""
     return await monitors_loader.register_monitor(

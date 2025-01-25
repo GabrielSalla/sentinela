@@ -142,6 +142,7 @@ async def test_queue_task(clear_queue, sample_monitor, tasks):
 async def test_queue_task_error(caplog, monkeypatch, clear_queue, sample_monitor: Monitor):
     """'_queue_task' should try to queue tasks and if it fails, the monitor's 'queued' attribute
     should be set back to False"""
+
     async def send_error(type, payload):
         raise ValueError("something went wrong")
 

@@ -24,9 +24,7 @@ async def test_monitor_register(mocker):
     code_module = await CodeModule.get(CodeModule.monitor_id == monitor.id)
     assert code_module is not None
 
-    register_monitor_spy.assert_awaited_once_with(
-        monitor_name, monitor_code, additional_files={}
-    )
+    register_monitor_spy.assert_awaited_once_with(monitor_name, monitor_code, additional_files={})
     assert monitor.name == monitor_name
     assert code_module.additional_files == {}
 
@@ -40,9 +38,7 @@ async def test_monitor_register_additional_files(mocker):
     with open("tests/sample_monitors/others/monitor_1/monitor_1.py", "r") as file:
         monitor_code = file.read()
 
-    monitor = await requests.monitor_register(
-        monitor_name, monitor_code, {"file.sql": "SELECT 1;"}
-    )
+    monitor = await requests.monitor_register(monitor_name, monitor_code, {"file.sql": "SELECT 1;"})
     code_module = await CodeModule.get(CodeModule.monitor_id == monitor.id)
     assert code_module is not None
 

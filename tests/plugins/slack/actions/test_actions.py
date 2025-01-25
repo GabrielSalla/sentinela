@@ -69,7 +69,7 @@ async def test_resend_notification_slack_notification_different_channels(
         sample_monitor.code,
         "notification_options",
         [channel_1_notification_option, channel_2_notification_option],
-        raising=False
+        raising=False,
     )
 
     alert = await Alert.create(
@@ -114,7 +114,7 @@ async def test_resend_notification_other_notification_types(
         sample_monitor.code,
         "notification_options",
         ["other_notification", slack_notification_option],
-        raising=False
+        raising=False,
     )
 
     alert = await Alert.create(
@@ -138,9 +138,7 @@ async def test_resend_notification_other_notification_types(
     assert_message_not_in_log(caplog, "No 'SlackNotification' option")
 
 
-async def test_resend_notification(
-    caplog, mocker, monkeypatch, sample_monitor: Monitor
-):
+async def test_resend_notification(caplog, mocker, monkeypatch, sample_monitor: Monitor):
     """'_resend_notification' should clear the notification and send it again"""
     wait_monitor_loaded_spy: AsyncMock = mocker.spy(registry, "wait_monitor_loaded")
     clear_notification_mock = AsyncMock()
@@ -206,9 +204,7 @@ async def test_resend_notifications(monkeypatch, sample_monitor: Monitor):
         data={"channel": "test_resend_notification_other", "ts": "123"},
     )
 
-    await actions.resend_notifications(
-        {"slack_channel": "test_resend_notification"}
-    )
+    await actions.resend_notifications({"slack_channel": "test_resend_notification"})
 
     assert resend_notification_mock.await_args is not None
     assert resend_notification_mock.await_args[0][0].id == notification_test_channel.id

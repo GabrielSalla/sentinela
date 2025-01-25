@@ -42,6 +42,7 @@ async def test_init_on_load(mocker, clear_database):
 
 async def test_post_create():
     """'Monitor._post_create' should setup the monitor's internal variables"""
+
     class MonitorMock(ModuleType):
         pass
 
@@ -250,11 +251,7 @@ async def test_load_active_issues(sample_monitor: Monitor, number_of_issues):
     and store them in the 'active_issues' attribute"""
     created_active_issues = await Issue.create_batch(
         [
-            Issue(
-                monitor_id=sample_monitor.id,
-                model_id=str(i),
-                data={"id": i}
-            )
+            Issue(monitor_id=sample_monitor.id, model_id=str(i), data={"id": i})
             for i in range(number_of_issues)
         ]
     )
@@ -282,10 +279,7 @@ async def test_load_active_alerts(sample_monitor: Monitor, number_of_alerts):
     """'Monitor.load_active_alerts' should load all the monitor's active alerts from the database
     and store them in the 'active_alerts' attribute"""
     created_active_alerts = await Alert.create_batch(
-        [
-            Alert(monitor_id=sample_monitor.id)
-            for i in range(number_of_alerts)
-        ]
+        [Alert(monitor_id=sample_monitor.id) for i in range(number_of_alerts)]
     )
     await Alert.create_batch(
         [
@@ -424,10 +418,9 @@ async def test_add_issues_multiple(sample_monitor: Monitor):
 async def test_add_alert(sample_monitor: Monitor):
     """'Monitor.add_alerts' should add a provided Alert to the monitor's active alerts list,
     keeping the items that were previously in the list"""
-    created_alerts = await Alert.create_batch([
-        Alert(monitor_id=sample_monitor.id),
-        Alert(monitor_id=sample_monitor.id)
-    ])
+    created_alerts = await Alert.create_batch(
+        [Alert(monitor_id=sample_monitor.id), Alert(monitor_id=sample_monitor.id)]
+    )
 
     sample_monitor.active_alerts = [created_alerts[0]]
     sample_monitor.add_alert(created_alerts[1])

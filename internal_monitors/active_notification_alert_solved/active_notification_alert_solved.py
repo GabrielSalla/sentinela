@@ -3,6 +3,7 @@ Objective: check for active Notifications where the associated alert has already
 The Monitor tries to automatically close the issues by closing the detected Notifications. If a
 Notification is not closed successfully, the Monitor will trigger a Slack notification.
 """
+
 import os
 from typing import Any, TypedDict, cast
 
@@ -50,24 +51,14 @@ class IssueDataType(TypedDict):
 async def search() -> list[IssueDataType] | None:
     sql = read_file("search_query.sql")
 
-    notifications_list = cast(
-        list[IssueDataType],
-        await query_application(sql)
-    )
-
-    return notifications_list
+    return cast(list[IssueDataType], await query_application(sql))
 
 
 async def update(issues_data: list[IssueDataType]) -> list[IssueDataType] | None:
     sql = read_file("update_query.sql")
 
     notifications_ids = [issue_data["notification_id"] for issue_data in issues_data]
-    notifications_list = cast(
-        list[IssueDataType],
-        await query_application(sql, notifications_ids)
-    )
-
-    return notifications_list
+    return cast(list[IssueDataType], await query_application(sql, notifications_ids))
 
 
 def is_solved(issue_data: IssueDataType) -> bool:
@@ -76,6 +67,7 @@ def is_solved(issue_data: IssueDataType) -> bool:
 
 
 # Reactions
+
 
 async def close_notification(event_payload: dict[str, Any]) -> None:
     """Fix the notification by closing it"""

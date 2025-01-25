@@ -103,10 +103,7 @@ async def main() -> None:
         "executor": executor.run,
     }
 
-    tasks = [
-        modes[mode]()
-        for mode in operation_modes
-    ]
+    tasks = [modes[mode]() for mode in operation_modes]
     await asyncio.gather(*tasks)
 
     await finish()

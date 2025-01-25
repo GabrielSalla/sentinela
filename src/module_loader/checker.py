@@ -131,7 +131,8 @@ def _check_alert_options(module: ModuleType) -> list[str]:
     if not isinstance(alert_options, AlertOptions):
         errors.append(
             ERROR_OPTIONAL_FIELD_WRONG_TYPE.format(
-                display_name="alert_options", expected_type="AlertOptions")
+                display_name="alert_options", expected_type="AlertOptions"
+            )
         )
         return errors
 
@@ -375,8 +376,7 @@ def _check_is_solved_function(module: ModuleType) -> list[str]:
         if issue_options.solvable:
             errors.append(ERROR_MISSING_FUNCTION.format(display_name="is_solved"))
             return errors
-        else:
-            return errors
+        return errors
 
     errors += _check_sync_function(is_solved_function, display_name="is_solved")
     if len(errors) > 0:
@@ -420,7 +420,7 @@ def _check_is_solved_function(module: ModuleType) -> list[str]:
         return errors
 
     # Check return type
-    if function_args.annotations["return"] != bool:
+    if function_args.annotations["return"] is not bool:
         errors.append(
             ERROR_FUNCTION_WRONG_RETURN_TYPE.format(display_name="is_solved", expected_type="bool")
         )

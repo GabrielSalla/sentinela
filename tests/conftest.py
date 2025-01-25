@@ -75,6 +75,7 @@ async def init_databases():
 @pytest_asyncio.fixture(loop_scope="session", scope="session", autouse=True)
 async def init_application_database():
     """Recreate all tables in the database for each test session"""
+
     def reset_database(connection, config):
         config.attributes["connection"] = connection
         alembic.command.downgrade(alembic_config, "base")
@@ -157,7 +158,7 @@ def sample_monitor_code():
 @pytest_asyncio.fixture(loop_scope="session", scope="function")
 async def sample_monitor(clear_monitors, sample_monitor_code) -> Monitor:
     """Create a sample monitor to be used in the test"""
-    monitor_name = f"test_monitor_{int(time.time()*1000000)}"
+    monitor_name = f"test_monitor_{int(time.time() * 1000000)}"
 
     new_monitor = await Monitor.create(name=monitor_name)
     await CodeModule.create(monitor_id=new_monitor.id, code=sample_monitor_code)

@@ -21,6 +21,7 @@ pytestmark = pytest.mark.asyncio(loop_scope="session")
 
 async def do_nothing(): ...
 
+
 # To test the Base class other models will be used, because most of the methods will make
 # operations on the internal database, so there must be a table for it
 
@@ -292,19 +293,13 @@ async def test_get_raw(sample_monitor: Monitor):
             for i in range(3)
         ]
     )
-    issues_data = {
-        issue.id: (issue.model_id, issue.data)
-        for issue in issues
-    }
+    issues_data = {issue.id: (issue.model_id, issue.data) for issue in issues}
 
     found_issues = await Issue.get_raw(
         columns=[Issue.id, Issue.model_id, Issue.data],
         column_filters=[Issue.monitor_id == sample_monitor.id],
     )
-    found_issues_data = {
-        issue[0]: (issue[1], issue[2])
-        for issue in found_issues
-    }
+    found_issues_data = {issue[0]: (issue[1], issue[2]) for issue in found_issues}
     assert found_issues_data == issues_data
 
 
@@ -388,10 +383,7 @@ async def test_get_all_order_by(sample_monitor: Monitor):
 
     issues_ids = sorted([issue.id for issue in issues])
 
-    sorted_issues = await Issue.get_all(
-        Issue.monitor_id == sample_monitor.id,
-        order_by=[Issue.id]
-    )
+    sorted_issues = await Issue.get_all(Issue.monitor_id == sample_monitor.id, order_by=[Issue.id])
     sorted_issues_ids = [issue.id for issue in sorted_issues]
 
     sorted_issues = await Issue.get_all(

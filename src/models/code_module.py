@@ -13,7 +13,8 @@ class CodeModule(Base):
     monitor_id: Mapped[int] = mapped_column(ForeignKey("Monitors.id"))
     code: Mapped[str] = mapped_column(String(), nullable=True)
     additional_files: Mapped[dict[str, str]] = mapped_column(
-        MutableDict.as_mutable(postgresql.JSON), nullable=True  # type: ignore[arg-type]
+        MutableDict.as_mutable(postgresql.JSON),  # type: ignore[arg-type]
+        nullable=True,
     )
 
     # Code modules won't trigger events when they are created

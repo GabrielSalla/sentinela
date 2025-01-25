@@ -4,12 +4,7 @@ import configs.configs_loader as configs_loader
 def test_configs_logging_friendly(monkeypatch):
     """'Configs' should be compatible with 'friendly' logs"""
     monkeypatch.setitem(
-        configs_loader.loaded_configs,
-        "logging",
-        {
-            "mode": "friendly",
-            "format": "%(message)s"
-        }
+        configs_loader.loaded_configs, "logging", {"mode": "friendly", "format": "%(message)s"}
     )
     assert configs_loader.Configs(**configs_loader.loaded_configs) is not None
 
@@ -29,21 +24,15 @@ def test_configs_logging_json(monkeypatch):
                 "function_name": "funcName",
                 "line_number": "lineno",
                 "message": "message",
-            }
-        }
+            },
+        },
     )
     assert configs_loader.Configs(**configs_loader.loaded_configs) is not None
 
 
 def test_configs_queue_internal(monkeypatch):
     """'Configs' should be compatible with 'internal' queue"""
-    monkeypatch.setitem(
-        configs_loader.loaded_configs,
-        "queue",
-        {
-            "type": "internal"
-        }
-    )
+    monkeypatch.setitem(configs_loader.loaded_configs, "queue", {"type": "internal"})
     assert configs_loader.Configs(**configs_loader.loaded_configs) is not None
 
 
@@ -57,7 +46,7 @@ def test_configs_queue_sqs(monkeypatch):
             "name": "test",
             "url": "http://localhost",
             "region": "us-west-1",
-            "create_queue": False
-        }
+            "create_queue": False,
+        },
     )
     assert configs_loader.Configs(**configs_loader.loaded_configs) is not None

@@ -114,7 +114,7 @@ class Executor:
     async def process_message(
         self,
         handler: Callable[[dict[Any, Any]], Coroutine[Any, Any, Any]],
-        message: message_queue.Message
+        message: message_queue.Message,
     ) -> None:
         """Process the message with the provided handler, protecting from possible exceptions.
         During the message processing, another task will be spawned to change it's visibility in
@@ -143,9 +143,7 @@ class Executor:
             self._logger.error(f"Message: '{json.dumps(message.content)}'")
             self._logger.info("Exception caught successfully, going on")
         finally:
-            prometheus_message_processing_count.labels(
-                message_type=message_type
-            ).dec()
+            prometheus_message_processing_count.labels(message_type=message_type).dec()
 
             # Stop the message change visibility loop
             change_visibility_task.cancel()

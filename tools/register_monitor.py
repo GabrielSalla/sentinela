@@ -25,7 +25,7 @@ def main() -> None:
         json={
             "monitor_code": monitor_code,
             "additional_files": additional_files,
-        }
+        },
     )
     print(result.json())
 
