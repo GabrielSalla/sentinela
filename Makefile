@@ -32,6 +32,7 @@ down-local:
 	docker compose -f docker-compose-local.yaml down
 
 linter:
+	docker compose -f docker-compose-dev.yaml run --rm --no-deps sentinela-dev ruff check
 	docker compose -f docker-compose-dev.yaml run --rm --no-deps sentinela-dev ruff format --check --diff
 
 mypy:

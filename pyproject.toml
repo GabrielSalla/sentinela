@@ -54,7 +54,7 @@ case-sensitive = true
 
 [tool.mypy]
 mypy_path = "src"
-files = ["src/**/*.py", "tests/**/*.py", "internal_monitors/**/*.py", "sample_monitors/**/*.py", "tools/**/*.py"]
+files = ["src", "tests", "internal_monitors", "sample_monitors", "tools"]
 ignore_missing_imports = true
 warn_return_any = true
 check_untyped_defs = true
