@@ -18,9 +18,9 @@ logging:
     timestamp: created
     level: levelname
     file_path: pathname
-    logger_name: name
     function_name: funcName
     line_number: lineno
+    logger_name: name
     message: message
 
 # Application database pool settings

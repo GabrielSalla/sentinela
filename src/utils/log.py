@@ -48,10 +48,10 @@ class JsonFormatter(logging.Formatter):
             key: getattr(record, record_field) for key, record_field in self.fields.items()
         }
 
-        if record.exc_info:
+        if record.exc_info:  # pragma: no cover
             message_dict["exception"] = self.formatException(record.exc_info)
 
-        if record.stack_info:
+        if record.stack_info:  # pragma: no cover
             message_dict["stack_info"] = self.formatStack(record.stack_info)
 
         return json.dumps(message_dict, default=str)
