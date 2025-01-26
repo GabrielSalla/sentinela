@@ -6,6 +6,10 @@ The application will try to load the configs file through the path defined in th
 
 THe monitors path is also defined in the `configs.yaml` file. By default, it's set to the `sample_monitors` folder, but it can be changed to another folder if desired. The `configs.yaml` file also have other configurations that can be adjusted.
 
+To enable a plugin, set the environment variable `SENTINELA_PLUGINS` with the name of the desired plugin. When enabling multiple plugins, separate them with commas.
+- To enable the Slack plugin, the environment variable should be set as `SENTINELA_PLUGINS=slack`.
+- To enable multiple plugins, the environment variable should be set as `SENTINELA_PLUGINS=plugin_1,plugin_2`.
+
 For the secrets, the application expects them to be set as environment variables.
 - `DATABASE_APPLICATION`: The database DSN that will be used to connect to the application database. This database will not be accessible through the databases interface for the monitors.
 - Every variable that starts with `DATABASE`, besides the application database, will have a connection pool instantiated, that can be used in the monitors to query data from them.
@@ -59,11 +63,22 @@ make run-local
 This will start the database and the application.
 
 ## Production deployment
-In production deployment, it's recommended that the controller and executors to be deployed in different containers or pods (in case of a kubernetes deployment). With this method a SQS queue is required to allow the controller communicate with the executors.
+### Building the image
+The [Dockerfile](../Dockerfile) is a starting point for building the application image. This file implements the logic to install all the enabled plugins dependencies correctly.
 
-The deployment should set the necessary environment variables for all the instances for them to work properly.
+```shell
+# Install the dependencies for the application and enabled plugins
+poetry install --no-root --only $(python ./tools/get_plugins_list.py)
+```
 
-Controllers and executors can be started passing them as parameters.
+### Deploying the application
+In production deployment, it's recommended that the controller and executors to be deployed in different containers or pods (in case of a Kubernetes deployment). With this method a SQS queue is required to allow the controller communicate with the executors.
+
+The files provided in the [Kubernetes template](../resources/kubernetes_template) directory can be used as a reference for a Kubernetes deployment.
+
+All services must have the environment variables set as specified in the [Configs and secrets](#configs-and-secrets) section.
+
+Controllers and executors can be started specifying them as parameters.
 ```shell
 # Controller
 python3 src/main.py controller

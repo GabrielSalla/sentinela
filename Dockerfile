@@ -11,7 +11,7 @@ RUN python3 -m venv $VIRTUAL_ENV \
 
 COPY . /app/
 
-RUN poetry install --no-root --only main \
+RUN poetry install --no-root --only $(python ./tools/get_plugins_list.py) \
     && poetry cache clear --no-interaction --all .
 
 

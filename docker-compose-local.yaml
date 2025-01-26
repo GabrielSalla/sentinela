@@ -21,6 +21,7 @@ services:
       retries: 3
       start_period: 2s
     environment:
+      SENTINELA_PLUGINS: slack
       SAMPLE_SLACK_CHANNEL: C07NCL94SDT
       SAMPLE_SLACK_MENTION: U07NFGGMB98
       SLACK_WEBSOCKET_ENABLED: true

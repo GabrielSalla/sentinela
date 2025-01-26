@@ -1492,7 +1492,7 @@ version = "1.22.0"
 description = "The Bolt Framework for Python"
 optional = false
 python-versions = ">=3.6"
-groups = ["main"]
+groups = ["plugin-slack"]
 files = [
     {file = "slack_bolt-1.22.0-py2.py3-none-any.whl", hash = "sha256:349097136a586617e5fb71f40f58a30fa847f664c598577f67a01f99faa1a9eb"},
     {file = "slack_bolt-1.22.0.tar.gz", hash = "sha256:b9c66d088fe3ec8bdd0494278eb500fe58092c2941de86d6822d00f4b3c7c88b"},
@@ -1507,7 +1507,7 @@ version = "3.34.0"
 description = "The Slack API Platform SDK for Python"
 optional = false
 python-versions = ">=3.6"
-groups = ["main"]
+groups = ["plugin-slack"]
 files = [
     {file = "slack_sdk-3.34.0-py2.py3-none-any.whl", hash = "sha256:c61f57f310d85be83466db5a98ab6ae3bb2e5587437b54fa0daa8fae6a0feffa"},
     {file = "slack_sdk-3.34.0.tar.gz", hash = "sha256:ff61db7012160eed742285ea91f11c72b7a38a6500a7f6c5335662b4bc6b853d"},
@@ -1971,4 +1971,4 @@ propcache = ">=0.2.0"
 [metadata]
 lock-version = "2.1"
 python-versions = "^3.12"
-content-hash = "d9ca1798dfde1a2515ee7f59a4631127e2964dac08a1a5c9acbef2741342ac81"
+content-hash = "4601479a1a2e932f2c3438d29df174d4c8d149abc733603b0360f0f91bbefd2a"
