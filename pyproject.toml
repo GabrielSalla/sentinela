@@ -22,7 +22,6 @@ pydantic = "^2.10.4"
 python = "^3.12"
 pytz = "*"
 pyyaml = "^6.0.2"
-slack-bolt = "^1.22.0"
 sqlalchemy = "^2.0.36"
 tabulate = "^0.9.0"
 uvloop = "^0.21.0"
@@ -43,6 +42,9 @@ types-pyyaml = "*"
 types-pytz = "*"
 types-pymysql = "*"
 types-croniter = "*"
+
+[tool.poetry.group.plugin-slack.dependencies]
+slack-bolt = "^1.22.0"
 
 [tool.ruff]
 include = ["src/**/*.py", "tests/**/*.py", "internal_monitors/**/*.py", "sample_monitors/**/*.py", "tools/**/*.py"]
