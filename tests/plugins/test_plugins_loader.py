@@ -6,7 +6,7 @@ import pytest
 
 import plugins as plugins
 import plugins.plugins_loader as plugins_loader
-from tests.test_utils import assert_message_in_log
+from tests.test_utils import assert_message_in_log, assert_message_not_in_log
 
 
 @pytest.fixture(scope="function")
@@ -28,27 +28,81 @@ def plugins_directory(temp_dir: Path) -> Path:
     return plugins_dir
 
 
-def test_load_plugins(plugins_directory):
-    """'load_plugins' should load all plugins from the directory"""
+@pytest.mark.parametrize(
+    "enabled_plugins",
+    [
+        ["plugin1", "plugin2", "plugin3"],
+        ["plugin1", "plugin2"],
+        ["plugin1", "plugin3"],
+        ["plugin2", "plugin3"],
+        ["plugin1"],
+        ["plugin2"],
+        ["plugin3"],
+        [],
+    ],
+)
+def test_load_plugins(monkeypatch, plugins_directory, enabled_plugins):
+    """'load_plugins' should load all plugins from the directory, loading only the enabled
+    plugins"""
+    monkeypatch.setenv("SENTINELA_PLUGINS", ",".join(enabled_plugins))
+
     loaded_plugins = plugins_loader.load_plugins(str(plugins_directory))
-    assert loaded_plugins["plugin1"].a == 10
-    assert loaded_plugins["plugin2"].a == 20
-    assert loaded_plugins["plugin3"].a == 30
+
+    if "plugin1" in enabled_plugins:
+        assert loaded_plugins["plugin1"].a == 10
+    else:
+        assert "plugin1" not in loaded_plugins
+    if "plugin2" in enabled_plugins:
+        assert loaded_plugins["plugin2"].a == 20
+    else:
+        assert "plugin2" not in loaded_plugins
+    if "plugin3" in enabled_plugins:
+        assert loaded_plugins["plugin3"].a == 30
+    else:
+        assert "plugin3" not in loaded_plugins
+
     assert "__pycache__" not in loaded_plugins
 
 
-def test_load_plugins_with_error(caplog, plugins_directory):
+@pytest.mark.parametrize(
+    "enabled_plugins",
+    [
+        ["plugin1", "plugin2", "plugin3"],
+        ["plugin1", "plugin2"],
+        ["plugin1", "plugin3"],
+        ["plugin2", "plugin3"],
+        ["plugin1"],
+        ["plugin2"],
+        ["plugin3"],
+        [],
+    ],
+)
+def test_load_plugins_with_error(caplog, monkeypatch, plugins_directory, enabled_plugins):
     """'load_plugins' should catch exceptions and log error messages when a plugin cannot be
     loaded"""
+    monkeypatch.setenv("SENTINELA_PLUGINS", ",".join(enabled_plugins))
+
     with open(plugins_directory / "plugin1" / "__init__.py", "w") as file:
         file.write("raise Exception('Some import error')")
 
     loaded_plugins = plugins_loader.load_plugins(str(plugins_directory))
 
-    assert_message_in_log(caplog, "Error loading plugin 'plugin1'")
-    assert_message_in_log(caplog, "Exception: Some import error")
-    assert loaded_plugins["plugin2"].a == 20
-    assert loaded_plugins["plugin3"].a == 30
+    if "plugin1" in enabled_plugins:
+        assert "plugin1" not in loaded_plugins
+        assert_message_in_log(caplog, "Error loading plugin 'plugin1'")
+        assert_message_in_log(caplog, "Exception: Some import error")
+    else:
+        assert "plugin1" not in loaded_plugins
+        assert_message_not_in_log(caplog, "Error loading plugin 'plugin1'")
+        assert_message_not_in_log(caplog, "Exception: Some import error")
+    if "plugin2" in enabled_plugins:
+        assert loaded_plugins["plugin2"].a == 20
+    else:
+        assert "plugin2" not in loaded_plugins
+    if "plugin3" in enabled_plugins:
+        assert loaded_plugins["plugin3"].a == 30
+    else:
+        assert "plugin3" not in loaded_plugins
 
 
 def test_load_plugins_default_path(mocker):
