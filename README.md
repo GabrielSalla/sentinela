@@ -69,7 +69,9 @@ State machine-related issues often require several data checks and conditional l
     1. [Sample Monitor](./docs/sample_monitor.md)
 3. [Querying data from databases](./docs/querying.md)
 4. [Registering a monitor](./docs/monitor_registering.md)
-5. [How to run](./docs/how_to_run.md)
+5. Deployment
+    1. [Configuration](./docs/configuration.md)
+    2. [How to run](./docs/how_to_run.md)
 6. [Monitoring Sentinela](./docs/monitoring_sentinela.md)
 7. [Plugins](./docs/plugins.md)
     1. [Slack](./docs/plugin_slack.md)
