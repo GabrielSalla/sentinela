@@ -1,24 +1,4 @@
-# Deployment
-## Configs and secrets
-The basic configs are set through the `configs.yaml` file. This file is read when the application starts and all the settings will be loaded.
-
-The application will try to load the configs file through the path defined in the `CONFIGS_FILE` environment variable. If this variable is not defined, it'll look for the file in the root directory of the application.
-
-THe monitors path is also defined in the `configs.yaml` file. By default, it's set to the `sample_monitors` folder, but it can be changed to another folder if desired. The `configs.yaml` file also have other configurations that can be adjusted.
-
-To enable a plugin, set the environment variable `SENTINELA_PLUGINS` with the name of the desired plugin. When enabling multiple plugins, separate them with commas.
-- To enable the Slack plugin, the environment variable should be set as `SENTINELA_PLUGINS=slack`.
-- To enable multiple plugins, the environment variable should be set as `SENTINELA_PLUGINS=plugin_1,plugin_2`.
-
-For the secrets, the application expects them to be set as environment variables.
-- `DATABASE_APPLICATION`: The database DSN that will be used to connect to the application database. This database will not be accessible through the databases interface for the monitors.
-- Every variable that starts with `DATABASE`, besides the application database, will have a connection pool instantiated, that can be used in the monitors to query data from them.
-- `AWS_ENDPOINT_URL`: The AWS endpoint to be used for local testing, without the need of a real SQS queue. When using the `motoserver` container as an AWS mock, it should be `http://motoserver:5000`. Don't set this environment variable when using a real SQS queue.
-- `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY` and `AWS_SESSION_TOKEN`: The service credentials to access the AWS SQS queue.
-
-> [!IMPORTANT]
-> Check the documentation for the plugins that are being used to see if they have environment variables of their own.
-
+# How to run
 ## Development execution
 Development execution should be used when developing or testing the platform features. It's not intended to be used to develop monitors as it might set variables that might interfere with the monitors execution.
 
