@@ -120,7 +120,40 @@ class AlertOptions:
     dismiss_acknowledge_on_new_issues: bool = False
 
 
-reaction_function_type = Callable[[dict[str, Any]], Coroutine[Any, Any, Any]]
+@dataclass
+class EventPayload:
+    """The event payload provided to each reaction function contains structured information about
+    the event source, details, and any additional context.
+    - `event_source`: Specifies the model that generated the event (e.g., `monitor`, `issue`,
+    `alert`).
+    - `event_source_id`: The unique identifier of the object that triggered the event (e.g.,
+    `monitor_id`, `issue_id`).
+    - `event_source_monitor_id`: The monitor ID associated with the object that generated the event.
+    - `event_name`: Name of the event, such as `alert_created` or `issue_solved`.
+    - `event_data`: Object with detailed information about the event source.
+    - `extra_payload`: Additional information that may be sent along with the event, providing
+    further context.
+    """
+
+    event_source: str
+    event_source_id: int
+    event_source_monitor_id: int
+    event_name: str
+    event_data: dict[str, Any]
+    extra_payload: dict[str, Any] | None = None
+
+    def to_dict(self) -> dict[str, Any]:
+        return {
+            "event_source": self.event_source,
+            "event_source_id": self.event_source_id,
+            "event_source_monitor_id": self.event_source_monitor_id,
+            "event_name": self.event_name,
+            "event_data": self.event_data,
+            "extra_payload": self.extra_payload,
+        }
+
+
+reaction_function_type = Callable[[EventPayload], Coroutine[Any, Any, Any]]
 
 
 @dataclass
@@ -136,23 +169,6 @@ class ReactionOptions:
     The event payload provided to each reaction function contains structured information about the
     event source, details, and any additional context. This allows reaction functions to respond
     precisely to specific events.
-
-    ```python
-    {
-        "event_source": "Specifies the model that generated the event (e.g., `monitor`, `issue`,
-        `alert`)."
-        "event_source_id": "The unique identifier of the object that triggered the event (e.g.,
-        `monitor_id`, `issue_id`)."
-        "event_source_monitor_id": "The monitor ID associated with the object that generated the
-        event."
-        "event_name": "Name of the event, such as `alert_created` or `issue_solved`.",
-        "event_data": {
-            "Object with detailed information about the event source."
-        },
-        "extra_payload": "Additional information that may be sent along with the event, providing
-        further context.",
-    }
-    ```
 
     Check the documentation for a more detailed explanation of each event.
     """

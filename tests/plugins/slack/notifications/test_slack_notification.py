@@ -1,4 +1,5 @@
 from datetime import datetime, timezone
+from typing import Any
 from unittest.mock import AsyncMock, MagicMock
 
 import pytest
@@ -9,11 +10,30 @@ import plugins.slack.slack as slack
 import utils.time as time_utils
 from configs import configs
 from models import Alert, AlertStatus, Issue, IssueStatus, Monitor, Notification, NotificationStatus
+from options import EventPayload
 from tests.test_utils import assert_message_in_log
 
 from .. import slack_mock
 
 pytestmark = pytest.mark.asyncio(loop_scope="session")
+
+
+def get_event_payload(
+    event_source: str = "",
+    event_source_id: int = 0,
+    event_source_monitor_id: int = 0,
+    event_name: str = "",
+    event_data: dict[str, Any] = {},
+    extra_payload: dict[str, Any] | None = None,
+) -> EventPayload:
+    return EventPayload(
+        event_source=event_source,
+        event_source_id=event_source_id,
+        event_source_monitor_id=event_source_monitor_id,
+        event_name=event_name,
+        event_data=event_data,
+        extra_payload=extra_payload,
+    )
 
 
 async def test_slacknotification_reactions_list():
@@ -1210,12 +1230,7 @@ async def test_slack_notification_no_alert(mocker):
     )
 
     await slack_notification.slack_notification(
-        event_payload={
-            "event_data": {
-                "id": 99999999,
-                "priority": 2,
-            }
-        },
+        event_payload=get_event_payload(event_data={"id": 99999999, "priority": 2}),
         notification_options=notification_options,
     )
 
@@ -1243,12 +1258,7 @@ async def test_slack_notification_min_priority_to_send(mocker, sample_monitor: M
     )
 
     await slack_notification.slack_notification(
-        event_payload={
-            "event_data": {
-                "id": alert.id,
-                "priority": 4,
-            }
-        },
+        event_payload=get_event_payload(event_data={"id": alert.id, "priority": 4}),
         notification_options=notification_options,
     )
 
@@ -1274,12 +1284,7 @@ async def test_slack_notification_no_notification_alert_solved(sample_monitor: M
     )
 
     await slack_notification.slack_notification(
-        event_payload={
-            "event_data": {
-                "id": alert.id,
-                "priority": 2,
-            }
-        },
+        event_payload=get_event_payload(event_data={"id": alert.id, "priority": 2}),
         notification_options=notification_options,
     )
 
@@ -1308,12 +1313,7 @@ async def test_slack_notification_alert_solved(sample_monitor: Monitor):
     )
 
     await slack_notification.slack_notification(
-        event_payload={
-            "event_data": {
-                "id": alert.id,
-                "priority": 2,
-            }
-        },
+        event_payload=get_event_payload(event_data={"id": alert.id, "priority": 2}),
         notification_options=notification_options,
     )
 
@@ -1341,12 +1341,7 @@ async def test_slack_notification_not_solved(sample_monitor: Monitor):
     )
 
     await slack_notification.slack_notification(
-        event_payload={
-            "event_data": {
-                "id": alert.id,
-                "priority": 2,
-            }
-        },
+        event_payload=get_event_payload(event_data={"id": alert.id, "priority": 2}),
         notification_options=notification_options,
     )
 
@@ -1375,12 +1370,7 @@ async def test_slack_notification_first_send(mocker, sample_monitor: Monitor, no
     )
 
     await slack_notification.slack_notification(
-        event_payload={
-            "event_data": {
-                "id": alert.id,
-                "priority": 2,
-            }
-        },
+        event_payload=get_event_payload(event_data={"id": alert.id, "priority": 2}),
         notification_options=notification_options,
     )
 
@@ -1417,12 +1407,7 @@ async def test_slack_notification_update(mocker, sample_monitor: Monitor, notifi
     )
 
     await slack_notification.slack_notification(
-        event_payload={
-            "event_data": {
-                "id": alert.id,
-                "priority": 2,
-            }
-        },
+        event_payload=get_event_payload(event_data={"id": alert.id, "priority": 2}),
         notification_options=notification_options,
     )
 
@@ -1456,12 +1441,7 @@ async def test_slack_notification_update_lower_priority(mocker, sample_monitor: 
     )
 
     await slack_notification.slack_notification(
-        event_payload={
-            "event_data": {
-                "id": alert.id,
-                "priority": 4,
-            }
-        },
+        event_payload=get_event_payload(event_data={"id": alert.id, "priority": 4}),
         notification_options=notification_options,
     )
 

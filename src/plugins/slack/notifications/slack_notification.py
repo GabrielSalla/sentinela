@@ -2,7 +2,7 @@ import json
 import logging
 import os
 from functools import partial
-from typing import Any, Callable, Coroutine
+from typing import Any
 
 from pydantic.dataclasses import dataclass
 from pytz import timezone
@@ -10,12 +10,11 @@ from tabulate import tabulate
 
 from configs import configs
 from models import Alert, AlertPriority, AlertStatus, Issue, IssueStatus, Monitor, Notification
+from options import EventPayload, reaction_function_type
 
 from .. import slack
 
 _logger = logging.getLogger("plugin.slack.notifications")
-
-type async_function = Callable[[dict[str, Any]], Coroutine[Any, Any, Any]]
 
 RESEND_ERRORS = [
     "message_not_found",
@@ -56,7 +55,7 @@ class SlackNotification:
     min_priority_to_mention: int = AlertPriority.moderate
     issue_show_limit: int = 10
 
-    def reactions_list(self) -> list[tuple[str, list[async_function]]]:
+    def reactions_list(self) -> list[tuple[str, list[reaction_function_type]]]:
         """Get a list of events that the notification will react to"""
         handle_notification_function = partial(slack_notification, notification_options=self)
         return [
@@ -387,11 +386,11 @@ async def notification_mention(
 
 
 async def slack_notification(
-    event_payload: dict[str, Any],
+    event_payload: EventPayload,
     notification_options: SlackNotification,
 ) -> None:
     """Handle the Slack notification for an alert"""
-    alert_data = event_payload["event_data"]
+    alert_data = event_payload.event_data
 
     alert = await Alert.get_by_id(alert_data["id"])
     if alert is None:

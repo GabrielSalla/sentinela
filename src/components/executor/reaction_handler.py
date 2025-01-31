@@ -11,6 +11,7 @@ import registry as registry
 from base_exception import BaseSentinelaException
 from configs import configs
 from models import Monitor
+from options import EventPayload
 
 _logger = logging.getLogger("reaction_handler")
 
@@ -34,9 +35,9 @@ prometheus_reaction_execution_time = prometheus_client.Summary(
 async def run(message: dict[Any, Any]) -> None:
     """Process a message with type 'event' using the monitor's defined list of reactions for the
     event. The execution timeout is for each function individually"""
-    message_payload = message["payload"]
-    monitor_id = message_payload["event_source_monitor_id"]
-    event_name = message_payload["event_name"]
+    event_payload = EventPayload(**message["payload"])
+    monitor_id = event_payload.event_source_monitor_id
+    event_name = event_payload.event_name
 
     monitor = await Monitor.get_by_id(monitor_id)
     if monitor is None:
@@ -68,12 +69,12 @@ async def run(message: dict[Any, Any]) -> None:
         reaction_execution_time = prometheus_reaction_execution_time.labels(**prometheus_labels)
         try:
             with reaction_execution_time.time():
-                await asyncio.wait_for(reaction(message_payload), configs.executor_reaction_timeout)
+                await asyncio.wait_for(reaction(event_payload), configs.executor_reaction_timeout)
         except asyncio.TimeoutError:
             prometheus_reaction_timeout_count.labels(**prometheus_labels).inc()
             _logger.error(
                 f"Timed out executing reaction '{reaction_name}' with payload "
-                f"'{json.dumps(message_payload)}'"
+                f"'{json.dumps(event_payload.to_dict())}'"
             )
         except BaseSentinelaException as e:
             raise e
@@ -81,6 +82,6 @@ async def run(message: dict[Any, Any]) -> None:
             prometheus_reaction_error_count.labels(**prometheus_labels).inc()
             _logger.error(
                 f"Error executing reaction '{reaction_name}' with payload "
-                f"'{json.dumps(message_payload)}'"
+                f"'{json.dumps(event_payload.to_dict())}'"
             )
             _logger.error(traceback.format_exc().strip())

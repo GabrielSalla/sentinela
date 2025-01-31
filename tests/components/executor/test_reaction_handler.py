@@ -2,7 +2,7 @@ import asyncio
 import json
 import time
 from functools import partial
-from typing import Coroutine
+from typing import Any, Coroutine
 from unittest.mock import AsyncMock, MagicMock
 
 import pytest
@@ -18,10 +18,32 @@ from tests.test_utils import assert_message_in_log
 pytestmark = pytest.mark.asyncio(loop_scope="session")
 
 
+def get_event_payload(
+    event_source: str = "",
+    event_source_id: int = 0,
+    event_source_monitor_id: int = 0,
+    event_name: str = "",
+    event_data: dict[str, Any] = {},
+    extra_payload: dict[str, Any] | None = None,
+) -> dict[str, Any]:
+    return {
+        "event_source": event_source,
+        "event_source_id": event_source_id,
+        "event_source_monitor_id": event_source_monitor_id,
+        "event_name": event_name,
+        "event_data": event_data,
+        "extra_payload": extra_payload,
+    }
+
+
 async def test_run_monitor_not_found(caplog):
     """'run' should ignore the message if a monitor with the provided id was not found"""
     await reaction_handler.run(
-        {"payload": {"event_source_monitor_id": 999999999, "event_name": "alert_created"}}
+        {
+            "payload": get_event_payload(
+                event_source_monitor_id=999999999, event_name="alert_created"
+            )
+        }
     )
     assert_message_in_log(caplog, "Monitor 999999999 not found. Skipping message")
 
@@ -36,10 +58,10 @@ async def test_run_monitor_not_registered(caplog, monkeypatch, sample_monitor: M
     run_task = asyncio.create_task(
         reaction_handler.run(
             {
-                "payload": {
-                    "event_source_monitor_id": sample_monitor.id,
-                    "event_name": "alert_created",
-                }
+                "payload": get_event_payload(
+                    event_source_monitor_id=sample_monitor.id,
+                    event_name="alert_created",
+                )
             }
         )
     )
@@ -63,7 +85,11 @@ async def test_run_no_reactions(monkeypatch, sample_monitor: Monitor):
     monkeypatch.setattr(sample_monitor.code, "reaction_options", ReactionOptions(), raising=False)
 
     await reaction_handler.run(
-        {"payload": {"event_source_monitor_id": sample_monitor.id, "event_name": "alert_created"}}
+        {
+            "payload": get_event_payload(
+                event_source_monitor_id=sample_monitor.id, event_name="alert_created"
+            )
+        }
     )
 
 
@@ -81,7 +107,9 @@ async def test_run_single_reaction(monkeypatch, sample_monitor: Monitor):
     )
 
     message_payload = {
-        "payload": {"event_source_monitor_id": sample_monitor.id, "event_name": "alert_created"}
+        "payload": get_event_payload(
+            event_source_monitor_id=sample_monitor.id, event_name="alert_created"
+        )
     }
     await reaction_handler.run(message_payload)
 
@@ -108,7 +136,9 @@ async def test_run_multiple_reaction(
     )
 
     message_payload = {
-        "payload": {"event_source_monitor_id": sample_monitor.id, "event_name": event_name}
+        "payload": get_event_payload(
+            event_source_monitor_id=sample_monitor.id, event_name="event_name"
+        )
     }
     await reaction_handler.run(message_payload)
 
@@ -133,7 +163,9 @@ async def test_run_multiple_reaction_error(caplog, monkeypatch, sample_monitor: 
     )
 
     message_payload = {
-        "payload": {"event_source_monitor_id": sample_monitor.id, "event_name": "alert_created"}
+        "payload": get_event_payload(
+            event_source_monitor_id=sample_monitor.id, event_name="alert_created"
+        )
     }
     await reaction_handler.run(message_payload)
 
@@ -158,7 +190,9 @@ async def test_run_partial(monkeypatch, sample_monitor: Monitor):
     )
 
     message_payload = {
-        "payload": {"event_source_monitor_id": sample_monitor.id, "event_name": "alert_created"}
+        "payload": get_event_payload(
+            event_source_monitor_id=sample_monitor.id, event_name="alert_created"
+        )
     }
     await reaction_handler.run(message_payload)
 
@@ -193,7 +227,9 @@ async def test_run_function_no_name(caplog, mocker, monkeypatch, sample_monitor:
     call_spy.assert_not_called()
 
     message_payload = {
-        "payload": {"event_source_monitor_id": sample_monitor.id, "event_name": "alert_created"}
+        "payload": get_event_payload(
+            event_source_monitor_id=sample_monitor.id, event_name="alert_created"
+        )
     }
     await reaction_handler.run(message_payload)
 
@@ -233,7 +269,9 @@ async def test_run_timeout(caplog, monkeypatch, sample_monitor: Monitor):
     )
 
     message_payload = {
-        "payload": {"event_source_monitor_id": sample_monitor.id, "event_name": "alert_created"}
+        "payload": get_event_payload(
+            event_source_monitor_id=sample_monitor.id, event_name="alert_created"
+        )
     }
 
     start_time = time.perf_counter()
@@ -267,7 +305,9 @@ async def test_run_sentinela_exception(monkeypatch, sample_monitor: Monitor):
     )
 
     message_payload = {
-        "payload": {"event_source_monitor_id": sample_monitor.id, "event_name": "alert_created"}
+        "payload": get_event_payload(
+            event_source_monitor_id=sample_monitor.id, event_name="alert_created"
+        )
     }
 
     with pytest.raises(SomeException):
