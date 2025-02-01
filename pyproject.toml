@@ -48,7 +48,7 @@ slack-bolt = "^1.22.0"
 
 [tool.ruff]
 include = ["src/**/*.py", "tests/**/*.py", "internal_monitors/**/*.py", "sample_monitors/**/*.py", "tools/**/*.py"]
-lint.extend-select = ["E", "F", "Q", "I", "RET"]
+lint.extend-select = ["E", "W", "F", "Q", "I", "RET"]
 line-length = 100
 
 [tool.ruff.lint.isort]
