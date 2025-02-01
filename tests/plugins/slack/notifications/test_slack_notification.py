@@ -8,6 +8,7 @@ import plugins.slack.notifications.slack_notification as slack_notification
 import plugins.slack.slack as slack
 import utils.time as time_utils
 from configs import configs
+from data_models.event_payload import EventPayload
 from models import Alert, AlertStatus, Issue, IssueStatus, Monitor, Notification, NotificationStatus
 from tests.test_utils import assert_message_in_log
 
@@ -1195,8 +1196,9 @@ async def test_notification_mention_already_sent(mocker, monkeypatch, sample_mon
     send_mention_spy.assert_not_called()
 
 
-async def test_slack_notification_no_alert(mocker):
-    """'slack_notification' should just return if couldn't find an alert with the provided id"""
+async def test_handle_slack_notification_no_alert(mocker):
+    """'_handle_slack_notification' should just return if couldn't find an alert with the provided
+    id"""
     send_notification_spy: MagicMock = mocker.spy(slack_notification, "send_notification")
     update_notification_spy: MagicMock = mocker.spy(slack_notification, "update_notification")
 
@@ -1209,13 +1211,8 @@ async def test_slack_notification_no_alert(mocker):
         min_priority_to_mention=2,
     )
 
-    await slack_notification.slack_notification(
-        event_payload={
-            "event_data": {
-                "id": 99999999,
-                "priority": 2,
-            }
-        },
+    await slack_notification._handle_slack_notification(
+        alert_id=99999999,
         notification_options=notification_options,
     )
 
@@ -1223,9 +1220,9 @@ async def test_slack_notification_no_alert(mocker):
     update_notification_spy.assert_not_called()
 
 
-async def test_slack_notification_min_priority_to_send(mocker, sample_monitor: Monitor):
-    """'slack_notification' should just return if the alert priority is smaller (bigger number)
-    than the 'min_priority_to_send' parameter"""
+async def test_handle_slack_notification_min_priority_to_send(mocker, sample_monitor: Monitor):
+    """'_handle_slack_notification' should just return if the alert priority is smaller (bigger
+    number) than the 'min_priority_to_send' parameter"""
     send_notification_spy: MagicMock = mocker.spy(slack_notification, "send_notification")
     update_notification_spy: MagicMock = mocker.spy(slack_notification, "update_notification")
 
@@ -1242,13 +1239,8 @@ async def test_slack_notification_min_priority_to_send(mocker, sample_monitor: M
         min_priority_to_mention=2,
     )
 
-    await slack_notification.slack_notification(
-        event_payload={
-            "event_data": {
-                "id": alert.id,
-                "priority": 4,
-            }
-        },
+    await slack_notification._handle_slack_notification(
+        alert_id=alert.id,
         notification_options=notification_options,
     )
 
@@ -1256,8 +1248,8 @@ async def test_slack_notification_min_priority_to_send(mocker, sample_monitor: M
     update_notification_spy.assert_not_called()
 
 
-async def test_slack_notification_no_notification_alert_solved(sample_monitor: Monitor):
-    """'slack_notification' should not create a notification if the alert is solved"""
+async def test_handle_slack_notification_no_notification_alert_solved(sample_monitor: Monitor):
+    """'_handle_slack_notification' should not create a notification if the alert is solved"""
     alert = await Alert.create(
         monitor_id=sample_monitor.id,
         status=AlertStatus.solved,
@@ -1273,13 +1265,8 @@ async def test_slack_notification_no_notification_alert_solved(sample_monitor: M
         min_priority_to_mention=2,
     )
 
-    await slack_notification.slack_notification(
-        event_payload={
-            "event_data": {
-                "id": alert.id,
-                "priority": 2,
-            }
-        },
+    await slack_notification._handle_slack_notification(
+        alert_id=alert.id,
         notification_options=notification_options,
     )
 
@@ -1287,8 +1274,8 @@ async def test_slack_notification_no_notification_alert_solved(sample_monitor: M
     assert notification is None
 
 
-async def test_slack_notification_alert_solved(sample_monitor: Monitor):
-    """'slack_notification' should close the notification if the alert is solved"""
+async def test_handle_slack_notification_alert_solved(sample_monitor: Monitor):
+    """'_handle_slack_notification' should close the notification if the alert is solved"""
     alert = await Alert.create(
         monitor_id=sample_monitor.id,
         status=AlertStatus.solved,
@@ -1307,13 +1294,8 @@ async def test_slack_notification_alert_solved(sample_monitor: Monitor):
         min_priority_to_mention=2,
     )
 
-    await slack_notification.slack_notification(
-        event_payload={
-            "event_data": {
-                "id": alert.id,
-                "priority": 2,
-            }
-        },
+    await slack_notification._handle_slack_notification(
+        alert_id=alert.id,
         notification_options=notification_options,
     )
 
@@ -1322,8 +1304,8 @@ async def test_slack_notification_alert_solved(sample_monitor: Monitor):
     assert notification.status == NotificationStatus.closed
 
 
-async def test_slack_notification_not_solved(sample_monitor: Monitor):
-    """'slack_notification' should keep the notification active if the alert isn't solved"""
+async def test_handle_slack_notification_not_solved(sample_monitor: Monitor):
+    """'_handle_slack_notification' should keep the notification active if the alert isn't solved"""
     alert = await Alert.create(
         monitor_id=sample_monitor.id,
         priority=2,
@@ -1340,13 +1322,8 @@ async def test_slack_notification_not_solved(sample_monitor: Monitor):
         min_priority_to_mention=2,
     )
 
-    await slack_notification.slack_notification(
-        event_payload={
-            "event_data": {
-                "id": alert.id,
-                "priority": 2,
-            }
-        },
+    await slack_notification._handle_slack_notification(
+        alert_id=alert.id,
         notification_options=notification_options,
     )
 
@@ -1355,9 +1332,8 @@ async def test_slack_notification_not_solved(sample_monitor: Monitor):
     assert notification.status == NotificationStatus.active
 
 
-@pytest.mark.parametrize("notification_data", [None, {"not_ts": "11.22"}])
-async def test_slack_notification_first_send(mocker, sample_monitor: Monitor, notification_data):
-    """'slack_notification' should send the notification message if there isn't one yet"""
+async def test_handle_slack_notification_first_send(mocker, sample_monitor: Monitor):
+    """'_handle_slack_notification' should send the notification message if there isn't one yet"""
     send_notification_spy: MagicMock = mocker.spy(slack_notification, "send_notification")
     update_notification_spy: MagicMock = mocker.spy(slack_notification, "update_notification")
 
@@ -1374,13 +1350,8 @@ async def test_slack_notification_first_send(mocker, sample_monitor: Monitor, no
         min_priority_to_mention=2,
     )
 
-    await slack_notification.slack_notification(
-        event_payload={
-            "event_data": {
-                "id": alert.id,
-                "priority": 2,
-            }
-        },
+    await slack_notification._handle_slack_notification(
+        alert_id=alert.id,
         notification_options=notification_options,
     )
 
@@ -1395,8 +1366,8 @@ async def test_slack_notification_first_send(mocker, sample_monitor: Monitor, no
         {"channel": "channel", "ts": "22.33", "mention_ts": "44.55"},
     ],
 )
-async def test_slack_notification_update(mocker, sample_monitor: Monitor, notification_data):
-    """'slack_notification' should update the notification message if there one already"""
+async def test_handle_slack_notification_update(mocker, sample_monitor: Monitor, notification_data):
+    """'_handle_slack_notification' should update the notification message if there one already"""
     send_notification_spy: MagicMock = mocker.spy(slack_notification, "send_notification")
     update_notification_spy: MagicMock = mocker.spy(slack_notification, "update_notification")
 
@@ -1416,13 +1387,8 @@ async def test_slack_notification_update(mocker, sample_monitor: Monitor, notifi
         min_priority_to_mention=2,
     )
 
-    await slack_notification.slack_notification(
-        event_payload={
-            "event_data": {
-                "id": alert.id,
-                "priority": 2,
-            }
-        },
+    await slack_notification._handle_slack_notification(
+        alert_id=alert.id,
         notification_options=notification_options,
     )
 
@@ -1430,8 +1396,8 @@ async def test_slack_notification_update(mocker, sample_monitor: Monitor, notifi
     update_notification_spy.assert_called_once()
 
 
-async def test_slack_notification_update_lower_priority(mocker, sample_monitor: Monitor):
-    """'slack_notification' should update an existing notification message even if the alert
+async def test_handle_slack_notification_update_lower_priority(mocker, sample_monitor: Monitor):
+    """'_handle_slack_notification' should update an existing notification message even if the alert
     priority is lower (bigger number) than the 'min_priority_to_send' parameter"""
     send_notification_spy: MagicMock = mocker.spy(slack_notification, "send_notification")
     update_notification_spy: MagicMock = mocker.spy(slack_notification, "update_notification")
@@ -1455,18 +1421,79 @@ async def test_slack_notification_update_lower_priority(mocker, sample_monitor: 
         min_priority_to_mention=2,
     )
 
-    await slack_notification.slack_notification(
-        event_payload={
-            "event_data": {
-                "id": alert.id,
-                "priority": 4,
-            }
-        },
+    await slack_notification._handle_slack_notification(
+        alert_id=alert.id,
         notification_options=notification_options,
     )
 
     send_notification_spy.assert_not_called()
     update_notification_spy.assert_called_once()
+
+
+@pytest.mark.parametrize("alert_id", [1, 10, 20, 123])
+async def test_handle_event(monkeypatch, alert_id):
+    """'handle_event' should call '_handle_slack_notification' with the alert id and the
+    notification options"""
+    handle_slack_notification_mock = AsyncMock()
+    monkeypatch.setattr(
+        slack_notification, "_handle_slack_notification", handle_slack_notification_mock
+    )
+
+    notification_options = slack_notification.SlackNotification(
+        channel="channel",
+        title="title",
+        issues_fields=["col"],
+        min_priority_to_send=3,
+        mention="mention",
+        min_priority_to_mention=2,
+    )
+
+    await slack_notification.handle_event(
+        EventPayload(
+            event_source="alert",
+            event_source_id=alert_id,
+            event_source_monitor_id=0,
+            event_name="",
+            event_data={},
+            extra_payload=None,
+        ),
+        notification_options,
+    )
+
+    handle_slack_notification_mock.assert_awaited_once_with(alert_id, notification_options)
+
+
+@pytest.mark.parametrize("event_source", ["monitor", "issue", "other"])
+async def test_handle_event_invalid_event_source(monkeypatch, event_source):
+    """'handle_event' should raise a 'ValueError' exception if the event source is not 'alert'"""
+    handle_slack_notification_mock = AsyncMock()
+    monkeypatch.setattr(
+        slack_notification, "_handle_slack_notification", handle_slack_notification_mock
+    )
+
+    notification_options = slack_notification.SlackNotification(
+        channel="channel",
+        title="title",
+        issues_fields=["col"],
+        min_priority_to_send=3,
+        mention="mention",
+        min_priority_to_mention=2,
+    )
+
+    with pytest.raises(ValueError, match=f"Invalid event source '{event_source}'"):
+        await slack_notification.handle_event(
+            EventPayload(
+                event_source=event_source,
+                event_source_id=1,
+                event_source_monitor_id=0,
+                event_name="",
+                event_data={},
+                extra_payload=None,
+            ),
+            notification_options,
+        )
+
+    handle_slack_notification_mock.assert_not_called()
 
 
 @pytest.mark.parametrize(

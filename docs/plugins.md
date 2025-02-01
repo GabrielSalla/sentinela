@@ -36,21 +36,27 @@ Notifications are used by monitors, usually to notify about an event. Each notif
 
 Notifications must have the structure defined by the `src.notifications.base_notification.BaseNotification` **protocol**. The method `reactions_list` returns a list of reactions that will trigger an action. Each reaction is a tuple with the reaction name and a list of coroutines that must be called when the reaction is triggered.
 
-Notification base structure:
+Notification base structure must be as follows:
 ```python
+from data_models.monitor_options import reaction_function_type
+
+
 class Notification:
     min_priority_to_send: int = 5
 
-    def reactions_list(self) -> list[tuple[str, list[Coroutine | partial[Coroutine]]]]:
+    def reactions_list(self) -> list[tuple[str, list[reaction_function_type]]]:
         ...
 ```
 
-A notification can have more parameters necessary to control their behavior. An example of a notification implementation is:
+An example of a notification implementation is shown bellow, where there are 3 different events with reactions set for them.
 ```python
+from data_models.monitor_options import reaction_function_type
+
+
 class MyNotification:
     min_priority_to_send: int = 5
 
-    def reactions_list(self) -> list[tuple[str, list[Coroutine | partial[Coroutine]]]]:
+    def reactions_list(self) -> list[tuple[str, list[reaction_function_type]]]:
         """Get a list of events that the notification will react to"""
         return [
             ("alert_acknowledged", [handle_event_acknowledged]),

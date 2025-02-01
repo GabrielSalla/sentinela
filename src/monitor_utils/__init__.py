@@ -2,6 +2,7 @@
 # all these imports should be able to be transported somewhere else, or at least there
 # should be a mock for them
 
+from data_models.event_payload import EventPayload
 from data_models.monitor_options import (
     AgeRule,
     AlertOptions,
@@ -22,6 +23,7 @@ __all__ = [
     "AlertOptions",
     "AlertPriority",
     "CountRule",
+    "EventPayload",
     "IssueOptions",
     "MonitorOptions",
     "PriorityLevels",

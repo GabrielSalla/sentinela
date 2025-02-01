@@ -2,20 +2,20 @@ import json
 import logging
 import os
 from functools import partial
-from typing import Any, Callable, Coroutine
+from typing import Any
 
 from pydantic.dataclasses import dataclass
 from pytz import timezone
 from tabulate import tabulate
 
 from configs import configs
+from data_models.event_payload import EventPayload
+from data_models.monitor_options import reaction_function_type
 from models import Alert, AlertPriority, AlertStatus, Issue, IssueStatus, Monitor, Notification
 
 from .. import slack
 
 _logger = logging.getLogger("plugin.slack.notifications")
-
-type async_function = Callable[[dict[str, Any]], Coroutine[Any, Any, Any]]
 
 RESEND_ERRORS = [
     "message_not_found",
@@ -56,9 +56,9 @@ class SlackNotification:
     min_priority_to_mention: int = AlertPriority.moderate
     issue_show_limit: int = 10
 
-    def reactions_list(self) -> list[tuple[str, list[async_function]]]:
+    def reactions_list(self) -> list[tuple[str, list[reaction_function_type]]]:
         """Get a list of events that the notification will react to"""
-        handle_notification_function = partial(slack_notification, notification_options=self)
+        handle_notification_function = partial(handle_event, notification_options=self)
         return [
             ("alert_acknowledge_dismissed", [handle_notification_function]),
             ("alert_acknowledged", [handle_notification_function]),
@@ -386,14 +386,12 @@ async def notification_mention(
     )
 
 
-async def slack_notification(
-    event_payload: dict[str, Any],
+async def _handle_slack_notification(
+    alert_id: int,
     notification_options: SlackNotification,
 ) -> None:
     """Handle the Slack notification for an alert"""
-    alert_data = event_payload["event_data"]
-
-    alert = await Alert.get_by_id(alert_data["id"])
+    alert = await Alert.get_by_id(alert_id)
     if alert is None:
         return
 
@@ -448,6 +446,14 @@ async def slack_notification(
         notification=notification,
         notification_options=notification_options,
     )
+
+
+async def handle_event(event: EventPayload, notification_options: SlackNotification) -> None:
+    """Handle the Slack notification for an alert"""
+    if event.event_source != "alert":
+        raise ValueError(f"Invalid event source '{event.event_source}'")
+
+    await _handle_slack_notification(event.event_source_id, notification_options)
 
 
 async def clear_slack_notification(notification: Notification) -> None:

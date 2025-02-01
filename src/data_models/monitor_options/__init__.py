@@ -7,6 +7,7 @@ from .monitor_options import (
     PriorityLevels,
     ReactionOptions,
     ValueRule,
+    reaction_function_type,
 )
 
 __all__ = [
@@ -18,4 +19,5 @@ __all__ = [
     "PriorityLevels",
     "ReactionOptions",
     "ValueRule",
+    "reaction_function_type",
 ]

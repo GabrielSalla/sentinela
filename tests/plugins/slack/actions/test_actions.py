@@ -17,8 +17,10 @@ async def test_resend_notification_no_slack_notification_option(
     """'_resend_notification' should just return when there is no SlackNotification option"""
     clear_notification_mock = AsyncMock()
     monkeypatch.setattr(slack_notification, "clear_slack_notification", clear_notification_mock)
-    slack_notification_mock = AsyncMock()
-    monkeypatch.setattr(slack_notification, "slack_notification", slack_notification_mock)
+    handle_slack_notification_mock = AsyncMock()
+    monkeypatch.setattr(
+        slack_notification, "_handle_slack_notification", handle_slack_notification_mock
+    )
     monkeypatch.setattr(sample_monitor.code, "notification_options", [], raising=False)
 
     alert = await Alert.create(
@@ -35,7 +37,7 @@ async def test_resend_notification_no_slack_notification_option(
     await actions._resend_notification(notification)
 
     clear_notification_mock.assert_not_called()
-    slack_notification_mock.assert_not_called()
+    handle_slack_notification_mock.assert_not_called()
     assert_message_in_log(caplog, f"No 'SlackNotification' option for {sample_monitor}")
 
 
@@ -46,8 +48,10 @@ async def test_resend_notification_slack_notification_different_channels(
     multiple ones defined in the monitor"""
     clear_notification_mock = AsyncMock()
     monkeypatch.setattr(slack_notification, "clear_slack_notification", clear_notification_mock)
-    slack_notification_mock = AsyncMock()
-    monkeypatch.setattr(slack_notification, "slack_notification", slack_notification_mock)
+    handle_slack_notification_mock = AsyncMock()
+    monkeypatch.setattr(
+        slack_notification, "_handle_slack_notification", handle_slack_notification_mock
+    )
 
     channel_1_notification_option = slack_notification.SlackNotification(
         channel="channel1",
@@ -86,8 +90,8 @@ async def test_resend_notification_slack_notification_different_channels(
     await actions._resend_notification(notification)
 
     clear_notification_mock.assert_awaited_once_with(notification)
-    slack_notification_mock.assert_awaited_once_with(
-        event_payload={"event_data": {"id": notification.alert_id}},
+    handle_slack_notification_mock.assert_awaited_once_with(
+        alert_id=alert.id,
         notification_options=channel_2_notification_option,
     )
     assert_message_not_in_log(caplog, "No 'SlackNotification' option")
@@ -99,8 +103,10 @@ async def test_resend_notification_other_notification_types(
     """'_resend_notification' should ignore notifications options that are not SlackNotifications"""
     clear_notification_mock = AsyncMock()
     monkeypatch.setattr(slack_notification, "clear_slack_notification", clear_notification_mock)
-    slack_notification_mock = AsyncMock()
-    monkeypatch.setattr(slack_notification, "slack_notification", slack_notification_mock)
+    handle_slack_notification_mock = AsyncMock()
+    monkeypatch.setattr(
+        slack_notification, "_handle_slack_notification", handle_slack_notification_mock
+    )
 
     slack_notification_option = slack_notification.SlackNotification(
         channel="channel",
@@ -131,8 +137,8 @@ async def test_resend_notification_other_notification_types(
     await actions._resend_notification(notification)
 
     clear_notification_mock.assert_awaited_once_with(notification)
-    slack_notification_mock.assert_awaited_once_with(
-        event_payload={"event_data": {"id": notification.alert_id}},
+    handle_slack_notification_mock.assert_awaited_once_with(
+        alert_id=alert.id,
         notification_options=slack_notification_option,
     )
     assert_message_not_in_log(caplog, "No 'SlackNotification' option")
@@ -143,8 +149,10 @@ async def test_resend_notification(caplog, mocker, monkeypatch, sample_monitor: 
     wait_monitor_loaded_spy: AsyncMock = mocker.spy(registry, "wait_monitor_loaded")
     clear_notification_mock = AsyncMock()
     monkeypatch.setattr(slack_notification, "clear_slack_notification", clear_notification_mock)
-    slack_notification_mock = AsyncMock()
-    monkeypatch.setattr(slack_notification, "slack_notification", slack_notification_mock)
+    handle_slack_notification_mock = AsyncMock()
+    monkeypatch.setattr(
+        slack_notification, "_handle_slack_notification", handle_slack_notification_mock
+    )
     notification_options = slack_notification.SlackNotification(
         channel="channel",
         title="title",
@@ -172,7 +180,7 @@ async def test_resend_notification(caplog, mocker, monkeypatch, sample_monitor: 
 
     wait_monitor_loaded_spy.assert_awaited_once_with(sample_monitor.id)
     clear_notification_mock.assert_awaited_once()
-    slack_notification_mock.assert_awaited_once()
+    handle_slack_notification_mock.assert_awaited_once()
     assert_message_not_in_log(caplog, "No 'SlackNotification' option")
 
 

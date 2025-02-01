@@ -4,6 +4,7 @@ from typing import Any, Callable, Coroutine, cast
 from pydantic.dataclasses import dataclass
 
 from configs import configs
+from data_models.event_payload import EventPayload
 
 
 @dataclass
@@ -120,7 +121,7 @@ class AlertOptions:
     dismiss_acknowledge_on_new_issues: bool = False
 
 
-reaction_function_type = Callable[[dict[str, Any]], Coroutine[Any, Any, Any]]
+type reaction_function_type = Callable[[EventPayload], Coroutine[Any, Any, Any]]
 
 
 @dataclass

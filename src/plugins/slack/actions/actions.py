@@ -26,12 +26,8 @@ async def _resend_notification(notification: Notification) -> None:
         if notification_option.channel == notification.data["channel"]:
             # Clear the notification and send it again
             await slack_notification.clear_slack_notification(notification)
-            await slack_notification.slack_notification(
-                event_payload={
-                    "event_data": {
-                        "id": notification.alert_id,
-                    }
-                },
+            await slack_notification._handle_slack_notification(
+                alert_id=notification.alert_id,
                 notification_options=notification_option,
             )
             break
