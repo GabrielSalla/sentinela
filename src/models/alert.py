@@ -6,7 +6,7 @@ from sqlalchemy import Boolean, DateTime, Enum, ForeignKey, Integer
 from sqlalchemy.orm import Mapped, mapped_column
 
 import models.utils.priority as priority_utils
-from options import AgeRule, AlertOptions, CountRule, IssueOptions, ValueRule
+from data_models.monitor_options import AgeRule, AlertOptions, CountRule, IssueOptions, ValueRule
 from registry import get_monitor_module
 from utils.async_tools import do_concurrently
 from utils.time import now

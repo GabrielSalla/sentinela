@@ -9,10 +9,11 @@ import pytest
 import message_queue as message_queue
 import utils.time as time_utils
 from configs import configs
+from data_models.event_payload import EventPayload
+from data_models.monitor_options import ReactionOptions
 from databases.databases import execute_application
 from internal_database import get_session
 from models import Alert, Issue, IssueStatus, Monitor
-from options import ReactionOptions
 from registry import registry
 from tests.test_utils import assert_message_in_log
 
@@ -78,6 +79,37 @@ async def test_should_queue_event(monkeypatch, sample_monitor: Monitor, event_na
 
     assert sample_monitor._should_queue_event(event_name) is True
     assert sample_monitor._should_queue_event("alert_acknowledged") is False
+
+
+async def test_build_event_payload(sample_monitor: Monitor):
+    """'Base._build_event_payload' should build the payload for the event correctly"""
+    issue = await Issue.create(
+        monitor_id=sample_monitor.id,
+        model_id="1",
+        data={"id": 1},
+    )
+
+    payload = issue._build_event_payload("issue_created", {"test": 123})
+
+    assert payload == {
+        "event_source": "issue",
+        "event_source_id": issue.id,
+        "event_source_monitor_id": issue.monitor_id,
+        "event_name": "issue_created",
+        "event_data": {
+            "id": issue.id,
+            "monitor_id": issue.monitor_id,
+            "alert_id": None,
+            "model_id": "1",
+            "status": "active",
+            "data": {"id": 1},
+            "created_at": issue.created_at.isoformat(),
+            "solved_at": None,
+            "dropped_at": None,
+        },
+        "extra_payload": {"test": 123},
+    }
+    assert EventPayload(**payload) is not None
 
 
 @pytest.mark.parametrize(

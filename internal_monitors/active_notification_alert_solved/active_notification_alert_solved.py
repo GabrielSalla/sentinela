@@ -5,7 +5,7 @@ Notification is not closed successfully, the Monitor will trigger a Slack notifi
 """
 
 import os
-from typing import Any, TypedDict, cast
+from typing import TypedDict, cast
 
 from databases import query_application
 from models import Notification, NotificationStatus
@@ -13,6 +13,7 @@ from monitor_utils import (
     AgeRule,
     AlertOptions,
     AlertPriority,
+    EventPayload,
     IssueOptions,
     MonitorOptions,
     PriorityLevels,
@@ -69,9 +70,9 @@ def is_solved(issue_data: IssueDataType) -> bool:
 # Reactions
 
 
-async def close_notification(event_payload: dict[str, Any]) -> None:
+async def close_notification(event_payload: EventPayload) -> None:
     """Fix the notification by closing it"""
-    issue_object = event_payload["event_data"]
+    issue_object = event_payload.event_data
     notification = await Notification.get_by_id(issue_object["data"]["notification_id"])
     if notification:
         await notification.close()

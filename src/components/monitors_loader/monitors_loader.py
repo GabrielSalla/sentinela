@@ -11,8 +11,8 @@ import module_loader as module_loader
 import registry as registry
 import utils.app as app
 from configs import configs
+from data_models.monitor_options import ReactionOptions
 from models import CodeModule, Monitor
-from options import ReactionOptions
 from utils.exception_handling import catch_exceptions
 from utils.time import now, time_since, time_until_next_trigger
 

@@ -10,8 +10,8 @@ from sqlalchemy.dialects import postgresql
 from sqlalchemy.ext.mutable import MutableDict
 from sqlalchemy.orm import Mapped, mapped_column
 
+from data_models.monitor_options import IssueOptions
 from internal_database import CallbackSession
-from options import IssueOptions
 from registry import get_monitor_module
 from utils.time import now
 

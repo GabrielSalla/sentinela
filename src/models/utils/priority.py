@@ -1,8 +1,8 @@
 import enum
 from typing import Callable, Sequence, cast
 
+from data_models.monitor_options import AgeRule, CountRule, ValueRule
 from models.issue import Issue
-from options import AgeRule, CountRule, ValueRule
 from utils.time import time_since
 
 _operators: dict[str, Callable[[int | float, int | float], bool]] = {

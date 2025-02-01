@@ -5,9 +5,9 @@ import pytest
 
 import models.utils.priority as priority
 import utils.time as time_utils
+from data_models.monitor_options import AgeRule, CountRule, PriorityLevels, ValueRule
 from models import Issue, Monitor
 from models.utils.priority import AlertPriority
-from options import AgeRule, CountRule, PriorityLevels, ValueRule
 
 pytestmark = pytest.mark.asyncio(loop_scope="session")
 

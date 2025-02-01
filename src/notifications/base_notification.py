@@ -1,10 +1,10 @@
-from typing import Any, Callable, Coroutine, Protocol, runtime_checkable
+from typing import Protocol, runtime_checkable
 
-type async_function = Callable[[dict[str, Any]], Coroutine[Any, Any, Any]]
+from data_models.monitor_options import reaction_function_type
 
 
 @runtime_checkable
 class BaseNotification(Protocol):
     min_priority_to_send: int = 5
 
-    def reactions_list(self) -> list[tuple[str, list[async_function]]]: ...
+    def reactions_list(self) -> list[tuple[str, list[reaction_function_type]]]: ...

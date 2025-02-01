@@ -4,8 +4,8 @@ import re
 from types import ModuleType
 from typing import Any, Callable, Optional, _TypedDictMeta  # type: ignore[attr-defined]
 
+from data_models.monitor_options import AlertOptions, IssueOptions, MonitorOptions, ReactionOptions
 from notifications import BaseNotification
-from options import AlertOptions, IssueOptions, MonitorOptions, ReactionOptions
 
 _logger = logging.getLogger("module_check")
 _logger.setLevel(logging.INFO)
