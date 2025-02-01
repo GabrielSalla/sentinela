@@ -4,13 +4,14 @@ build-backend = "poetry.core.masonry.api"
 
 [tool.poetry]
 name = "Sentinela"
-version = "0.3.0"
+version = "0.3.1"
 description = "Sentinela Monitoring Platform"
 authors = ["Gabriel Salla <gabriel.c.salla@gmail.com>"]
 license = "MIT"
 readme = "README.md"
 
 [tool.poetry.dependencies]
+python = "^3.12"
 aioboto3 = "^13.2.0"
 aiohttp = "^3.11.11"
 alembic = "^1.14.0"
@@ -19,7 +20,6 @@ certifi = "*"
 croniter = "^5.0.1"
 prometheus-client = "^0.21.1"
 pydantic = "^2.10.4"
-python = "^3.12"
 pytz = "*"
 pyyaml = "^6.0.2"
 sqlalchemy = "^2.0.36"
