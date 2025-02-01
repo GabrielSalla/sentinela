@@ -268,24 +268,21 @@ Reactions are defined as a list of **async functions** that are triggered when s
 Below is an example of defining a reaction function that responds to the creation of a new issue:
 
 ```python
-async def reaction_issue_created(event_payload: dict[str, Any]) -> None:
+from monitor_utils import EventPayload
+
+
+async def reaction_issue_created(event_payload: EventPayload) -> None:
     # Do something
 ```
 
+### Event payload
 The event payload provided to each reaction function contains structured information about the event source, details, and any additional context. This allows reaction functions to respond precisely to specific events.
-
-```python
-{
-    "event_source": "Specifies the model that generated the event (e.g., `monitor`, `issue`, `alert`)."
-    "event_source_id": "The unique identifier of the object that triggered the event (e.g., `monitor_id`, `issue_id`)."
-    "event_source_monitor_id": "The monitor ID associated with the object that generated the event."
-    "event_name": "Name of the event, such as `alert_created` or `issue_solved`.",
-    "event_data": {
-        "Object with detailed information about the event source."
-    },
-    "extra_payload": "Additional information that may be sent along with the event, providing further context.",
-}
-```
+- `event_source`: Specifies the model that generated the event (e.g., `monitor`, `issue`, `alert`).
+- `event_source_id`: The unique identifier of the object that triggered the event (e.g., `monitor_id`, `issue_id`).
+- `event_source_monitor_id`: The monitor ID associated with the object that generated the event.
+- `event_name`: Name of the event (e.g., `alert_created`, `issue_solved`).
+- `event_data`: Dictionary with detailed information about the event source.
+- `extra_payload`: Additional information that may be sent along with the event, providing further context.
 
 Reaction functions can be assigned to specific events when creating an instance of `ReactionOptions`. This configuration ensures that designated functions are triggered whenever specified events occur.
 
