@@ -113,6 +113,7 @@ In scenarios like this, the recommended configuration for `solvable` and `unique
 
 > **Note**: This example is solely for illustrating how these settings operate. The problem presented here should not be monitored in this exact way as there're better ways to do it.
 
+### Example
 Considering the monitor is implemented to monitor user registration data, it's expected that the issues are `solvable`, as the registration data can be corrected. Additionally, the issue is not `unique` because a user may have invalid registration data, fix it, and later have it changed incorrectly again, indicating a new issue must be created.
 
 ```python
@@ -169,13 +170,16 @@ The `IssueDataType` class defines the structure of the data that represents an i
 
 Define a class called `IssueDataType`, that inherits from `TypedDict`, and includes all the fields that will be present in the issue data for the monitor.
 
+**Attention**: The `IssueDataType` class must contain the field specified in the `model_id_key` parameter of the `IssueOptions` setting. This ensures that the issue’s unique identifier is consistently used across your monitor’s configuration.
+
+### Example
+For the user registration monitor, the issue data type should include the `id` and `name` fields, as these are the essential fields for identifying and tracking the issue.
+
 ```python
 class IssueDataType(TypedDict):
     id: int
     name: str
 ```
-
-**Attention**: The `IssueDataType` class must contain the field specified in the `model_id_key` parameter of the `IssueOptions` setting. This ensures that the issue’s unique identifier is consistently used across your monitor’s configuration.
 
 # The functions
 There are 3 functions that control the monitor's execution. They are `search`, `update` and `is_solved`.
@@ -187,13 +191,22 @@ The **search function** is an asynchronous function that identifies and returns 
 - This function can execute any asynchronous code required to gather information, such as querying a database or making API calls.
 - The function should return all identified issues, without the need to check if they were already found in a previous iteration.
 
-If no user should have a `name` equal to `null`, the search function would locate all such users and return a list of dictionaries. Each dictionary must include fields like the user `id` and `name`.
+Each issue returned by the search function will have their fields converted to JSON compatible types according to the following rules:
+- Nested objects, like dictionaries and lists will be recursively converted.
+- `datetime` objects will be converted to ISO format `YYYY-MM-DD HH:MM:SS.mmm+HH:MM`.
+- Strings, integers, floats, booleans and `None` values will be kept as they are.
+- All other types will be converted to strings using the default `str()` operation.
 
-**Attention: all dictionaries must have the field set in the `model_id_key` parameter of the `IssueOptions` class, as they should have the same structure defined by the `IssueDataType` class. Issues without the field will be discarded.**
+These conversions must be taken into account in the **update** and **is solved** functions, as they will be called with the converted data, instead of the data in with the same types that were returned by the search function.
+
+**Attention: all issues must have the field set in the `model_id_key` parameter of the `IssueOptions` class, as they should have the same structure defined by the `IssueDataType` class. Issues without the field will be discarded.**
 
 If no issues are detected, the function can return an empty list, `None`, or simply not return at all (equivalent to returning `None`).
 
 Issues that are considered as "already solved", will be discarded. Check the [**Is solved function**](#is-solved-function) section for more details.
+
+### Example
+If no user should have a `name` equal to `null`, the search function would locate all such users and return a list of dictionaries, each one representing an issue. Each issue should include the fields defined in the `IssueDataType` class.
 
 ```python
 async def search() -> list[IssueDataType] | None:
@@ -211,6 +224,8 @@ The **update function** is an asynchronous function that gets the updated data f
 - The function must be **async** and takes a list of active issue data as its argument.
 - It returns a list of dictionaries, each containing updated information for the issues, structured according to the `IssueDataType` class.
 
+Each issue returned by the update function will have their fields converted to JSON compatible types following the same rules as the search function.
+
 **Why does the update function receives all active issues data?**
 
 Unlike the search function, the update function does not identify new issues. While looking for new issues might be slow, getting the updated information for them, usually, is faster, as it's identifier (e.g. the ID column) allows the use of an efficient method to get the information.
@@ -220,6 +235,9 @@ To update the issue data with current user information, the update function can 
 The updated data returned by this function will be used to updated the active issues. The issues that will be updated will be identified by the `model_id_key`.
 
 If no updates are needed, the function can return an empty list, `None`, or simply not return at all (equivalent to returning `None`). Only issues included in the returned list will be updated. Issues not present in the list will retain their existing data.
+
+### Example
+The update function should get the updated data for all the users that were identified as having invalid registration data. The function should return a list of dictionaries, each containing the updated information for the issues.
 
 ```python
 async def update(issues_data: list[IssueDataType]) -> list[IssueDataType] | None:
@@ -237,6 +255,9 @@ The **is solved function** is a synchronous function that determines if an issue
 - It returns `True` if the issue is considered solved and `False` if it is unresolved.
 
 This function not only checks the resolution status of existing issues but also validates issues returned by the **search function**. Issues where `is_solved` returns `True` are discarded, preventing the creation of issues that are already resolved.
+
+### Example
+The is solved function should check if the user's `name` is not `None`. If the name is not `None`, the issue is considered solved.
 
 ```python
 def is_solved(issue_data: IssueDataType) -> bool:
