@@ -6,8 +6,8 @@ import pytest
 
 import models.utils.priority as priority_utils
 import utils.time as time_utils
+from data_models.monitor_options import AgeRule, AlertOptions, IssueOptions, PriorityLevels
 from models import Alert, AlertPriority, AlertStatus, Issue, IssueStatus, Monitor
-from options import AgeRule, AlertOptions, IssueOptions, PriorityLevels
 from registry import registry
 from tests.test_utils import assert_message_in_log, assert_message_not_in_log
 

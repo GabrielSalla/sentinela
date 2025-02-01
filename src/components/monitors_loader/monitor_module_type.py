@@ -1,7 +1,7 @@
 from typing import Protocol, TypedDict
 
+from data_models.monitor_options import AlertOptions, IssueOptions, MonitorOptions, ReactionOptions
 from notifications import BaseNotification
-from options import AlertOptions, IssueOptions, MonitorOptions, ReactionOptions
 
 
 class MonitorModule(Protocol):

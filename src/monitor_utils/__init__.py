@@ -2,9 +2,7 @@
 # all these imports should be able to be transported somewhere else, or at least there
 # should be a mock for them
 
-from databases import query
-from models.utils.priority import AlertPriority
-from options import (
+from data_models.monitor_options import (
     AgeRule,
     AlertOptions,
     CountRule,
@@ -14,6 +12,8 @@ from options import (
     ReactionOptions,
     ValueRule,
 )
+from databases import query
+from models.utils.priority import AlertPriority
 
 from .read_file import read_file
 

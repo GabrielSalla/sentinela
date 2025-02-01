@@ -7,8 +7,8 @@ import pytest
 
 import databases.databases as databases
 import utils.time as time_utils
+from data_models.monitor_options import AlertOptions, CountRule, PriorityLevels, ReactionOptions
 from models import Alert, AlertStatus, Issue, IssueStatus, Monitor
-from options import AlertOptions, CountRule, PriorityLevels, ReactionOptions
 from registry import registry
 
 pytestmark = pytest.mark.asyncio(loop_scope="session")

@@ -9,10 +9,10 @@ import pytest
 import message_queue as message_queue
 import utils.time as time_utils
 from configs import configs
+from data_models.monitor_options import ReactionOptions
 from databases.databases import execute_application
 from internal_database import get_session
 from models import Alert, Issue, IssueStatus, Monitor
-from options import ReactionOptions
 from registry import registry
 from tests.test_utils import assert_message_in_log
 

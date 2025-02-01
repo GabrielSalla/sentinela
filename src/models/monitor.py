@@ -7,7 +7,7 @@ from sqlalchemy import Boolean, DateTime, Integer, String
 from sqlalchemy.orm import Mapped, mapped_column, reconstructor
 
 import utils.time as time_utils
-from options import AlertOptions, IssueOptions, MonitorOptions, ReactionOptions
+from data_models.monitor_options import AlertOptions, IssueOptions, MonitorOptions, ReactionOptions
 from registry import get_monitor_module
 
 from .alert import Alert, AlertStatus

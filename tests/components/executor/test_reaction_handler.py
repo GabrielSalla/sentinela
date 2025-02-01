@@ -11,8 +11,8 @@ import components.executor.reaction_handler as reaction_handler
 import registry.registry as registry
 from base_exception import BaseSentinelaException
 from configs import configs
+from data_models.monitor_options import ReactionOptions
 from models import Monitor
-from options import ReactionOptions
 from tests.test_utils import assert_message_in_log
 
 pytestmark = pytest.mark.asyncio(loop_scope="session")

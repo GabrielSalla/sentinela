@@ -8,8 +8,8 @@ import pytest
 import components.executor.monitor_handler as monitor_handler
 import registry.registry as registry
 from base_exception import BaseSentinelaException
+from data_models.monitor_options import AlertOptions, CountRule, IssueOptions, PriorityLevels
 from models import Alert, AlertPriority, AlertStatus, Issue, IssueStatus, Monitor
-from options import AlertOptions, CountRule, IssueOptions, PriorityLevels
 from tests.test_utils import assert_message_in_log
 from utils.time import time_since
 

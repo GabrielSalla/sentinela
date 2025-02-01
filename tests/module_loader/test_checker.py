@@ -8,7 +8,7 @@ import pydantic
 import pytest
 
 import module_loader.checker as checker
-from options import (
+from data_models.monitor_options import (
     AlertOptions,
     CountRule,
     IssueOptions,

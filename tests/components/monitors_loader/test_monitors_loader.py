@@ -11,8 +11,8 @@ import databases.databases as databases
 import utils.app as app
 import utils.time as time_utils
 from configs import configs
+from data_models.monitor_options import ReactionOptions
 from models import CodeModule, Monitor
-from options import ReactionOptions
 from registry import registry
 from tests.test_utils import assert_message_in_log
 
