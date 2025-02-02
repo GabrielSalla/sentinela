@@ -22,6 +22,8 @@ services:
       context: .
       dockerfile: Dockerfile
       target: sentinela_dev
+      args:
+        SENTINELA_PLUGINS: slack
     image: sentinela-dev:latest
     ports:
       - 8000:8000
@@ -36,6 +38,10 @@ services:
       - .env.secrets
     volumes:
       - .:/app:Z
+      # Paths that won't be synced with the container
+      - /app/src/_monitors
+      - /app/src/_monitors_load
+      - /app/src/tmp
     depends_on:
       - postgres
       - motoserver

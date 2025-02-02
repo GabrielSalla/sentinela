@@ -1,6 +1,8 @@
 _monitors
 _monitors_load
 .coverage
+.mypy_cache
+.pytest_cache
 .ruff_cache
 .vscode
 **/__pycache__

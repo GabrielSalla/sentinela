@@ -1,4 +1,14 @@
-**/__pycache__
-**/.mypy_cache
-**/.pytest_cache
 _monitors
+_monitors_load
+.coverage
+.git
+.mypy_cache
+.pytest_cache
+.ruff_cache
+.vscode
+**/__pycache__
+**/*.pyc
+**/*.pyd
+**/*.pyo
+docs
+tmp
