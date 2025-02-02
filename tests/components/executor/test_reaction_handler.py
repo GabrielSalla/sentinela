@@ -37,6 +37,18 @@ def get_event_payload(
     }
 
 
+async def test_run_invalid_payload(caplog):
+    """'run' should log an error if the payload is invalid and just return"""
+    await reaction_handler.run({})
+    assert_message_in_log(caplog, "Message '{}' missing 'payload' field")
+
+
+async def test_run_payload_wrong_structure(caplog):
+    """'run' should log an error if the payload has the wrong structure and just return"""
+    await reaction_handler.run({"payload": {}})
+    assert_message_in_log(caplog, "Invalid payload: 5 validation errors for EventPayload")
+
+
 async def test_run_monitor_not_found(caplog):
     """'run' should ignore the message if a monitor with the provided id was not found"""
     await reaction_handler.run(

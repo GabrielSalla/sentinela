@@ -6,6 +6,7 @@ from functools import partial
 from typing import Any
 
 import prometheus_client
+from pydantic import ValidationError
 
 import registry as registry
 from base_exception import BaseSentinelaException
@@ -35,7 +36,15 @@ prometheus_reaction_execution_time = prometheus_client.Summary(
 async def run(message: dict[Any, Any]) -> None:
     """Process a message with type 'event' using the monitor's defined list of reactions for the
     event. The execution timeout is for each function individually"""
-    event_payload = EventPayload(**message["payload"])
+    try:
+        event_payload = EventPayload(**message["payload"])
+    except KeyError:
+        _logger.error(f"Message '{json.dumps(message)}' missing 'payload' field")
+        return
+    except ValidationError as e:
+        _logger.error(f"Invalid payload: {e}")
+        return
+
     monitor_id = event_payload.event_source_monitor_id
     event_name = event_payload.event_name
 
