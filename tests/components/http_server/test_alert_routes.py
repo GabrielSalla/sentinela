@@ -45,7 +45,7 @@ async def test_alert_acknowledge(clear_queue, sample_monitor: Monitor):
         "type": "request",
         "payload": {
             "action": "alert_acknowledge",
-            "target_id": alert.id,
+            "params": {"target_id": alert.id},
         },
     }
 
@@ -84,7 +84,7 @@ async def test_alert_lock(clear_queue, sample_monitor: Monitor):
         "type": "request",
         "payload": {
             "action": "alert_lock",
-            "target_id": alert.id,
+            "params": {"target_id": alert.id},
         },
     }
 
@@ -122,7 +122,7 @@ async def test_alert_solve(clear_queue, sample_monitor: Monitor):
         "type": "request",
         "payload": {
             "action": "alert_solve",
-            "target_id": alert.id,
+            "params": {"target_id": alert.id},
         },
     }
 

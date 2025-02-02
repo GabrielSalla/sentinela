@@ -5,11 +5,13 @@ import traceback
 from typing import Any, Callable, Coroutine, cast
 
 import prometheus_client
+from pydantic import ValidationError
 
 import plugins
 import registry as registry
 from base_exception import BaseSentinelaException
 from configs import configs
+from data_models.request_payload import RequestPayload
 from models import Alert, Issue
 
 _logger = logging.getLogger("request_handler")
@@ -31,9 +33,9 @@ prometheus_request_execution_time = prometheus_client.Summary(
 )
 
 
-async def alert_acknowledge(message_payload: dict[Any, Any]) -> None:
+async def alert_acknowledge(message_payload: RequestPayload) -> None:
     """Acknowledge an alert"""
-    alert_id = message_payload["target_id"]
+    alert_id = message_payload.params["target_id"]
     alert = await Alert.get_by_id(alert_id)
     if alert is None:
         _logger.info(f"Alert '{alert_id}' not found")
@@ -42,9 +44,9 @@ async def alert_acknowledge(message_payload: dict[Any, Any]) -> None:
     await alert.acknowledge()
 
 
-async def alert_lock(message_payload: dict[Any, Any]) -> None:
+async def alert_lock(message_payload: RequestPayload) -> None:
     """Lock an alert"""
-    alert_id = message_payload["target_id"]
+    alert_id = message_payload.params["target_id"]
     alert = await Alert.get_by_id(alert_id)
     if alert is None:
         _logger.info(f"Alert '{alert_id}' not found")
@@ -53,9 +55,9 @@ async def alert_lock(message_payload: dict[Any, Any]) -> None:
     await alert.lock()
 
 
-async def alert_solve(message_payload: dict[Any, Any]) -> None:
+async def alert_solve(message_payload: RequestPayload) -> None:
     """Solve all alert's issues"""
-    alert_id = message_payload["target_id"]
+    alert_id = message_payload.params["target_id"]
     alert = await Alert.get_by_id(alert_id)
     if alert is None:
         _logger.info(f"Alert '{alert_id}' not found")
@@ -64,9 +66,9 @@ async def alert_solve(message_payload: dict[Any, Any]) -> None:
     await alert.solve_issues()
 
 
-async def issue_drop(message_payload: dict[Any, Any]) -> None:
+async def issue_drop(message_payload: RequestPayload) -> None:
     """Drop an issue"""
-    issue_id = message_payload["target_id"]
+    issue_id = message_payload.params["target_id"]
     issue = await Issue.get_by_id(issue_id)
     if issue is None:
         _logger.info(f"Issue '{issue_id}' not found")
@@ -83,7 +85,7 @@ actions = {
 }
 
 
-def get_action(action_name: str) -> Callable[[dict[Any, Any]], Coroutine[Any, Any, None]] | None:
+def get_action(action_name: str) -> Callable[[RequestPayload], Coroutine[Any, Any, None]] | None:
     """Get the action function by its name, checking if it is a plugin action"""
     if action_name.startswith("plugin."):
         plugin_name, action_name = action_name.split(".")[1:3]
@@ -103,20 +105,30 @@ def get_action(action_name: str) -> Callable[[dict[Any, Any]], Coroutine[Any, An
             _logger.warning(f"Action '{plugin_name}.{action_name}' unknown")
             return None
 
-        return cast(Callable[[dict[Any, Any]], Coroutine[Any, Any, None]], action)
+        return cast(Callable[[RequestPayload], Coroutine[Any, Any, None]], action)
 
     return actions.get(action_name)
 
 
 async def run(message: dict[Any, Any]) -> None:
     """Process a received request"""
-    message_payload = message["payload"]
-    action_name = message_payload["action"]
+    try:
+        message_payload = RequestPayload(**message["payload"])
+    except KeyError:
+        _logger.error(f"Message '{json.dumps(message)}' missing 'payload' field")
+        return
+    except ValidationError as e:
+        _logger.error(f"Invalid payload: {e}")
+        return
+
+    action_name = message_payload.action
 
     action = get_action(action_name)
 
     if action is None:
-        _logger.warning(f"Got request with unknown action '{json.dumps(message_payload)}'")
+        _logger.warning(
+            f"Got request with unknown action '{json.dumps(message_payload.to_dict())}'"
+        )
         return
 
     try:
@@ -124,10 +136,10 @@ async def run(message: dict[Any, Any]) -> None:
             await asyncio.wait_for(action(message_payload), configs.executor_request_timeout)
     except asyncio.TimeoutError:
         prometheus_request_timeout_count.labels(action_name=action_name).inc()
-        _logger.error(f"Timed out executing request '{json.dumps(message_payload)}'")
+        _logger.error(f"Timed out executing request '{json.dumps(message_payload.to_dict())}'")
     except BaseSentinelaException as e:
         raise e
     except Exception:
         prometheus_request_error_count.labels(action_name=action_name).inc()
-        _logger.error(f"Error executing request '{json.dumps(message_payload)}'")
+        _logger.error(f"Error executing request '{json.dumps(message_payload.to_dict())}'")
         _logger.error(traceback.format_exc().strip())

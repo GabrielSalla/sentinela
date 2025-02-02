@@ -9,6 +9,7 @@ import plugins as plugins
 import registry as registry
 from base_exception import BaseSentinelaException
 from configs import configs
+from data_models.request_payload import RequestPayload
 from models import Alert, AlertStatus, Issue, IssueStatus, Monitor
 from tests.test_utils import assert_message_in_log
 
@@ -25,7 +26,9 @@ async def test_alert_acknowledge(mocker, sample_monitor: Monitor):
     )
     assert not alert.acknowledged
 
-    await request_handler.alert_acknowledge({"target_id": alert.id})
+    await request_handler.alert_acknowledge(
+        RequestPayload(action="alert_acknowledge", params={"target_id": alert.id})
+    )
 
     await alert.refresh()
 
@@ -38,7 +41,9 @@ async def test_alert_acknowledge_alert_not_found(caplog, mocker):
     """'alert_acknowledge' should just return when an alert with the provided id doesn't exists"""
     acknowledge_spy: AsyncMock = mocker.spy(Alert, "acknowledge")
 
-    await request_handler.alert_acknowledge({"target_id": 999999999})
+    await request_handler.alert_acknowledge(
+        RequestPayload(action="alert_acknowledge", params={"target_id": 999999999})
+    )
 
     acknowledge_spy.assert_not_called()
     assert_message_in_log(caplog, "Alert '999999999' not found")
@@ -54,7 +59,9 @@ async def test_alert_lock(mocker, sample_monitor: Monitor):
     )
     assert not alert.locked
 
-    await request_handler.alert_lock({"target_id": alert.id})
+    await request_handler.alert_lock(
+        RequestPayload(action="alert_lock", params={"target_id": alert.id})
+    )
 
     await alert.refresh()
 
@@ -67,7 +74,9 @@ async def test_alert_lock_alert_not_found(caplog, mocker):
     """'alert_lock' should just return when an alert with the provided id doesn't exists"""
     lock_spy: AsyncMock = mocker.spy(Alert, "lock")
 
-    await request_handler.alert_lock({"target_id": 999999999})
+    await request_handler.alert_lock(
+        RequestPayload(action="alert_lock", params={"target_id": 999999999})
+    )
 
     lock_spy.assert_not_called()
     assert_message_in_log(caplog, "Alert '999999999' not found")
@@ -84,7 +93,9 @@ async def test_alert_solve(mocker, monkeypatch, sample_monitor: Monitor):
     )
     assert alert.status == AlertStatus.active
 
-    await request_handler.alert_solve({"target_id": alert.id})
+    await request_handler.alert_solve(
+        RequestPayload(action="alert_solve", params={"target_id": alert.id})
+    )
 
     await alert.refresh()
 
@@ -97,7 +108,9 @@ async def test_alert_solve_alert_not_found(caplog, mocker):
     """'alert_solve' should just return when an alert with the provided id doesn't exists"""
     solve_spy: AsyncMock = mocker.spy(Alert, "solve")
 
-    await request_handler.alert_solve({"target_id": 999999999})
+    await request_handler.alert_solve(
+        RequestPayload(action="alert_lock", params={"target_id": 999999999})
+    )
 
     solve_spy.assert_not_called()
     assert_message_in_log(caplog, "Alert '999999999' not found")
@@ -111,7 +124,9 @@ async def test_issue_drop(mocker, sample_monitor: Monitor):
     issue = await Issue.create(monitor_id=sample_monitor.id, model_id="1", data={"id": 1})
     assert issue.status == IssueStatus.active
 
-    await request_handler.issue_drop({"target_id": issue.id})
+    await request_handler.issue_drop(
+        RequestPayload(action="issue_drop", params={"target_id": issue.id})
+    )
 
     await issue.refresh()
 
@@ -124,7 +139,9 @@ async def test_issue_drop_issue_not_found(caplog, mocker):
     """'issue_drop' should just return when an issue with the provided id doesn't exists"""
     drop_spy: AsyncMock = mocker.spy(Issue, "drop")
 
-    await request_handler.issue_drop({"target_id": 999999999})
+    await request_handler.issue_drop(
+        RequestPayload(action="issue_drop", params={"target_id": 999999999})
+    )
 
     drop_spy.assert_not_called()
     assert_message_in_log(caplog, "Issue '999999999' not found")
@@ -205,16 +222,32 @@ async def test_run_action(monkeypatch, action_name):
     action_mock = AsyncMock(side_effect=do_nothing)
     monkeypatch.setitem(request_handler.actions, action_name, action_mock)
 
-    await request_handler.run({"payload": {"action": action_name, "target_id": 999999999}})
+    await request_handler.run(
+        {"payload": {"action": action_name, "params": {"target_id": 999999999}}}
+    )
 
-    action_mock.assert_awaited_once_with({"action": action_name, "target_id": 999999999})
+    action_mock.assert_awaited_once_with(
+        RequestPayload(action=action_name, params={"target_id": 999999999})
+    )
+
+
+async def test_run_invalid_payload(caplog):
+    """'run' should log an error if the payload is invalid and just return"""
+    await request_handler.run({})
+    assert_message_in_log(caplog, "Message '{}' missing 'payload' field")
+
+
+async def test_run_payload_wrong_structure(caplog):
+    """'run' should log an error if the payload has the wrong structure and just return"""
+    await request_handler.run({"payload": {}})
+    assert_message_in_log(caplog, "Invalid payload: 2 validation errors for RequestPayload")
 
 
 async def test_run_unknown_action(caplog):
     """'run' should just return if there isn't an action mapped for the action requested"""
-    await request_handler.run({"payload": {"action": "test", "target_id": 1}})
+    await request_handler.run({"payload": {"action": "test", "params": {"target_id": 1}}})
     assert_message_in_log(
-        caplog, 'Got request with unknown action \'{"action": "test", "target_id": 1}\''
+        caplog, 'Got request with unknown action \'{"action": "test", "params": {"target_id": 1}}\''
     )
 
 
@@ -230,7 +263,7 @@ async def test_run_timeout(caplog, monkeypatch):
     monkeypatch.setitem(request_handler.actions, "test", action_mock)
 
     start_time = time.perf_counter()
-    await request_handler.run({"payload": {"action": "test", "target_id": 1}})
+    await request_handler.run({"payload": {"action": "test", "params": {"target_id": 1}}})
     end_time = time.perf_counter()
 
     total_time = end_time - start_time
@@ -255,7 +288,7 @@ async def test_run_sentinela_exception(monkeypatch):
     monkeypatch.setitem(request_handler.actions, "test", action_mock)
 
     with pytest.raises(SomeException):
-        await request_handler.run({"payload": {"action": "test", "target_id": 1}})
+        await request_handler.run({"payload": {"action": "test", "params": {"target_id": 1}}})
 
 
 async def test_run_error(caplog, monkeypatch):
@@ -267,7 +300,9 @@ async def test_run_error(caplog, monkeypatch):
     action_mock = AsyncMock(side_effect=error)
     monkeypatch.setitem(request_handler.actions, "test", action_mock)
 
-    await request_handler.run({"payload": {"action": "test", "target_id": 1}})
+    await request_handler.run({"payload": {"action": "test", "params": {"target_id": 1}}})
 
-    assert_message_in_log(caplog, 'Error executing request \'{"action": "test", "target_id": 1}\'')
+    assert_message_in_log(
+        caplog, 'Error executing request \'{"action": "test", "params": {"target_id": 1}}\''
+    )
     assert_message_in_log(caplog, "ValueError: Nothing good happens")

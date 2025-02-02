@@ -49,7 +49,7 @@ async def test_issue_drop(clear_queue, sample_monitor: Monitor):
         "type": "request",
         "payload": {
             "action": "issue_drop",
-            "target_id": issue.id,
+            "params": {"target_id": issue.id},
         },
     }
 

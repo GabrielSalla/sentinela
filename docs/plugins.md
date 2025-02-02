@@ -23,12 +23,22 @@ Actions are used as custom behaviors to requests received by sentinela. If senti
 
 Actions must have the following signature:
 ```python
-async def action_name(message_payload: dict[Any, Any]):
+from data_models.request_payload import RequestPayload
+
+
+async def action_name(message_payload: RequestPayload):
 ```
+
+The `RequestPayload` object contains the action name and the parameters sent by the request. The parameters will vary depending on the action.
 
 An example of the action call made by Sentinela is:
 ```python
-await plugin.my_plugin.actions.action_name({"key": "value"})
+from data_models.request_payload import RequestPayload
+
+
+await plugin.my_plugin.actions.action_name(
+    RequestPayload(action="my_plugin.action_name", params={"key": "value"})
+)
 ```
 
 ## Notifications
