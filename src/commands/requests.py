@@ -40,7 +40,7 @@ async def alert_acknowledge(alert_id: int) -> None:
         type="request",
         payload={
             "action": "alert_acknowledge",
-            "target_id": alert_id,
+            "params": {"target_id": alert_id},
         },
     )
 
@@ -51,7 +51,7 @@ async def alert_lock(alert_id: int) -> None:
         type="request",
         payload={
             "action": "alert_lock",
-            "target_id": alert_id,
+            "params": {"target_id": alert_id},
         },
     )
 
@@ -62,7 +62,7 @@ async def alert_solve(alert_id: int) -> None:
         type="request",
         payload={
             "action": "alert_solve",
-            "target_id": alert_id,
+            "params": {"target_id": alert_id},
         },
     )
 
@@ -73,6 +73,6 @@ async def issue_drop(issue_id: int) -> None:
         type="request",
         payload={
             "action": "issue_drop",
-            "target_id": issue_id,
+            "params": {"target_id": issue_id},
         },
     )

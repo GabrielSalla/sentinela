@@ -16,10 +16,10 @@ async def test_disable_monitor(mocker):
     """'disable_monitor' should return the coroutine to disable the monitor"""
     disable_monitor_spy: MagicMock = mocker.spy(commands, "disable_monitor")
 
-    action = pattern_match.disable_monitor(
-        message_match=re.match(r"disable monitor +(\w+)", "disable monitor abc"),
-        context={},
-    )
+    match = re.match(r"disable monitor +(\w+)", "disable monitor abc")
+    assert match is not None
+
+    action = pattern_match.disable_monitor(message_match=match, context={})
 
     assert action is not None
     assert inspect.isawaitable(action)
@@ -33,10 +33,10 @@ async def test_enable_monitor(mocker):
     """'enable_monitor' should return the coroutine to enable the monitor"""
     enable_monitor_spy: MagicMock = mocker.spy(commands, "enable_monitor")
 
-    action = pattern_match.enable_monitor(
-        message_match=re.match(r"enable monitor +(\w+)", "enable monitor abc"),
-        context={},
-    )
+    match = re.match(r"enable monitor +(\w+)", "enable monitor abc")
+    assert match is not None
+
+    action = pattern_match.enable_monitor(message_match=match, context={})
 
     assert action is not None
     assert inspect.isawaitable(action)
@@ -50,10 +50,10 @@ async def test_alert_acknowledge(mocker):
     """'alert_acknowledge' should return the coroutine to acknowledge the alert"""
     alert_acknowledge_spy: MagicMock = mocker.spy(commands, "alert_acknowledge")
 
-    action = pattern_match.alert_acknowledge(
-        message_match=re.match(r"ack +(\d+)", "ack 12345"),
-        context={},
-    )
+    match = re.match(r"ack +(\d+)", "ack 12345")
+    assert match is not None
+
+    action = pattern_match.alert_acknowledge(message_match=match, context={})
 
     assert action is not None
     assert inspect.isawaitable(action)
@@ -67,10 +67,10 @@ async def test_alert_lock(mocker):
     """'alert_lock' should return the coroutine to lock the alert"""
     alert_lock_spy: MagicMock = mocker.spy(commands, "alert_lock")
 
-    action = pattern_match.alert_lock(
-        message_match=re.match(r"lock +(\d+)", "lock 12345"),
-        context={},
-    )
+    match = re.match(r"lock +(\d+)", "lock 12345")
+    assert match is not None
+
+    action = pattern_match.alert_lock(message_match=match, context={})
 
     assert action is not None
     assert inspect.isawaitable(action)
@@ -84,10 +84,10 @@ async def test_alert_solve(mocker):
     """'alert_solve' should return the coroutine to solve the alert"""
     alert_solve_spy: MagicMock = mocker.spy(commands, "alert_solve")
 
-    action = pattern_match.alert_solve(
-        message_match=re.match(r"solve +(\d+)", "solve 12345"),
-        context={},
-    )
+    match = re.match(r"solve +(\d+)", "solve 12345")
+    assert match is not None
+
+    action = pattern_match.alert_solve(message_match=match, context={})
 
     assert action is not None
     assert inspect.isawaitable(action)
@@ -101,10 +101,10 @@ async def test_issue_drop(mocker):
     """'issue_drop' should return the coroutine to drop the issue"""
     issue_drop_spy: MagicMock = mocker.spy(commands, "issue_drop")
 
-    action = pattern_match.issue_drop(
-        message_match=re.match(r"drop issue +(\d+)", "drop issue 12345"),
-        context={},
-    )
+    match = re.match(r"drop issue +(\d+)", "drop issue 12345")
+    assert match is not None
+
+    action = pattern_match.issue_drop(message_match=match, context={})
 
     assert action is not None
     assert inspect.isawaitable(action)
@@ -117,9 +117,11 @@ async def test_issue_drop(mocker):
 @pytest.mark.parametrize("slack_channel", ["C1234567890", "C2345678901", "C3456789012"])
 async def test_resend_notifications(clear_queue, slack_channel):
     """'resend_notifications' should queue a 'plugin.slack.resend_notifications' action request"""
+    match = re.match(r"resend notifications", "resend notifications")
+    assert match is not None
+
     await pattern_match.resend_notifications(
-        message_match=re.match(r"resend notifications", "resend notifications"),
-        context={"channel": slack_channel},
+        message_match=match, context={"channel": slack_channel}
     )
 
     queue_items = get_queue_items()
@@ -130,7 +132,7 @@ async def test_resend_notifications(clear_queue, slack_channel):
                 "type": "request",
                 "payload": {
                     "action": "plugin.slack.resend_notifications",
-                    "slack_channel": slack_channel,
+                    "params": {"slack_channel": slack_channel},
                 },
             }
         )

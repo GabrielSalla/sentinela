@@ -53,7 +53,7 @@ def resend_notifications(
         type="request",
         payload={
             "action": "plugin.slack.resend_notifications",
-            "slack_channel": context["channel"],
+            "params": {"slack_channel": context["channel"]},
         },
     )
 
