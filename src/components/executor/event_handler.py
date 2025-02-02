@@ -14,7 +14,7 @@ from configs import configs
 from data_models.event_payload import EventPayload
 from models import Monitor
 
-_logger = logging.getLogger("reaction_handler")
+_logger = logging.getLogger("event_handler")
 
 prometheus_reaction_error_count = prometheus_client.Counter(
     "executor_reaction_execution_error",
