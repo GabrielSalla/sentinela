@@ -8,13 +8,12 @@ Create Date: 2024-11-06 22:48:33.179508
 import enum
 from typing import Sequence, Union
 
-from alembic import op
 import sqlalchemy as sa
-
+from alembic import op
 
 # revision identifiers, used by Alembic.
-revision: str = '8382681faa0c'
-down_revision: Union[str, None] = 'a0e61ac09d4c'
+revision: str = "8382681faa0c"
+down_revision: Union[str, None] = "a0e61ac09d4c"
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
 
