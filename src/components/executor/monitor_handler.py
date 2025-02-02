@@ -1,13 +1,16 @@
 import asyncio
+import json
 import logging
 import traceback
 from datetime import datetime
-from typing import Any, cast
+from typing import Any, Literal, cast
 
 import prometheus_client
+from pydantic import ValidationError
 
 import registry as registry
 from base_exception import BaseSentinelaException
+from data_models.process_monitor_payload import ProcessMonitorPayload
 from internal_database import get_session
 from models import Alert, Issue, Monitor
 from utils.async_tools import do_concurrently
@@ -279,7 +282,7 @@ async def _alerts_routine(monitor: Monitor) -> None:
     await do_concurrently(*[alert.update() for alert in monitor.active_alerts])
 
 
-async def _run_routines(monitor: Monitor, tasks: list[str]) -> None:
+async def _run_routines(monitor: Monitor, tasks: list[Literal["search", "update"]]) -> None:
     """Run all routines for a monitor, based on a list of tasks"""
     # Monitor instrumentation metrics
     prometheus_labels = {
@@ -321,9 +324,16 @@ async def _run_routines(monitor: Monitor, tasks: list[str]) -> None:
 async def run(message: dict[Any, Any]) -> None:
     """Process a message with type 'process_monitor', loading the monitor and executing it's
     routines, while also detecting errors and reporting them accordingly"""
-    message_payload = message["payload"]
+    try:
+        message_payload = ProcessMonitorPayload(**message["payload"])
+    except KeyError:
+        _logger.error(f"Message '{json.dumps(message)}' missing 'payload' field")
+        return
+    except ValidationError as e:
+        _logger.error(f"Invalid payload: {e}")
+        return
 
-    monitor_id = message_payload["monitor_id"]
+    monitor_id = message_payload.monitor_id
     monitor = await Monitor.get_by_id(monitor_id)
     if monitor is None:
         _logger.error(f"Monitor {monitor_id} not found. Skipping message")
@@ -340,17 +350,17 @@ async def run(message: dict[Any, Any]) -> None:
         "monitor_name": monitor.name,
     }
 
-    try:
-        monitor_running = prometheus_monitor_running.labels(**prometheus_labels)
-        monitor_running.inc()
+    monitor_running = prometheus_monitor_running.labels(**prometheus_labels)
+    monitor_running.inc()
 
+    try:
         monitor.set_running(True)
         await monitor.save()
 
         monitor_execution_time = prometheus_monitor_execution_time.labels(**prometheus_labels)
         with monitor_execution_time.time():
             await asyncio.wait_for(
-                _run_routines(monitor, message_payload["tasks"]), monitor.options.execution_timeout
+                _run_routines(monitor, message_payload.tasks), monitor.options.execution_timeout
             )
     except asyncio.TimeoutError:
         monitor_timeout_count = prometheus_monitor_timeout_count.labels(**prometheus_labels)

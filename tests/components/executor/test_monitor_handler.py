@@ -10,7 +10,7 @@ import registry.registry as registry
 from base_exception import BaseSentinelaException
 from data_models.monitor_options import AlertOptions, CountRule, IssueOptions, PriorityLevels
 from models import Alert, AlertPriority, AlertStatus, Issue, IssueStatus, Monitor
-from tests.test_utils import assert_message_in_log
+from tests.test_utils import assert_message_in_log, assert_message_not_in_log
 from utils.time import time_since
 
 pytestmark = pytest.mark.asyncio(loop_scope="session")
@@ -1103,9 +1103,21 @@ async def test_run_routines_load_modules(mocker, monkeypatch, sample_monitor: Mo
 # Test run
 
 
+async def test_run_invalid_payload(caplog):
+    """'run' should log an error if the payload is invalid and just return"""
+    await monitor_handler.run({})
+    assert_message_in_log(caplog, "Message '{}' missing 'payload' field")
+
+
+async def test_run_payload_wrong_structure(caplog):
+    """'run' should log an error if the payload has the wrong structure and just return"""
+    await monitor_handler.run({"payload": {}})
+    assert_message_in_log(caplog, "Invalid payload: 2 validation errors for ProcessMonitorPayload")
+
+
 async def test_run_monitor_not_found(caplog):
     """'run' should ignore the message if a monitor with the provided id was not found"""
-    await monitor_handler.run({"payload": {"monitor_id": 999999999}})
+    await monitor_handler.run({"payload": {"monitor_id": 999999999, "tasks": []}})
     assert_message_in_log(caplog, "Monitor 999999999 not found. Skipping message")
 
 
@@ -1134,24 +1146,26 @@ async def test_run_monitor_not_registered(monkeypatch, sample_monitor: Monitor):
     assert total_time < 0.1 + 0.03
 
 
-async def test_run_monitor_skip_running(mocker, sample_monitor: Monitor):
+async def test_run_monitor_skip_running(caplog, mocker, sample_monitor: Monitor):
     """'run' should skip running the monitor if it's 'running' flag is 'True'"""
     sample_monitor.set_running(True)
     await sample_monitor.save()
 
     run_routines_spy: AsyncMock = mocker.spy(monitor_handler, "_run_routines")
 
-    await monitor_handler.run({"payload": {"monitor_id": sample_monitor.id}})
+    await monitor_handler.run({"payload": {"monitor_id": sample_monitor.id, "tasks": ["search"]}})
 
+    assert_message_not_in_log(caplog, "Invalid payload")
     run_routines_spy.assert_not_called()
 
 
-async def test_run_monitor_set_running(mocker, sample_monitor: Monitor):
+@pytest.mark.parametrize("tasks", [["search"], ["update"], ["search", "update"]])
+async def test_run_monitor_set_running(mocker, sample_monitor: Monitor, tasks):
     """'run' should set the monitor's 'running' flag to 'True' while running the routines"""
     run_routines_spy: AsyncMock = mocker.spy(monitor_handler, "_run_routines")
     set_running_spy: AsyncMock = mocker.spy(Monitor, "set_running")
 
-    await monitor_handler.run({"payload": {"monitor_id": sample_monitor.id, "tasks": ["search"]}})
+    await monitor_handler.run({"payload": {"monitor_id": sample_monitor.id, "tasks": tasks}})
 
     run_routines_spy.assert_awaited_once()
 
@@ -1163,7 +1177,8 @@ async def test_run_monitor_set_running(mocker, sample_monitor: Monitor):
 
 
 @pytest.mark.flaky(reruns=2)
-async def test_run_monitor_timeout(caplog, mocker, monkeypatch, sample_monitor: Monitor):
+@pytest.mark.parametrize("tasks", [["search"], ["update"], ["search", "update"]])
+async def test_run_monitor_timeout(caplog, mocker, monkeypatch, sample_monitor: Monitor, tasks):
     """'run' should handle execution timeouts while running the monitor routines"""
 
     async def sleep(monitor, tasks):
@@ -1177,7 +1192,7 @@ async def test_run_monitor_timeout(caplog, mocker, monkeypatch, sample_monitor: 
     set_queued_spy: AsyncMock = mocker.spy(Monitor, "set_queued")
 
     start_time = time.perf_counter()
-    await monitor_handler.run({"payload": {"monitor_id": sample_monitor.id, "tasks": ["search"]}})
+    await monitor_handler.run({"payload": {"monitor_id": sample_monitor.id, "tasks": tasks}})
     end_time = time.perf_counter()
 
     total_time = end_time - start_time
@@ -1197,7 +1212,8 @@ async def test_run_monitor_timeout(caplog, mocker, monkeypatch, sample_monitor: 
     assert set_queued_spy.call_args_list[0].args[1] is False
 
 
-async def test_run_monitor_sentinela_exception(mocker, monkeypatch, sample_monitor: Monitor):
+@pytest.mark.parametrize("tasks", [["search"], ["update"], ["search", "update"]])
+async def test_run_monitor_sentinela_exception(mocker, monkeypatch, sample_monitor: Monitor, tasks):
     """'run' should re-raise Sentinela exceptions"""
 
     class SomeException(BaseSentinelaException):
@@ -1212,9 +1228,7 @@ async def test_run_monitor_sentinela_exception(mocker, monkeypatch, sample_monit
     set_queued_spy: AsyncMock = mocker.spy(Monitor, "set_queued")
 
     with pytest.raises(SomeException):
-        await monitor_handler.run(
-            {"payload": {"monitor_id": sample_monitor.id, "tasks": ["search"]}}
-        )
+        await monitor_handler.run({"payload": {"monitor_id": sample_monitor.id, "tasks": tasks}})
 
     assert set_running_spy.call_count == 2
     assert set_running_spy.call_args_list[0].args[0].id == sample_monitor.id
@@ -1227,7 +1241,8 @@ async def test_run_monitor_sentinela_exception(mocker, monkeypatch, sample_monit
     assert set_queued_spy.call_args_list[0].args[1] is False
 
 
-async def test_run_monitor_error(caplog, mocker, monkeypatch, sample_monitor: Monitor):
+@pytest.mark.parametrize("tasks", [["search"], ["update"], ["search", "update"]])
+async def test_run_monitor_error(caplog, mocker, monkeypatch, sample_monitor: Monitor, tasks):
     """'run' should handle errors when running the monitor routines"""
 
     async def error(monitor, tasks):
@@ -1238,7 +1253,7 @@ async def test_run_monitor_error(caplog, mocker, monkeypatch, sample_monitor: Mo
     set_running_spy: MagicMock = mocker.spy(Monitor, "set_running")
     set_queued_spy: MagicMock = mocker.spy(Monitor, "set_queued")
 
-    await monitor_handler.run({"payload": {"monitor_id": sample_monitor.id, "tasks": ["search"]}})
+    await monitor_handler.run({"payload": {"monitor_id": sample_monitor.id, "tasks": tasks}})
 
     assert_message_in_log(caplog, f"Error in execution for monitor '{sample_monitor}'")
     assert_message_in_log(caplog, "ValueError: Something is not right")
