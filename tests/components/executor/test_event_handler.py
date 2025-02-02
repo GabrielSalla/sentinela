@@ -6,7 +6,7 @@ from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 
-import components.executor.reaction_handler as reaction_handler
+import components.executor.event_handler as event_handler
 import registry.registry as registry
 from base_exception import BaseSentinelaException
 from configs import configs
@@ -39,19 +39,19 @@ def get_event_payload(
 
 async def test_run_invalid_payload(caplog):
     """'run' should log an error if the payload is invalid and just return"""
-    await reaction_handler.run({})
+    await event_handler.run({})
     assert_message_in_log(caplog, "Message '{}' missing 'payload' field")
 
 
 async def test_run_payload_wrong_structure(caplog):
     """'run' should log an error if the payload has the wrong structure and just return"""
-    await reaction_handler.run({"payload": {}})
+    await event_handler.run({"payload": {}})
     assert_message_in_log(caplog, "Invalid payload: 5 validation errors for EventPayload")
 
 
 async def test_run_monitor_not_found(caplog):
     """'run' should ignore the message if a monitor with the provided id was not found"""
-    await reaction_handler.run(
+    await event_handler.run(
         {
             "payload": get_event_payload(
                 event_source_monitor_id=999999999, event_name="alert_created"
@@ -69,7 +69,7 @@ async def test_run_monitor_not_registered(caplog, monkeypatch, sample_monitor: M
     del registry._monitors[sample_monitor.id]
 
     run_task = asyncio.create_task(
-        reaction_handler.run(
+        event_handler.run(
             {
                 "payload": get_event_payload(
                     event_source_monitor_id=sample_monitor.id, event_name="alert_created"
@@ -96,7 +96,7 @@ async def test_run_no_reactions(monkeypatch, sample_monitor: Monitor):
     """'run' should do nothing if there're no reactions registered for the event"""
     monkeypatch.setattr(sample_monitor.code, "reaction_options", ReactionOptions(), raising=False)
 
-    await reaction_handler.run(
+    await event_handler.run(
         {
             "payload": get_event_payload(
                 event_source_monitor_id=sample_monitor.id, event_name="alert_created"
@@ -123,7 +123,7 @@ async def test_run_single_reaction(monkeypatch, sample_monitor: Monitor):
             event_source_monitor_id=sample_monitor.id, event_name="alert_created"
         )
     }
-    await reaction_handler.run(message_payload)
+    await event_handler.run(message_payload)
 
     reaction_mock.assert_awaited_once_with(EventPayload(**message_payload["payload"]))
 
@@ -152,7 +152,7 @@ async def test_run_multiple_reaction(
             event_source_monitor_id=sample_monitor.id, event_name=event_name
         )
     }
-    await reaction_handler.run(message_payload)
+    await event_handler.run(message_payload)
 
     assert reaction_mock.await_count == number_of_events
     call_args = (EventPayload(**message_payload["payload"]),)
@@ -180,7 +180,7 @@ async def test_run_multiple_reaction_error(caplog, monkeypatch, sample_monitor: 
             event_source_monitor_id=sample_monitor.id, event_name="alert_created"
         )
     }
-    await reaction_handler.run(message_payload)
+    await event_handler.run(message_payload)
 
     assert reaction_mock.await_count == 2
     call_args = (EventPayload(**message_payload["payload"]),)
@@ -208,7 +208,7 @@ async def test_run_partial(monkeypatch, sample_monitor: Monitor):
             event_source_monitor_id=sample_monitor.id, event_name="alert_created"
         )
     }
-    await reaction_handler.run(message_payload)
+    await event_handler.run(message_payload)
 
     reaction_mock.assert_awaited_once_with(
         EventPayload(**message_payload["payload"]), something="other thing"
@@ -247,14 +247,14 @@ async def test_run_function_no_name(caplog, mocker, monkeypatch, sample_monitor:
             event_source_monitor_id=sample_monitor.id, event_name="alert_created"
         )
     }
-    await reaction_handler.run(message_payload)
+    await event_handler.run(message_payload)
 
     assert call_spy.call_args[0][1] == EventPayload(**message_payload["payload"])
 
     assert_message_in_log(
         caplog,
         "Timed out executing reaction "
-        "'<test_reaction_handler.test_run_function_no_name.<locals>.Mock object at 0x",
+        "'<test_event_handler.test_run_function_no_name.<locals>.Mock object at 0x",
     )
     assert_message_in_log(caplog, "' with payload '")
 
@@ -291,7 +291,7 @@ async def test_run_timeout(caplog, monkeypatch, sample_monitor: Monitor):
     }
 
     start_time = time.perf_counter()
-    await reaction_handler.run(message_payload)
+    await event_handler.run(message_payload)
     end_time = time.perf_counter()
 
     total_time = end_time - start_time
@@ -327,4 +327,4 @@ async def test_run_sentinela_exception(monkeypatch, sample_monitor: Monitor):
     }
 
     with pytest.raises(SomeException):
-        await reaction_handler.run(message_payload)
+        await event_handler.run(message_payload)

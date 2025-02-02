@@ -17,7 +17,7 @@ from configs import configs
 from utils.exception_handling import catch_exceptions
 from utils.time import format_datetime_iso, now, time_since
 
-from . import monitor_handler, reaction_handler, request_handler
+from . import event_handler, monitor_handler, request_handler
 
 _logger = logging.getLogger("executor")
 
@@ -75,7 +75,7 @@ class Executor:
     _logger: logging.Logger
 
     _handlers = {
-        "event": reaction_handler.run,
+        "event": event_handler.run,
         "process_monitor": monitor_handler.run,
         "request": request_handler.run,
     }

@@ -6,9 +6,9 @@ from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 
+import components.executor.event_handler as event_handler
 import components.executor.executor as executor
 import components.executor.monitor_handler as monitor_handler
-import components.executor.reaction_handler as reaction_handler
 import components.executor.request_handler as request_handler
 import message_queue as message_queue
 import registry as registry
@@ -163,7 +163,7 @@ async def test_executor_get_message_with_message(monkeypatch, clear_queue):
 @pytest.mark.parametrize(
     "message, expected_result",
     [
-        (InternalMessage(json.dumps({"type": "event"})), reaction_handler.run),
+        (InternalMessage(json.dumps({"type": "event"})), event_handler.run),
         (InternalMessage(json.dumps({"type": "process_monitor"})), monitor_handler.run),
         (InternalMessage(json.dumps({"type": "request"})), request_handler.run),
         (InternalMessage(json.dumps({"type": "unknown"})), None),
