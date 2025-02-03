@@ -11,6 +11,8 @@ services:
       context: .
       dockerfile: Dockerfile
       target: sentinela
+      args:
+        SENTINELA_PLUGINS: slack
     image: sentinela-local:latest
     ports:
       - 8000:8000

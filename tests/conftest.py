@@ -106,6 +106,7 @@ async def clear_database(init_databases):
 @pytest.fixture(scope="session", autouse=True)
 def _temp_dir(monkeypatch_session):
     """Create a temporary directory for all the tests that will be removed at the end"""
+    shutil.rmtree("src/tmp", ignore_errors=True)
     os.makedirs("src/tmp", exist_ok=True)
     monkeypatch_session.setattr(monitors_loader, "MONITORS_LOAD_PATH", "tmp")
     monkeypatch_session.setattr(module_loader.loader, "MODULES_PATH", "tmp")

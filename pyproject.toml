@@ -1,14 +1,15 @@
-[build-system]
-requires = ["poetry-core"]
-build-backend = "poetry.core.masonry.api"
-
-[tool.poetry]
+[project]
 name = "Sentinela"
 version = "0.3.2"
 description = "Sentinela Monitoring Platform"
-authors = ["Gabriel Salla <gabriel.c.salla@gmail.com>"]
-license = "MIT"
+authors = [
+    { name = "Gabriel Salla", email = "gabriel.c.salla@gmail.com" }
+]
+license = { file = "LICENSE.txt" }
 readme = "README.md"
+
+[tool.poetry]
+package-mode = false
 
 [tool.poetry.dependencies]
 python = "^3.12"
@@ -86,4 +87,17 @@ log_level = "INFO"
 log_format = "%(asctime)s [%(levelname)s] %(name)s.%(funcName)s.%(lineno)d: %(message)s"
 
 # Disable botocore 'datetime.datetime.utcnow()' deprecation warning
-filterwarnings = "ignore:datetime.datetime.utcnow:DeprecationWarning"
+filterwarnings = "ignore:datetime.datetime.utcnow:DeprecationWarning:botocore"
+
+[tool.coverage.report]
+omit =[
+    "src/_monitors/*",
+    "src/_monitors_load/*",
+    "src/tmp/*",
+    "src/main.py",
+]
+exclude_lines = [
+    "pragma: no cover",
+    "if TYPE_CHECKING:",
+    "def __repr__",
+]
