@@ -15,7 +15,7 @@ from components.http_server.issue_routes import issue_routes
 from components.http_server.monitor_routes import monitor_routes
 from configs import configs
 
-_logger = logging.getLogger("api_server")
+_logger = logging.getLogger("http_server")
 
 _runner: web.AppRunner
 
