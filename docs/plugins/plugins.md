@@ -92,9 +92,21 @@ async def init(controller_enabled: bool, executor_enabled: bool): ...
 async def stop(): ...
 ```
 
+## Queues
+Plugins can provide different queues to be used by Sentinela. Queues are used to send messages between different parts of the application. A queue must adhere to the protocol defined in the `src.message_queue.protocols.Queue` class.
+
+To configure a queue from a plugin in the configuration file, the queue must be located in the path `src/plugins/my_plugin/queue/queue_type`, where `my_plugin` is the name of the plugin and `queue_type` is the type of the queue to be used.
+
+Sentinela will import the queue class in a manner similar to the following, so it's important that all `__init__.py` files are correctly configured.
+
+```python
+from plugins.my_plugin.queue.queue_type import Queue
+```
+
 ## Built-in plugins
 Sentinela comes with some built-in plugins that can be used to extend the application's functionality.
-- [Slack](./plugin_slack.md)
+- [AWS](./aws.md)
+- [Slack](./slack.md)
 
 ## Enabling plugins
 To enable a plugin, set the environment variable `SENTINELA_PLUGINS` with the name of the desired plugin. When enabling multiple plugins, separate them with commas.

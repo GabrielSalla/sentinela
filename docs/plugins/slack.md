@@ -1,6 +1,9 @@
 # Slack Plugin
 The Slack plugin offers an interface to interact with Sentinela through Slack. It allows users to receive notifications from Sentinela in a Slack channel while also providing useful commands from notification buttons or Slack messages mentioning the Sentinela bot.
 
+## Enabling
+To enable the Slack plugin, set the environment variable `SENTINELA_PLUGINS` with the value `slack`.
+
 ## Create the Slack app
 First create a Slack app in your workspace. The provided app manifest [template](../resources/slack_app_manifest.yaml) has the basic configuration and permissions needed for the Sentinela Slack app.
 

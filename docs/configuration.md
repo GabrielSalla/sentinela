@@ -37,30 +37,3 @@ Example:
 ```
 DATABASE_ABC=postgres://postgres:postgres@postgres:5432/postgres
 ```
-
-## `AWS_ENDPOINT_URL`
-`AWS_ENDPOINT_URL` specifies the AWS endpoint to be used for local testing, without the need of a real SQS queue. When using the `motoserver` container as an AWS mock, it should be `http://motoserver:5000`. Don't set this environment variable when using a real SQS queue.
-
-Example:
-```
-AWS_ENDPOINT_URL=http://motoserver:5000
-```
-
-## `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY` and `AWS_SESSION_TOKEN`
-`AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY` and `AWS_SESSION_TOKEN` specifies the service credentials to access the AWS SQS queue.
-
-If the credentials does not include the session token, the `AWS_SESSION_TOKEN` environment variable should not be set.
-
-Example:
-```
-AWS_ACCESS_KEY_ID=ACCESSKEYID
-AWS_SECRET_ACCESS_KEY=SECRETACCESSKEY
-AWS_SESSION=SESSIONTOKEN
-```
-
-or, when not using a session token,
-
-```
-AWS_ACCESS_KEY_ID=ACCESSKEYID
-AWS_SECRET_ACCESS_KEY=SECRETACCESSKEY
-```

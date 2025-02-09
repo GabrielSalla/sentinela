@@ -73,8 +73,9 @@ State machine-related issues often require several data checks and conditional l
     1. [Configuration](./docs/configuration.md)
     2. [How to run](./docs/how_to_run.md)
 6. [Monitoring Sentinela](./docs/monitoring_sentinela.md)
-7. [Plugins](./docs/plugins.md)
-    1. [Slack](./docs/plugin_slack.md)
+7. [Plugins](./docs/plugins/plugins.md)
+    1. [AWS](./docs/plugins/aws.md)
+    2. [Slack](./docs/plugins/slack.md)
 8. Interacting with Sentinela
     1. [HTTP server](./docs/http_server.md)
 9. Special cases
