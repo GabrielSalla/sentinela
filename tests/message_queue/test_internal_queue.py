@@ -1,18 +1,19 @@
 import time
 
 import pytest
-import pytest_asyncio
 
 import message_queue.internal_queue as internal_queue
-from configs import configs
 
 pytestmark = pytest.mark.asyncio(loop_scope="session")
 
 
-@pytest_asyncio.fixture(loop_scope="session", scope="module", autouse=True)
-async def set_queue(monkeypatch_module):
-    monkeypatch_module.setattr(configs, "queue_wait_message_time", 0.5)
-    monkeypatch_module.setattr(configs, "queue_visibility_time", 0.5)
+@pytest.mark.parametrize("queue_wait_message_time", [1, 2, 3, 4, 5])
+async def test_queue_wait_message_time(queue_wait_message_time):
+    """'queue_wait_message_time' should return the 'queue_wait_message_time'"""
+    queue = internal_queue.InternalQueue(
+        config={"type": "internal", "queue_wait_message_time": queue_wait_message_time}
+    )
+    assert queue.queue_wait_message_time == queue_wait_message_time
 
 
 @pytest.mark.parametrize(
@@ -25,7 +26,7 @@ async def set_queue(monkeypatch_module):
 )
 async def test_send_message(message_type, message_payload):
     """'send_message' should put a message in the queue"""
-    queue = internal_queue.InternalQueue()
+    queue = internal_queue.InternalQueue(config={"type": "internal"})
     await queue.init()
 
     await queue.send_message(message_type, message_payload)
@@ -38,7 +39,9 @@ async def test_send_message(message_type, message_payload):
 @pytest.mark.flaky(reruns=2)
 async def test_get_message_timeout():
     """'get_message' should wait for a message and if the timeout is reached, return 'None'"""
-    queue = internal_queue.InternalQueue()
+    queue = internal_queue.InternalQueue(
+        config={"type": "internal", "queue_wait_message_time": 0.5}
+    )
     await queue.init()
 
     start_time = time.perf_counter()
@@ -52,16 +55,16 @@ async def test_get_message_timeout():
 
 
 async def test_change_visibility():
-    """'change_visibility' should not do anything"""
-    queue = internal_queue.InternalQueue()
+    """'change_visibility' should do nothing"""
+    queue = internal_queue.InternalQueue(config={"type": "internal"})
     await queue.init()
 
-    await queue.change_visibility(None)
+    await queue.change_visibility(internal_queue.InternalMessage(message="{}"))
 
 
 async def test_delete_message():
-    """'delete_message' should not do anything"""
-    queue = internal_queue.InternalQueue()
+    """'delete_message' should do nothing"""
+    queue = internal_queue.InternalQueue(config={"type": "internal"})
     await queue.init()
 
-    await queue.delete_message(None)
+    await queue.delete_message(internal_queue.InternalMessage(message="{}"))
