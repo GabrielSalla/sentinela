@@ -12,7 +12,6 @@ import components.executor.runner as runner
 import message_queue as message_queue
 import registry as registry
 from base_exception import BaseSentinelaException
-from configs import configs
 from message_queue.internal_queue import InternalMessage
 from tests.test_utils import assert_message_in_log, assert_message_not_in_log
 
@@ -21,7 +20,11 @@ pytestmark = pytest.mark.asyncio(loop_scope="session")
 
 async def test_change_visibility_loop(mocker, monkeypatch, clear_queue):
     """'_change_visibility_loop' should change a message's visibility recurrently until cancelled"""
-    monkeypatch.setattr(configs, "queue_visibility_time", 0.2)
+    monkeypatch.setattr(
+        message_queue.queue._config,  # type: ignore[attr-defined]
+        "queue_wait_message_time",
+        0.2,
+    )
     change_visibility_spy: MagicMock = mocker.spy(message_queue, "change_visibility")
 
     message = InternalMessage(json.dumps({"type": "type", "payload": "payload"}))
@@ -63,7 +66,11 @@ async def test_runner_process_message_success(caplog, mocker, monkeypatch):
     """'Runner.process_message' should process the message with the provided handler, changing
     the message visibility in the queue recurrently during it's processing and deleting the message
     from the queue after finished"""
-    monkeypatch.setattr(configs, "queue_visibility_time", 0.1)
+    monkeypatch.setattr(
+        message_queue.queue._config,  # type: ignore[attr-defined]
+        "queue_wait_message_time",
+        0.1,
+    )
     change_visibility_spy: MagicMock = mocker.spy(message_queue, "change_visibility")
     delete_message_spy: MagicMock = mocker.spy(message_queue, "delete_message")
 
@@ -94,7 +101,11 @@ async def test_runner_process_message_sentinela_error(caplog, mocker, monkeypatc
     """'Runner.process_message' should process the message with the provided handler, catching
     Sentinela exceptions that might occur and logging them properly. The message shouldn't be
     deleted from the queue"""
-    monkeypatch.setattr(configs, "queue_visibility_time", 0.1)
+    monkeypatch.setattr(
+        message_queue.queue._config,  # type: ignore[attr-defined]
+        "queue_wait_message_time",
+        0.1,
+    )
     change_visibility_spy: MagicMock = mocker.spy(message_queue, "change_visibility")
     delete_message_spy: MagicMock = mocker.spy(message_queue, "delete_message")
 
@@ -129,7 +140,11 @@ async def test_runner_process_message_error(caplog, mocker, monkeypatch):
     """'Runner.process_message' should process the message with the provided handler, catching
     exceptions that might occur and logging them properly. The message shouldn't be deleted from
     the queue"""
-    monkeypatch.setattr(configs, "queue_visibility_time", 0.1)
+    monkeypatch.setattr(
+        message_queue.queue._config,  # type: ignore[attr-defined]
+        "queue_wait_message_time",
+        0.1,
+    )
     change_visibility_spy: MagicMock = mocker.spy(message_queue, "change_visibility")
     delete_message_spy: MagicMock = mocker.spy(message_queue, "delete_message")
 

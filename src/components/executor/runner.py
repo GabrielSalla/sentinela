@@ -10,7 +10,6 @@ import message_queue as message_queue
 import registry as registry
 import utils.app as app
 from base_exception import BaseSentinelaException
-from configs import configs
 from utils.exception_handling import catch_exceptions
 
 from . import event_handler, monitor_handler, request_handler
@@ -33,7 +32,7 @@ async def _change_visibility_loop(message: message_queue.Message) -> None:
     try:
         while app.running():
             await message_queue.change_visibility(message)
-            await app.sleep(configs.queue_visibility_time)
+            await app.sleep(message_queue.get_queue_wait_message_time())
     except asyncio.CancelledError:
         return
 
