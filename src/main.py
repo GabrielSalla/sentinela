@@ -3,6 +3,7 @@
 import asyncio
 import logging
 import sys
+import traceback
 from typing import Coroutine
 
 import uvloop
@@ -26,7 +27,8 @@ async def protected_task(task: Coroutine[None, None, None]) -> None:
     try:
         await task
     except Exception:
-        _logger.warning(f"Exception with task '{task}'")
+        _logger.error(f"Exception with task '{task}'")
+        _logger.error(traceback.format_exc().strip())
 
 
 async def init_plugins_services(controller_enabled: bool, executor_enabled: bool) -> None:

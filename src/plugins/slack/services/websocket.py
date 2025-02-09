@@ -7,6 +7,7 @@ from typing import Any, Callable, Coroutine
 import certifi
 from slack_bolt.adapter.socket_mode.async_handler import AsyncSocketModeHandler
 from slack_bolt.async_app import AsyncApp
+from slack_sdk.errors import SlackApiError
 from slack_sdk.web.async_client import AsyncWebClient
 
 from .. import slack
@@ -14,7 +15,7 @@ from .pattern_match import get_message_request
 
 _logger = logging.getLogger("plugin.slack.websocket")
 
-_handler: AsyncSocketModeHandler | None
+_handler: AsyncSocketModeHandler | None = None
 
 
 async def app_mention(body: dict[Any, Any]) -> None:
@@ -76,6 +77,14 @@ async def init(controller_enabled: bool, executor_enabled: bool) -> None:  # pra
     ssl_context = ssl.create_default_context(cafile=certifi.where())
     client = AsyncWebClient(token=os.environ["SLACK_APP_TOKEN"], ssl=ssl_context)
 
+    try:
+        await client.auth_test()
+    except SlackApiError as e:
+        response_data = e.response.data
+        if response_data["error"] == "invalid_auth":
+            _logger.error("Invalid Slack application token. Slack websocket won't be enabled")
+            return
+
     app = AsyncApp(client=client)
     app.event("app_mention")(app_mention)
     app.action(re.compile(r"sentinela_.*"))(command)
@@ -84,7 +93,7 @@ async def init(controller_enabled: bool, executor_enabled: bool) -> None:  # pra
 
     _logger.info("Starting Slack websocket")
 
-    await _handler.connect_async()  # type: ignore[no-untyped-call]
+    await _handler.connect_async()
 
 
 async def stop() -> None:  # pragma: no cover
@@ -92,4 +101,4 @@ async def stop() -> None:  # pragma: no cover
 
     if _handler is not None:
         _logger.info("Stopping Slack websocket")
-        await _handler.close_async()  # type: ignore[no-untyped-call]
+        await _handler.close_async()

@@ -70,6 +70,7 @@ disallow_untyped_calls = true
 disallow_untyped_decorators = true
 disallow_untyped_defs = true
 no_implicit_optional = true
+untyped_calls_exclude = ["slack_bolt"]
 
 [[tool.mypy.overrides]]
 module = "tests.*"
