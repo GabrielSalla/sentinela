@@ -23,20 +23,6 @@ class ApplicationDatabaseConfig:
 
 
 @dataclass
-class InternalQueueConfig:
-    type: Literal["internal"]
-
-
-@dataclass
-class SQSQueueConfig:
-    type: Literal["sqs"]
-    name: str
-    url: str
-    region: str
-    create_queue: bool = False
-
-
-@dataclass
 class HttpServerConfig:
     port: int
 
@@ -56,8 +42,7 @@ class Configs:
 
     application_database_settings: ApplicationDatabaseConfig
 
-    queue_wait_message_time: int
-    queue_visibility_time: int
+    application_queue: dict[str, Any]
 
     http_server: HttpServerConfig
 
@@ -85,7 +70,6 @@ class Configs:
     log_all_events: bool
 
     logging: FriendlyLogConfig | JsonLogConfig = Field(discriminator="mode")
-    application_queue: InternalQueueConfig | SQSQueueConfig = Field(discriminator="type")
 
 
 with open(os.environ.get("CONFIGS_FILE", "configs.yaml"), "r") as file:

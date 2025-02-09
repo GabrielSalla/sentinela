@@ -30,23 +30,23 @@ application_database_settings:
 # Queue to be used. Can be "internal" os "sqs".
 application_queue:
   type: internal
+  queue_wait_message_time: 2
 
 # Settings for SQS queue
 # application_queue:
-#   type: sqs
+#   type: plugin.aws.sqs
 #   name: app
 #   url: http://motoserver:5000/123456789012/app
 #   region: us-east-1
 #   # 'create_queue' should be set to 'false' or not specified in production environment
 #   create_queue: true
-
-# Time, in seconds, to wait for a message
-# Higher values will increase in the application's shutdown time
-queue_wait_message_time: 2
-# Time to wait, in seconds, to change a message visibility in the queue
-# Must be lower than the default queue's visibility time or a message will become visible before
-# it finishes processing
-queue_visibility_time: 15
+#   # Time, in seconds, to wait for a message
+#   # Higher values will increase the application's shutdown time
+#   queue_wait_message_time: 2
+#   # Time to wait, in seconds, to change a message's visibility in the queue. Must be lower than
+#   # the default queue's visibility time, or a message might become visible before it finishes
+#   # processing.
+#   queue_visibility_time: 15
 
 # HTTP server settings
 http_server:
