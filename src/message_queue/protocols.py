@@ -1,4 +1,4 @@
-from typing import Any, Protocol
+from typing import Any, Protocol, runtime_checkable
 
 
 class Message(Protocol):
@@ -8,7 +8,13 @@ class Message(Protocol):
     def content(self) -> dict[str, Any]: ...
 
 
+@runtime_checkable
 class Queue(Protocol):
+    def __init__(self, config: dict[str, Any]) -> None: ...
+
+    @property
+    def queue_wait_message_time(self) -> float: ...
+
     async def init(self) -> None: ...
 
     async def send_message(self, type: str, payload: dict[str, Any]) -> None: ...
