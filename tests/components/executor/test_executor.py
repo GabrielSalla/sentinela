@@ -137,7 +137,11 @@ async def test_run(monkeypatch, clear_queue):
 async def test_run_no_messages(mocker, monkeypatch, clear_queue):
     """'run' should sleep for the configured time when there are no messages in the queue"""
     monkeypatch.setattr(executor, "TASKS_FINISH_CHECK_TIME", 0.01)
-    monkeypatch.setattr(configs, "queue_wait_message_time", 0.05)
+    monkeypatch.setattr(
+        message_queue.queue._config,  # type: ignore[attr-defined]
+        "queue_wait_message_time",
+        0.05,
+    )
     monkeypatch.setattr(configs, "executor_sleep", 0.135)
 
     sleep_spy: AsyncMock = mocker.spy(app, "sleep")
@@ -166,7 +170,11 @@ async def test_run_no_messages(mocker, monkeypatch, clear_queue):
 async def test_run_error(caplog, monkeypatch, clear_queue):
     """'run' should log exceptions that might occur during the execution without breaking the
     loop"""
-    monkeypatch.setattr(configs, "queue_wait_message_time", 0.2)
+    monkeypatch.setattr(
+        message_queue.queue._config,  # type: ignore[attr-defined]
+        "queue_wait_message_time",
+        0.2,
+    )
     monkeypatch.setattr(executor, "TASKS_FINISH_CHECK_TIME", 0.01)
 
     registry.monitors_ready.set()

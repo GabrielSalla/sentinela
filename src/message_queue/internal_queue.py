@@ -1,12 +1,19 @@
 import asyncio
 import json
 import logging
-from typing import Any
+from typing import Any, Literal
 
-from configs import configs
+from pydantic.dataclasses import dataclass
+
 from message_queue.protocols import Message
 
 _logger = logging.getLogger("internal_queue")
+
+
+@dataclass
+class InternalQueueConfig:
+    type: Literal["internal"]
+    queue_wait_message_time: float = 2
 
 
 class InternalMessage:
@@ -22,7 +29,15 @@ class InternalMessage:
 
 
 class InternalQueue:
+    _config: InternalQueueConfig
     _queue: asyncio.Queue[str]
+
+    def __init__(self, config: dict[str, Any]) -> None:
+        self._config = InternalQueueConfig(**config)
+
+    @property
+    def queue_wait_message_time(self) -> float:
+        return self._config.queue_wait_message_time
 
     async def init(self) -> None:
         """Setup the internal queue"""
@@ -44,7 +59,7 @@ class InternalQueue:
         """Get a message from the queue"""
         try:
             return InternalMessage(
-                await asyncio.wait_for(self._queue.get(), configs.queue_wait_message_time)
+                await asyncio.wait_for(self._queue.get(), self._config.queue_wait_message_time)
             )
         except asyncio.TimeoutError:
             return None

@@ -58,11 +58,14 @@ async def init(controller_enabled: bool, executor_enabled: bool) -> None:
     await databases.init()
     # Depends on internal database migrated
     await monitors_loader.init(controller_enabled)
-    await message_queue.init()
     await http_server.init(controller_enabled)
 
     plugins.load_plugins()
     await init_plugins_services(controller_enabled, executor_enabled)
+
+    # As the queue might be provided by a plugin, only start the queue after the plugins have been
+    # loaded
+    await message_queue.init()
 
 
 async def stop_plugins_services() -> None:

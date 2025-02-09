@@ -1,27 +1,34 @@
 from typing import Any
 
 from configs import configs
-from message_queue.internal_queue import InternalQueue
-from message_queue.protocols import Message, Queue
-from message_queue.sqs_queue import SQSQueue
+
+from .internal_queue import InternalQueue
+from .protocols import Message, Queue
+from .queue_select import get_plugin_queue
 
 queue: Queue
 
 
 async def init() -> None:
-    """Initialize the queue"""
+    """Initialize the queue, identifying if it's internal or a queue from an installed plugin"""
     global queue
 
-    if configs.application_queue.type == "internal":
-        queue = InternalQueue()
-    elif configs.application_queue.type == "sqs":
-        queue = SQSQueue(configs.application_queue)
+    queue_type = configs.application_queue["type"]
+
+    if queue_type == "internal":
+        queue = InternalQueue(config=configs.application_queue)
+    elif queue_type.startswith("plugin."):
+        queue_class = get_plugin_queue(queue_type)
+        queue = queue_class(config=configs.application_queue)
     else:
-        raise ValueError(  # pragma: no cover
-            f"Invalid queue type '{configs.application_queue.type}'"
-        )
+        raise ValueError(f"Invalid queue type '{queue_type}'")
 
     await queue.init()
+
+
+def get_queue_wait_message_time() -> float:
+    """Get the time to wait for a message in the queue"""
+    return queue.queue_wait_message_time
 
 
 async def send_message(type: str, payload: dict[str, Any]) -> None:
