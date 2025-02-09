@@ -1,7 +1,7 @@
 # Configuration
-The basic configs are set through the `configs.yaml` file. This file is read when the application starts and all the settings will be loaded.
+The basic configs are set through the `configs.yaml` file. This file is read when the application starts and all the settings will be loaded. The documentation found at [Configuration file](./configuration_file.md) provides an overview of the configuration parameters available.
 
-THe monitors path is also defined in the `configs.yaml` file. By default, it's set to the `sample_monitors` folder, but it can be changed to another folder if desired. The `configs.yaml` file also have other configurations that can be adjusted.
+The monitors path is also defined in the `configs.yaml` file. By default, it's set to the `sample_monitors` folder, but it can be changed to another folder if desired. The `configs.yaml` file also have other configurations that can be adjusted.
 
 > [!IMPORTANT]
 > Check the documentation for the plugins that are being used to see if they have environment variables of their own.

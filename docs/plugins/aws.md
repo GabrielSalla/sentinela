@@ -34,7 +34,7 @@ The queue settings are:
 - `queue_wait_message_time`: Time, in seconds, to wait for a message. Higher values will increase the application's shutdown time. Defaults to `2`.
 - `queue_visibility_time`: Time to wait, in seconds, to change a message's visibility in the queue. Must be lower than the default queue's visibility time, or a message might become visible before it finishes processing. Defaults to `15`.
 
-An example of the queue configuration is shown below:
+Suggested configuration for local development or testing:
 ```yaml
 application_queue:
   type: plugin.aws.sqs
