@@ -4,44 +4,96 @@ import os
 import time
 from unittest.mock import AsyncMock, MagicMock
 
-import asyncpg
 import pytest
 import pytest_asyncio
 
 import databases.databases as databases
-import databases.postgresql_pools as postgresql_pools
 from configs import configs
+from plugins.postgres.pools import PostgresPool
 from tests.test_utils import assert_message_in_log
 
 pytestmark = pytest.mark.asyncio(loop_scope="session")
 
 
-@pytest_asyncio.fixture(loop_scope="session", scope="function")
-async def reload_databases() -> None:
-    """Used in the tests that close the databases pools"""
+@pytest_asyncio.fixture(loop_scope="session", scope="module", autouse=True)
+async def close_pools(monkeypatch_module):
+    """Automatically close all the pools created in the tests"""
+    created_pools = []
+    original_init = PostgresPool.init
+
+    async def init_mock(self):
+        nonlocal created_pools
+        created_pools.append(self)
+        await original_init(self)
+
+    monkeypatch_module.setattr(PostgresPool, "init", init_mock)
+
     yield
-    await databases.init()
+
+    for pool in created_pools:
+        await pool.close()
 
 
 @pytest_asyncio.fixture(loop_scope="session", scope="function", autouse=True)
-async def drop_test_tables() -> None:
-    try:
-        await postgresql_pools.execute("application", "drop table test_table cascade")
-    except asyncpg.exceptions.UndefinedTableError:
-        pass
+async def drop_test_tables():
+    pool = PostgresPool(dsn="postgres://postgres:postgres@postgres:5432/postgres", name="db1")
+    await pool.init()
+    await pool.execute("drop table if exists test_table cascade")
 
 
-async def test_init(caplog, monkeypatch):
+@pytest_asyncio.fixture(loop_scope="session", scope="function")
+async def empty_pools(monkeypatch):
+    """Reset the databases pools before each test"""
+    monkeypatch.setattr(databases, "_pool_cache", {})
+    monkeypatch.setattr(databases, "_pools", {})
+
+
+async def test_init(caplog, mocker, monkeypatch, empty_pools):
     """'init' should create the database pools for each environment variable that starts with
     'DATABASE_', using the correct database pool engine"""
     monkeypatch.setitem(os.environ, "DATABASE_INVALID", "invalid_dsn")
+    monkeypatch.setitem(
+        os.environ, "DATABASE_REPEATED", "postgres://postgres:postgres@postgres:5432/postgres"
+    )
+
+    get_plugin_pool_spy: MagicMock = mocker.spy(databases, "get_plugin_pool")
 
     await databases.init()
 
-    assert databases._pools["application"] == "postgresql"
-    assert databases._pools["local"] == "postgresql"
+    assert isinstance(databases._pools["application"], PostgresPool)
+    assert isinstance(databases._pools["local"], PostgresPool)
+
+    assert databases._pool_cache == {
+        "postgres": PostgresPool,
+        "postgresql+asyncpg": PostgresPool,
+    }
+
+    # As one of the databases is repeated, there should be only 1 call with "postgres"
+    assert len(get_plugin_pool_spy.call_args_list) == 3
+    assert (("postgres",),) in get_plugin_pool_spy.call_args_list
+    assert (("postgresql+asyncpg",),) in get_plugin_pool_spy.call_args_list
+    assert (("invalid_dsn",),) in get_plugin_pool_spy.call_args_list
 
     assert_message_in_log(caplog, "Invalid DSN for database pool 'DATABASE_INVALID'")
+
+
+async def test_init_error(caplog, mocker, empty_pools):
+    """'init' should log an error and continue if an exception is raised while creating a pool"""
+    init_spy: MagicMock = mocker.spy(PostgresPool, "init")
+
+    async def init_mock(self):
+        await init_spy(self)
+        if self.name == "local":
+            raise ValueError("some error")
+
+    mocker.patch.object(PostgresPool, "init", init_mock)
+
+    await databases.init()
+
+    assert databases._pools.keys() == {"application"}
+
+    assert_message_in_log(caplog, "Skipping pool for 'DATABASE_LOCAL'")
+    assert_message_in_log(caplog, "ValueError: some error")
 
 
 async def test_fetch(caplog, monkeypatch):
@@ -162,13 +214,13 @@ async def test_fetch_error(caplog, monkeypatch):
 
 async def test_query_postgresql(mocker):
     """'query' should execute a query using the specified database pool"""
-    pool_fetch_spy: MagicMock = mocker.spy(postgresql_pools, "fetch")
+    pool_fetch_spy: MagicMock = mocker.spy(PostgresPool, "fetch")
 
     result = await databases.query("local", "select $1 :: int as value", 123)
 
     assert result == [{"value": 123}]
     pool_fetch_spy.assert_called_once_with(
-        "local",
+        databases._pools["local"],
         "select $1 :: int as value",
         123,
         acquire_timeout=configs.database_default_acquire_timeout,
@@ -179,7 +231,7 @@ async def test_query_postgresql(mocker):
 async def test_query_postgresql_timeouts(mocker):
     """'query' should execute a query using the specified database pool with the provided
     timeouts"""
-    pool_fetch_spy: MagicMock = mocker.spy(postgresql_pools, "fetch")
+    pool_fetch_spy: MagicMock = mocker.spy(PostgresPool, "fetch")
 
     result = await databases.query(
         "local", "select $1 :: int as value", 123, acquire_timeout=12, query_timeout=34
@@ -187,7 +239,11 @@ async def test_query_postgresql_timeouts(mocker):
 
     assert result == [{"value": 123}]
     pool_fetch_spy.assert_called_once_with(
-        "local", "select $1 :: int as value", 123, acquire_timeout=12, query_timeout=34
+        databases._pools["local"],
+        "select $1 :: int as value",
+        123,
+        acquire_timeout=12,
+        query_timeout=34,
     )
 
 
@@ -207,35 +263,31 @@ async def test_query_invalid_pool():
         await databases.query("some_database", "select 1")
 
 
-async def test_query_invalid_engine(monkeypatch):
-    """'query' should raise an 'ValueError' exception if the provided database uses a not
-    implemented engine"""
-    monkeypatch.setitem(databases._pools, "invalid", "invalid_engine")
-    with pytest.raises(ValueError, match="Invalid pool type 'invalid_engine'"):
-        await databases.query("invalid", "select 1")
-
-
 async def test_execute_application(mocker):
     """'execute_application' should run the provided query in the application database pool"""
-    pool_execute_spy: MagicMock = mocker.spy(postgresql_pools, "execute")
+    pool_execute_spy: MagicMock = mocker.spy(PostgresPool, "execute")
 
     await databases.execute_application("create table test_table (value int);")
-    pool_execute_spy.assert_called_with("application", "create table test_table (value int);")
+    pool_execute_spy.assert_called_with(
+        databases._pools["application"], "create table test_table (value int);"
+    )
 
     await databases.execute_application("insert into test_table values (1), (2);")
-    pool_execute_spy.assert_called_with("application", "insert into test_table values (1), (2);")
+    pool_execute_spy.assert_called_with(
+        databases._pools["application"], "insert into test_table values (1), (2);"
+    )
 
 
 async def test_query_application(mocker):
     """'query_application' should run the provided query in the application database pool and
     return the result"""
-    pool_fetch_spy: MagicMock = mocker.spy(postgresql_pools, "fetch")
+    pool_fetch_spy: MagicMock = mocker.spy(PostgresPool, "fetch")
 
     result = await databases.query_application("select 2 * $1 :: int as value", 234)
 
     assert result == [{"value": 468}]
     pool_fetch_spy.assert_called_once_with(
-        "application",
+        databases._pools["application"],
         "select 2 * $1 :: int as value",
         234,
         acquire_timeout=configs.database_default_acquire_timeout,
@@ -243,10 +295,13 @@ async def test_query_application(mocker):
     )
 
 
-async def test_close(mocker, reload_databases):
+async def test_close(mocker, empty_pools):
     """'close' should close all the pools"""
-    postgresql_pools_close_spy: AsyncMock = mocker.spy(postgresql_pools, "close")
+    postgresql_pools_close_spy: AsyncMock = mocker.spy(PostgresPool, "close")
 
+    await databases.init()
     await databases.close()
 
-    postgresql_pools_close_spy.assert_awaited_once()
+    assert len(postgresql_pools_close_spy.call_args_list) == 2
+    assert ((databases._pools["application"],),) in postgresql_pools_close_spy.call_args_list
+    assert ((databases._pools["local"],),) in postgresql_pools_close_spy.call_args_list

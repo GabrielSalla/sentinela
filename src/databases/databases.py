@@ -7,13 +7,16 @@ import time
 import traceback
 from typing import Any, Coroutine, cast
 
-import databases.postgresql_pools as postgresql_pools
 from configs import configs
 from utils.async_tools import do_concurrently
 
+from .pool_select import get_plugin_pool
+from .protocols import Pool
+
 _logger = logging.getLogger("database")
 
-_pools: dict[str, str] = {}
+_pool_cache: dict[str, type[Pool]] = {}
+_pools: dict[str, Pool] = {}
 
 
 class QueryStatus(enum.Enum):
@@ -28,13 +31,32 @@ async def init() -> None:
         if not env_var_name.startswith("DATABASE_"):
             continue
 
-        database_name = env_var_name.split("DATABASE_")[1].lower()
         dsn = env_var_value
-        if dsn.startswith("postgres"):
-            _pools[database_name] = "postgresql"
-            await postgresql_pools.create_pool(name=database_name, dsn=dsn)
+        pool_type = dsn.split("://")[0]
+
+        pool_class: type[Pool] | None
+        if pool_type in _pool_cache:
+            pool_class = _pool_cache[pool_type]
         else:
+            pool_class = get_plugin_pool(pool_type)
+
+        if pool_class is None:
             _logger.warning(f"Invalid DSN for database pool '{env_var_name}'")
+            continue
+
+        _pool_cache[pool_type] = pool_class
+
+        # Get the pool configs
+        database_name = env_var_name.split("DATABASE_")[1].lower()
+        pool_configs = configs.databases_pools_configs.get(database_name) or {}
+
+        try:
+            pool = pool_class(dsn=dsn, name=database_name, **pool_configs)
+            await pool.init()
+            _pools[database_name] = pool
+        except Exception:
+            _logger.error(traceback.format_exc().strip())
+            _logger.info(f"Skipping pool for '{env_var_name}'")
 
 
 async def _fetch(
@@ -76,17 +98,14 @@ async def query(
     if name == "application":
         raise RuntimeError("Querying application database not allowed")
 
-    engine_pool = _pools.get(name)
-    if engine_pool is None:
+    pool = _pools.get(name)
+    if pool is None:
         raise ValueError(f"Database '{name}' not loaded in environment variables")
 
     # Identify the engine pool and create the fetch coroutine that will be awaited
-    if engine_pool == "postgresql":
-        fetch_task = postgresql_pools.fetch(
-            name, sql, *args, acquire_timeout=acquire_timeout, query_timeout=query_timeout
-        )
-    else:
-        raise ValueError(f"Invalid pool type '{engine_pool}'")
+    fetch_task = pool.fetch(
+        sql, *args, acquire_timeout=acquire_timeout, query_timeout=query_timeout
+    )
 
     metrics = {
         "pool_name": name,
@@ -108,7 +127,7 @@ async def execute_application(
 ) -> None:
     """Function to be used internally by the application or by the internal modules.
     Execute a query in the application database"""
-    await postgresql_pools.execute("application", sql, *args)
+    await _pools["application"].execute(sql, *args)
 
 
 async def query_application(
@@ -119,8 +138,8 @@ async def query_application(
 ) -> list[dict[Any, Any]] | None:
     """Function to be used internally by the application or by the internal modules.
     Query data from the application database"""
-    fetch_task = postgresql_pools.fetch(
-        "application", sql, *args, acquire_timeout=acquire_timeout, query_timeout=query_timeout
+    fetch_task = _pools["application"].fetch(
+        sql, *args, acquire_timeout=acquire_timeout, query_timeout=query_timeout
     )
 
     metrics = {
@@ -139,8 +158,4 @@ async def query_application(
 
 async def close() -> None:
     """Close all the database pools"""
-    await do_concurrently(
-        *[
-            postgresql_pools.close(),
-        ]
-    )
+    await do_concurrently(*[pool.close() for pool in _pools.values()])
