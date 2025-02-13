@@ -3,7 +3,6 @@ ARG PYTHON_VERSION=3.12
 # Base image
 FROM python:${PYTHON_VERSION}-alpine AS base
 
-ARG SENTINELA_PLUGINS
 ENV VIRTUAL_ENV=/opt/venv \
     PATH="/opt/venv/bin:$PATH"
 

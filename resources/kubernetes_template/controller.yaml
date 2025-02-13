@@ -24,8 +24,6 @@ spec:
         env:
         - name: CONFIGS_FILE
           value: configs_sqs.yaml
-        - name: SENTINELA_PLUGINS
-          value: "aws,postgres,slack"
         - name: SAMPLE_SLACK_CHANNEL
           value: C07NCL94SDT
         - name: SAMPLE_SLACK_MENTION
