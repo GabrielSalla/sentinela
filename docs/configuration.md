@@ -15,11 +15,6 @@ Example:
 CONFIGS_FILE=configs.yaml
 ```
 
-## `SENTINELA_PLUGINS`
-To enable a plugin, set the environment variable `SENTINELA_PLUGINS` with the name of the desired plugin. When enabling multiple plugins, separate them with commas.
-- To enable the Slack plugin, the environment variable should be set as `SENTINELA_PLUGINS=slack`.
-- To enable multiple plugins, the environment variable should be set as `SENTINELA_PLUGINS=plugin_1,plugin_2`.
-
 ## `DATABASE_APPLICATION`
 Specifies the database DSN that will be used to connect to the application database. This database will not be accessible through the databases interface for the monitors.
 
