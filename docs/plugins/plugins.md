@@ -103,9 +103,49 @@ Sentinela will import the queue class in a manner similar to the following, so i
 from plugins.my_plugin.queue.queue_type import Queue
 ```
 
+## Pools
+Plugins can provide different database pools to be used by Sentinela. Pools are a way to provide connections to databases to the monitors through a simple interface using the `query` function. More information about querying databases can be found in the [querying](../querying.md) documentation.
+
+An example of a plugin that provides the a database pool is shown below:
+
+```
+src/plugins/my_plugin
+├── __init__.py
+└── pools
+    ├── __init__.py
+    └── abc.py
+```
+
+In this example, the `abc.py` file must contain the pool class with any name, while the `my_plugin/pools/__init__.py` file must expose all the pool classes available.
+
+```python
+from .abc import SomePool, OtherPool
+
+__all__ = ["SomePool", "OtherPool"]
+```
+
+The `my_plugin/__init__.py` file must, then, expose the `pools` module.
+
+```python
+from . import pools
+
+__all__ = ["pools"]
+```
+
+The pool class must adhere to the protocol defined in the `src.databases.protocol.Pool` class. The class must provide the `PATTERNS` class variable, which contains all prefixes that the pool is capable of handling.
+
+```python
+class SomePool:
+    PATTERNS = ["some://", "other://"]
+    ...
+```
+
+When the databases are being initialized, Sentinela will search for pools provided by all plugins, looking for one that handles each DSN prefix. The first pool found will be used to create the database pool for that DSN. If no pool is found, the database will not be initialized, an error will be logged and the connection won't be available for the monitors.
+
 ## Built-in plugins
 Sentinela comes with some built-in plugins that can be used to extend the application's functionality.
 - [AWS](./aws.md)
+- [Postgres](./postgres.md)
 - [Slack](./slack.md)
 
 ## Enabling plugins
