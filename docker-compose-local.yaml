@@ -12,7 +12,7 @@ services:
       dockerfile: Dockerfile
       target: sentinela
       args:
-        SENTINELA_PLUGINS: aws,slack
+        SENTINELA_PLUGINS: aws,postgres,slack
     image: sentinela-local:latest
     ports:
       - 8000:8000
@@ -23,7 +23,7 @@ services:
       retries: 3
       start_period: 2s
     environment:
-      SENTINELA_PLUGINS: aws,slack
+      SENTINELA_PLUGINS: aws,postgres,slack
       SAMPLE_SLACK_CHANNEL: C07NCL94SDT
       SAMPLE_SLACK_MENTION: U07NFGGMB98
       SLACK_WEBSOCKET_ENABLED: true

@@ -19,6 +19,7 @@ import databases as databases
 import internal_database as internal_database
 import message_queue as message_queue
 import module_loader as module_loader
+import plugins as plugins
 import utils.app as app
 from models import CodeModule, Monitor
 from registry import registry
@@ -65,7 +66,12 @@ async def reset_motoserver():
 
 
 @pytest_asyncio.fixture(loop_scope="session", scope="session", autouse=True)
-async def init_databases():
+async def load_plugins():
+    plugins.load_plugins()
+
+
+@pytest_asyncio.fixture(loop_scope="session", scope="session", autouse=True)
+async def init_databases(load_plugins):
     """Start the database pools"""
     await databases.init()
     yield

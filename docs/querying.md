@@ -16,12 +16,6 @@ For a database named `users`, set up an environment variable `DATABASE_USERS` co
 > [!CAUTION]
 > Environment variables are accessible by all monitors, and any monitor can read or expose them. Ensure that sensitive information is handled with care by reviewing all the created monitors.
 
-## PostgreSQL DSN
-Possible DSNs pattern to connect to PostgreSQL databases is:
-```
-postgres[+asyncpg]://user:password@host:5432/database
-```
-
 # Querying data
 Monitors can query data from available databases using the `query` function, provided in the `monitor_utils` module.
 
