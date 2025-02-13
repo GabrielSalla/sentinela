@@ -8,13 +8,14 @@ _logger = logging.getLogger("queue_select")
 
 
 def get_plugin_queue(queue_type: str) -> type[Queue]:
+    """Get the queue from the plugin"""
     _, plugin_name, queue_type = queue_type.split(".")
 
     plugin = plugins.loaded_plugins.get(plugin_name)
     if plugin is None:
         raise ValueError(f"Plugin '{plugin_name}' not loaded")
 
-    plugin_queue = getattr(plugin, "queue", None)
+    plugin_queue = getattr(plugin, "queues", None)
     if plugin_queue is None:
         raise ValueError(f"Plugin '{plugin_name}' has no queues")
 

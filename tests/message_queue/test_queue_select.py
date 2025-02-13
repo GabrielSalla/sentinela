@@ -14,7 +14,7 @@ def test_get_plugin_queue(monkeypatch):
     """'get_plugin_queue' should get the queue from the defined plugin"""
 
     class Plugin:
-        class queue:
+        class queues:
             class queue_type:
                 class Queue:
                     pass
@@ -22,7 +22,7 @@ def test_get_plugin_queue(monkeypatch):
     monkeypatch.setitem(plugins.loaded_plugins, "plugin_name", Plugin)
 
     class OtherPlugin:
-        class queue:
+        class queues:
             class other_queue_type:
                 class Queue:
                     pass
@@ -30,10 +30,10 @@ def test_get_plugin_queue(monkeypatch):
     monkeypatch.setitem(plugins.loaded_plugins, "other_plugin_name", OtherPlugin)
 
     queue = queue_select.get_plugin_queue("plugin.plugin_name.queue_type")
-    assert queue == Plugin.queue.queue_type.Queue
+    assert queue == Plugin.queues.queue_type.Queue
 
     queue = queue_select.get_plugin_queue("plugin.other_plugin_name.other_queue_type")
-    assert queue == OtherPlugin.queue.other_queue_type.Queue
+    assert queue == OtherPlugin.queues.other_queue_type.Queue
 
 
 def test_get_plugin_queue_plugin_not_loaded():
@@ -59,7 +59,7 @@ def test_get_plugin_queue_plugin_no_queue_type(monkeypatch):
     queue type"""
 
     class Plugin:
-        class queue:
+        class queues:
             pass
 
     monkeypatch.setitem(plugins.loaded_plugins, "plugin_name", Plugin)
@@ -73,7 +73,7 @@ def test_get_plugin_queue_plugin_no_queue(monkeypatch):
     'Queue' class"""
 
     class Plugin:
-        class queue:
+        class queues:
             class queue_type:
                 pass
 
