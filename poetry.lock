@@ -210,7 +210,7 @@ version = "0.30.0"
 description = "An asyncio PostgreSQL driver"
 optional = false
 python-versions = ">=3.8.0"
-groups = ["main"]
+groups = ["main", "plugin-postgres"]
 files = [
     {file = "asyncpg-0.30.0-cp310-cp310-macosx_10_9_x86_64.whl", hash = "sha256:bfb4dd5ae0699bad2b233672c8fc5ccbd9ad24b89afded02341786887e37927e"},
     {file = "asyncpg-0.30.0-cp310-cp310-macosx_11_0_arm64.whl", hash = "sha256:dc1f62c792752a49f88b7e6f774c26077091b44caceb1983509edc18a2222ec0"},
@@ -1913,4 +1913,4 @@ propcache = ">=0.2.0"
 [metadata]
 lock-version = "2.1"
 python-versions = "^3.12"
-content-hash = "67ae67475b259d693c02ddcee58396fde5fffcbd67439fa723a7f3129d0ae989"
+content-hash = "6f21dc846d73d74cf0f1794b38e56191d60e91acb623ee0bf7d5f7ea6e30d8e6"

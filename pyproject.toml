@@ -46,6 +46,9 @@ types-croniter = "*"
 [tool.poetry.group.plugin-aws.dependencies]
 aiobotocore = "^2.19.0"
 
+[tool.poetry.group.plugin-postgres.dependencies]
+asyncpg = "^0.30.0"
+
 [tool.poetry.group.plugin-slack.dependencies]
 slack-bolt = "^1.22.0"
 
