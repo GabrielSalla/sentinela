@@ -1,7 +1,7 @@
 # Plugins
 Plugins are a way to add functionality to Sentinela without needing to edit the application code. Plugins can be added to the `src/plugins` directory and will be automatically loaded by Sentinela.
 
-Each plugin is a module that can implement it's own behaviors. Each plugin should follow the following basic structure:
+Each plugin is a module that can implement it's own behaviors. Each plugin should follow the following basic structure, including only the options being provided:
 
 ```
 src/plugins/my_plugin
@@ -10,6 +10,11 @@ src/plugins/my_plugin
 │   └── __init__.py
 ├── notifications
 │   └── __init__.py
+├── pools
+│   └── __init__.py
+├── queues
+│   └── queue_type
+│       └── __init__.py
 └── services
     └── __init__.py
 ```
@@ -95,12 +100,40 @@ async def stop(): ...
 ## Queues
 Plugins can provide different queues to be used by Sentinela. Queues are used to send messages between different parts of the application. A queue must adhere to the protocol defined in the `src.message_queue.protocols.Queue` class.
 
-To configure a queue from a plugin in the configuration file, the queue must be located in the path `src/plugins/my_plugin/queue/queue_type`, where `my_plugin` is the name of the plugin and `queue_type` is the type of the queue to be used.
+An example of a plugin that provides the `abc` queue is shown below:
 
-Sentinela will import the queue class in a manner similar to the following, so it's important that all `__init__.py` files are correctly configured.
+```
+src/plugins/my_plugin
+├── __init__.py
+└── queues
+    ├── __init__.py
+    └── abc
+        ├── __init__.py
+        └── abc.py
+```
+
+In this example, the `abc.py` file must contain the queue class that must be called `Queue`, while the `my_plugin/queues/abc/__init__.py` file must expose the the class.
 
 ```python
-from plugins.my_plugin.queue.queue_type import Queue
+from .abc import Queue
+
+__all__ = ["Queue"]
+```
+
+The `my_plugin/queues/__init__.py` file must expose the available queues modules.
+
+```python
+from . import abc
+
+__all__ = ["abc"]
+```
+
+The `my_plugin/__init__.py` file must, then, expose the `queues` module.
+
+```python
+from . import queues
+
+__all__ = ["queues"]
 ```
 
 ## Pools

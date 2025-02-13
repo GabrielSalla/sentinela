@@ -1,3 +1,3 @@
-from . import client, queue
+from . import client, queues
 
-__all__ = ["client", "queue"]
+__all__ = ["client", "queues"]

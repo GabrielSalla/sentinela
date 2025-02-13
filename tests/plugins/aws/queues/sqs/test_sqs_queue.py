@@ -8,7 +8,7 @@ import pytest
 import pytest_asyncio
 
 import plugins.aws.client as aws_client
-import plugins.aws.queue.sqs as sqs_queue
+import plugins.aws.queues.sqs as sqs_queue
 
 pytestmark = pytest.mark.asyncio(loop_scope="session")
 
