@@ -13,7 +13,7 @@ COPY . /app/
 RUN python3 -m venv $VIRTUAL_ENV \
     && pip install --no-cache-dir --upgrade pip \
     && pip install poetry --no-cache-dir \
-    && poetry install --only $(python ./tools/get_plugins_list.py)
+    && sh tools/install_dependencies.sh
 
 
 # Sentinela image

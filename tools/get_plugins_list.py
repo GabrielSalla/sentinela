@@ -3,10 +3,11 @@ dependencies"""
 
 import os
 
-plugins = os.environ.get("SENTINELA_PLUGINS")
+import yaml
 
-if not plugins:
-    print("main")
-else:
-    plugins_list = [f"plugin-{plugin.strip()}" for plugin in plugins.split(",")]
-    print("main," + ",".join(plugins_list))
+with open(os.environ.get("CONFIGS_FILE", "configs.yaml"), "r") as file:
+    configs = yaml.load(file.read(), Loader=yaml.FullLoader)
+
+if configs["plugins"]:
+    plugins_list = [f"plugin-{plugin.strip()}" for plugin in configs["plugins"]]
+    print(",".join(plugins_list))

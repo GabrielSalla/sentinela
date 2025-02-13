@@ -6,6 +6,7 @@ import pytest
 
 import plugins as plugins
 import plugins.plugins_loader as plugins_loader
+from configs import configs
 from tests.test_utils import assert_message_in_log, assert_message_not_in_log
 
 
@@ -44,7 +45,7 @@ def plugins_directory(temp_dir: Path) -> Path:
 def test_load_plugins(monkeypatch, plugins_directory, enabled_plugins):
     """'load_plugins' should load all plugins from the directory, loading only the enabled
     plugins"""
-    monkeypatch.setenv("SENTINELA_PLUGINS", ",".join(enabled_plugins))
+    monkeypatch.setattr(configs, "plugins", enabled_plugins)
 
     loaded_plugins = plugins_loader.load_plugins(str(plugins_directory))
 
@@ -80,7 +81,7 @@ def test_load_plugins(monkeypatch, plugins_directory, enabled_plugins):
 def test_load_plugins_with_error(caplog, monkeypatch, plugins_directory, enabled_plugins):
     """'load_plugins' should catch exceptions and log error messages when a plugin cannot be
     loaded"""
-    monkeypatch.setenv("SENTINELA_PLUGINS", ",".join(enabled_plugins))
+    monkeypatch.setattr(configs, "plugins", enabled_plugins)
 
     with open(plugins_directory / "plugin1" / "__init__.py", "w") as file:
         file.write("raise Exception('Some import error')")

@@ -5,6 +5,11 @@ metadata:
 data:
   configs_sqs.yaml: |
     # The documentation for this configuration file can be found at "docs/configuration_file.md"
+    plugins:
+      - aws
+      - postgres
+      - slack
+
     load_sample_monitors: true
     sample_monitors_path: sample_monitors
     internal_monitors_path: internal_monitors
