@@ -57,7 +57,6 @@ async def init(controller_enabled: bool, executor_enabled: bool) -> None:
     log.setup()
     app.setup()
     registry.init()
-    await databases.init()
     # Depends on internal database migrated
     await monitors_loader.init(controller_enabled)
     await http_server.init(controller_enabled)
@@ -65,8 +64,8 @@ async def init(controller_enabled: bool, executor_enabled: bool) -> None:
     plugins.load_plugins()
     await init_plugins_services(controller_enabled, executor_enabled)
 
-    # As the queue might be provided by a plugin, only start the queue after the plugins have been
-    # loaded
+    # The following modules depend on the plugins being loaded
+    await databases.init()
     await message_queue.init()
 
 

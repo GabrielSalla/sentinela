@@ -5,6 +5,8 @@ import traceback
 from pathlib import Path
 from types import ModuleType
 
+from configs import configs
+
 _logger = logging.getLogger("plugins_loader")
 
 
@@ -25,14 +27,12 @@ def load_plugins(path: str | None = None) -> dict[str, ModuleType]:
             plugins_names.append(item)
 
     # Load all enabled plugins
-    enabled_plugins = os.getenv("SENTINELA_PLUGINS", "").split(",")
-
     plugins_relative_path = plugins_directory.relative_to("src")
     plugins_import_path = plugins_relative_path.as_posix().replace("/", ".")
     plugins = {}
     for plugin_name in plugins_names:
         # Skip not enabled plugins
-        if plugin_name not in enabled_plugins:
+        if plugin_name not in configs.plugins:
             continue
 
         try:

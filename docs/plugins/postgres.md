@@ -2,7 +2,7 @@
 The Postgres plugin offers a PostgreSQL database pool to be used with que `query` function.
 
 ## Enabling
-To enable the Postgres plugin, set the environment variable `SENTINELA_PLUGINS` with the value `postgres`.
+To enable the PostgreSQL plugin, add `postgres` to the `plugins` list in the configuration file.
 
 ## Environment variables
 The PostgreSQL pool will be used when the database DSN starts with one of the following patterns:

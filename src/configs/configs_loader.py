@@ -35,6 +35,8 @@ class ControllerProcedureConfig:
 
 @dataclass
 class Configs:
+    plugins: list[str]
+
     load_sample_monitors: bool
     sample_monitors_path: str
     internal_monitors_path: str

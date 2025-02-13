@@ -4,7 +4,7 @@ The AWS plugin provides a Queue implementation for AWS SQS (Simple Queue Service
 This plugin allows the use of different credentials for different services if desired. If any monitor uses the AWS client, it's recommended to use a different credential than the application's main credential.
 
 ## Enabling
-To enable the AWS plugin, set the environment variable `SENTINELA_PLUGINS` with the value `aws`.
+To enable the AWS plugin, add `aws` to the `plugins` list in the configuration file.
 
 ## Environment variables
 Credentials are selected by a **name**, which indicates which environment variable should be used. The variables that have this setting will have the placeholder `{name}` in their name. The credential name **must be in uppercase letters**.

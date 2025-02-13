@@ -1,6 +1,9 @@
 # Configuration file
 This document provides an overview of the configuration parameters available in the `configs.yaml` file.
 
+## Plugins
+- `plugins`: List of strings. Plugins to be used by Sentinela. Check each plugin documentation to learn how to enable them.
+
 ## Monitors
 - `load_sample_monitors`: Boolean. Flag to enable the sample monitors.
 - `sample_monitors_path`: String. Path relative to the project root, where the sample monitors are stored.

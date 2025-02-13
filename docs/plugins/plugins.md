@@ -182,6 +182,12 @@ Sentinela comes with some built-in plugins that can be used to extend the applic
 - [Slack](./slack.md)
 
 ## Enabling plugins
-To enable a plugin, set the environment variable `SENTINELA_PLUGINS` with the name of the desired plugin. When enabling multiple plugins, separate them with commas.
-- To enable the Slack plugin, the environment variable should be set as `SENTINELA_PLUGINS=slack`.
-- To enable multiple plugins, the environment variable should be set as `SENTINELA_PLUGINS=plugin_1,plugin_2`.
+To enable a plugin, set the `plugins` field in the configuration file with the name of the desired plugins.
+
+Example:
+```yaml
+plugins:
+  - aws
+  - postgres
+  - slack
+```
