@@ -266,12 +266,7 @@ async def update_notification(
     """Update a Slack message. If the update fails but the error indicates the message should be
     re-sent, send it again, otherwise just log an error"""
     ts = notification.data["ts"]
-
-    response = await slack.update(
-        channel=channel,
-        ts=ts,
-        attachments=attachments,
-    )
+    response = await slack.update(channel=channel, ts=ts, attachments=attachments)
 
     if not response["ok"]:
         if response["error"] in RESEND_ERRORS:
@@ -279,6 +274,10 @@ async def update_notification(
                 f"Unable to update message for {monitor} alert {notification.alert_id} "
                 f"with error '{response['error']}', resending"
             )
+
+            # If sending a new notification message, clear the mention message so it'll be sent
+            # again in the new message thread
+            notification.data["mention_ts"] = None
 
             await send_notification(
                 monitor=monitor,

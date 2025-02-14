@@ -526,7 +526,7 @@ async def test_update_notification_error_resend(
         monitor_id=sample_monitor.id,
         alert_id=alert.id,
         target="slack",
-        data={"channel": "channel", "ts": "1111"},
+        data={"channel": "channel", "ts": "1111", "mention_ts": "123"},
     )
 
     await slack_notification.update_notification(
@@ -538,7 +538,7 @@ async def test_update_notification_error_resend(
 
     loaded_notification = await Notification.get_by_id(notification.id)
     assert loaded_notification is not None
-    assert loaded_notification.data == {"channel": "channel", "ts": "999"}
+    assert loaded_notification.data == {"channel": "channel", "ts": "999", "mention_ts": None}
     assert_message_in_log(caplog, "Unable to update message for")
     assert_message_in_log(caplog, "resending")
 
@@ -547,8 +547,8 @@ async def test_update_notification_error_resend(
 async def test_update_notification_error_no_resend(
     caplog, monkeypatch, sample_monitor: Monitor, update_error
 ):
-    """'update_notification' should update a message in the channel and if it fails and just fail
-    if the error doesn't indicate that the message should be sent again"""
+    """'update_notification' should update a message in the channel and if it fails and if the
+    error doesn't indicate that the message should be sent again, it should log an error"""
     monkeypatch.setattr(slack_mock, "response_ts", "123")
     update_response = AsyncMock(
         return_value=AsyncSlackResponse(
