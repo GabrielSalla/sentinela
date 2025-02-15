@@ -256,14 +256,14 @@ def test_load_module_from_string(sleep_time):
 
     module_path, module = loader.load_module_from_string(module_name, module_code.format(n=10))
 
-    assert module_path == Path("_monitors") / module_name
+    assert module_path == Path("tmp") / module_name / f"{module_name}.py"
     assert module.get_value() == 10
 
     time.sleep(sleep_time)
 
     module_path, module = loader.load_module_from_string(module_name, module_code.format(n=200))
 
-    assert module_path == Path("_monitors") / module_name
+    assert module_path == Path("tmp") / module_name / f"{module_name}.py"
     # If the sleep time is less than 1 second, the module shouldn't change
     if sleep_time < 1:
         assert module.get_value() == 10
