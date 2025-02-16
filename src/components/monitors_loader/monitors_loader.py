@@ -191,6 +191,12 @@ def _configure_monitor(monitor_module: MonitorModule) -> None:
             monitor_module.reaction_options[event_name].extend(reactions)
 
 
+async def _disable_monitor(monitor: Monitor) -> None:
+    """Disable a monitor"""
+    await monitor.set_enabled(False)
+    _logger.warning(f"Monitor '{monitor}' has no code module, it will be disabled")
+
+
 async def _load_monitors() -> None:
     """Load all enabled monitors from the database and add them to the registry. If any of the
     monitor's modules fails to load, the monitor will not be added to the registry"""

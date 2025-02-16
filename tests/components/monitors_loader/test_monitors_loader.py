@@ -544,6 +544,19 @@ async def test_configure_monitor_notifications_setup(monkeypatch, sample_monitor
     assert monitor_module.reaction_options.alert_solved == [do_nothing, "do_nothing"]
 
 
+async def test_disable_monitor(caplog, sample_monitor: Monitor):
+    """'_disable_monitor' should disable a monitor"""
+    assert sample_monitor.enabled
+
+    await monitors_loader._disable_monitor(sample_monitor)
+
+    await sample_monitor.refresh()
+    assert not sample_monitor.enabled
+    assert_message_in_log(
+        caplog, f"Monitor '{sample_monitor}' has no code module, it will be disabled"
+    )
+
+
 async def test_load_monitors(clear_database):
     """'_load_monitors' should load all enabled monitors from the database and add them to the
     registry"""
