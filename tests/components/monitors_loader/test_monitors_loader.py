@@ -1,9 +1,10 @@
 import asyncio
+import importlib
 import sys
 from datetime import datetime, timezone
 from pathlib import Path
 from types import ModuleType
-from unittest.mock import AsyncMock
+from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 
@@ -537,9 +538,11 @@ async def test_configure_monitor_notifications_setup(monkeypatch, sample_monitor
     assert monitor_module.reaction_options.alert_solved == [do_nothing, "do_nothing"]
 
 
-async def test_load_monitors(clear_database):
+async def test_load_monitors(mocker, clear_database):
     """'_load_monitors' should load all enabled monitors from the database and add them to the
     registry"""
+    invalidate_caches_spy: MagicMock = mocker.spy(importlib, "invalidate_caches")
+
     await databases.execute_application(
         'insert into "Monitors"(id, name, enabled) values'
         "(9999123, 'monitor_1', true),"
@@ -554,6 +557,8 @@ async def test_load_monitors(clear_database):
     )
 
     await monitors_loader._load_monitors()
+
+    invalidate_caches_spy.assert_called_once()
 
     assert len(registry._monitors) == 2
     assert isinstance(registry._monitors[9999123]["module"], ModuleType)

@@ -1,4 +1,5 @@
 import asyncio
+import importlib
 import logging
 import shutil
 from datetime import datetime, timedelta
@@ -220,6 +221,8 @@ async def _load_monitors() -> None:
                 module_code=code_module.code,
                 additional_files=code_module.additional_files,
             )
+
+    importlib.invalidate_caches()
 
     for monitor in loaded_monitors:
         with catch_exceptions(_logger):
