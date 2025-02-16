@@ -1,6 +1,17 @@
+import random
+import string
+import time
+
 import components.monitors_loader as monitors_loader
 import message_queue as message_queue
 from models import Monitor
+
+
+async def monitor_code_validate(monitor_code: str) -> None:
+    """Validate a monitor code without registering it"""
+    timestamp_string = str(int(time.time()))
+    random_string = "".join(random.choice(string.ascii_lowercase) for _ in range(8))
+    monitors_loader.check_monitor(f"monitor_{timestamp_string}_{random_string}", monitor_code)
 
 
 async def monitor_register(

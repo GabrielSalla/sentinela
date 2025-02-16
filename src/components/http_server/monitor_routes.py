@@ -108,13 +108,58 @@ async def monitor_enable(request: Request) -> Response:
         return web.json_response(error_response, status=400)
 
 
+@monitor_routes.post(base_route + "/validate")
+@monitor_routes.post(base_route + "/validate/")
+async def monitor_validate(request: Request) -> Response:
+    """Route to check a monitor without registering it"""
+    request_data = await request.json()
+    monitor_code = request_data.get("monitor_code")
+
+    error_response: dict[str, str | list[Any]]
+
+    if monitor_code is None:
+        error_response = {"status": "error", "message": "'monitor_code' parameter is required"}
+        return web.json_response(error_response, status=400)
+
+    try:
+        await commands.monitor_code_validate(monitor_code)
+    except pydantic.ValidationError as e:
+        error_response = {
+            "status": "error",
+            "message": "Type validation error",
+            "error": [
+                {
+                    "loc": list(error["loc"]),
+                    "type": error["type"],
+                    "msg": error["msg"],
+                }
+                for error in e.errors()
+            ],
+        }
+        return web.json_response(error_response, status=400)
+    except MonitorValidationError as e:
+        error_response = {
+            "status": "error",
+            "message": "Module didn't pass check",
+            "error": e.get_error_message(),
+        }
+        return web.json_response(error_response, status=400)
+    except Exception as e:
+        error_response = {"status": "error", "error": str(e)}
+        _logger.error(traceback.format_exc().strip())
+        return web.json_response(error_response, status=400)
+
+    success_response = {"status": "monitor_validated"}
+    return web.json_response(success_response)
+
+
 @monitor_routes.post(base_route + "/register/{monitor_name}")
 @monitor_routes.post(base_route + "/register/{monitor_name}/")
 async def monitor_register(request: Request) -> Response:
     """Route to register a monitor"""
-    request_data = await request.json()
-
     monitor_name = request.match_info["monitor_name"]
+
+    request_data = await request.json()
     monitor_code = request_data.get("monitor_code")
     additional_files = request_data.get("additional_files", {})
 

@@ -1,4 +1,4 @@
-from unittest.mock import AsyncMock
+from unittest.mock import AsyncMock, MagicMock
 
 import aiohttp
 import pytest
@@ -7,6 +7,7 @@ import pytest_asyncio
 import commands as commands
 import components.controller.controller as controller
 import components.http_server as http_server
+import components.monitors_loader as monitors_loader
 import databases as databases
 from models import CodeModule, Monitor
 
@@ -200,6 +201,124 @@ async def test_monitor_enable_error(mocker, clear_database):
     }
 
 
+async def test_monitor_validate(mocker):
+    """The 'monitor validate' route should validate the provided module code"""
+    monitor_code_validate_spy: AsyncMock = mocker.spy(commands, "monitor_code_validate")
+
+    with open("tests/sample_monitors/others/monitor_1/monitor_1.py", "r") as file:
+        monitor_code = file.read()
+
+    request_payload = {"monitor_code": monitor_code}
+
+    url = BASE_URL + "/validate"
+    async with aiohttp.ClientSession() as session:
+        async with session.post(url, json=request_payload) as response:
+            response_data = await response.json()
+
+    assert response_data == {"status": "monitor_validated"}
+    monitor_code_validate_spy.assert_awaited_once_with(monitor_code)
+
+
+async def test_monitor_validate_missing_monitor_code():
+    """The 'monitor validate' route should return an error any required parameter is missing"""
+    url = BASE_URL + "/validate"
+    async with aiohttp.ClientSession() as session:
+        async with session.post(url, json={}) as response:
+            assert await response.json() == {
+                "status": "error",
+                "message": "'monitor_code' parameter is required",
+            }
+
+
+async def test_monitor_validate_dataclass_validation_error():
+    """The 'monitor validate' route should return an error if the provided module code has a
+    'pydantic.ValidationError'"""
+    request_payload = {
+        "monitor_code": "\n".join(
+            [
+                "from pydantic.dataclasses import dataclass",
+                "\n",
+                "@dataclass",
+                "class Data:",
+                "    value: str",
+                "\n",
+                "data = Data(value=123)",
+            ]
+        ),
+    }
+
+    url = BASE_URL + "/validate"
+    async with aiohttp.ClientSession() as session:
+        async with session.post(url, json=request_payload) as response:
+            assert await response.json() == {
+                "status": "error",
+                "message": "Type validation error",
+                "error": [
+                    {
+                        "loc": ["value"],
+                        "type": "string_type",
+                        "msg": "Input should be a valid string",
+                    },
+                ],
+            }
+
+
+async def test_monitor_validate_check_fail(mocker):
+    """The 'monitor validate' route should return an error if the provided module code is invalid"""
+    check_monitor_spy: MagicMock = mocker.spy(monitors_loader, "check_monitor")
+
+    monitor_code = "import time"
+
+    request_payload = {"monitor_code": monitor_code}
+
+    url = BASE_URL + "/validate"
+    async with aiohttp.ClientSession() as session:
+        async with session.post(url, json=request_payload) as response:
+            assert await response.json() == {
+                "status": "error",
+                "message": "Module didn't pass check",
+                "error": "\n".join(
+                    [
+                        f"Monitor '{check_monitor_spy.call_args[0][0]}' has the following errors:",
+                        "  'monitor_options' is required",
+                        "  'issue_options' is required",
+                        "  'IssueDataType' is required",
+                        "  'search' function is required",
+                        "  'update' function is required",
+                    ]
+                ),
+            }
+
+
+@pytest.mark.parametrize(
+    "monitor_code, expected_error",
+    [
+        ("something", "name 'something' is not defined"),
+        ("import time;\n\ntime.abc()", "module 'time' has no attribute 'abc'"),
+        (
+            "print('a",
+            "unterminated string literal (detected at line 1) ({monitor_name}.py, line 1)",
+        ),
+    ],
+)
+async def test_monitor_validate_invalid_monitor_code(mocker, monitor_code, expected_error):
+    """The 'monitor validate' route should return an error if the provided module code has any
+    errors"""
+    check_monitor_spy: MagicMock = mocker.spy(monitors_loader, "check_monitor")
+
+    request_payload = {
+        "monitor_code": monitor_code,
+    }
+
+    url = BASE_URL + "/validate"
+    async with aiohttp.ClientSession() as session:
+        async with session.post(url, json=request_payload) as response:
+            assert await response.json() == {
+                "status": "error",
+                "error": expected_error.format(monitor_name=check_monitor_spy.call_args.args[0]),
+            }
+
+
 @pytest.mark.parametrize(
     "monitor_name",
     [
@@ -350,7 +469,7 @@ async def test_monitor_register_dataclass_validation_error():
             }
 
 
-async def test_monitor_register_check_fail(caplog):
+async def test_monitor_register_check_fail():
     """The 'monitor register' route should return an error if the provided module code is invalid"""
     monitor_code = "import time"
 

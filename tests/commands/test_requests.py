@@ -1,5 +1,6 @@
 import json
-from unittest.mock import AsyncMock
+import re
+from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 
@@ -9,6 +10,24 @@ from models import CodeModule, Monitor
 from tests.message_queue.utils import get_queue_items
 
 pytestmark = pytest.mark.asyncio(loop_scope="session")
+
+
+async def test_monitor_code_validate(mocker):
+    """'monitor_code_validate' function should validate a monitor code"""
+    check_monitor_spy: MagicMock = mocker.spy(monitors_loader, "check_monitor")
+
+    with open("tests/sample_monitors/others/monitor_1/monitor_1.py", "r") as file:
+        monitor_code = file.read()
+
+    await requests.monitor_code_validate(monitor_code)
+
+    check_monitor_spy.assert_called_once()
+
+    call_args = check_monitor_spy.call_args
+    assert len(call_args.args) == 2
+    monitor_name_regex = r"monitor_\d{10}_[a-z]{8}"
+    assert re.match(monitor_name_regex, call_args.args[0]) is not None
+    assert call_args.args[1] == monitor_code
 
 
 async def test_monitor_register(mocker):
