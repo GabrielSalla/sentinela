@@ -1,4 +1,5 @@
 import asyncio
+import sys
 from datetime import datetime, timezone
 from pathlib import Path
 from types import ModuleType
@@ -14,7 +15,7 @@ from configs import configs
 from data_models.monitor_options import ReactionOptions
 from models import CodeModule, Monitor
 from registry import registry
-from tests.test_utils import assert_message_in_log
+from tests.test_utils import assert_message_in_log, assert_message_not_in_log
 
 pytestmark = pytest.mark.asyncio(loop_scope="session")
 
@@ -35,79 +36,51 @@ async def test_file_has_extension(file, extensions, expected):
     assert monitors_loader._file_has_extension(file, extensions) == expected
 
 
-async def test_get_monitors_files_from_path():
-    """'_get_monitors_files_from_path' should return all the monitors files from a path"""
-    monitors_files = list(monitors_loader._get_monitors_files_from_path("tests/sample_monitors"))
+async def test_check_monitor(caplog):
+    """'check_monitor' function should check a monitor code without registering it"""
+    monitor_name = "test_check_monitor"
 
-    assert len(monitors_files) == 3
-    monitors_files = list(
-        sorted(monitors_files, key=lambda monitor_files: monitor_files.monitor_name)
-    )
-    assert monitors_files == [
-        monitors_loader.MonitorFiles(
-            monitor_name="monitor_1",
-            monitor_path=Path("tests/sample_monitors/others/monitor_1/monitor_1.py"),
-            additional_files=[],
-        ),
-        monitors_loader.MonitorFiles(
-            monitor_name="monitor_2",
-            monitor_path=Path("tests/sample_monitors/internal/monitor_2/monitor_2.py"),
-            additional_files=[],
-        ),
-        monitors_loader.MonitorFiles(
-            monitor_name="monitor_3",
-            monitor_path=Path("tests/sample_monitors/internal/monitor_3/monitor_3.py"),
-            additional_files=[],
-        ),
-    ]
+    with open("tests/sample_monitors/others/monitor_1/monitor_1.py", "r") as file:
+        monitor_code = file.read()
+
+    monitors_loader.check_monitor(monitor_name, monitor_code)
+
+    assert monitor_name not in sys.modules
+    assert_message_not_in_log(caplog, "has the following errors")
 
 
-async def test_get_monitors_files_from_path_with_additional_files():
-    """'_get_monitors_files_from_path' should return all the monitors files from a path including
-    their additional files"""
-    monitors_files = list(
-        monitors_loader._get_monitors_files_from_path(
-            "tests/sample_monitors/internal", additional_file_extensions=["sql"]
+@pytest.mark.parametrize("log_error", [False, True])
+async def test_check_monitor_validation_error(caplog, log_error):
+    """'check_monitor' function should raise a 'MonitorValidationError' if the monitor module
+    does not pass the validation"""
+    monitor_name = f"test_check_monitor_validation_error_{log_error}"
+
+    with open("tests/sample_monitors/others/monitor_1/monitor_1.py", "r") as file:
+        monitor_code = file.read()
+
+    # Add errors that should be caught by the validation
+    monitor_code = monitor_code.replace("id: str", "not_id: str")
+    monitor_code = monitor_code.replace("issues_data", "issue_data")
+
+    try:
+        monitors_loader.check_monitor(monitor_name, monitor_code, log_error=log_error)
+    except monitors_loader.MonitorValidationError as exception:
+        assert exception.monitor_name == monitor_name
+        assert (
+            "'IssueDataType' must have the 'id' field, as specified by 'issue_options.model_id_key'"
+            in exception.errors_found
         )
-    )
-
-    assert len(monitors_files) == 2
-    monitors_files = list(
-        sorted(monitors_files, key=lambda monitor_files: monitor_files.monitor_name)
-    )
-    for monitor_files in monitors_files:
-        monitor_files.additional_files = list(
-            sorted(monitor_files.additional_files, key=lambda additional_file: additional_file.name)
+        assert (
+            "'update' function must have arguments 'issues_data: list[IssueDataType]'"
+            in exception.errors_found
         )
-    assert monitors_files == [
-        monitors_loader.MonitorFiles(
-            monitor_name="monitor_2",
-            monitor_path=Path("tests/sample_monitors/internal/monitor_2/monitor_2.py"),
-            additional_files=[],
-        ),
-        monitors_loader.MonitorFiles(
-            monitor_name="monitor_3",
-            monitor_path=Path("tests/sample_monitors/internal/monitor_3/monitor_3.py"),
-            additional_files=[
-                monitors_loader.AdditionalFile(
-                    name="other_file.sql",
-                    path=Path("tests/sample_monitors/internal/monitor_3/other_file.sql"),
-                ),
-                monitors_loader.AdditionalFile(
-                    name="some_file.sql",
-                    path=Path("tests/sample_monitors/internal/monitor_3/some_file.sql"),
-                ),
-            ],
-        ),
-    ]
 
+    assert monitor_name not in sys.modules
 
-async def test_get_monitors_files_from_path_no_python_files():
-    """'_get_monitors_files_from_path' should return an empty generator if there are no python
-    files in the path"""
-    monitors_files = list(monitors_loader._get_monitors_files_from_path("docs"))
-
-    assert len(monitors_files) == 0
+    if log_error:
+        assert_message_in_log(caplog, "has the following errors")
+    else:
+        assert_message_not_in_log(caplog, "has the following errors")
 
 
 @pytest.mark.parametrize(
@@ -247,7 +220,7 @@ async def test_register_monitor_monitor_already_exists_error():
 async def test_register_monitor_validation_error():
     """'register_monitor' function should raise a 'MonitorValidationError' if the monitor module
     does not pass the validation"""
-    monitor_name = "test_register_monitor"
+    monitor_name = "test_register_monitor_validation_error"
 
     with open("tests/sample_monitors/others/monitor_1/monitor_1.py", "r") as file:
         monitor_code = file.read()
@@ -268,6 +241,81 @@ async def test_register_monitor_validation_error():
             "'update' function must have arguments 'issues_data: list[IssueDataType]'"
             in exception.errors_found
         )
+
+
+async def test_get_monitors_files_from_path():
+    """'_get_monitors_files_from_path' should return all the monitors files from a path"""
+    monitors_files = list(monitors_loader._get_monitors_files_from_path("tests/sample_monitors"))
+
+    assert len(monitors_files) == 3
+    monitors_files = list(
+        sorted(monitors_files, key=lambda monitor_files: monitor_files.monitor_name)
+    )
+    assert monitors_files == [
+        monitors_loader.MonitorFiles(
+            monitor_name="monitor_1",
+            monitor_path=Path("tests/sample_monitors/others/monitor_1/monitor_1.py"),
+            additional_files=[],
+        ),
+        monitors_loader.MonitorFiles(
+            monitor_name="monitor_2",
+            monitor_path=Path("tests/sample_monitors/internal/monitor_2/monitor_2.py"),
+            additional_files=[],
+        ),
+        monitors_loader.MonitorFiles(
+            monitor_name="monitor_3",
+            monitor_path=Path("tests/sample_monitors/internal/monitor_3/monitor_3.py"),
+            additional_files=[],
+        ),
+    ]
+
+
+async def test_get_monitors_files_from_path_with_additional_files():
+    """'_get_monitors_files_from_path' should return all the monitors files from a path including
+    their additional files"""
+    monitors_files = list(
+        monitors_loader._get_monitors_files_from_path(
+            "tests/sample_monitors/internal", additional_file_extensions=["sql"]
+        )
+    )
+
+    assert len(monitors_files) == 2
+    monitors_files = list(
+        sorted(monitors_files, key=lambda monitor_files: monitor_files.monitor_name)
+    )
+    for monitor_files in monitors_files:
+        monitor_files.additional_files = list(
+            sorted(monitor_files.additional_files, key=lambda additional_file: additional_file.name)
+        )
+    assert monitors_files == [
+        monitors_loader.MonitorFiles(
+            monitor_name="monitor_2",
+            monitor_path=Path("tests/sample_monitors/internal/monitor_2/monitor_2.py"),
+            additional_files=[],
+        ),
+        monitors_loader.MonitorFiles(
+            monitor_name="monitor_3",
+            monitor_path=Path("tests/sample_monitors/internal/monitor_3/monitor_3.py"),
+            additional_files=[
+                monitors_loader.AdditionalFile(
+                    name="other_file.sql",
+                    path=Path("tests/sample_monitors/internal/monitor_3/other_file.sql"),
+                ),
+                monitors_loader.AdditionalFile(
+                    name="some_file.sql",
+                    path=Path("tests/sample_monitors/internal/monitor_3/some_file.sql"),
+                ),
+            ],
+        ),
+    ]
+
+
+async def test_get_monitors_files_from_path_no_python_files():
+    """'_get_monitors_files_from_path' should return an empty generator if there are no python
+    files in the path"""
+    monitors_files = list(monitors_loader._get_monitors_files_from_path("docs"))
+
+    assert len(monitors_files) == 0
 
 
 async def test_register_monitors_from_path(clear_database):

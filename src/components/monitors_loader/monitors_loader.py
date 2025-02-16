@@ -62,6 +62,43 @@ def _file_has_extension(file: str, extensions: list[str]) -> bool:
     return any(file.endswith(f".{extension}") for extension in extensions)
 
 
+def check_monitor(
+    monitor_name: str, monitor_code: str, base_path: str | None = None, log_error: bool = False
+) -> None:
+    """Check if a monitor module is valid without registering it"""
+    module_path, module = module_loader.load_module_from_string(
+        module_name=monitor_name, module_code=monitor_code, base_path=base_path
+    )
+
+    errors = module_loader.check_module(module=module)
+    module_loader.remove_module(module_name=module_loader.make_module_name(module_path))
+    if len(errors) > 0:
+        exception = MonitorValidationError(monitor_name=monitor_name, errors_found=errors)
+        if log_error:
+            _logger.error(exception.get_error_message())
+        raise exception
+
+
+async def register_monitor(
+    monitor_name: str,
+    monitor_code: str,
+    base_path: str | None = None,
+    additional_files: dict[str, str] | None = None,
+) -> Monitor:
+    """Register a monitor and its additional files"""
+    check_monitor(
+        base_path=base_path, monitor_name=monitor_name, monitor_code=monitor_code, log_error=True
+    )
+
+    monitor = await Monitor.get_or_create(name=monitor_name)
+    code_module = await CodeModule.get_or_create(monitor_id=monitor.id)
+    code_module.code = monitor_code
+    code_module.additional_files = additional_files or {}
+    await code_module.save()
+
+    return monitor
+
+
 def _get_monitors_files_from_path(
     path: str, additional_file_extensions: list[str] | None = None
 ) -> Generator[MonitorFiles, None, None]:
@@ -94,37 +131,6 @@ def _get_monitors_files_from_path(
                 additional_files=additional_files,
             )
             yield monitor_files
-
-
-async def register_monitor(
-    monitor_name: str,
-    monitor_code: str,
-    base_path: str | None = None,
-    additional_files: dict[str, str] | None = None,
-) -> Monitor:
-    """Register a monitor and its additional files"""
-    if base_path is None:
-        base_path = MONITORS_LOAD_PATH
-
-    monitor_path = module_loader.create_module_files(
-        monitor_name, monitor_code, base_path=base_path
-    )
-    module = module_loader.load_module_from_file(monitor_path)
-
-    # Check the monitor module
-    errors = module_loader.check_module(module=module)
-    if len(errors) > 0:
-        exception = MonitorValidationError(monitor_name=monitor_name, errors_found=errors)
-        _logger.warning(exception.get_error_message())
-        raise exception
-
-    monitor = await Monitor.get_or_create(name=monitor_name)
-    code_module = await CodeModule.get_or_create(monitor_id=monitor.id)
-    code_module.code = monitor_code
-    code_module.additional_files = additional_files or {}
-    await code_module.save()
-
-    return monitor
 
 
 async def _register_monitors_from_path(

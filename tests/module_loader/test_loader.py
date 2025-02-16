@@ -75,6 +75,43 @@ def test_create_module_files(module_name, module_code, additional_files):
                 assert file.read() == file_content
 
 
+@pytest.mark.parametrize(
+    "module_path, expected_module_name",
+    [
+        (Path("src/test/module.py"), "src.test.module"),
+        (Path("abc/aa/module_2.py"), "abc.aa.module_2"),
+        (Path("ab123/aabbcc/module_3.py"), "ab123.aabbcc.module_3"),
+    ],
+)
+def test_make_module_name(module_path, expected_module_name):
+    """'make_module_name' should return the module name from a path"""
+    module_name = loader.make_module_name(module_path)
+    assert module_name == expected_module_name
+
+
+def test_remove_module():
+    """'remove_module' should remove a module from 'sys.modules'"""
+    module_name = "test_remove_module"
+    module_code = "def get_value(): return {n}"
+
+    module_path, module = loader.load_module_from_string(module_name, module_code.format(n=10))
+    loaded_module_name = loader.make_module_name(module_path)
+
+    assert sys.modules[loaded_module_name] is module
+
+    loader.remove_module(loaded_module_name)
+
+    assert loaded_module_name not in sys.modules
+
+
+def test_remove_module_not_exists():
+    """'remove_module' should just return if the module doesn't exist in 'sys.modules'"""
+    module_name = "test_remove_module_not_exists"
+    assert module_name not in sys.modules
+    loader.remove_module(module_name)
+    assert module_name not in sys.modules
+
+
 def test_load_module_from_file(caplog):
     """'load_module_from_file' should load a module from a file path"""
     module_name = "load_module_from_file_1"
@@ -83,19 +120,20 @@ def test_load_module_from_file(caplog):
     module_path = loader.create_module_files(module_name, module_code)
     module = loader.load_module_from_file(module_path)
 
-    assert module.sys is sys
+    loaded_module_name = loader.make_module_name(module_path)
+    assert sys.modules[loaded_module_name] is module
 
     assert_message_in_log(caplog, f"Monitor '{module_name}' loaded")
 
 
 @pytest.mark.parametrize(
-    "n1, n2, expected_1, expected_2",
+    "n1, n2",
     [
-        (10, 99, 10, 99),  # In this test case, the file size doesn't change
-        (10, 200, 10, 200),
+        (10, 99),  # In this test case, the file size doesn't change
+        (10, 200),
     ],
 )
-def test_load_module_from_file_reload(caplog, n1, n2, expected_1, expected_2):
+def test_load_module_from_file_reload(caplog, n1, n2):
     """'load_module_from_file' should be able to reload modules that were previously loaded,
     allowing hot changes"""
     module_name = f"load_module_from_file_reload_{n1}_{n2}"
@@ -105,7 +143,7 @@ def test_load_module_from_file_reload(caplog, n1, n2, expected_1, expected_2):
 
     module = loader.load_module_from_file(module_path)
 
-    assert module.get_value() == expected_1
+    assert module.get_value() == n1
     assert_message_in_log(caplog, f"Monitor '{module_name}' loaded")
 
     # As python checks for the timestamp to change to reload a module, sleep for 1 second
@@ -116,7 +154,7 @@ def test_load_module_from_file_reload(caplog, n1, n2, expected_1, expected_2):
 
     module = loader.load_module_from_file(module_path)
 
-    assert module.get_value() == expected_2
+    assert module.get_value() == n2
     assert_message_in_log(caplog, f"Monitor '{module_name}' loaded", count=2)
 
 
@@ -206,3 +244,28 @@ def test_load_module_from_file_dataclass_validation_error():
 
     with pytest.raises(pydantic.ValidationError, match="1 validation error for Data"):
         loader.load_module_from_file(module_path)
+
+
+@pytest.mark.parametrize("sleep_time", [0.2, 1])
+def test_load_module_from_string(sleep_time):
+    """'load_module_from_string' should create the module file and load it. If this function is
+    called with the same module_name in a short time span, it should return the module that was
+    previously loaded instead of the new one"""
+    module_name = f"test_load_module_from_string_{str(sleep_time).replace('.', '_')}"
+    module_code = "def get_value(): return {n}"
+
+    module_path, module = loader.load_module_from_string(module_name, module_code.format(n=10))
+
+    assert module_path == Path("tmp") / module_name / f"{module_name}.py"
+    assert module.get_value() == 10
+
+    time.sleep(sleep_time)
+
+    module_path, module = loader.load_module_from_string(module_name, module_code.format(n=200))
+
+    assert module_path == Path("tmp") / module_name / f"{module_name}.py"
+    # If the sleep time is less than 1 second, the module shouldn't change
+    if sleep_time < 1:
+        assert module.get_value() == 10
+    else:
+        assert module.get_value() == 200
