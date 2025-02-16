@@ -1,3 +1,4 @@
+import importlib
 import os
 import sys
 import time
@@ -134,10 +135,12 @@ def test_load_module_from_file(caplog):
         (10, 200),
     ],
 )
-def test_load_module_from_file_reload(caplog, n1, n2):
+def test_load_module_from_file_reload_invalidate_cache(caplog, n1, n2):
     """'load_module_from_file' should be able to reload modules that were previously loaded,
-    allowing hot changes"""
-    module_name = f"load_module_from_file_reload_{n1}_{n2}"
+    allowing hot changes.
+    To be able reload a file the file timestamp or size must change, or the cache must be
+    invalidated"""
+    module_name = f"test_load_module_from_file_reload_invalidate_cache_{n1}_{n2}"
     module_code = "def get_value(): return {n}"
 
     module_path = loader.create_module_files(module_name, module_code.format(n=n1))
@@ -147,7 +150,38 @@ def test_load_module_from_file_reload(caplog, n1, n2):
     assert module.get_value() == n1
     assert_message_in_log(caplog, f"Monitor '{module_name}' loaded")
 
-    # As python checks for the timestamp to change to reload a module, sleep for 1 second
+    importlib.invalidate_caches()
+
+    module_path = loader.create_module_files(module_name, module_code.format(n=n2))
+
+    module = loader.load_module_from_file(module_path)
+
+    assert module.get_value() == n2
+    assert_message_in_log(caplog, f"Monitor '{module_name}' loaded", count=2)
+
+
+@pytest.mark.parametrize(
+    "n1, n2",
+    [
+        (10, 99),  # In this test case, the file size doesn't change
+        (10, 200),
+    ],
+)
+def test_load_module_from_file_reload_sleep(caplog, n1, n2):
+    """'load_module_from_file' should be able to reload modules that were previously loaded,
+    allowing hot changes.
+    To be able reload a file the file timestamp or size must change, or the cache must be
+    invalidated"""
+    module_name = f"test_load_module_from_file_reload_sleep_{n1}_{n2}"
+    module_code = "def get_value(): return {n}"
+
+    module_path = loader.create_module_files(module_name, module_code.format(n=n1))
+
+    module = loader.load_module_from_file(module_path)
+
+    assert module.get_value() == n1
+    assert_message_in_log(caplog, f"Monitor '{module_name}' loaded")
+
     time.sleep(1)
 
     module_path = loader.create_module_files(module_name, module_code.format(n=n2))
@@ -155,6 +189,31 @@ def test_load_module_from_file_reload(caplog, n1, n2):
     module = loader.load_module_from_file(module_path)
 
     assert module.get_value() == n2
+    assert_message_in_log(caplog, f"Monitor '{module_name}' loaded", count=2)
+
+
+@pytest.mark.flaky(reruns=1)
+def test_load_module_from_file_reload_no_time_change(caplog):
+    """'load_module_from_file' should not reload the file if the file timestamp or size didn't
+    change."""
+    module_name = "test_load_module_from_file_reload_no_time_change"
+    module_code = "def get_value(): return {n}"
+
+    module_path = loader.create_module_files(module_name, module_code.format(n=10))
+
+    module = loader.load_module_from_file(module_path)
+
+    assert module.get_value() == 10
+    assert_message_in_log(caplog, f"Monitor '{module_name}' loaded")
+
+    time.sleep(0.1)
+
+    module_path = loader.create_module_files(module_name, module_code.format(n=99))
+
+    module = loader.load_module_from_file(module_path)
+
+    # The value didn't change, even though the module code changed
+    assert module.get_value() == 10
     assert_message_in_log(caplog, f"Monitor '{module_name}' loaded", count=2)
 
 
