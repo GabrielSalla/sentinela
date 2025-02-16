@@ -94,6 +94,7 @@ async def register_monitor(
     code_module = await CodeModule.get_or_create(monitor_id=monitor.id)
     code_module.code = monitor_code
     code_module.additional_files = additional_files or {}
+    code_module.registered_at = now()
     await code_module.save()
 
     return monitor

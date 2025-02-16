@@ -1,4 +1,7 @@
-from sqlalchemy import ForeignKey, Integer, String
+from datetime import datetime
+from typing import Sequence
+
+from sqlalchemy import DateTime, ForeignKey, Integer, String
 from sqlalchemy.dialects import postgresql
 from sqlalchemy.ext.mutable import MutableDict
 from sqlalchemy.orm import Mapped, mapped_column
@@ -16,6 +19,25 @@ class CodeModule(Base):
         MutableDict.as_mutable(postgresql.JSON),  # type: ignore[arg-type]
         nullable=True,
     )
+    registered_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=True)
 
     # Code modules won't trigger events when they are created
     _enable_creation_event: bool = False
+
+    @classmethod
+    async def get_updated_code_modules(
+        cls: type["CodeModule"],
+        monitors_ids: list[int],
+        reference_timestamp: datetime | None,
+    ) -> Sequence["CodeModule"]:
+        """Get all code modules that were updated after a reference timestamp"""
+        if not monitors_ids:
+            return []
+
+        if reference_timestamp is None:
+            return await cls.get_all(cls.monitor_id.in_(monitors_ids))
+
+        return await cls.get_all(
+            cls.monitor_id.in_(monitors_ids),
+            cls.registered_at > reference_timestamp,
+        )

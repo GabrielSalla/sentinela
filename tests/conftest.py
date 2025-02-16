@@ -109,6 +109,12 @@ async def clear_database(init_databases):
     await databases.query_application('truncate "Monitors" cascade;')
 
 
+@pytest_asyncio.fixture(loop_scope="session", scope="module")
+async def clear_database_module(init_databases):
+    """Clear all the tables by truncating the Monitors table"""
+    await databases.query_application('truncate "Monitors" cascade;')
+
+
 @pytest.fixture(scope="session", autouse=True)
 def _temp_dir(monkeypatch_session):
     """Create a temporary directory for all the tests that will be removed at the end"""

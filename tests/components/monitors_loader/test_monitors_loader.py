@@ -1,6 +1,6 @@
 import asyncio
 import sys
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from types import ModuleType
 from unittest.mock import AsyncMock
@@ -109,6 +109,8 @@ async def test_register_monitor(additional_files):
     assert code_module is not None
     assert code_module.code == monitor_code
     assert code_module.additional_files == (additional_files or {})
+    assert code_module.registered_at > time_utils.now() - timedelta(seconds=1)
+    assert code_module.registered_at < time_utils.now()
 
 
 @pytest.mark.parametrize(
@@ -161,6 +163,8 @@ async def test_register_monitor_monitor_already_exists(additional_files):
     await code_module.refresh()
     assert code_module.code == monitor_code
     assert code_module.additional_files == new_additional_files
+    assert code_module.registered_at > time_utils.now() - timedelta(seconds=1)
+    assert code_module.registered_at < time_utils.now()
 
 
 async def test_register_monitor_monitor_already_exists_error():
@@ -185,6 +189,8 @@ async def test_register_monitor_monitor_already_exists_error():
     assert code_module is not None
     assert code_module.code == monitor_code
     assert code_module.additional_files == {"file_1.sql": "SELECT * FROM table_1;"}
+
+    registered_at = code_module.registered_at
 
     new_monitor_code = monitor_code.replace("id: str", "not_id: str")
     new_monitor_code = new_monitor_code.replace("issues_data", "issue_data")
@@ -215,6 +221,7 @@ async def test_register_monitor_monitor_already_exists_error():
     await code_module.refresh()
     assert code_module.code == monitor_code
     assert code_module.additional_files == {"file_1.sql": "SELECT * FROM table_1;"}
+    assert code_module.registered_at == registered_at
 
 
 async def test_register_monitor_validation_error():
