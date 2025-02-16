@@ -13,6 +13,7 @@ import utils.app as app
 from configs import configs
 from data_models.monitor_options import ReactionOptions
 from models import CodeModule, Monitor
+from utils.async_tools import do_concurrently
 from utils.exception_handling import catch_exceptions
 from utils.time import now, time_since, time_until_next_trigger
 
@@ -195,6 +196,20 @@ async def _disable_monitor(monitor: Monitor) -> None:
     """Disable a monitor"""
     await monitor.set_enabled(False)
     _logger.warning(f"Monitor '{monitor}' has no code module, it will be disabled")
+
+
+async def _disable_monitors_without_code_modules() -> None:
+    """Disable all monitors that don't have a code module"""
+    enabled_monitors = await Monitor.get_raw([Monitor.id], [Monitor.enabled.is_(True)])
+    monitors_ids = {monitor_id for (monitor_id,) in enabled_monitors}
+
+    code_modules = await CodeModule.get_raw([CodeModule.monitor_id], [CodeModule.code.is_not(None)])
+    code_modules_monitor_ids = {monitor_id for (monitor_id,) in code_modules}
+
+    monitors_to_disable = await Monitor.get_all(
+        Monitor.id.in_(monitors_ids - code_modules_monitor_ids)
+    )
+    await do_concurrently(*[_disable_monitor(monitor) for monitor in monitors_to_disable])
 
 
 async def _load_monitors() -> None:

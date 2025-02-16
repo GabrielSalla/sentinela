@@ -557,6 +557,50 @@ async def test_disable_monitor(caplog, sample_monitor: Monitor):
     )
 
 
+async def test_disable_monitors_without_code_modules(mocker, clear_database):
+    """'_disable_monitors_without_code_modules' should disable all monitors that don't have a code
+    module"""
+    disable_monitor_spy: AsyncMock = mocker.spy(monitors_loader, "_disable_monitor")
+
+    await databases.execute_application(
+        'insert into "Monitors"(id, name, enabled) values '
+        "(9999123, 'monitor_1', true), "
+        "(9999456, 'internal.monitor_2', true), "
+        "(9999457, 'disabled_monitor', false);"
+    )
+    await databases.execute_application(
+        'insert into "CodeModules"(monitor_id, code) values'
+        "(9999123, 'def get_value(): return 10');"
+    )
+
+    await monitors_loader._disable_monitors_without_code_modules()
+
+    disable_monitor_spy.assert_awaited_once()
+    assert disable_monitor_spy.call_args[0][0].id == 9999456
+
+
+async def test_disable_monitors_without_code_modules_no_monitors_to_disable(mocker, clear_database):
+    """'_disable_monitors_without_code_modules' should not disable any monitor if all of them have a
+    code module"""
+    disable_monitor_spy: AsyncMock = mocker.spy(monitors_loader, "_disable_monitor")
+
+    await databases.execute_application(
+        'insert into "Monitors"(id, name, enabled) values '
+        "(9999123, 'monitor_1', true), "
+        "(9999456, 'internal.monitor_2', true), "
+        "(9999457, 'disabled_monitor', false);"
+    )
+    await databases.execute_application(
+        'insert into "CodeModules"(monitor_id, code) values'
+        "(9999123, 'def get_value(): return 10'),"
+        "(9999456, 'def get_value(): return 11');"
+    )
+
+    await monitors_loader._disable_monitors_without_code_modules()
+
+    disable_monitor_spy.assert_not_called()
+
+
 async def test_load_monitors(clear_database):
     """'_load_monitors' should load all enabled monitors from the database and add them to the
     registry"""
