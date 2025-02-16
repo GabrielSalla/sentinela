@@ -1,6 +1,7 @@
 import importlib
 import logging
 import os
+import re
 import sys
 import time
 from functools import cache
@@ -59,16 +60,28 @@ def create_module_files(
     return module_path.relative_to(RELATIVE_PATH)
 
 
+def make_module_name(module_path: Path) -> str:
+    """Make a module name from a path"""
+    return re.sub(r"\.py$", "", module_path.as_posix().replace("/", "."))
+
+
+def remove_module(module_name: str) -> None:
+    """Remove a module from the loaded_modules. The module name should be relative to the 'src'
+    folder. Example: '_monitors.test'"""
+    if module_name in sys.modules:
+        del sys.modules[module_name]
+
+
 def load_module_from_file(module_path: Path) -> ModuleType:
-    """Load a module from a path, returning the module"""
-    module_name = module_path.as_posix().replace("/", ".").strip(".py")
+    """Load a module from a path, returning the module. If this function is called for the same
+    path in a short time frame, the module won't be reloaded from the files and will be the same
+    that was previously loaded"""
+    module_name = make_module_name(module_path)
     monitor_name = module_path.stem
 
     start_time = time.time()
 
-    if module_name in sys.modules:
-        del sys.modules[module_name]
-
+    remove_module(module_name)
     module = importlib.import_module(module_name)
     _logger.info(f"Monitor '{monitor_name}' loaded")
 
@@ -80,3 +93,16 @@ def load_module_from_file(module_path: Path) -> ModuleType:
         _logger.warning(f"Monitor '{monitor_name}' took {total_time} seconds to load")
 
     return module
+
+
+def load_module_from_string(
+    module_name: str, module_code: str, base_path: str | None = None
+) -> tuple[Path, ModuleType]:
+    """Load a module from a code string"""
+    if base_path is None:
+        base_path = MODULES_PATH
+
+    module_path = create_module_files(
+        module_name=module_name, module_code=module_code, base_path=base_path
+    )
+    return module_path, load_module_from_file(module_path)
