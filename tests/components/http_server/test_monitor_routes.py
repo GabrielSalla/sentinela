@@ -263,10 +263,8 @@ async def test_monitor_validate_dataclass_validation_error():
             }
 
 
-async def test_monitor_validate_check_fail(mocker):
+async def test_monitor_validate_check_fail():
     """The 'monitor validate' route should return an error if the provided module code is invalid"""
-    check_monitor_spy: MagicMock = mocker.spy(monitors_loader, "check_monitor")
-
     monitor_code = "import time"
 
     request_payload = {"monitor_code": monitor_code}
@@ -279,7 +277,7 @@ async def test_monitor_validate_check_fail(mocker):
                 "message": "Module didn't pass check",
                 "error": "\n".join(
                     [
-                        f"Monitor '{check_monitor_spy.call_args[0][0]}' has the following errors:",
+                        "Monitor has the following errors:",
                         "  'monitor_options' is required",
                         "  'issue_options' is required",
                         "  'IssueDataType' is required",
