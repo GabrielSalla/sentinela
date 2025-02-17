@@ -212,6 +212,37 @@ async def _disable_monitors_without_code_modules() -> None:
     await do_concurrently(*[_disable_monitor(monitor) for monitor in monitors_to_disable])
 
 
+async def _get_monitors_to_load(
+    last_load_time: datetime | None,
+) -> tuple[dict[int, Monitor], list[CodeModule]]:
+    """Get all the monitors that need to be loaded"""
+    # Get all enabled monitors
+    loaded_monitors = await Monitor.get_all(Monitor.enabled.is_(True))
+    monitors = {monitor.id: monitor for monitor in loaded_monitors}
+
+    # Get all code modules that were updated since the last load time
+    # Add a time delta to have some room for code modules that updated right before the last load
+    if last_load_time is None:
+        reference_timestamp = None
+    else:
+        reference_timestamp = last_load_time - timedelta(seconds=15)
+
+    updated_code_modules = await CodeModule.get_updated_code_modules(
+        monitors_ids=list(monitors.keys()),
+        reference_timestamp=reference_timestamp,
+    )
+    code_modules = [code_module for code_module in updated_code_modules]
+
+    # Add monitors that are enabled but aren't in the registry
+    registry_monitors_ids = set(registry.get_monitors_ids())
+    update_monitors_ids = {code_module.monitor_id for code_module in updated_code_modules}
+    pending_monitors = set(monitors.keys()) - registry_monitors_ids - update_monitors_ids
+    if len(pending_monitors) > 0:
+        code_modules.extend(await CodeModule.get_all(CodeModule.monitor_id.in_(pending_monitors)))
+
+    return monitors, code_modules
+
+
 async def _load_monitors() -> None:
     """Load all enabled monitors from the database and add them to the registry. If any of the
     monitor's modules fails to load, the monitor will not be added to the registry"""
