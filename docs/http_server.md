@@ -23,32 +23,113 @@ Exposes Prometheus-formatted metrics, enabling external monitoring and observabi
 # Interaction routes
 These routes are available only when the container deployment includes the **Controller** component.
 
+## List monitors
+**`GET /monitors/list`**
+
+Returns a list of all monitors currently registered with the `id`, `name` and `enabled` fields for each monitor.
+
+Response example:
+```json
+[
+    {
+        "id": 123,
+        "name": "monitor_name",
+        "enabled": true
+    },
+    {
+        "id": 124,
+        "name": "another_monitor",
+        "enabled": false
+    }
+]
+```
+
+## Get monitor
+**`GET /monitor/{monitor_name}`**
+
+Returns the monitor details for the monitor with the provided `monitor_name`.
+
+Response example:
+```json
+{
+    "id": 123,
+    "name": "monitor_name",
+    "enabled": true,
+    "code": "...",
+    "additional_files": {"file_name.txt": "..."}
+}
+```
+
 ## Disable monitor
-**`POST /{monitor_name}/disable`**
+**`POST /monitor/{monitor_name}/disable`**
 
 Disable the monitor with the provided `monitor_name`.
 
 ## Enable monitor
-**`POST /{monitor_name}/enable`**
+**`POST /monitor/{monitor_name}/enable`**
 
 Enable the monitor with the provided `monitor_name`.
 
+## Validate monitor
+**`POST /monitor/validate`**
+
+Validate the monitor code provided without registering it.
+
+For more information, check the [Validating a monitor](./monitor_validating.md) documentation.
+
+Request body example:
+```json
+{
+    "monitor_code": "...",
+}
+```
+
+Response example:
+```json
+{
+    "status": "monitor_validated"
+}
+```
+
+## Register monitor
+**`POST /monitor/register/{monitor_name}`**
+
+Register the monitor with the provided `monitor_name`.
+
+For more information, check the [Registering a monitor](./monitor_registering.md) documentation.
+
+Request body example:
+```json
+{
+    "monitor_code": "...",
+    "additional_files": {"file_name.txt": "..."}
+}
+```
+
+Response example:
+```json
+{
+    "status": "monitor_registered",
+    "monitor_id": 123
+}
+```
+
 ## Acknowledge alert
-**`POST /{alert_id}/acknowledge`**
+**`POST /alert/{alert_id}/acknowledge`**
 
 Acknowledge the alert with the provided `alert_id`.
 
 ## Lock alert
-**`POST /{alert_id}/lock`**
+**`POST /alert/{alert_id}/lock`**
 
 Lock the alert with the provided `alert_id`.
 
 ## Solve alert
-**`POST /{alert_id}/solve`**
+**`POST /alert/{alert_id}/solve`**
 
 Solve the alert with the provided `alert_id`.
 
 ## Drop issue
-**`POST /{issue_id}/drop`**
+**`POST /issue/{issue_id}/drop`**
 
 Drop the issue with the provided `issue_id`.

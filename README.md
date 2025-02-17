@@ -68,17 +68,18 @@ State machine-related issues often require several data checks and conditional l
 2. [Building a Monitor](./docs/monitor.md)
     1. [Sample Monitor](./docs/sample_monitor.md)
 3. [Querying data from databases](./docs/querying.md)
-4. [Registering a monitor](./docs/monitor_registering.md)
-5. Deployment
+4. [Validating a monitor](./docs/monitor_validating.md)
+5. [Registering a monitor](./docs/monitor_registering.md)
+6. Deployment
     1. [Configuration](./docs/configuration.md)
     2. [Configuration file](./docs/configuration_file.md)
     3. [How to run](./docs/how_to_run.md)
-6. [Monitoring Sentinela](./docs/monitoring_sentinela.md)
-7. [Plugins](./docs/plugins/plugins.md)
+7. [Monitoring Sentinela](./docs/monitoring_sentinela.md)
+8. [Plugins](./docs/plugins/plugins.md)
     1. [AWS](./docs/plugins/aws.md)
     2. [Postgres](./docs/plugins/postgres.md)
     2. [Slack](./docs/plugins/slack.md)
-8. Interacting with Sentinela
+9. Interacting with Sentinela
     1. [HTTP server](./docs/http_server.md)
-9. Special cases
+10. Special cases
     1. [Dropping issues](./docs/dropping_issues.md)
