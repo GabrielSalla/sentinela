@@ -32,7 +32,7 @@ def get_plugin_pool(pool_type: str) -> type[Pool] | None:
                 )
                 continue
 
-            _logger.info(f"Using plugin {plugin_name} for pool with pattern '{pool_type}'")
+            _logger.info(f"Using plugin '{plugin_name}' for pool with pattern '{pool_type}'")
             return cast(type[Pool], pool_class)
 
     _logger.error(f"Unable to find pool for pattern '{pool_type}'")
