@@ -1,6 +1,6 @@
 import asyncio
 import sys
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from types import ModuleType
 from unittest.mock import AsyncMock
@@ -109,6 +109,8 @@ async def test_register_monitor(additional_files):
     assert code_module is not None
     assert code_module.code == monitor_code
     assert code_module.additional_files == (additional_files or {})
+    assert code_module.registered_at > time_utils.now() - timedelta(seconds=1)
+    assert code_module.registered_at < time_utils.now()
 
 
 @pytest.mark.parametrize(
@@ -161,6 +163,8 @@ async def test_register_monitor_monitor_already_exists(additional_files):
     await code_module.refresh()
     assert code_module.code == monitor_code
     assert code_module.additional_files == new_additional_files
+    assert code_module.registered_at > time_utils.now() - timedelta(seconds=1)
+    assert code_module.registered_at < time_utils.now()
 
 
 async def test_register_monitor_monitor_already_exists_error():
@@ -185,6 +189,8 @@ async def test_register_monitor_monitor_already_exists_error():
     assert code_module is not None
     assert code_module.code == monitor_code
     assert code_module.additional_files == {"file_1.sql": "SELECT * FROM table_1;"}
+
+    registered_at = code_module.registered_at
 
     new_monitor_code = monitor_code.replace("id: str", "not_id: str")
     new_monitor_code = new_monitor_code.replace("issues_data", "issue_data")
@@ -215,6 +221,7 @@ async def test_register_monitor_monitor_already_exists_error():
     await code_module.refresh()
     assert code_module.code == monitor_code
     assert code_module.additional_files == {"file_1.sql": "SELECT * FROM table_1;"}
+    assert code_module.registered_at == registered_at
 
 
 async def test_register_monitor_validation_error():
@@ -537,6 +544,137 @@ async def test_configure_monitor_notifications_setup(monkeypatch, sample_monitor
     assert monitor_module.reaction_options.alert_solved == [do_nothing, "do_nothing"]
 
 
+async def test_disable_monitor(caplog, sample_monitor: Monitor):
+    """'_disable_monitor' should disable a monitor"""
+    assert sample_monitor.enabled
+
+    await monitors_loader._disable_monitor(sample_monitor)
+
+    await sample_monitor.refresh()
+    assert not sample_monitor.enabled
+    assert_message_in_log(
+        caplog, f"Monitor '{sample_monitor}' has no code module, it will be disabled"
+    )
+
+
+async def test_disable_monitors_without_code_modules(mocker, clear_database):
+    """'_disable_monitors_without_code_modules' should disable all monitors that don't have a code
+    module"""
+    disable_monitor_spy: AsyncMock = mocker.spy(monitors_loader, "_disable_monitor")
+
+    await databases.execute_application(
+        'insert into "Monitors"(id, name, enabled) values '
+        "(9999123, 'monitor_1', true), "
+        "(9999456, 'internal.monitor_2', true), "
+        "(9999457, 'disabled_monitor', false);"
+    )
+    await databases.execute_application(
+        'insert into "CodeModules"(monitor_id, code) values'
+        "(9999123, 'def get_value(): return 10');"
+    )
+
+    await monitors_loader._disable_monitors_without_code_modules()
+
+    disable_monitor_spy.assert_awaited_once()
+    assert disable_monitor_spy.call_args[0][0].id == 9999456
+
+
+async def test_disable_monitors_without_code_modules_no_monitors_to_disable(mocker, clear_database):
+    """'_disable_monitors_without_code_modules' should not disable any monitor if all of them have a
+    code module"""
+    disable_monitor_spy: AsyncMock = mocker.spy(monitors_loader, "_disable_monitor")
+
+    await databases.execute_application(
+        'insert into "Monitors"(id, name, enabled) values '
+        "(9999123, 'monitor_1', true), "
+        "(9999456, 'internal.monitor_2', true), "
+        "(9999457, 'disabled_monitor', false);"
+    )
+    await databases.execute_application(
+        'insert into "CodeModules"(monitor_id, code) values'
+        "(9999123, 'def get_value(): return 10'),"
+        "(9999456, 'def get_value(): return 11');"
+    )
+
+    await monitors_loader._disable_monitors_without_code_modules()
+
+    disable_monitor_spy.assert_not_called()
+
+
+async def test_get_monitors_to_load(mocker, clear_database):
+    """'_get_monitors_to_load' should return only the updated monitors"""
+    get_updated_code_modules_spy: AsyncMock = mocker.spy(CodeModule, "get_updated_code_modules")
+
+    await databases.execute_application(
+        'insert into "Monitors"(id, name, enabled) values'
+        "(9999123, 'monitor_1', true),"
+        "(9999456, 'internal.monitor_2', true),"
+        "(9999457, 'disabled_monitor', false);"
+    )
+    await databases.execute_application(
+        'insert into "CodeModules"(monitor_id, code, registered_at) values'
+        "(9999123, 'def get_value(): return 10', '2025-01-10 00:00'),"
+        "(9999456, 'def get_value(): return 11', '2025-01-20 00:00'),"
+        "(9999457, 'def get_value(): return 12', '2025-01-30 00:00');"
+    )
+
+    registry.add_monitor(9999123, "monitor_1", ModuleType(name="MockMonitorModule"))
+    monitors, code_modules = await monitors_loader._get_monitors_to_load(
+        datetime(2025, 1, 15, tzinfo=timezone.utc)
+    )
+
+    assert len(monitors) == 2
+    assert monitors[9999123].name == "monitor_1"
+    assert monitors[9999456].name == "internal.monitor_2"
+    assert len(code_modules) == 1
+    assert code_modules[0].monitor_id == 9999456
+
+    get_updated_code_modules_spy.assert_awaited_once_with(
+        [9999123, 9999456],
+        datetime(2025, 1, 14, 23, 59, 45, tzinfo=timezone.utc),
+    )
+
+
+async def test_get_monitors_to_load_no_monitors(mocker, clear_database):
+    """'_get_monitors_to_load' should return an empty list if there are no monitors registered"""
+    get_updated_code_modules_spy: AsyncMock = mocker.spy(CodeModule, "get_updated_code_modules")
+
+    monitors, code_modules = await monitors_loader._get_monitors_to_load(None)
+
+    assert len(monitors) == 0
+    assert len(code_modules) == 0
+
+    get_updated_code_modules_spy.assert_awaited_once_with([], None)
+
+
+async def test_get_monitors_to_load_enabled_not_in_registry(clear_database):
+    """'_get_monitors_to_load' should return enabled monitors that are not in the registry"""
+    await databases.execute_application(
+        'insert into "Monitors"(id, name, enabled) values'
+        "(9999123, 'monitor_1', true),"
+        "(9999456, 'internal.monitor_2', true),"
+        "(9999457, 'disabled_monitor', false);"
+    )
+    await databases.execute_application(
+        'insert into "CodeModules"(monitor_id, code, registered_at) values'
+        "(9999123, 'def get_value(): return 10', '2025-01-10 00:00'),"
+        "(9999456, 'def get_value(): return 11', '2025-01-20 00:00'),"
+        "(9999457, 'def get_value(): return 12', '2025-01-30 00:00');"
+    )
+
+    registry.add_monitor(9999456, "internal.monitor_2", ModuleType(name="MockMonitorModule"))
+
+    monitors, code_modules = await monitors_loader._get_monitors_to_load(
+        datetime(2025, 1, 15, tzinfo=timezone.utc)
+    )
+
+    assert len(monitors) == 2
+    assert monitors[9999123].name == "monitor_1"
+    assert monitors[9999456].name == "internal.monitor_2"
+    assert len(code_modules) == 2
+    assert {code_module.monitor_id for code_module in code_modules} == {9999123, 9999456}
+
+
 async def test_load_monitors(clear_database):
     """'_load_monitors' should load all enabled monitors from the database and add them to the
     registry"""
@@ -553,11 +691,39 @@ async def test_load_monitors(clear_database):
         "(9999457, 'def get_value(): return 12');"
     )
 
-    await monitors_loader._load_monitors()
+    await monitors_loader._load_monitors(None)
 
     assert len(registry._monitors) == 2
     assert isinstance(registry._monitors[9999123]["module"], ModuleType)
     assert isinstance(registry._monitors[9999456]["module"], ModuleType)
+
+
+async def test_load_monitors_only_updated(clear_database):
+    """'_load_monitors' should load all enabled monitors that were updated after the provided
+    timestamp"""
+    await databases.execute_application(
+        'insert into "Monitors"(id, name, enabled) values'
+        "(9999123, 'monitor_1', true),"
+        "(9999456, 'internal.monitor_2', true),"
+        "(9999457, 'disabled_monitor', false);"
+    )
+    await databases.execute_application(
+        'insert into "CodeModules"(monitor_id, code, registered_at) values'
+        "(9999123, 'def get_value(): return 10', '2025-01-10 00:00'),"
+        "(9999456, 'def get_value(): return 11', '2025-01-20 00:00'),"
+        "(9999457, 'def get_value(): return 12', '2025-01-30 00:00');"
+    )
+
+    registry.add_monitor(9999123, "monitor_1", ModuleType(name="MockMonitorModule"))
+    await monitors_loader._load_monitors(datetime(2025, 1, 15, tzinfo=timezone.utc))
+
+    assert len(registry._monitors) == 2
+    assert isinstance(registry._monitors[9999123]["module"], ModuleType)
+    assert isinstance(registry._monitors[9999456]["module"], ModuleType)
+    # Only the monitor 9999456 was updated after the timestamp, so only it should be reloaded
+    with pytest.raises(AttributeError):
+        registry._monitors[9999123]["module"].get_value()
+    assert registry._monitors[9999456]["module"].get_value() == 11
 
 
 async def test_load_monitors_monitors_ready_flag(monkeypatch, clear_database):
@@ -584,7 +750,7 @@ async def test_load_monitors_monitors_ready_flag(monkeypatch, clear_database):
     assert registry.monitors_ready.is_set()
     assert registry.monitors_pending.is_set()
 
-    load_monitors_task = asyncio.create_task(monitors_loader._load_monitors())
+    load_monitors_task = asyncio.create_task(monitors_loader._load_monitors(None))
 
     await asyncio.sleep(0.1)
     assert not registry.monitors_ready.is_set()
@@ -593,30 +759,6 @@ async def test_load_monitors_monitors_ready_flag(monkeypatch, clear_database):
 
     assert registry.monitors_ready.is_set()
     assert not registry.monitors_pending.is_set()
-
-
-async def test_load_monitors_monitor_without_code_module(caplog, monkeypatch, clear_database):
-    """'_load_monitors' should disable the monitor if it doesn't have a code module"""
-    monitor_get_all = Monitor.get_all
-
-    async def slow_get_all(self, *args, **kwargs):
-        await asyncio.sleep(0.2)
-        return await monitor_get_all(self, *args, **kwargs)
-
-    monkeypatch.setattr(Monitor, "get_all", slow_get_all)
-
-    await databases.execute_application(
-        "insert into \"Monitors\"(id, name, enabled) values (9999123, 'monitor_1', true);"
-    )
-
-    await monitors_loader._load_monitors()
-
-    monitor = await Monitor.get_by_id(9999123)
-    assert monitor is not None
-    assert not monitor.enabled
-
-    assert len(registry._monitors) == 0
-    assert_message_in_log(caplog, "Monitor 'monitor_1' has no code module, it will be disabled")
 
 
 async def test_load_monitors_error(caplog, clear_database):
@@ -634,7 +776,7 @@ async def test_load_monitors_error(caplog, clear_database):
         "(9999456, 'def get_value(): return 10');"
     )
 
-    await monitors_loader._load_monitors()
+    await monitors_loader._load_monitors(None)
 
     assert len(registry._monitors) == 1
     assert isinstance(registry._monitors[9999456]["module"], ModuleType)

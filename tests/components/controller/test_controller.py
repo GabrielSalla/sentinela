@@ -338,7 +338,7 @@ async def test_run(monkeypatch, clear_queue, clear_database):
     assert len(queue_items) == 0
 
     # Load the monitors and wait for a while
-    await monitors_loader._load_monitors()
+    await monitors_loader._load_monitors(None)
     await asyncio.sleep(0.2)
 
     # Stop the app and wait for the controller task
@@ -399,7 +399,7 @@ async def test_run_monitors_not_ready(caplog, monkeypatch, mocker):
 
     # Run the controller for a while then stop it
     await monitors_loader._register_monitors()
-    await monitors_loader._load_monitors()
+    await monitors_loader._load_monitors(None)
     registry.monitors_ready.clear()
 
     controller_task = asyncio.create_task(controller.run())
@@ -419,7 +419,7 @@ async def test_run_monitors_not_registered(caplog, monkeypatch, mocker):
 
     # Run the controller for a while then stop it
     await monitors_loader._register_monitors()
-    await monitors_loader._load_monitors()
+    await monitors_loader._load_monitors(None)
 
     controller_task = asyncio.create_task(controller.run())
     await asyncio.sleep(0.2)
@@ -442,7 +442,7 @@ async def test_run_error(caplog, monkeypatch, clear_queue, clear_database):
     # Run the controller for a while then stop it
     await monitors_loader._register_monitors()
     controller_task = asyncio.create_task(controller.run())
-    await monitors_loader._load_monitors()
+    await monitors_loader._load_monitors(None)
     await asyncio.sleep(0.3)
 
     assert_message_in_log(caplog, "ValueError: Not able to get the monitors")

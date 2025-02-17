@@ -13,6 +13,7 @@ import utils.app as app
 from configs import configs
 from data_models.monitor_options import ReactionOptions
 from models import CodeModule, Monitor
+from utils.async_tools import do_concurrently
 from utils.exception_handling import catch_exceptions
 from utils.time import now, time_since, time_until_next_trigger
 
@@ -94,6 +95,7 @@ async def register_monitor(
     code_module = await CodeModule.get_or_create(monitor_id=monitor.id)
     code_module.code = monitor_code
     code_module.additional_files = additional_files or {}
+    code_module.registered_at = now()
     await code_module.save()
 
     return monitor
@@ -190,30 +192,72 @@ def _configure_monitor(monitor_module: MonitorModule) -> None:
             monitor_module.reaction_options[event_name].extend(reactions)
 
 
-async def _load_monitors() -> None:
+async def _disable_monitor(monitor: Monitor) -> None:
+    """Disable a monitor"""
+    await monitor.set_enabled(False)
+    _logger.warning(f"Monitor '{monitor}' has no code module, it will be disabled")
+
+
+async def _disable_monitors_without_code_modules() -> None:
+    """Disable all monitors that don't have a code module"""
+    enabled_monitors = await Monitor.get_raw([Monitor.id], [Monitor.enabled.is_(True)])
+    monitors_ids = {monitor_id for (monitor_id,) in enabled_monitors}
+
+    code_modules = await CodeModule.get_raw([CodeModule.monitor_id], [CodeModule.code.is_not(None)])
+    code_modules_monitor_ids = {monitor_id for (monitor_id,) in code_modules}
+
+    monitors_to_disable = await Monitor.get_all(
+        Monitor.id.in_(monitors_ids - code_modules_monitor_ids)
+    )
+    await do_concurrently(*[_disable_monitor(monitor) for monitor in monitors_to_disable])
+
+
+async def _get_monitors_to_load(
+    last_load_time: datetime | None,
+) -> tuple[dict[int, Monitor], list[CodeModule]]:
+    """Get all the monitors that need to be loaded"""
+    # Get all enabled monitors
+    loaded_monitors = await Monitor.get_all(Monitor.enabled.is_(True))
+    monitors = {monitor.id: monitor for monitor in loaded_monitors}
+
+    # Get all code modules that were updated since the last load time
+    # Add a time delta to have some room for code modules that updated right before the last load
+    if last_load_time is None:
+        reference_timestamp = None
+    else:
+        reference_timestamp = last_load_time - timedelta(seconds=15)
+
+    updated_code_modules = await CodeModule.get_updated_code_modules(
+        monitors_ids=list(monitors.keys()),
+        reference_timestamp=reference_timestamp,
+    )
+    code_modules = [code_module for code_module in updated_code_modules]
+
+    # Add monitors that are enabled but aren't in the registry
+    registry_monitors_ids = set(registry.get_monitors_ids())
+    update_monitors_ids = {code_module.monitor_id for code_module in updated_code_modules}
+    pending_monitors = set(monitors.keys()) - registry_monitors_ids - update_monitors_ids
+    if len(pending_monitors) > 0:
+        code_modules.extend(await CodeModule.get_all(CodeModule.monitor_id.in_(pending_monitors)))
+
+    return monitors, code_modules
+
+
+async def _load_monitors(last_load_time: datetime | None) -> None:
     """Load all enabled monitors from the database and add them to the registry. If any of the
     monitor's modules fails to load, the monitor will not be added to the registry"""
     registry.monitors_ready.clear()
 
-    loaded_monitors = await Monitor.get_all(Monitor.enabled.is_(True))
-    monitors_ids = [monitor.id for monitor in loaded_monitors]
-
-    code_modules = await CodeModule.get_all(CodeModule.monitor_id.in_(monitors_ids))
-    code_modules_map = {code_module.monitor_id: code_module for code_module in code_modules}
-
-    _logger.info(f"Monitors found: {len(loaded_monitors)}")
+    monitors, code_modules = await _get_monitors_to_load(last_load_time)
+    _logger.info(f"Monitors to load: {len(code_modules)}")
 
     # To load the monitors safely, first create all the files and then import them
     # Loading right after writing the files can result in an error where the Monitor module is not
     # found
     monitors_paths = {}
-    for monitor in loaded_monitors:
+    for code_module in code_modules:
         with catch_exceptions(_logger):
-            code_module = code_modules_map.get(monitor.id)
-            if code_module is None:
-                await monitor.set_enabled(False)
-                _logger.warning(f"Monitor '{monitor.name}' has no code module, it will be disabled")
-                continue
+            monitor = monitors[code_module.monitor_id]
 
             monitors_paths[monitor.id] = module_loader.create_module_files(
                 module_name=monitor.name,
@@ -221,12 +265,11 @@ async def _load_monitors() -> None:
                 additional_files=code_module.additional_files,
             )
 
-    for monitor in loaded_monitors:
+    for code_module in code_modules:
         with catch_exceptions(_logger):
-            monitor_path = monitors_paths.get(monitor.id)
-            if monitor_path is None:
-                continue
+            monitor = monitors[code_module.monitor_id]
 
+            monitor_path = monitors_paths[monitor.id]
             monitor_module = cast(MonitorModule, module_loader.load_module_from_file(monitor_path))
             _configure_monitor(monitor_module)
 
@@ -238,11 +281,12 @@ async def _load_monitors() -> None:
 
 async def _run() -> None:
     """Monitors loading loop, loading them recurrently. Stops automatically when the app stops"""
-    last_load_time: datetime
+    last_load_time: datetime | None = None
 
     while app.running():
         with catch_exceptions(_logger):
-            await _load_monitors()
+            await _disable_monitors_without_code_modules()
+            await _load_monitors(last_load_time)
             last_load_time = now()
 
             # The sleep task will start seconds earlier to try to load all monitors before the

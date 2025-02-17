@@ -76,6 +76,11 @@ async def wait_monitor_loaded(monitor_id: int) -> None:
         raise MonitorNotRegisteredError(f"Monitor '{monitor_id}' not registered")
 
 
+def get_monitors_ids() -> list[int]:
+    """Get all the monitors"""
+    return list(_monitors.keys())
+
+
 def get_monitors() -> list[MonitorInfo]:
     """Get all the monitors"""
     return list(_monitors.values())

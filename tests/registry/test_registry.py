@@ -134,6 +134,17 @@ async def test_wait_monitor_loaded_wait_not_registered(monkeypatch):
     assert total_time < 0.1 + 0.005
 
 
+async def test_get_monitors_ids():
+    """'get_monitors_ids' should return all the registered monitors ids"""
+    registry.add_monitor(1, "Monitor 1", ModuleType(name="MockMonitorModule1"))
+    registry.add_monitor(2, "Monitor 2", ModuleType(name="MockMonitorModule2"))
+    registry.add_monitor(3, "Monitor 3", ModuleType(name="MockMonitorModule3"))
+
+    monitors_ids = registry.get_monitors_ids()
+
+    assert set(monitors_ids) == {1, 2, 3}
+
+
 async def test_get_monitors():
     """'get_monitors' should return all the registered monitors"""
     registry.add_monitor(1, "Monitor 1", ModuleType(name="MockMonitorModule1"))
