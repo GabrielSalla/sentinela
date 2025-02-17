@@ -141,7 +141,7 @@ async def monitor_validate(request: Request) -> Response:
         error_response = {
             "status": "error",
             "message": "Module didn't pass check",
-            "error": e.get_error_message(),
+            "error": e.get_error_message(include_monitor_name=False),
         }
         return web.json_response(error_response, status=400)
     except Exception as e:

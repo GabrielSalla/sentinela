@@ -51,9 +51,12 @@ class MonitorValidationError(Exception):
         self.monitor_name = monitor_name
         self.errors_found = errors_found
 
-    def get_error_message(self) -> str:
+    def get_error_message(self, include_monitor_name: bool = True) -> str:
         """Get the error message for the module validation errors"""
-        error_message = f"Monitor '{self.monitor_name}' has the following errors:\n  "
+        if include_monitor_name:
+            error_message = f"Monitor '{self.monitor_name}' has the following errors:\n  "
+        else:
+            error_message = "Monitor has the following errors:\n  "
         error_message += "\n  ".join(self.errors_found)
         return error_message
 

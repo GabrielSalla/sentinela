@@ -9,16 +9,16 @@ A monitor consists of:
 - **Optional Additional Files**: Supporting resources used during the monitor's execution, such as SQL query files or other data files.
 
 ## Registration Process
-To register a monitor, use the POST method with the `monitors/register/` route, providing all the required information in the request.
+```
+POST monitors/register/{monitor_name}
+```
 
-1. **Request URL**:
-   Format the URL as `monitors/register/{monitor_name}`, where `{monitor_name}` is the name of the monitor being created or updated.
-   Example: `monitors/register/my_monitor`
+Parameters:
+- `{monitor_name}` is the name of the monitor being created or updated.
 
-2. **Request Payload**:
-   The payload should include the following fields:
-   - `monitor_code`: The content of the monitor’s main `.py` file content.
-   - `additional_files`: Optional field with an object where the keys are the names of additional files, and the values are their content.
+The payload should include the following fields:
+- `monitor_code`: The content of the monitor’s main `.py` file content.
+- `additional_files`: Optional field with an object where the keys are the names of additional files, and the values are their content.
 
 Example:
 ```json
@@ -27,6 +27,28 @@ Example:
     "additional_files": {
         "search_query.sql": "select * from users where id = $1;"
     }
+}
+```
+
+## Responses
+The response will contain the status of the registration process. The field `status` will be set to `monitor_registered` if the monitor was successfully registered and the monitor id will be in the `monitor_id` field.
+
+Example:
+```json
+{
+    "status": "monitor_registered",
+    "monitor_id": 123
+}
+```
+
+If the registration fails, the `status` field will be set to `error` and the field `message` will contain the error message. Depending on the error, additional fields may be present to help diagnose the issue.
+
+Example:
+```json
+{
+    "status": "error",
+    "message": "Module didn't pass check",
+    "error": "Monitor 'my_monitor' has the following errors:\n  'monitor_options' is required"
 }
 ```
 
