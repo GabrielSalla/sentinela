@@ -62,11 +62,12 @@ async def init(controller_enabled: bool, executor_enabled: bool) -> None:
     await http_server.init(controller_enabled)
 
     plugins.load_plugins()
-    await init_plugins_services(controller_enabled, executor_enabled)
 
     # The following modules depend on the plugins being loaded
     await databases.init()
     await message_queue.init()
+
+    await init_plugins_services(controller_enabled, executor_enabled)
 
 
 async def stop_plugins_services() -> None:
@@ -81,16 +82,18 @@ async def stop_plugins_services() -> None:
         for service_name in plugin_services.__all__:
             service = getattr(plugin_services, service_name)
             if hasattr(service, "stop"):
+                _logger.info(f"Stopping service '{plugin_name}.{service_name}'")
                 await protected_task(service.stop())
 
 
 async def finish() -> None:
     """Finish the application, making sure any exception won't impact other closing tasks"""
+    await protected_task(stop_plugins_services())
+
+    await protected_task(databases.close())
     await protected_task(http_server.wait_stop())
     await protected_task(monitors_loader.wait_stop())
-    await protected_task(databases.close())
     await protected_task(internal_database.close())
-    await protected_task(stop_plugins_services())
 
 
 async def main() -> None:

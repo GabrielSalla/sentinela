@@ -29,6 +29,7 @@ uvloop = "^0.21.0"
 [tool.poetry.group.dev.dependencies]
 isort = "*"
 mypy = "*"
+pdbp = "*"
 pytest = "*"
 pytest-asyncio = "*"
 pytest-cov = "*"
@@ -84,7 +85,7 @@ disallow_untyped_defs = false
 [tool.pytest.ini_options]
 pythonpath = "src"
 testpaths = "tests"
-addopts = "-rf --show-capture=all --color=yes --cov=src --cov-report=term-missing --cov-fail-under=100"
+addopts = "-rf -s --show-capture=all --color=yes --cov=src --cov-report=term-missing --cov-fail-under=100"
 
 asyncio_default_fixture_loop_scope = "session"
 

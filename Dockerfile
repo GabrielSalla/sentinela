@@ -37,7 +37,8 @@ RUN poetry install --only dev
 FROM python:${PYTHON_VERSION}-alpine AS sentinela_dev
 
 ENV VIRTUAL_ENV=/opt/venv \
-    PATH="/opt/venv/bin:$PATH"
+    PATH="/opt/venv/bin:$PATH" \
+    PYTHONBREAKPOINT=pdbp.set_trace
 
 WORKDIR /app
 

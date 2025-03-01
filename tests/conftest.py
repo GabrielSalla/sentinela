@@ -1,4 +1,4 @@
-import logging
+import logging  # noqa: I001
 import os
 import random
 import shutil
@@ -9,6 +9,7 @@ from pathlib import Path
 import aiohttp
 import alembic.command
 import alembic.config
+import pdbp  # noqa: F401
 import pytest
 import pytest_asyncio
 import uvloop

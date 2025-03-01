@@ -327,7 +327,7 @@ description = "Cross-platform colored terminal text."
 optional = false
 python-versions = "!=3.0.*,!=3.1.*,!=3.2.*,!=3.3.*,!=3.4.*,!=3.5.*,!=3.6.*,>=2.7"
 groups = ["dev"]
-markers = "sys_platform == \"win32\""
+markers = "sys_platform == \"win32\" or platform_system == \"Windows\""
 files = [
     {file = "colorama-0.4.6-py2.py3-none-any.whl", hash = "sha256:4f1d9991f5acc0ca119f9d443620b77f9d6b33703e51011c16baf57afb285fc6"},
     {file = "colorama-0.4.6.tar.gz", hash = "sha256:08695f5cb7ed6e0531a20572697297273c47b8cae5a63ffc6d6ed5c201be6e44"},
@@ -935,6 +935,23 @@ files = [
 ]
 
 [[package]]
+name = "pdbp"
+version = "1.6.1"
+description = "pdbp (Pdb+): A drop-in replacement for pdb and pdbpp."
+optional = false
+python-versions = ">=3.8"
+groups = ["dev"]
+files = [
+    {file = "pdbp-1.6.1-py3-none-any.whl", hash = "sha256:f10bad2ee044c0e5c168cb0825abfdbdc01c50013e9755df5261b060bdd35c22"},
+    {file = "pdbp-1.6.1.tar.gz", hash = "sha256:f4041642952a05df89664e166d5bd379607a0866ddd753c06874f65552bdf40b"},
+]
+
+[package.dependencies]
+colorama = {version = ">=0.4.6", markers = "platform_system == \"Windows\""}
+pygments = ">=2.18.0"
+tabcompleter = ">=1.4.0"
+
+[[package]]
 name = "pluggy"
 version = "1.5.0"
 description = "plugin and hook calling mechanisms for python"
@@ -1190,6 +1207,37 @@ files = [
 
 [package.dependencies]
 typing-extensions = ">=4.6.0,<4.7.0 || >4.7.0"
+
+[[package]]
+name = "pygments"
+version = "2.19.1"
+description = "Pygments is a syntax highlighting package written in Python."
+optional = false
+python-versions = ">=3.8"
+groups = ["dev"]
+files = [
+    {file = "pygments-2.19.1-py3-none-any.whl", hash = "sha256:9ea1544ad55cecf4b8242fab6dd35a93bbce657034b0611ee383099054ab6d8c"},
+    {file = "pygments-2.19.1.tar.gz", hash = "sha256:61c16d2a8576dc0649d9f39e089b5f02bcd27fba10d8fb4dcc28173f7a45151f"},
+]
+
+[package.extras]
+windows-terminal = ["colorama (>=0.4.6)"]
+
+[[package]]
+name = "pyreadline3"
+version = "3.5.4"
+description = "A python implementation of GNU readline."
+optional = false
+python-versions = ">=3.8"
+groups = ["dev"]
+markers = "platform_system == \"Windows\""
+files = [
+    {file = "pyreadline3-3.5.4-py3-none-any.whl", hash = "sha256:eaf8e6cc3c49bcccf145fc6067ba8643d1df34d604a1ec0eccbf7a18e6d3fae6"},
+    {file = "pyreadline3-3.5.4.tar.gz", hash = "sha256:8d57d53039a1c75adba8e50dd3d992b28143480816187ea5efbd5c78e6c885b7"},
+]
+
+[package.extras]
+dev = ["build", "flake8", "mypy", "pytest", "twine"]
 
 [[package]]
 name = "pytest"
@@ -1539,6 +1587,21 @@ postgresql-psycopg2cffi = ["psycopg2cffi"]
 postgresql-psycopgbinary = ["psycopg[binary] (>=3.0.7)"]
 pymysql = ["pymysql"]
 sqlcipher = ["sqlcipher3_binary"]
+
+[[package]]
+name = "tabcompleter"
+version = "1.4.0"
+description = "tabcompleter --- Autocompletion in the Python console."
+optional = false
+python-versions = ">=3.8"
+groups = ["dev"]
+files = [
+    {file = "tabcompleter-1.4.0-py3-none-any.whl", hash = "sha256:d744aa735b49c0a6cc2fb8fcd40077fec47425e4388301010b14e6ce3311368b"},
+    {file = "tabcompleter-1.4.0.tar.gz", hash = "sha256:7562a9938e62f8e7c3be612c3ac4e14c5ec4307b58ba9031c148260e866e8814"},
+]
+
+[package.dependencies]
+pyreadline3 = {version = "*", markers = "platform_system == \"Windows\""}
 
 [[package]]
 name = "tabulate"
@@ -1913,4 +1976,4 @@ propcache = ">=0.2.0"
 [metadata]
 lock-version = "2.1"
 python-versions = "^3.12"
-content-hash = "6f21dc846d73d74cf0f1794b38e56191d60e91acb623ee0bf7d5f7ea6e30d8e6"
+content-hash = "037d303bddb2331d01d4848df45715844c0ea3839ccfacf79a238aadf4e699c6"
