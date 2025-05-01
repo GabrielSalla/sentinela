@@ -67,7 +67,7 @@ def is_solved(issue_data: IssueDataType) -> bool:
 notification_options = [
     SlackNotification(
         channel=os.environ["SAMPLE_SLACK_CHANNEL"],
-        title="Test module",
+        title="Test monitor",
         issues_fields=["id", "value"],
         mention=os.environ["SAMPLE_SLACK_MENTION"],
     )

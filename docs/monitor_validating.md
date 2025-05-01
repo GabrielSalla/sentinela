@@ -1,5 +1,5 @@
 # Validating a monitor
-Validating a monitor is a important step before registering it. This process ensures that the monitor code is correct and can be executed by Sentinela. This is useful when using a deployment pipeline to ensure that the monitor is correctly implemented before being deployed.
+Validating a monitor is an important step before registering it. This process ensures that the monitor code is correct and can be executed by Sentinela. This is useful when using a deployment pipeline to ensure that the monitor is correctly implemented before being deployed.
 
 ## Validation Process
 ```
