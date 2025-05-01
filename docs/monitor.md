@@ -102,10 +102,10 @@ Specify settings for issue management in the `issue_options` variable.
 
 Parameters:
 - `model_id_key`: A key that uniquely identifies each issue, such as an ID column in a database. The configured key references the field in the issues data returned by the `search` and `update` functions that will identify the unique id for the issue.
-- `solvable`: Indicates if an issue can be resolved automatically. Issues set as non-solvable require manual intervention. Defaults to `true`.
+- `solvable`: Indicates if an issue can reach a solved state automatically. Issues set as non-solvable require manual intervention by solving the alert. Defaults to `true`.
 - `unique`: Ensures that only one instance of a given issue (based on the `model_id_key`) is created. Non-solvable issues are often set as unique to avoid duplicate entries. Defaults to `false`.
 
-The `solvable` and `unique` settings can be nuanced to understand, so an example is helpful. Consider a monitor that detects users deactivating their accounts. This state, once detected, is permanent. If an user deactivates their account, it will always be considered a problem (as the monitor is configured to do so). In this case, the issue is **not solvable** since nothing will alter this state for that particular user.
+The `solvable` and `unique` settings can be nuanced to understand, so an example is helpful. Consider a monitor that detects users deactivating their accounts. This state, once detected, is permanent. If a user deactivates their account, it will always be considered a problem (as the monitor is configured to do so). In this case, the issue is **not solvable** since nothing will alter this state for that particular user.
 
 In scenarios like this, the recommended configuration for `solvable` and `unique` settings is as follows:
 - Set `solvable` to `False` because the state of what’s being monitored is final and cannot change, unable to reach a "solved" state.
@@ -114,7 +114,7 @@ In scenarios like this, the recommended configuration for `solvable` and `unique
 > **Note**: This example is solely for illustrating how these settings operate. The problem presented here should not be monitored in this exact way as there're better ways to do it.
 
 ### Example
-Considering the monitor is implemented to monitor user registration data, it's expected that the issues are `solvable`, as the registration data can be corrected. Additionally, the issue is not `unique` because a user may have invalid registration data, fix it, and later have it changed incorrectly again, indicating a new issue must be created.
+Considering the monitor is implemented to monitor user registration data, it's expected that the issues are `solvable`, as the registration data can be corrected and Sentinela can detect when the issue is solved. Additionally, the issue is not `unique` because a user may have invalid registration data, fix it, and later have it changed incorrectly again, indicating a new issue must be created.
 
 ```python
 issue_options = IssueOptions(
@@ -250,11 +250,11 @@ async def update(issues_data: list[IssueDataType]) -> list[IssueDataType] | None
 ```
 
 ## Is solved function
-The **is solved function** is a synchronous function that determines if an issue is resolved based on its data.
+The **is solved function** is a synchronous function that determines if an issue is solved based on its data.
 - The function must be **sync** and takes an active issue data as its argument.
 - It returns `True` if the issue is considered solved and `False` if it is unresolved.
 
-This function not only checks the resolution status of existing issues but also validates issues returned by the **search function**. Issues where `is_solved` returns `True` are discarded, preventing the creation of issues that are already resolved.
+This function not only checks the solved status of existing issues but also validates issues returned by the **search function**. Issues where `is_solved` returns `True` are discarded, preventing the creation of issues that are already solved.
 
 ### Example
 The is solved function should check if the user's `name` is not `None`. If the name is not `None`, the issue is considered solved.

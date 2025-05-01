@@ -74,9 +74,9 @@ Parameters:
 - `min_priority_to_mention`: Minimum alert priority that triggers a mention. Mentions will occur if the alert is not acknowledged at the current priority level and it's is greater than or equal to this setting. Defaults to `moderate` (P3).
 - `issue_show_limit`: Maximum number of issues to show in the notification. If the limit is reached, the message `XXX more...` will be shown at the and of the issues list, where `XXX` is the number of issues that are not being shown. Defaults to 10.
 
-The Slack message will show the alert and it's issues information. The notification will persist and will be updated until the alert is solved, even if it's priority falls to P5.
+The Slack message will show the alert and its issues information. The notification will persist and will be updated until the alert is detected as solved, even if its priority falls to P5.
 
-The notification also includes buttons to interact with the alert, allowing it to be acknowledged, locked or solved. The latest is only included if the issues setting was set as **not solvable**.
+The notification also includes buttons to interact with the alert, allowing it to be acknowledged, locked or marked as solved. The last is only included if the issues setting was set as **not solvable**.
 
 ```python
 notification_options = [
