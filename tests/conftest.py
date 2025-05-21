@@ -178,6 +178,10 @@ async def sample_monitor(clear_monitors, sample_monitor_code) -> Monitor:
     monitor_path = module_loader.create_module_files(monitor_name, sample_monitor_code)
     module = module_loader.load_module_from_file(monitor_path)
 
+    module.SENTINELA_MONITOR_ID = new_monitor.id  # type: ignore[attr-defined]
+    module.SENTINELA_MONITOR_NAME = monitor_name  # type: ignore[attr-defined]
+    module.SENTINELA_MONITOR_PATH = monitor_path  # type: ignore[attr-defined]
+
     registry.add_monitor(new_monitor.id, new_monitor.name, module)
 
     return new_monitor

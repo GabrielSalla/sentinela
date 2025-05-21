@@ -179,8 +179,15 @@ async def _register_monitors() -> None:
         await _register_monitors_from_path(configs.sample_monitors_path)
 
 
-def _configure_monitor(monitor_module: MonitorModule) -> None:
+def _configure_monitor(
+    monitor_module: MonitorModule, monitor_id: int, monitor_name: str, monitor_path: Path
+) -> None:
     """Make the necessary configurations to the monitor's attributes"""
+    # Set the monitor's identification attributes
+    monitor_module.SENTINELA_MONITOR_ID = monitor_id
+    monitor_module.SENTINELA_MONITOR_NAME = monitor_name
+    monitor_module.SENTINELA_MONITOR_PATH = monitor_path
+
     # Add an empty reaction option if it was not configured
     if getattr(monitor_module, "reaction_options", None) is None:
         monitor_module.reaction_options = ReactionOptions()
@@ -274,7 +281,7 @@ async def _load_monitors(last_load_time: datetime | None) -> None:
 
             monitor_path = monitors_paths[monitor.id]
             monitor_module = cast(MonitorModule, module_loader.load_module_from_file(monitor_path))
-            _configure_monitor(monitor_module)
+            _configure_monitor(monitor_module, monitor.id, monitor.name, monitor_path)
 
             registry.add_monitor(monitor.id, monitor.name, monitor_module)
 
