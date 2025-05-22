@@ -5,6 +5,7 @@ from .issue import Issue, IssueStatus
 from .monitor import Monitor
 from .notification import Notification, NotificationStatus
 from .utils.priority import AlertPriority
+from .variable import Variable
 
 __all__ = [
     "Alert",
@@ -17,4 +18,5 @@ __all__ = [
     "Monitor",
     "Notification",
     "NotificationStatus",
+    "Variable",
 ]
