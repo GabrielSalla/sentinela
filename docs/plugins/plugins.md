@@ -80,7 +80,7 @@ class MyNotification:
         ]
 ```
 
-The reaction functions must follow the same structure presented in the [Monitor](./monitors.md) documentation.
+The reaction functions must follow the same structure presented in the [Monitor](../monitor.md) documentation.
 
 ## Services
 Services are used when the plugin has some initialization or running service. An example of a running service is a websocket connection to an external provider.
