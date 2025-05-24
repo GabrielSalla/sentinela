@@ -30,7 +30,7 @@ Possible buttons:
 - **Lock**: Lock the alert. Visible if the alert is not already locked.
 - **Solve**: Solves the alert. Visible only if the monitor’s issue settings is set as **not solvable**.
 
-![Slack message with buttons](./images/slack_notification_message_with_buttons.png)
+![Slack message with buttons](../images/slack_notification_message_with_buttons.png)
 
 ### Messages mentioning Sentinela
 As a Slack app, Sentinela can also respond to direct commands sent in a message. To interact this way, mention the Sentinela app, followed by the desired action.

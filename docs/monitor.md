@@ -280,7 +280,7 @@ result = await asyncio.to_thread(blocking_function)
 # Notifications
 Notifications are optional and can be configured to send notifications to different targets without needing extensive settings for ech monitor. Configure notifications by creating the `notification_options` variable with a list of the desired notifications. Each notification has it's own settings and behaviors.
 
-Notifications are provided as plugins. Check the [plugins documentation](./plugins.md) for more information.
+Notifications are provided as plugins. Check the [plugins documentation](./plugins/plugins.md) for more information.
 
 # Reactions
 Reactions are optional and can be configured reactions to specific events by creating a `reaction_options` variable with an instance of the `ReactionOptions` class, available in the `monitor_utils` module.
