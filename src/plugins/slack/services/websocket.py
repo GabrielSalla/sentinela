@@ -96,7 +96,7 @@ async def init(controller_enabled: bool, executor_enabled: bool) -> None:  # pra
     await _handler.connect_async()
 
 
-async def stop() -> None:  # pragma: no cover
+async def stop(controller_enabled: bool, executor_enabled: bool) -> None:  # pragma: no cover
     global _handler
 
     if _handler is not None:
