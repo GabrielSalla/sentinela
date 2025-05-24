@@ -56,9 +56,10 @@ To create a monitor, import specific dependencies from `monitor_utils`. Availabl
 - [`ValueRule`](#value-rule)
 - [`PriorityLevels`](#priority-levels)
 
-**Functions**
+**Available functions and modules**
 - [`query`](#query)
 - [`read_file`](#read-file)
+- [`variables`](#variables)
 
 To get started with a simple monitor, use the following imports:
 
@@ -358,6 +359,39 @@ The function takes 2 parameters:
 
 ```python
 content = read_file("search_query.sql")
+```
+
+## Variables
+The `variables` module allows storing and retrieving variables that can be used across executions of the monitor. This is useful for maintaining state or configuration information.
+
+Available functions are:
+
+**`get_variable`**
+
+The function takes one parameter:
+- `name`: The name of the variable to retrieve.
+
+Return the value of a variable. If the variable does not exist, returns `None`.
+
+**`set_variable`**
+
+The function takes two parameters:
+- `name`: The name of the variable to set.
+- `value`: The value to assign to the variable.
+
+Sets the value of a variable. If the variable does not exist yet, it's created.
+
+Both functions must be called from functions defined in the monitor base code. If they're called from any other Python file, they will raise an error as they won't be able to identify the monitor that's calling it.
+
+```python
+from monitor_utils import variables
+
+async def search() -> list[IssueDataType] | None:
+    # Set a variable
+    await variables.set_variable("my_var", "some_value")
+
+async def update(issues_data: list[IssueDataType]) -> list[IssueDataType] | None:
+    value = await variables.get_variable("my_var")
 ```
 
 # Registering

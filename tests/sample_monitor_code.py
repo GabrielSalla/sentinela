@@ -1,4 +1,4 @@
-from typing import TypedDict
+from typing import Any, Callable, TypedDict
 
 from monitor_utils import IssueOptions, MonitorOptions
 
@@ -21,3 +21,9 @@ class IssueDataType(TypedDict):
 async def search() -> list[IssueDataType] | None: ...
 async def update(issues_data: list[IssueDataType]) -> list[IssueDataType] | None: ...
 def is_solved(issue_data: IssueDataType) -> bool: ...
+
+
+async def call_function(function: Callable[..., Any], *args: Any, **kwargs: Any) -> Any:
+    """Call a function and return the result. This function is used in tests to mock calls that must
+    come from inside the monitor"""
+    return await function(*args, **kwargs)

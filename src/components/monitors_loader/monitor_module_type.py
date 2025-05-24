@@ -1,3 +1,4 @@
+from pathlib import Path
 from typing import Protocol, TypedDict
 
 from data_models.monitor_options import AlertOptions, IssueOptions, MonitorOptions, ReactionOptions
@@ -5,7 +6,11 @@ from notifications import BaseNotification
 
 
 class MonitorModule(Protocol):
-    """Class that represents a base monitor module structure to have a better code completion"""
+    """Class that represents a base monitor module structure"""
+
+    SENTINELA_MONITOR_ID: int
+    SENTINELA_MONITOR_NAME: str
+    SENTINELA_MONITOR_PATH: Path
 
     monitor_options: MonitorOptions
     issue_options: IssueOptions

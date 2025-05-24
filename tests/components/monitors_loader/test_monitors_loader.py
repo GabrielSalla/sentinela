@@ -496,20 +496,39 @@ async def test_register_monitors_no_sample_monitors(monkeypatch, clear_database)
             assert code_modules_dict[monitor.id].additional_files == {}
 
 
-async def test_configure_monitor(monkeypatch, sample_monitor: Monitor):
-    """'_configure_monitor' should populate the 'reaction_options' and 'notification_options' with
-    the default values"""
+@pytest.mark.parametrize(
+    "monitor_id, monitor_name, monitor_path",
+    [
+        (11, "abc", Path("/path/to/monitor")),
+        (22, "def", Path("/other_path/to/monitor2")),
+        (33, "ghi", Path("/one_more_path/monitor3")),
+    ],
+)
+async def test_configure_monitor(
+    monkeypatch, sample_monitor: Monitor, monitor_id, monitor_name, monitor_path
+):
+    """'_configure_monitor' should populate the monitor identification attributes,
+    'reaction_options' and 'notification_options' with the default values"""
     monitor_module = sample_monitor.code
     monkeypatch.setattr(monitor_module, "reaction_options", None, raising=False)
     monkeypatch.setattr(monitor_module, "notification_options", None, raising=False)
+    monkeypatch.setattr(monitor_module, "SENTINELA_MONITOR_ID", None)
+    monkeypatch.setattr(monitor_module, "SENTINELA_MONITOR_NAME", None)
+    monkeypatch.setattr(monitor_module, "SENTINELA_MONITOR_PATH", None)
 
     assert getattr(monitor_module, "reaction_options", None) is None
     assert getattr(monitor_module, "notification_options", None) is None
+    assert getattr(monitor_module, "SENTINELA_MONITOR_ID", None) is None
+    assert getattr(monitor_module, "SENTINELA_MONITOR_NAME", None) is None
+    assert getattr(monitor_module, "SENTINELA_MONITOR_PATH", None) is None
 
-    monitors_loader._configure_monitor(monitor_module)
+    monitors_loader._configure_monitor(monitor_module, monitor_id, monitor_name, monitor_path)
 
     assert isinstance(monitor_module.reaction_options, ReactionOptions)
     assert monitor_module.notification_options == []
+    assert monitor_module.SENTINELA_MONITOR_ID == monitor_id
+    assert monitor_module.SENTINELA_MONITOR_NAME == monitor_name
+    assert monitor_module.SENTINELA_MONITOR_PATH == monitor_path
 
 
 async def test_configure_monitor_notifications_setup(monkeypatch, sample_monitor: Monitor):
@@ -538,7 +557,7 @@ async def test_configure_monitor_notifications_setup(monkeypatch, sample_monitor
 
     monkeypatch.setattr(monitor_module, "notification_options", [MockNotification()], raising=False)
 
-    monitors_loader._configure_monitor(monitor_module)
+    monitors_loader._configure_monitor(monitor_module, 1, "monitor_1", Path(""))
 
     assert monitor_module.reaction_options.alert_updated == [do_something, do_nothing]
     assert monitor_module.reaction_options.alert_solved == [do_nothing, "do_nothing"]

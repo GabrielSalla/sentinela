@@ -16,6 +16,7 @@ from data_models.monitor_options import (
 from databases import query
 from models.utils.priority import AlertPriority
 
+from . import variables
 from .read_file import read_file
 
 __all__ = [
@@ -31,4 +32,5 @@ __all__ = [
     "ReactionOptions",
     "read_file",
     "ValueRule",
+    "variables",
 ]
