@@ -3,8 +3,6 @@
 import asyncio
 import logging
 import sys
-import traceback
-from typing import Coroutine
 
 import uvloop
 
@@ -19,16 +17,9 @@ import plugins as plugins
 import registry as registry
 import utils.app as app
 import utils.log as log
+from utils.exception_handling import protected_task
 
 _logger = logging.getLogger("main")
-
-
-async def protected_task(task: Coroutine[None, None, None]) -> None:
-    try:
-        await task
-    except Exception:
-        _logger.error(f"Exception with task '{task}'")
-        _logger.error(traceback.format_exc().strip())
 
 
 async def init_plugins_services(controller_enabled: bool, executor_enabled: bool) -> None:
@@ -86,11 +77,11 @@ async def stop_plugins_services() -> None:
 
 async def finish() -> None:
     """Finish the application, making sure any exception won't impact other closing tasks"""
-    await protected_task(http_server.wait_stop())
-    await protected_task(monitors_loader.wait_stop())
-    await protected_task(databases.close())
-    await protected_task(internal_database.close())
-    await protected_task(stop_plugins_services())
+    await protected_task(_logger, http_server.wait_stop())
+    await protected_task(_logger, monitors_loader.wait_stop())
+    await protected_task(_logger, databases.close())
+    await protected_task(_logger, internal_database.close())
+    await protected_task(_logger, plugins.services.stop())
 
 
 async def main() -> None:

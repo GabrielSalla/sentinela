@@ -6,7 +6,7 @@ import pytest
 
 from base_exception import BaseSentinelaException
 from tests.test_utils import assert_message_in_log, assert_message_not_in_log
-from utils.exception_handling import catch_exceptions
+from utils.exception_handling import catch_exceptions, protected_task
 
 pytestmark = pytest.mark.asyncio(loop_scope="session")
 
@@ -78,3 +78,33 @@ async def test_catch_exceptions_error(caplog, mocker, logger):
         assert logger_error_spy.call_count == 2
         logger_error_spy.assert_called_with("error function raised exception")
         logger_info_spy.assert_called_once_with("Exception caught successfully, going on")
+
+
+async def test_protected_task(caplog, mocker):
+    """'protected_task' should do nothing if the execution doesn't raise any errors"""
+    logger = logging.getLogger("test_protected_task")
+    logger_error_spy: MagicMock = mocker.spy(logger, "error")
+
+    async def no_error() -> None:
+        pass
+
+    await protected_task(logger, no_error())
+
+    assert_message_not_in_log(caplog, "Exception with task")
+    logger_error_spy.assert_not_called()
+
+
+async def test_protected_task_error(caplog, mocker):
+    """'protected_task' should log the exception message if an exception is raised"""
+    logger = logging.getLogger("test_protected_task")
+    logger_error_spy: MagicMock = mocker.spy(logger, "error")
+
+    async def error() -> None:
+        raise ValueError("should be raised")
+
+    await protected_task(logger, error())
+
+    assert_message_in_log(caplog, "Exception with task")
+    assert_message_in_log(caplog, "ValueError: should be raised")
+
+    assert logger_error_spy.call_count == 2
