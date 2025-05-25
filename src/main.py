@@ -44,7 +44,6 @@ async def init(controller_enabled: bool, executor_enabled: bool) -> None:
 async def finish(controller_enabled: bool, executor_enabled: bool) -> None:
     """Finish the application, making sure any exception won't impact other closing tasks"""
     await protected_task(_logger, http_server.wait_stop())
-    await protected_task(_logger, monitors_loader.wait_stop())
     await protected_task(_logger, databases.close())
     await protected_task(_logger, internal_database.close())
     await protected_task(

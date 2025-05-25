@@ -820,6 +820,7 @@ async def test_run_as_controller(mocker, monkeypatch, clear_database):
     _load_monitors_spy: AsyncMock = mocker.spy(monitors_loader, "_load_monitors")
 
     await monitors_loader.init(controller_enabled=True)
+    run_task = asyncio.create_task(monitors_loader.run())
 
     for _ in range(3):
         await asyncio.sleep(0.1)
@@ -827,11 +828,10 @@ async def test_run_as_controller(mocker, monkeypatch, clear_database):
 
     await asyncio.sleep(0.1)
     app.stop()
-    await monitors_loader.wait_stop()
 
     assert _load_monitors_spy.call_count == 4
 
-    assert monitors_loader._task.done()
+    await asyncio.wait_for(run_task, timeout=0.1)
 
     assert len(registry._monitors) == 2
 
@@ -862,6 +862,7 @@ async def test_run_as_executor(mocker, monkeypatch, clear_database):
     )
 
     await monitors_loader.init(controller_enabled=False)
+    run_task = asyncio.create_task(monitors_loader.run())
 
     for _ in range(3):
         await asyncio.sleep(0.1)
@@ -869,11 +870,10 @@ async def test_run_as_executor(mocker, monkeypatch, clear_database):
 
     await asyncio.sleep(0.1)
     app.stop()
-    await monitors_loader.wait_stop()
 
     assert _load_monitors_spy.call_count == 4
 
-    assert monitors_loader._task.done()
+    await asyncio.wait_for(run_task, timeout=0.1)
 
     assert len(registry._monitors) == 2
     assert isinstance(registry._monitors[9999123]["module"], ModuleType)
@@ -905,6 +905,7 @@ async def test_run_cool_down(mocker, monkeypatch, clear_database):
     )
 
     await monitors_loader.init(controller_enabled=False)
+    run_task = asyncio.create_task(monitors_loader.run())
 
     for _ in range(3):
         await asyncio.sleep(0.1)
@@ -912,11 +913,10 @@ async def test_run_cool_down(mocker, monkeypatch, clear_database):
 
     await asyncio.sleep(0.1)
     app.stop()
-    await monitors_loader.wait_stop()
 
     assert _load_monitors_spy.call_count == 1
 
-    assert monitors_loader._task.done()
+    await asyncio.wait_for(run_task, timeout=0.1)
 
     assert len(registry._monitors) == 2
     assert isinstance(registry._monitors[9999123]["module"], ModuleType)
@@ -959,10 +959,10 @@ async def test_run_sleep_time(mocker, monkeypatch, clear_database, seconds, expe
     )
 
     await monitors_loader.init(controller_enabled=False)
+    run_task = asyncio.create_task(monitors_loader.run())
     await asyncio.sleep(1)
     app.stop()
-    await monitors_loader.wait_stop()
 
-    assert monitors_loader._task.done()
+    await asyncio.wait_for(run_task, timeout=0.1)
 
     sleep_spy.assert_called_once_with(expected_sleep_time)

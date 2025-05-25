@@ -3,7 +3,7 @@ import logging
 import shutil
 from datetime import datetime, timedelta
 from pathlib import Path
-from typing import Any, Generator, cast
+from typing import Generator, cast
 
 from pydantic.dataclasses import dataclass
 
@@ -26,8 +26,6 @@ MONITORS_PATH = "_monitors"
 MONITORS_LOAD_PATH = "_monitors_load"
 EARLY_LOAD_TIME = 5
 COOL_DOWN_TIME = 2
-
-_task: asyncio.Task[Any]
 
 
 @dataclass
@@ -289,7 +287,7 @@ async def _load_monitors(last_load_time: datetime | None) -> None:
     registry.monitors_pending.clear()
 
 
-async def _run() -> None:
+async def run() -> None:
     """Monitors loading loop, loading them recurrently. Stops automatically when the app stops"""
     last_load_time: datetime | None = None
 
@@ -326,21 +324,13 @@ async def _run() -> None:
             if time_since_last_load < COOL_DOWN_TIME:
                 await app.sleep(COOL_DOWN_TIME - time_since_last_load)
 
+    _logger.info("Removing temporary monitors paths")
+    shutil.rmtree(Path(RELATIVE_PATH) / MONITORS_LOAD_PATH, ignore_errors=True)
+    shutil.rmtree(Path(RELATIVE_PATH) / MONITORS_PATH, ignore_errors=True)
+
 
 async def init(controller_enabled: bool) -> None:
     """Load the internal monitors and sample monitors if controller is enabled, and start the
     monitors load task"""
     if controller_enabled:
         await _register_monitors()
-
-    global _task
-    _task = asyncio.create_task(_run())
-
-
-async def wait_stop() -> None:
-    """Wait for the Monitors load task to finish"""
-    global _task
-    await _task
-    _logger.info("Removing temporary monitors paths")
-    shutil.rmtree(Path(RELATIVE_PATH) / MONITORS_LOAD_PATH, ignore_errors=True)
-    shutil.rmtree(Path(RELATIVE_PATH) / MONITORS_PATH, ignore_errors=True)
