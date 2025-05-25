@@ -1148,8 +1148,7 @@ async def test_run_monitor_not_registered(monkeypatch, sample_monitor: Monitor):
 
 async def test_run_monitor_skip_running(caplog, mocker, sample_monitor: Monitor):
     """'run' should skip running the monitor if it's 'running' flag is 'True'"""
-    sample_monitor.set_running(True)
-    await sample_monitor.save()
+    await sample_monitor.set_running(True)
 
     run_routines_spy: AsyncMock = mocker.spy(monitor_handler, "_run_routines")
 
@@ -1169,11 +1168,11 @@ async def test_run_monitor_set_running(mocker, sample_monitor: Monitor, tasks):
 
     run_routines_spy.assert_awaited_once()
 
-    assert set_running_spy.call_count == 2
-    assert set_running_spy.call_args_list[0].args[0].id == sample_monitor.id
-    assert set_running_spy.call_args_list[0].args[1] is True
-    assert set_running_spy.call_args_list[1].args[0].id == sample_monitor.id
-    assert set_running_spy.call_args_list[1].args[1] is False
+    assert set_running_spy.await_count == 2
+    assert set_running_spy.await_args_list[0].args[0].id == sample_monitor.id
+    assert set_running_spy.await_args_list[0].args[1] is True
+    assert set_running_spy.await_args_list[1].args[0].id == sample_monitor.id
+    assert set_running_spy.await_args_list[1].args[1] is False
 
 
 @pytest.mark.flaky(reruns=2)
@@ -1201,15 +1200,15 @@ async def test_run_monitor_timeout(caplog, mocker, monkeypatch, sample_monitor: 
 
     assert_message_in_log(caplog, f"Execution for monitor '{sample_monitor}' timed out")
 
-    assert set_running_spy.call_count == 2
-    assert set_running_spy.call_args_list[0].args[0].id == sample_monitor.id
-    assert set_running_spy.call_args_list[0].args[1] is True
-    assert set_running_spy.call_args_list[1].args[0].id == sample_monitor.id
-    assert set_running_spy.call_args_list[1].args[1] is False
+    assert set_running_spy.await_count == 2
+    assert set_running_spy.await_args_list[0].args[0].id == sample_monitor.id
+    assert set_running_spy.await_args_list[0].args[1] is True
+    assert set_running_spy.await_args_list[1].args[0].id == sample_monitor.id
+    assert set_running_spy.await_args_list[1].args[1] is False
 
-    set_queued_spy.assert_called_once()
-    assert set_queued_spy.call_args_list[0].args[0].id == sample_monitor.id
-    assert set_queued_spy.call_args_list[0].args[1] is False
+    set_queued_spy.assert_awaited_once()
+    assert set_queued_spy.await_args_list[0].args[0].id == sample_monitor.id
+    assert set_queued_spy.await_args_list[0].args[1] is False
 
 
 @pytest.mark.parametrize("tasks", [["search"], ["update"], ["search", "update"]])
@@ -1230,15 +1229,15 @@ async def test_run_monitor_sentinela_exception(mocker, monkeypatch, sample_monit
     with pytest.raises(SomeException):
         await monitor_handler.run({"payload": {"monitor_id": sample_monitor.id, "tasks": tasks}})
 
-    assert set_running_spy.call_count == 2
-    assert set_running_spy.call_args_list[0].args[0].id == sample_monitor.id
-    assert set_running_spy.call_args_list[0].args[1] is True
-    assert set_running_spy.call_args_list[1].args[0].id == sample_monitor.id
-    assert set_running_spy.call_args_list[1].args[1] is False
+    assert set_running_spy.await_count == 2
+    assert set_running_spy.await_args_list[0].args[0].id == sample_monitor.id
+    assert set_running_spy.await_args_list[0].args[1] is True
+    assert set_running_spy.await_args_list[1].args[0].id == sample_monitor.id
+    assert set_running_spy.await_args_list[1].args[1] is False
 
-    set_queued_spy.assert_called_once()
-    assert set_queued_spy.call_args_list[0].args[0].id == sample_monitor.id
-    assert set_queued_spy.call_args_list[0].args[1] is False
+    set_queued_spy.assert_awaited_once()
+    assert set_queued_spy.await_args_list[0].args[0].id == sample_monitor.id
+    assert set_queued_spy.await_args_list[0].args[1] is False
 
 
 @pytest.mark.parametrize("tasks", [["search"], ["update"], ["search", "update"]])
@@ -1250,8 +1249,8 @@ async def test_run_monitor_error(caplog, mocker, monkeypatch, sample_monitor: Mo
 
     monkeypatch.setattr(monitor_handler, "_run_routines", error)
 
-    set_running_spy: MagicMock = mocker.spy(Monitor, "set_running")
-    set_queued_spy: MagicMock = mocker.spy(Monitor, "set_queued")
+    set_running_spy: AsyncMock = mocker.spy(Monitor, "set_running")
+    set_queued_spy: AsyncMock = mocker.spy(Monitor, "set_queued")
 
     await monitor_handler.run({"payload": {"monitor_id": sample_monitor.id, "tasks": tasks}})
 
@@ -1259,12 +1258,12 @@ async def test_run_monitor_error(caplog, mocker, monkeypatch, sample_monitor: Mo
     assert_message_in_log(caplog, "ValueError: Something is not right")
     assert_message_in_log(caplog, "Exception caught successfully, going on")
 
-    assert set_running_spy.call_count == 2
-    assert set_running_spy.call_args_list[0].args[0].id == sample_monitor.id
-    assert set_running_spy.call_args_list[0].args[1] is True
-    assert set_running_spy.call_args_list[1].args[0].id == sample_monitor.id
-    assert set_running_spy.call_args_list[1].args[1] is False
+    assert set_running_spy.await_count == 2
+    assert set_running_spy.await_args_list[0].args[0].id == sample_monitor.id
+    assert set_running_spy.await_args_list[0].args[1] is True
+    assert set_running_spy.await_args_list[1].args[0].id == sample_monitor.id
+    assert set_running_spy.await_args_list[1].args[1] is False
 
-    set_queued_spy.assert_called_once()
-    assert set_queued_spy.call_args_list[0].args[0].id == sample_monitor.id
-    assert set_queued_spy.call_args_list[0].args[1] is False
+    set_queued_spy.assert_awaited_once()
+    assert set_queued_spy.await_args_list[0].args[0].id == sample_monitor.id
+    assert set_queued_spy.await_args_list[0].args[1] is False

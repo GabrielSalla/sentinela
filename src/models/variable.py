@@ -17,6 +17,7 @@ class Variable(Base):
     value: Mapped[str | None] = mapped_column(String(), nullable=True)
     updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), insert_default=now)
 
+    @Base.lock_change
     async def set(self, value: str | None) -> None:
         """Set the variable value"""
         self.value = value

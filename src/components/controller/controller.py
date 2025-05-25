@@ -61,8 +61,7 @@ async def diagnostics() -> tuple[dict[str, Any], list[str]]:
 
 async def _queue_task(monitor: Monitor, tasks: list[str]) -> None:
     """Send a message to the queue with the monitor tasks that should be executed"""
-    monitor.set_queued(True)
-    await monitor.save()
+    await monitor.set_queued(True)
 
     try:
         await message_queue.send_message(
@@ -77,8 +76,7 @@ async def _queue_task(monitor: Monitor, tasks: list[str]) -> None:
 
         _logger.error("Error while queueing the task, reverting queued state")
         _logger.error(traceback.format_exc().strip())
-        monitor.set_queued(False)
-        await monitor.save()
+        await monitor.set_queued(False)
 
 
 async def _process_monitor(monitor: Monitor) -> None:

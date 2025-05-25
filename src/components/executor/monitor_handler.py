@@ -301,7 +301,7 @@ async def _run_routines(monitor: Monitor, tasks: list[Literal["search", "update"
             await _update_routine(monitor)
 
         await monitor.refresh()
-        monitor.set_update_executed_at()
+        await monitor.set_update_executed_at()
         await monitor.save()
         # Reload all objects to prevent some kind of injection
         await monitor.load()
@@ -314,7 +314,7 @@ async def _run_routines(monitor: Monitor, tasks: list[Literal["search", "update"
             await _search_routine(monitor)
 
         await monitor.refresh()
-        monitor.set_search_executed_at()
+        await monitor.set_search_executed_at()
         await monitor.save()
 
     with monitor_alert_time.time():
@@ -354,8 +354,7 @@ async def run(message: dict[Any, Any]) -> None:
     monitor_running.inc()
 
     try:
-        monitor.set_running(True)
-        await monitor.save()
+        await monitor.set_running(True)
 
         monitor_execution_time = prometheus_monitor_execution_time.labels(**prometheus_labels)
         with monitor_execution_time.time():
@@ -380,10 +379,10 @@ async def run(message: dict[Any, Any]) -> None:
         # Refresh the monitor before updating to prevent overwriting information that might have
         # changed while the routines were executing
         await monitor.refresh()
+
         # Set the monitor's running and queued variables to False, to allow the monitor to be
         # queued and run again
-        monitor.set_running(False)
-        monitor.set_queued(False)
-        await monitor.save()
+        await monitor.set_running(False)
+        await monitor.set_queued(False)
 
         monitor_running.dec()
