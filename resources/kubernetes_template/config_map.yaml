@@ -42,7 +42,7 @@ data:
       monitors_stuck:
         schedule: "*/5 * * * *"
         params:
-          time_tolerance: 300
+          time_tolerance: 10
 
     executor_concurrency: 5
     executor_sleep: 5
