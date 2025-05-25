@@ -307,13 +307,17 @@ async def test_create_process_task_semaphore_wait(caplog, sample_monitor: Monito
     semaphore = asyncio.Semaphore(1)
 
     async with semaphore:
-        task = asyncio.create_task(controller._create_process_task(semaphore, sample_monitor))
+        wait_semaphore_task = asyncio.create_task(
+            controller._create_process_task(semaphore, sample_monitor)
+        )
         await asyncio.sleep(0.1)
-        assert not task.done()
+        assert not wait_semaphore_task.done()
 
     await asyncio.sleep(0.1)
-    assert task.done()
-    await task
+    assert wait_semaphore_task.done()
+
+    run_task_task = await wait_semaphore_task
+    await run_task_task
 
     assert_message_in_log(caplog, f"Triggered ['search', 'update'] for {sample_monitor}")
 
@@ -388,6 +392,14 @@ async def test_run(monkeypatch, clear_queue, clear_database):
             ),
         ]
     )
+
+
+async def test_run_current_task_error(caplog, monkeypatch):
+    """'run' should log an error if it can't get the current task and finish the execution"""
+    monkeypatch.setattr(asyncio, "current_task", lambda: None)
+
+    await asyncio.wait_for(controller.run(), timeout=0.1)
+    assert_message_in_log(caplog, "Could not get the current asyncio task, finishing")
 
 
 async def test_run_monitors_not_ready(caplog, monkeypatch, mocker):

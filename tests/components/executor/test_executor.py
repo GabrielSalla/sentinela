@@ -62,39 +62,6 @@ async def test_diagnostics(monkeypatch, started_at, last_message_at, expected_re
     assert result == expected_result
 
 
-@pytest.mark.parametrize("running_tasks", [0, 1, 2, 3, 4, 5])
-async def test_count_running(running_tasks):
-    """'count_running' should return the number of running tasks"""
-    tasks = [asyncio.create_task(asyncio.sleep(1 if i < running_tasks else 0.05)) for i in range(5)]
-    await asyncio.sleep(0.1)
-
-    result = executor.count_running(tasks)
-    assert result == running_tasks
-
-    for task in tasks:
-        task.cancel()
-
-
-async def test_count_running_empty_list():
-    """'count_running' should return 0 if the list is empty"""
-    result = executor.count_running([])
-    assert result == 0
-
-
-async def test_wait_for_tasks(caplog, monkeypatch):
-    """'wait_for_tasks' should wait for all running tasks to finish"""
-    monkeypatch.setattr(executor, "TASKS_FINISH_CHECK_TIME", 0.2)
-
-    tasks = [asyncio.create_task(asyncio.sleep(0.5)) for _ in range(5)]
-
-    await executor.wait_for_tasks(tasks)
-
-    for task in tasks:
-        assert task.done()
-
-    assert_message_in_log(caplog, "Waiting for 5 tasks to finish", count=3)
-
-
 async def test_run(monkeypatch, clear_queue):
     """Integration test of the 'run' method. It should wait for messages and process them using the
     runners"""
@@ -132,6 +99,14 @@ async def test_run(monkeypatch, clear_queue):
     await asyncio.sleep(0.1)
     assert stop_task.done()
     await stop_task
+
+
+async def test_run_current_task_error(caplog, monkeypatch):
+    """'run' should log an error if it can't get the current task and finish the execution"""
+    monkeypatch.setattr(asyncio, "current_task", lambda: None)
+
+    await asyncio.wait_for(executor.run(), timeout=0.1)
+    assert_message_in_log(caplog, "Could not get the current asyncio task, finishing")
 
 
 async def test_run_no_messages(mocker, monkeypatch, clear_queue):

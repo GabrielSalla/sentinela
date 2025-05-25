@@ -1,6 +1,5 @@
 # Still missing tests for main.py, so it's been ignored in the .coveragerc file
 
-import asyncio
 import logging
 import sys
 
@@ -10,6 +9,7 @@ import components.controller as controller
 import components.executor as executor
 import components.http_server as http_server
 import components.monitors_loader as monitors_loader
+import components.task_manager as task_manager
 import databases as databases
 import internal_database as internal_database
 import message_queue as message_queue
@@ -44,7 +44,6 @@ async def init(controller_enabled: bool, executor_enabled: bool) -> None:
 async def finish(controller_enabled: bool, executor_enabled: bool) -> None:
     """Finish the application, making sure any exception won't impact other closing tasks"""
     await protected_task(_logger, http_server.wait_stop())
-    await protected_task(_logger, monitors_loader.wait_stop())
     await protected_task(_logger, databases.close())
     await protected_task(_logger, internal_database.close())
     await protected_task(
@@ -69,8 +68,11 @@ async def main() -> None:
         "executor": executor.run,
     }
 
-    tasks = [modes[mode]() for mode in operation_modes]
-    await asyncio.gather(*tasks)
+    for mode in operation_modes:
+        task_manager.create_task(modes[mode]())
+    task_manager.create_task(monitors_loader.run())
+
+    await task_manager.run()
 
     await finish(
         controller_enabled="controller" in operation_modes,

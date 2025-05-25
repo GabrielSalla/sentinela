@@ -2,10 +2,11 @@ import asyncio
 import logging
 import traceback
 from datetime import datetime
-from typing import Any
+from typing import Any, Coroutine
 
 import prometheus_client
 
+import components.task_manager as task_manager
 import message_queue as message_queue
 import registry as registry
 import utils.app as app
@@ -115,7 +116,7 @@ async def _run_task(semaphore: asyncio.Semaphore, monitor: Monitor) -> None:
 
 async def _create_process_task(
     semaphore: asyncio.Semaphore, monitor: Monitor
-) -> asyncio.Task[Any] | None:
+) -> Coroutine[Any, Any, Any] | None:
     """Create a task to process the monitor"""
     # Instead of registering the monitor, skip if it's not registered yet
     # If processing a monitor that is not yet registered, the executor won't have
@@ -126,14 +127,19 @@ async def _create_process_task(
         return None
 
     # Process monitors concurrently
-    # Use '_run_task' to keep the semaphore lock while the monitor is being processed
+    # Use '_run_task' to hold the semaphore while the monitor is being processed
     async with semaphore:
-        return asyncio.create_task(_run_task(semaphore, monitor))
+        return _run_task(semaphore, monitor)
 
 
 async def run() -> None:
     global last_loop_at
     global running
+
+    current_task = asyncio.current_task()
+    if current_task is None:
+        _logger.error("Could not get the current asyncio task, finishing")
+        return
 
     running = True
 
@@ -145,28 +151,22 @@ async def run() -> None:
     # Queue setup
     semaphore = asyncio.Semaphore(configs.controller_concurrency)
 
-    tasks: list[asyncio.Task[Any]] = []
-
     while app.running():
         with catch_exceptions(_logger):
             # Wait for monitors to be ready
             await registry.wait_monitors_ready()
 
-            # Tasks cleaning
-            tasks = [task for task in tasks if not task.done()]
-
             last_loop_at = now()
 
             # Run the procedures in the background
-            procedures_task = asyncio.create_task(run_procedures())
-            tasks.append(procedures_task)
+            task_manager.create_task(run_procedures(), parent_task=current_task)
 
             # Loop through all monitors
             enabled_monitors = await Monitor.get_all(Monitor.enabled.is_(True))
             for monitor in enabled_monitors:
-                task = await _create_process_task(semaphore, monitor)
-                if task is not None:
-                    tasks.append(task)
+                coroutine = await _create_process_task(semaphore, monitor)
+                if coroutine is not None:
+                    task_manager.create_task(coroutine, parent_task=current_task)
 
         # Sleep until next scheduling decision, if necessary
         if not is_triggered(controller_process_schedule, last_loop_at):
@@ -174,3 +174,4 @@ async def run() -> None:
             await app.sleep(sleep_time)
 
     _logger.info("Finishing")
+    await task_manager.wait_for_tasks(parent_task=current_task)
