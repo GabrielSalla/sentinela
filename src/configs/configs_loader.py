@@ -59,6 +59,7 @@ class Configs:
     executor_monitor_timeout: int
     executor_reaction_timeout: int
     executor_request_timeout: int
+    executor_monitor_heartbeat_time: int
 
     max_issues_creation: int
 

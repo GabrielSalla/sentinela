@@ -70,6 +70,7 @@ application_queue:
 - `executor_monitor_timeout`: Integer. Timeout, in seconds, for monitor execution.
 - `executor_reaction_timeout`: Integer. Timeout, in seconds, for reactions execution.
 - `executor_request_timeout`: Integer. Timeout, in seconds, for requests execution.
+- `executor_monitor_heartbeat_time`: Integer. Time, in seconds, between each monitor heartbeat.
 
 ## Issues Creation
 - `max_issues_creation`: Integer. Maximum number of issues that can be created by each monitor in a single search. Can be overridden by the monitors' configuration.

@@ -49,6 +49,7 @@ data:
     executor_monitor_timeout: 60
     executor_reaction_timeout: 5
     executor_request_timeout: 2
+    executor_monitor_heartbeat_time: 5
 
     max_issues_creation: 100
 
