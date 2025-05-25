@@ -62,7 +62,7 @@ application_queue:
 - `controller_procedures`: Object. Procedures to be executed by the Controller and their settings.
 - `controller_procedures.monitors_stuck`: Object. Settings for the procedure to fix monitors stuck in "queued" or "running" status.
 - `controller_procedures.monitors_stuck.schedule`: String using Cron format. Schedule to execute the `monitors_stuck` procedure.
-- `controller_procedures.monitors_stuck.params.time_tolerance`: Integer. Time tolerance in seconds for a monitor to be considered as stuck.
+- `controller_procedures.monitors_stuck.params.time_tolerance`: Integer. Time tolerance in seconds for a monitor to be considered as stuck. This parameter is directly impacted by the `executor_monitor_heartbeat_time` setting and the recommended value is 2 times the heartbeat time.
 
 ## Executor Settings
 - `executor_concurrency`: Integer. Number of tasks that can be executed at the same time by each Executor.
@@ -70,7 +70,7 @@ application_queue:
 - `executor_monitor_timeout`: Integer. Timeout, in seconds, for monitor execution.
 - `executor_reaction_timeout`: Integer. Timeout, in seconds, for reactions execution.
 - `executor_request_timeout`: Integer. Timeout, in seconds, for requests execution.
-- `executor_monitor_heartbeat_time`: Integer. Time, in seconds, between each monitor heartbeat.
+- `executor_monitor_heartbeat_time`: Integer. Time, in seconds, between each monitor heartbeat. This parameter impacts the controller procedure `monitors_stuck.time_tolerance` parameter.
 
 ## Issues Creation
 - `max_issues_creation`: Integer. Maximum number of issues that can be created by each monitor in a single search. Can be overridden by the monitors' configuration.

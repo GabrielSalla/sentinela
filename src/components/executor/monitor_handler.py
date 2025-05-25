@@ -8,8 +8,10 @@ from typing import Any, Literal, cast
 import prometheus_client
 from pydantic import ValidationError
 
+import components.task_manager as task_manager
 import registry as registry
 from base_exception import BaseSentinelaException
+from configs import configs
 from data_models.process_monitor_payload import ProcessMonitorPayload
 from internal_database import get_session
 from models import Alert, Issue, Monitor
@@ -321,6 +323,13 @@ async def _run_routines(monitor: Monitor, tasks: list[Literal["search", "update"
         await _alerts_routine(monitor)
 
 
+async def _heartbeat_routine(monitor: Monitor) -> None:
+    """Heartbeat routine for the monitor, setting the last heartbeat to the current time"""
+    while True:
+        await monitor.set_last_heartbeat()
+        await asyncio.sleep(configs.executor_monitor_heartbeat_time)
+
+
 async def run(message: dict[Any, Any]) -> None:
     """Process a message with type 'process_monitor', loading the monitor and executing it's
     routines, while also detecting errors and reporting them accordingly"""
@@ -339,11 +348,11 @@ async def run(message: dict[Any, Any]) -> None:
         _logger.error(f"Monitor {monitor_id} not found. Skipping message")
         return
 
-    await registry.wait_monitor_loaded(monitor_id)
-
     # Skip executing the monitor if it's already running
     if monitor.running:
         return
+
+    await registry.wait_monitor_loaded(monitor_id)
 
     prometheus_labels = {
         "monitor_id": monitor.id,
@@ -352,6 +361,10 @@ async def run(message: dict[Any, Any]) -> None:
 
     monitor_running = prometheus_monitor_running.labels(**prometheus_labels)
     monitor_running.inc()
+
+    heartbeat_task = task_manager.create_task(
+        _heartbeat_routine(monitor), parent_task=asyncio.current_task()
+    )
 
     try:
         await monitor.set_running(True)
@@ -376,6 +389,9 @@ async def run(message: dict[Any, Any]) -> None:
         _logger.error(traceback.format_exc().strip())
         _logger.info("Exception caught successfully, going on")
     finally:
+        # Cancel the heartbeat task
+        heartbeat_task.cancel()
+
         # Refresh the monitor before updating to prevent overwriting information that might have
         # changed while the routines were executing
         await monitor.refresh()

@@ -1,6 +1,6 @@
 import asyncio
 import time
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from unittest.mock import AsyncMock, MagicMock
 
 import pytest
@@ -11,7 +11,7 @@ from base_exception import BaseSentinelaException
 from data_models.monitor_options import AlertOptions, CountRule, IssueOptions, PriorityLevels
 from models import Alert, AlertPriority, AlertStatus, Issue, IssueStatus, Monitor
 from tests.test_utils import assert_message_in_log, assert_message_not_in_log
-from utils.time import time_since
+from utils.time import now, time_since
 
 pytestmark = pytest.mark.asyncio(loop_scope="session")
 
@@ -1100,6 +1100,27 @@ async def test_run_routines_load_modules(mocker, monkeypatch, sample_monitor: Mo
     assert sample_monitor.active_alerts[0].id == alert.id
 
 
+# Test _heartbeat_routine
+
+
+async def test_heartbeat_routine(monkeypatch, sample_monitor: Monitor):
+    """'_heartbeat_routine' should handle execution timeouts while running the monitor routines"""
+    monkeypatch.setattr(monitor_handler.configs, "executor_monitor_heartbeat_time", 0.5)
+
+    await sample_monitor.refresh()
+    assert sample_monitor.last_heartbeat is None
+
+    heartbeat_task = asyncio.create_task(monitor_handler._heartbeat_routine(sample_monitor))
+
+    await asyncio.sleep(0)
+    for _ in range(4):
+        await sample_monitor.refresh()
+        assert sample_monitor.last_heartbeat > now() - timedelta(seconds=0.1)
+        await asyncio.sleep(0.5)
+
+    heartbeat_task.cancel()
+
+
 # Test run
 
 
@@ -1156,6 +1177,33 @@ async def test_run_monitor_skip_running(caplog, mocker, sample_monitor: Monitor)
 
     assert_message_not_in_log(caplog, "Invalid payload")
     run_routines_spy.assert_not_called()
+
+
+@pytest.mark.flaky(reruns=2)
+async def test_run_monitor_heartbeat(monkeypatch, sample_monitor: Monitor):
+    """'run' should handle execution timeouts while running the monitor routines"""
+
+    async def sleep(monitor, tasks):
+        await asyncio.sleep(2.1)
+
+    monkeypatch.setattr(monitor_handler, "_run_routines", sleep)
+
+    monkeypatch.setattr(monitor_handler.configs, "executor_monitor_heartbeat_time", 0.5)
+
+    await sample_monitor.refresh()
+    assert sample_monitor.last_heartbeat is None
+
+    run_task = asyncio.create_task(
+        monitor_handler.run({"payload": {"monitor_id": sample_monitor.id, "tasks": ["search"]}})
+    )
+
+    await asyncio.sleep(0.05)
+    for _ in range(4):
+        await sample_monitor.refresh()
+        assert sample_monitor.last_heartbeat > now() - timedelta(seconds=0.1)
+        await asyncio.sleep(0.5)
+
+    await run_task
 
 
 @pytest.mark.parametrize("tasks", [["search"], ["update"], ["search", "update"]])
