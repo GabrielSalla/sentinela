@@ -6,6 +6,7 @@ from typing import Any, Callable, Coroutine
 
 import prometheus_client
 
+import components.task_manager as task_manager
 import message_queue as message_queue
 import registry as registry
 import utils.app as app
@@ -76,7 +77,9 @@ class Runner:
 
         # Create a looping task that will keep the message not visible while it's been
         # handled
-        change_visibility_task = asyncio.create_task(_change_visibility_loop(self.message))
+        change_visibility_task = task_manager.create_task(
+            _change_visibility_loop(self.message), parent_task=asyncio.current_task()
+        )
 
         # Protect execution from exceptions
         try:

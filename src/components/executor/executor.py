@@ -5,6 +5,7 @@ import logging
 from datetime import datetime
 from typing import Any
 
+import components.task_manager as task_manager
 import message_queue as message_queue
 import registry as registry
 import utils.app as app
@@ -40,23 +41,15 @@ async def diagnostics() -> tuple[dict[str, Any], list[str]]:
     return status, issues
 
 
-def count_running(tasks: list[asyncio.Task[Any]]) -> int:
-    """Count the number of running tasks"""
-    return len([task for task in tasks if not task.done()])
-
-
-async def wait_for_tasks(tasks: list[asyncio.Task[Any]]) -> None:
-    """Wait for all running tasks to finish"""
-    while count_running(tasks) > 0:
-        _logger.info(f"Waiting for {count_running(tasks)} tasks to finish")
-        await asyncio.sleep(TASKS_FINISH_CHECK_TIME)
-
-
 async def run() -> None:
     global last_message_at
     global running
 
-    tasks: list[asyncio.Task[Any]] = []
+    current_task = asyncio.current_task()
+    if current_task is None:
+        _logger.error("Could not get the current asyncio task, finishing")
+        return
+
     runner_id = 0
     running = True
     semaphore = asyncio.Semaphore(configs.executor_concurrency)
@@ -65,9 +58,6 @@ async def run() -> None:
 
     while app.running():
         with catch_exceptions(_logger):
-            # Tasks cleaning
-            tasks = [task for task in tasks if not task.done()]
-
             async with semaphore:
                 message = await message_queue.get_message()
 
@@ -79,11 +69,10 @@ async def run() -> None:
 
             runner_id += 1
             runner = Runner(runner_id, message)
-            runner_task = asyncio.create_task(runner.process(semaphore))
-            tasks.append(runner_task)
+            task_manager.create_task(runner.process(semaphore), parent_task=current_task)
 
             # Give control back to the event loop
             await asyncio.sleep(0)
 
     _logger.info("Finishing")
-    await wait_for_tasks(tasks)
+    await task_manager.wait_for_tasks(parent_task=current_task)
