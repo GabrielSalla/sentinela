@@ -3,7 +3,7 @@ import logging
 from asyncio import Semaphore
 from datetime import datetime
 from enum import Enum
-from typing import Any, Coroutine, Optional, Sequence, Type, TypeVar, cast
+from typing import Any, Callable, Coroutine, Optional, Sequence, Type, TypeVar, cast
 
 from sqlalchemy import Row, func, inspect, select
 from sqlalchemy.ext.asyncio import AsyncAttrs
@@ -32,7 +32,8 @@ class Base(AsyncAttrs, DeclarativeBase):
     __allow_unmapped__ = True
 
     _logger_obj: logging.Logger
-    _semaphore_obj: Semaphore
+    _session_semaphore_obj: Semaphore
+    _lock_semaphore_obj: Semaphore
 
     _enable_creation_event: bool = True
 
@@ -42,6 +43,24 @@ class Base(AsyncAttrs, DeclarativeBase):
 
     def __repr__(self) -> str:
         return f"{self._class_name()}[{self.id}]"  # type: ignore[attr-defined]
+
+    @staticmethod
+    def lock_change(
+        func: Callable[..., Coroutine[Any, Any, Any]],
+    ) -> Callable[..., Coroutine[Any, Any, Any]]:
+        """Decorator to lock the object to prevent concurrent tasks changing the same instance at
+        the same time."""
+
+        async def wrapper(self: Base, *args: Any, **kwargs: Any) -> Any:
+            try:
+                self._lock_semaphore_obj
+            except AttributeError:
+                self._lock_semaphore_obj = Semaphore()
+
+            async with self._lock_semaphore_obj:
+                return await func(self, *args, **kwargs)
+
+        return wrapper
 
     async def _post_create(self) -> None:
         pass
@@ -97,10 +116,10 @@ class Base(AsyncAttrs, DeclarativeBase):
         An example is one executor processing the object and another one processing an event that
         loads the same object to check for it's information"""
         try:
-            return self._semaphore_obj
+            return self._session_semaphore_obj
         except AttributeError:
-            self._semaphore_obj = Semaphore()
-            return self._semaphore_obj
+            self._session_semaphore_obj = Semaphore()
+            return self._session_semaphore_obj
 
     @classmethod
     async def count(cls: Type[ClassType], *column_filters: ColumnElement[Any]) -> int:
