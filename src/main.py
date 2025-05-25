@@ -3,8 +3,6 @@
 import asyncio
 import logging
 import sys
-import traceback
-from typing import Coroutine
 
 import uvloop
 
@@ -19,35 +17,9 @@ import plugins as plugins
 import registry as registry
 import utils.app as app
 import utils.log as log
+from utils.exception_handling import protected_task
 
 _logger = logging.getLogger("main")
-
-
-async def protected_task(task: Coroutine[None, None, None]) -> None:
-    try:
-        await task
-    except Exception:
-        _logger.error(f"Exception with task '{task}'")
-        _logger.error(traceback.format_exc().strip())
-
-
-async def init_plugins_services(controller_enabled: bool, executor_enabled: bool) -> None:
-    """Initialize the plugins services"""
-    for plugin_name, plugin in plugins.loaded_plugins.items():
-        _logger.info(f"Loading plugin '{plugin_name}'")
-
-        plugin_services = getattr(plugin, "services", None)
-        if plugin_services is None:
-            _logger.info(f"Plugin '{plugin_name}' has no services")
-            continue
-
-        for service_name in plugin_services.__all__:
-            service = getattr(plugin_services, service_name)
-            if hasattr(service, "init"):
-                await service.init(controller_enabled, executor_enabled)
-                _logger.info(f"Service '{plugin_name}.{service_name}' initialized")
-            else:
-                _logger.warning(f"Service '{plugin_name}.{service_name}' has no 'init' function")
 
 
 async def init(controller_enabled: bool, executor_enabled: bool) -> None:
@@ -62,35 +34,23 @@ async def init(controller_enabled: bool, executor_enabled: bool) -> None:
     await http_server.init(controller_enabled)
 
     plugins.load_plugins()
-    await init_plugins_services(controller_enabled, executor_enabled)
+    await plugins.services.init_plugin_services(controller_enabled, executor_enabled)
 
     # The following modules depend on the plugins being loaded
     await databases.init()
     await message_queue.init()
 
 
-async def stop_plugins_services() -> None:
-    """Stop the plugins services"""
-    for plugin_name, plugin in plugins.loaded_plugins.items():
-        _logger.info(f"Stopping plugin '{plugin_name}'")
-
-        plugin_services = getattr(plugin, "services", None)
-        if plugin_services is None:
-            continue
-
-        for service_name in plugin_services.__all__:
-            service = getattr(plugin_services, service_name)
-            if hasattr(service, "stop"):
-                await protected_task(service.stop())
-
-
-async def finish() -> None:
+async def finish(controller_enabled: bool, executor_enabled: bool) -> None:
     """Finish the application, making sure any exception won't impact other closing tasks"""
-    await protected_task(http_server.wait_stop())
-    await protected_task(monitors_loader.wait_stop())
-    await protected_task(databases.close())
-    await protected_task(internal_database.close())
-    await protected_task(stop_plugins_services())
+    await protected_task(_logger, http_server.wait_stop())
+    await protected_task(_logger, monitors_loader.wait_stop())
+    await protected_task(_logger, databases.close())
+    await protected_task(_logger, internal_database.close())
+    await protected_task(
+        _logger,
+        plugins.services.stop_plugin_services(controller_enabled, executor_enabled),
+    )
 
 
 async def main() -> None:
@@ -112,7 +72,10 @@ async def main() -> None:
     tasks = [modes[mode]() for mode in operation_modes]
     await asyncio.gather(*tasks)
 
-    await finish()
+    await finish(
+        controller_enabled="controller" in operation_modes,
+        executor_enabled="executor" in operation_modes,
+    )
 
 
 if __name__ == "__main__":
