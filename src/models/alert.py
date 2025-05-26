@@ -71,6 +71,7 @@ class Alert(Base):
         """Calculate the alert priority for the provided rule and issues"""
         return priority_utils.calculate_priority(rule=rule, issues=issues)
 
+    @Base.lock_change
     async def update_priority(self) -> None:
         """Update the alert priority from it's rule and active issues"""
         if self.options is None:
@@ -133,6 +134,7 @@ class Alert(Base):
         )
         self._logger.debug(f"Issues linked: {linked_issues_ids}")
 
+    @Base.lock_change
     async def acknowledge(self, send_event: bool = True) -> None:
         """Acknowledge the alert at the current priority"""
         if self.status != AlertStatus.active:
@@ -151,6 +153,7 @@ class Alert(Base):
 
         self._logger.debug("Acknowledged")
 
+    @Base.lock_change
     async def dismiss_acknowledge(self) -> None:
         """Dismiss the alert's acknowledgement"""
         if self.status != AlertStatus.active:
@@ -167,6 +170,7 @@ class Alert(Base):
 
         self._logger.debug("Acknowledgement dismissed")
 
+    @Base.lock_change
     async def lock(self) -> None:
         """Lock the alert to prevent linking new issues"""
         if self.status != AlertStatus.active:
@@ -183,6 +187,7 @@ class Alert(Base):
 
         self._logger.debug("Locked")
 
+    @Base.lock_change
     async def unlock(self) -> None:
         """Unlock the alert to allow linking new issues"""
         if self.status != AlertStatus.active:
@@ -230,6 +235,7 @@ class Alert(Base):
         await self.acknowledge(send_event=False)
         await self.update()
 
+    @Base.lock_change
     async def solve(self) -> None:
         """Solve an alert, setting it's 'status' and 'solved_at' attributes"""
         if self.status != AlertStatus.active:

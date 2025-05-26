@@ -72,6 +72,7 @@ class Issue(Base):
         await self._create_event("issue_linked")
         self._logger.debug(f"Linked to alert '{self.alert_id}'")
 
+    @Base.lock_change
     async def link_to_alert(self, alert: Alert, session: CallbackSession | None = None) -> None:
         """Link the issue to an alert if the issue's status is 'active'"""
         if self.status != IssueStatus.active:
@@ -91,6 +92,7 @@ class Issue(Base):
         if self.is_solved:
             await self.solve(session=session)
 
+    @Base.lock_change
     async def drop(self) -> None:
         """Set the issue as dropped if the issue's status is 'active'"""
         if self.status != IssueStatus.active:
@@ -109,6 +111,7 @@ class Issue(Base):
         await self._create_event("issue_solved")
         self._logger.debug("Solved")
 
+    @Base.lock_change
     async def solve(self, session: CallbackSession | None = None) -> None:
         """Set the issue as solved if the issue's status is 'active'"""
         if self.status != IssueStatus.active:
@@ -129,6 +132,7 @@ class Issue(Base):
             await self._create_event("issue_updated_not_solved")
         self._logger.debug(f"Data updated to '{json.dumps(self.data)}'")
 
+    @Base.lock_change
     async def update_data(
         self, new_data: dict[Any, Any], session: CallbackSession | None = None
     ) -> None:

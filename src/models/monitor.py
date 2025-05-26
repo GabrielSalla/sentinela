@@ -30,6 +30,7 @@ class Monitor(Base):
     running_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=True)
     search_executed_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=True)
     update_executed_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=True)
+    last_heartbeat: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=True)
 
     active_alerts: list[Alert]
     active_issues: list[Issue]
@@ -152,30 +153,45 @@ class Monitor(Base):
         await self.load_active_issues()
         await self.load_active_alerts()
 
-    def set_search_executed_at(self) -> None:
+    @Base.lock_change
+    async def set_search_executed_at(self) -> None:
         """Set the 'search_executed_at' to the current timestamp"""
         self.search_executed_at = time_utils.now()
+        await self.save()
 
-    def set_update_executed_at(self) -> None:
+    @Base.lock_change
+    async def set_update_executed_at(self) -> None:
         """Set the 'update_executed_at' to the current timestamp"""
         self.update_executed_at = time_utils.now()
+        await self.save()
 
+    @Base.lock_change
+    async def set_last_heartbeat(self) -> None:
+        """Set the 'last_heartbeat' to the current timestamp and save"""
+        self.last_heartbeat = time_utils.now()
+        await self.save()
+
+    @Base.lock_change
     async def set_enabled(self, value: bool) -> None:
         """Set the 'enabled' to the provided value"""
         self.enabled = value
         await self.save()
 
-    def set_queued(self, value: bool) -> None:
+    @Base.lock_change
+    async def set_queued(self, value: bool) -> None:
         """Set the 'queued' to the provided value"""
         self.queued = value
         if value:
             self.queued_at = time_utils.now()
+        await self.save()
 
-    def set_running(self, value: bool) -> None:
+    @Base.lock_change
+    async def set_running(self, value: bool) -> None:
         """Set the 'running' to the provided value"""
         self.running = value
         if value:
             self.running_at = time_utils.now()
+        await self.save()
 
     def add_issues(self, issues: Issue | list[Issue]) -> None:
         """Add the provided issues to the monitor's 'active_issues' attributes"""

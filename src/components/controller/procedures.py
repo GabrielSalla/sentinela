@@ -37,9 +37,8 @@ async def _monitors_stuck(time_tolerance: int) -> None:
             _logger.error(f"monitors_stuck: Monitor with id '{monitor_info['id']}' not found")
             continue
 
-        monitor.set_queued(False)
-        monitor.set_running(False)
-        await monitor.save()
+        await monitor.set_queued(False)
+        await monitor.set_running(False)
 
         _logger.warning(f"monitors_stuck: {monitor} was stuck and now it's fixed")
 

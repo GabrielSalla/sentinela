@@ -34,6 +34,7 @@ class Notification(Base):
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), insert_default=now)
     closed_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=True)
 
+    @Base.lock_change
     async def close(self) -> None:
         self.status = NotificationStatus.closed
         self.closed_at = now()

@@ -27,6 +27,35 @@ async def do_nothing(): ...
 # operations on the internal database, so there must be a table for it
 
 
+async def test_lock(monkeypatch, sample_monitor: Monitor):
+    """'Base.lock' should prevent concurrent tasks changing the same instance at the same time"""
+
+    @Monitor.lock_change
+    async def sleep(self, time: int):
+        await asyncio.sleep(time)
+
+    monkeypatch.setattr(Monitor, "sleep", sleep, raising=False)
+
+    long_sleep_task = asyncio.create_task(sample_monitor.sleep(0.2))  # type: ignore[attr-defined]
+    await asyncio.sleep(0.05)
+    short_sleep_task = asyncio.create_task(
+        sample_monitor.sleep(0.05)  # type: ignore[attr-defined]
+    )
+
+    assert not long_sleep_task.done()
+    assert not short_sleep_task.done()
+
+    await asyncio.sleep(0.1)
+
+    assert not long_sleep_task.done()
+    assert not short_sleep_task.done()
+
+    await asyncio.sleep(0.15)
+
+    assert long_sleep_task.done()
+    assert short_sleep_task.done()
+
+
 async def test_should_queue_event_no_reaction_options(sample_monitor: Monitor):
     """'Base._should_queue_event' should return 'False' if the monitor has no 'reaction_options'
     setting"""
@@ -218,12 +247,12 @@ async def test_logger(sample_monitor: Monitor):
 async def test_semaphore(sample_monitor: Monitor):
     """'Base._semaphore' should lazy load a 'Semaphore' object"""
     with pytest.raises(AttributeError):
-        sample_monitor._semaphore_obj
+        sample_monitor._session_semaphore_obj
 
     assert isinstance(sample_monitor._semaphore, asyncio.Semaphore)
 
     assert sample_monitor._semaphore is not None
-    assert sample_monitor._semaphore == sample_monitor._semaphore_obj
+    assert sample_monitor._semaphore == sample_monitor._session_semaphore_obj
 
 
 @pytest.mark.parametrize("size", range(5))

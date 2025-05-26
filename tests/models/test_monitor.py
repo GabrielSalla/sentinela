@@ -313,16 +313,24 @@ async def test_set_search_executed_at(sample_monitor: Monitor):
     """'Monitor.set_search_executed_at' should set the monitor's 'search_executed_at' to the
     current timestamp"""
     assert sample_monitor.search_executed_at is None
-    sample_monitor.set_search_executed_at()
-    assert sample_monitor.search_executed_at > time_utils.now() - timedelta(milliseconds=1)
+    await sample_monitor.set_search_executed_at()
+    assert sample_monitor.search_executed_at > time_utils.now() - timedelta(seconds=0.1)
 
 
 async def test_set_update_executed_at(sample_monitor: Monitor):
     """'Monitor.set_update_executed_at' should set the monitor's 'update_executed_at' to the
     current timestamp"""
     assert sample_monitor.update_executed_at is None
-    sample_monitor.set_update_executed_at()
-    assert sample_monitor.update_executed_at > time_utils.now() - timedelta(milliseconds=1)
+    await sample_monitor.set_update_executed_at()
+    assert sample_monitor.update_executed_at > time_utils.now() - timedelta(seconds=0.1)
+
+
+async def test_set_last_heartbeat(sample_monitor: Monitor):
+    """'Monitor.set_last_heartbeat' should set the monitor's 'last_heartbeat' to the current
+    timestamp"""
+    assert sample_monitor.last_heartbeat is None
+    await sample_monitor.set_last_heartbeat()
+    assert sample_monitor.last_heartbeat > time_utils.now() - timedelta(seconds=0.1)
 
 
 async def test_set_enabled(sample_monitor: Monitor):
@@ -339,40 +347,40 @@ async def test_set_enabled(sample_monitor: Monitor):
 
 async def test_set_queued(sample_monitor: Monitor):
     """'Monitor.set_queued' should set the monitor's 'queued' to the provided value"""
-    sample_monitor.set_queued(True)
+    await sample_monitor.set_queued(True)
     assert sample_monitor.queued is True
     queued_at = sample_monitor.queued_at
 
-    sample_monitor.set_queued(True)
+    await sample_monitor.set_queued(True)
     assert sample_monitor.queued is True
     queued_at_2 = sample_monitor.queued_at
     assert queued_at_2 > queued_at
 
-    sample_monitor.set_queued(False)
+    await sample_monitor.set_queued(False)
     assert sample_monitor.queued is False
     assert sample_monitor.queued_at == queued_at_2
 
-    sample_monitor.set_queued(False)
+    await sample_monitor.set_queued(False)
     assert sample_monitor.queued is False
     assert sample_monitor.queued_at == queued_at_2
 
 
 async def test_set_running(sample_monitor: Monitor):
     """'Monitor.set_running' should set the monitor's 'running' to the provided value"""
-    sample_monitor.set_running(True)
+    await sample_monitor.set_running(True)
     assert sample_monitor.running is True
     running_at = sample_monitor.running_at
 
-    sample_monitor.set_running(True)
+    await sample_monitor.set_running(True)
     assert sample_monitor.running is True
     running_at_2 = sample_monitor.running_at
     assert running_at_2 > running_at
 
-    sample_monitor.set_running(False)
+    await sample_monitor.set_running(False)
     assert sample_monitor.running is False
     assert sample_monitor.running_at == running_at_2
 
-    sample_monitor.set_running(False)
+    await sample_monitor.set_running(False)
     assert sample_monitor.running is False
     assert sample_monitor.running_at == running_at_2
 

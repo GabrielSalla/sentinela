@@ -15,7 +15,7 @@ pytestmark = pytest.mark.asyncio(loop_scope="session")
 def get_time(reference: str) -> datetime | None:
     values = {
         "now": now(),
-        "five_minutes_ago": now() - timedelta(seconds=301),
+        "ten_seconds_ago": now() - timedelta(seconds=11),
     }
     return values.get(reference)
 
@@ -23,34 +23,31 @@ def get_time(reference: str) -> datetime | None:
 @pytest.mark.parametrize("enabled", [False, True])
 @pytest.mark.parametrize("queued", [False, True])
 @pytest.mark.parametrize("running", [False, True])
-@pytest.mark.parametrize("queued_at", [None, "now", "five_minutes_ago"])
-@pytest.mark.parametrize("running_at", [None, "now", "five_minutes_ago"])
+@pytest.mark.parametrize("last_heartbeat", [None, "now", "ten_seconds_ago"])
 async def test_monitors_stuck(
     caplog,
     sample_monitor: Monitor,
     enabled,
     queued,
     running,
-    queued_at,
-    running_at,
+    last_heartbeat,
 ):
     """'_monitors_stuck' should fix monitors that are stuck"""
     sample_monitor.enabled = enabled
     sample_monitor.queued = queued
     sample_monitor.running = running
-    sample_monitor.queued_at = get_time(queued_at)  # type:ignore[assignment]
-    sample_monitor.running_at = get_time(running_at)  # type:ignore[assignment]
+    sample_monitor.last_heartbeat = get_time(last_heartbeat)  # type:ignore[assignment]
     await sample_monitor.save()
 
-    await procedures._monitors_stuck(time_tolerance=300)
+    await procedures._monitors_stuck(time_tolerance=10)
 
     await sample_monitor.refresh()
 
     if not enabled:
         triggered = False
-    elif queued_at is None and running_at is None:
+    elif last_heartbeat is None:
         triggered = False
-    elif queued_at == "now" or running_at == "now":
+    elif last_heartbeat == "now":
         triggered = False
     else:
         triggered = queued or running
