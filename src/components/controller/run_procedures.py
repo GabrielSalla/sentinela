@@ -6,46 +6,15 @@ execution doesn't complete properly. If this happens, the monitor won't be proce
 
 import logging
 from datetime import datetime
-from pathlib import Path
 from typing import Callable, Coroutine
 
-import databases
 from configs import configs
-from models import Monitor
 from utils.exception_handling import catch_exceptions
 from utils.time import is_triggered, now
 
+from .procedures import procedures
+
 _logger = logging.getLogger("controller_procedures")
-
-SQL_FILES_PATH = Path(__file__).parent / "sql_files"
-
-
-async def _monitors_stuck(time_tolerance: int) -> None:
-    with open(SQL_FILES_PATH / "monitors_stuck.sql") as file:
-        query = file.read()
-
-    result = await databases.query_application(query, time_tolerance)
-
-    if result is None:
-        _logger.error("monitors_stuck: Error with query result")
-        return
-
-    for monitor_info in result:
-        monitor = await Monitor.get_by_id(monitor_info["id"])
-
-        if monitor is None:
-            _logger.error(f"monitors_stuck: Monitor with id '{monitor_info['id']}' not found")
-            continue
-
-        await monitor.set_queued(False)
-        await monitor.set_running(False)
-
-        _logger.warning(f"monitors_stuck: {monitor} was stuck and now it's fixed")
-
-
-procedures: dict[str, Callable[..., Coroutine[None, None, None]]] = {
-    "monitors_stuck": _monitors_stuck,
-}
 
 last_executions: dict[str, datetime] = {}
 
