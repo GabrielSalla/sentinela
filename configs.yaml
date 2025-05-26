@@ -32,6 +32,8 @@ controller_procedures:
     schedule: "*/5 * * * *"
     params:
       time_tolerance: 10
+  notifications_alert_solved:
+    schedule: "*/5 * * * *"
 
 executor_concurrency: 5
 executor_sleep: 5
