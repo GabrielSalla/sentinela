@@ -8,9 +8,9 @@ import traceback
 from typing import Any, Coroutine, cast
 
 from configs import configs
+from plugins.pool_select import get_plugin_pool
 from utils.async_tools import do_concurrently
 
-from .pool_select import get_plugin_pool
 from .protocols import Pool
 
 _logger = logging.getLogger("database")

@@ -1,7 +1,7 @@
 import pytest
 
-import message_queue.queue_select as queue_select
 import plugins
+import plugins.queue_select as queue_select
 
 
 @pytest.fixture(scope="module", autouse=True)
