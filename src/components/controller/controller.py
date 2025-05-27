@@ -15,7 +15,7 @@ from models import Monitor
 from utils.exception_handling import catch_exceptions
 from utils.time import format_datetime_iso, is_triggered, now, time_since, time_until_next_trigger
 
-from .procedures import run_procedures
+from .run_procedures import run_procedures
 
 _logger = logging.getLogger("controller")
 
