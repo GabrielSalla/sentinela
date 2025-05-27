@@ -1,10 +1,10 @@
 from typing import Any
 
 from configs import configs
+from plugins.queue_select import get_plugin_queue
 
 from .internal_queue import InternalQueue
 from .protocols import Message, Queue
-from .queue_select import get_plugin_queue
 
 queue: Queue
 

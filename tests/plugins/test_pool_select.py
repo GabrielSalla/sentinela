@@ -2,8 +2,8 @@ from typing import Any
 
 import pytest
 
-import databases.pool_select as pool_select
 import plugins
+import plugins.pool_select as pool_select
 from tests.test_utils import assert_message_in_log
 
 

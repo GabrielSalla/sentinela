@@ -2,8 +2,7 @@ import logging
 from typing import cast
 
 import plugins
-
-from .protocols import Pool
+from databases.protocols import Pool
 
 _logger = logging.getLogger("pool_select")
 
