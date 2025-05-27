@@ -73,7 +73,7 @@ async def test_on_parent_done_cancel(caplog):
 
 
 async def test_create_task():
-    """'create_task' should create a task and add it to the task manager belonging to the parent
+    """'create_task' should create a task and add it to the task manager linked to the parent
     task"""
     parent_task_1 = None
     task_1 = task_manager.create_task(asyncio.sleep(0), parent_task=parent_task_1)
@@ -97,6 +97,27 @@ async def test_create_task():
     }
 
 
+async def test_create_task_log_error(caplog):
+    """'create_task' should create tasks that log the errors as soon as they happen without needing
+    to await the created task"""
+
+    async def error() -> None:
+        await asyncio.sleep(0.1)
+        raise ValueError("some error")
+
+    task = task_manager.create_task(error())
+    await asyncio.sleep(0.05)
+
+    assert not task.done()
+    assert_message_not_in_log(caplog, "ValueError: some error")
+
+    await asyncio.sleep(0.06)
+
+    assert task.done()
+    assert_message_in_log(caplog, "Exception with task")
+    assert_message_in_log(caplog, "ValueError: some error")
+
+
 async def test_clear_completed():
     """'_clear_completed' should remove completed tasks from the task manager"""
     parent_task_1 = asyncio.create_task(asyncio.sleep(0.2))
@@ -106,16 +127,24 @@ async def test_clear_completed():
     task_2 = task_manager.create_task(asyncio.sleep(0.1), parent_task=parent_task_2)
     task_3 = task_manager.create_task(asyncio.sleep(0.2), parent_task=parent_task_2)
 
+    parent_task_3 = asyncio.create_task(asyncio.sleep(0.3))
+    task_4 = task_manager.create_task(asyncio.sleep(0.3), parent_task=parent_task_3)
+    task_5 = task_manager.create_task(asyncio.sleep(0.3), parent_task=parent_task_3)
+
     assert task_manager._tasks == {
         parent_task_1: [task_1],
         parent_task_2: [task_2, task_3],
+        parent_task_3: [task_4, task_5],
     }
+
+    task_manager._clear_completed()
 
     await task_1
     task_manager._clear_completed()
 
     assert task_manager._tasks == {
         parent_task_2: [task_2, task_3],
+        parent_task_3: [task_4, task_5],
     }
 
     await task_2
@@ -123,9 +152,22 @@ async def test_clear_completed():
 
     assert task_manager._tasks == {
         parent_task_2: [task_3],
+        parent_task_3: [task_4, task_5],
     }
 
     await task_3
+    task_manager._clear_completed()
+
+    assert task_manager._tasks == {
+        parent_task_3: [task_4, task_5],
+    }
+
+    await task_4
+    await task_5
+    task_manager._clear_completed()
+
+    assert task_manager._tasks == {}
+
     task_manager._clear_completed()
 
     assert task_manager._tasks == {}
@@ -134,13 +176,13 @@ async def test_clear_completed():
 async def test_wait_for_tasks():
     """'wait_for_tasks' should wait for all tasks started by the parent task to finish"""
     parent_task_1 = asyncio.create_task(asyncio.sleep(0.3))
-    task_1 = asyncio.create_task(asyncio.sleep(1))
+    task_1 = task_manager.create_task(asyncio.sleep(1), parent_task=parent_task_1)
 
     parent_task_2 = asyncio.create_task(asyncio.sleep(0.3))
-    task_2 = asyncio.create_task(asyncio.sleep(1))
-    task_3 = asyncio.create_task(asyncio.sleep(1))
+    task_2 = task_manager.create_task(asyncio.sleep(1), parent_task=parent_task_2)
+    task_3 = task_manager.create_task(asyncio.sleep(1), parent_task=parent_task_2)
 
-    task_manager._tasks = {
+    assert task_manager._tasks == {
         parent_task_1: [task_1],
         parent_task_2: [task_2, task_3],
     }
@@ -178,13 +220,13 @@ async def test_wait_for_tasks_timeout():
     """'wait_for_tasks' should wait for all tasks started by the parent task to finish, but
     timeout if they don't finish in time. The tasks should not be cancelled"""
     parent_task_1 = asyncio.create_task(asyncio.sleep(0.3))
-    task_1 = asyncio.create_task(asyncio.sleep(1))
+    task_1 = task_manager.create_task(asyncio.sleep(1), parent_task=parent_task_1)
 
     parent_task_2 = asyncio.create_task(asyncio.sleep(0.3))
-    task_2 = asyncio.create_task(asyncio.sleep(1))
-    task_3 = asyncio.create_task(asyncio.sleep(1))
+    task_2 = task_manager.create_task(asyncio.sleep(1), parent_task=parent_task_2)
+    task_3 = task_manager.create_task(asyncio.sleep(1), parent_task=parent_task_2)
 
-    task_manager._tasks = {
+    assert task_manager._tasks == {
         parent_task_1: [task_1],
         parent_task_2: [task_2, task_3],
     }
@@ -220,16 +262,16 @@ async def test_wait_for_tasks_timeout_cancel(caplog):
     """'wait_for_tasks' should wait for all tasks started by the parent task to finish, but
     timeout if they don't finish in time. The tasks should be cancelled"""
     parent_task_1 = asyncio.create_task(asyncio.sleep(0.3))
-    task_1 = asyncio.create_task(asyncio.sleep(1))
+    task_1 = task_manager.create_task(asyncio.sleep(1), parent_task=parent_task_1)
     task_1.set_name("task_1")
 
     parent_task_2 = asyncio.create_task(asyncio.sleep(0.3))
-    task_2 = asyncio.create_task(asyncio.sleep(1))
+    task_2 = task_manager.create_task(asyncio.sleep(1), parent_task=parent_task_2)
     task_2.set_name("task_2")
-    task_3 = asyncio.create_task(asyncio.sleep(1))
+    task_3 = task_manager.create_task(asyncio.sleep(1), parent_task=parent_task_2)
     task_3.set_name("task_3")
 
-    task_manager._tasks = {
+    assert task_manager._tasks == {
         parent_task_1: [task_1],
         parent_task_2: [task_2, task_3],
     }
@@ -242,19 +284,24 @@ async def test_wait_for_tasks_timeout_cancel(caplog):
     )
 
     await asyncio.sleep(0.05)
+
     assert not wait_task_1.done()
     assert not wait_task_2.done()
 
     await asyncio.sleep(0.05)
+
     assert wait_task_1.done()
     assert_message_in_log(caplog, "Task 'task_1' timed out")
+
     with pytest.raises(asyncio.CancelledError):
         await asyncio.wait_for(task_1, timeout=0.1)
+
     assert not wait_task_2.done()
     assert not task_2.done()
     assert not task_3.done()
 
     await asyncio.sleep(0.1)
+
     assert wait_task_1.done()
     assert wait_task_2.done()
     assert_message_in_log(caplog, "Task 'task_2' timed out")
@@ -282,43 +329,6 @@ async def test_wait_for_tasks_empty():
         task_manager.wait_for_tasks(parent_task="parent_task"), timeout=0.1
     )
     assert result
-
-
-@pytest.mark.parametrize("timeout, cancel", [(0.1, False), (0.2, True)])
-async def test_wait_for_all_tasks(mocker, timeout, cancel):
-    """'wait_for_all_tasks' should wait for all tasks to finish, but timeout if they don't finish
-    in time. The tasks should be cancelled if 'cancel' is True"""
-    wait_for_tasks_spy: AsyncMock = mocker.spy(task_manager, "wait_for_tasks")
-
-    parent_task_1 = asyncio.create_task(asyncio.sleep(0.3))
-    task_1 = asyncio.create_task(asyncio.sleep(0.05))
-
-    parent_task_2 = asyncio.create_task(asyncio.sleep(0.3))
-    task_2 = asyncio.create_task(asyncio.sleep(0.05))
-    task_3 = asyncio.create_task(asyncio.sleep(0.05))
-
-    task_manager._tasks = {
-        parent_task_1: [task_1],
-        parent_task_2: [task_2, task_3],
-    }
-
-    await asyncio.wait_for(
-        task_manager.wait_for_all_tasks(timeout=timeout, cancel=cancel),
-        timeout=0.15,
-    )
-
-    assert wait_for_tasks_spy.await_count == 2
-    assert wait_for_tasks_spy.await_args_list == [
-        ((), {"parent_task": parent_task_1, "timeout": timeout, "cancel": cancel}),
-        ((), {"parent_task": parent_task_2, "timeout": timeout, "cancel": cancel}),
-    ]
-
-
-async def test_wait_for_all_tasks_empty():
-    """'wait_for_all_tasks' should return True if there are no tasks to wait for"""
-    task_manager._tasks = {}
-    await asyncio.wait_for(task_manager.wait_for_all_tasks(), timeout=0.1)
-    await asyncio.wait_for(task_manager.wait_for_all_tasks(timeout=0.1), timeout=0.1)
 
 
 @pytest.mark.parametrize("running_tasks", [0, 1, 2, 3, 4, 5])
@@ -374,18 +384,20 @@ async def test_wait_to_finish_empty():
     await asyncio.wait_for(task_manager._wait_to_finish({}), timeout=0.1)
 
 
-async def test_run(mocker):
+async def test_run(mocker, monkeypatch):
     """'_run' should clear the completed tasks and wait for the remaining tasks to finish when the
     application is stopping"""
     clear_completed_spy: MagicMock = mocker.spy(task_manager, "_clear_completed")
     wait_to_finish_spy: AsyncMock = mocker.spy(task_manager, "_wait_to_finish")
+    monkeypatch.setattr(task_manager, "LOOP_TIME", 0.2)
 
     run_task = asyncio.create_task(task_manager.run())
+    task_manager.create_task(asyncio.sleep(0.1))
 
-    await asyncio.sleep(0.1)
+    await asyncio.sleep(0.5)
 
     assert not run_task.done()
-    clear_completed_spy.assert_called_once()
+    assert clear_completed_spy.call_count == 3
     wait_to_finish_spy.assert_not_called()
 
     app.stop()

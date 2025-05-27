@@ -4,8 +4,10 @@ from functools import partial
 from typing import Any, Coroutine
 
 import utils.app as app
+from utils.exception_handling import protected_task
 
 TASKS_FINISH_CHECK_TIME = 1
+LOOP_TIME = 60
 
 _logger = logging.getLogger("task_manager")
 
@@ -24,7 +26,7 @@ def create_task(
 ) -> asyncio.Task[Any]:
     """Create a task that will be executed in the background with an optional 'parent' attribute. If
     the parent task is done while the child task is running, the child task will be canceled"""
-    task = asyncio.create_task(coro, name=coro.__name__)
+    task = asyncio.create_task(protected_task(_logger, coro), name=coro.__name__)
     _tasks.setdefault(parent_task, []).append(task)
 
     if parent_task is not None:
@@ -36,10 +38,15 @@ def create_task(
 def _clear_completed() -> None:
     """Remove completed tasks from the global task list"""
     global _tasks
-    _tasks = {
-        parent: [task for task in tasks if not task.done()] for parent, tasks in _tasks.items()
-    }
-    _tasks = {parent: tasks for parent, tasks in _tasks.items() if len(tasks) > 0}
+
+    cleaned_tasks = {}
+
+    for parent, tasks in _tasks.items():
+        active_tasks = [task for task in tasks if not task.done()]
+        if len(active_tasks) > 0:
+            cleaned_tasks[parent] = active_tasks
+
+    _tasks = cleaned_tasks
 
 
 async def wait_for_tasks(
@@ -65,12 +72,6 @@ async def wait_for_tasks(
     return True
 
 
-async def wait_for_all_tasks(timeout: float | None = None, cancel: bool = False) -> None:
-    """Wait for all running tasks to finish"""
-    for parent_task in _tasks.keys():
-        await wait_for_tasks(parent_task=parent_task, timeout=timeout, cancel=cancel)
-
-
 def _count_running(tasks: dict[Any, list[asyncio.Task[Any]]]) -> int:
     """Count the number of running tasks"""
     running_tasks = 0
@@ -94,7 +95,7 @@ async def run() -> None:
 
     while app.running():
         _clear_completed()
-        await app.sleep(60)
+        await app.sleep(LOOP_TIME)
 
     _logger.info("Finishing")
     await _wait_to_finish(_tasks)

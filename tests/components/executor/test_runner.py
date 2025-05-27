@@ -69,7 +69,7 @@ async def test_runner_process_message_success(caplog, mocker, monkeypatch):
     monkeypatch.setattr(
         message_queue.queue._config,  # type: ignore[attr-defined]
         "queue_wait_message_time",
-        0.1,
+        0.2,
     )
     change_visibility_spy: MagicMock = mocker.spy(message_queue, "change_visibility")
     delete_message_spy: MagicMock = mocker.spy(message_queue, "delete_message")
@@ -104,7 +104,7 @@ async def test_runner_process_message_sentinela_error(caplog, mocker, monkeypatc
     monkeypatch.setattr(
         message_queue.queue._config,  # type: ignore[attr-defined]
         "queue_wait_message_time",
-        0.1,
+        0.2,
     )
     change_visibility_spy: MagicMock = mocker.spy(message_queue, "change_visibility")
     delete_message_spy: MagicMock = mocker.spy(message_queue, "delete_message")
@@ -143,7 +143,7 @@ async def test_runner_process_message_error(caplog, mocker, monkeypatch):
     monkeypatch.setattr(
         message_queue.queue._config,  # type: ignore[attr-defined]
         "queue_wait_message_time",
-        0.1,
+        0.2,
     )
     change_visibility_spy: MagicMock = mocker.spy(message_queue, "change_visibility")
     delete_message_spy: MagicMock = mocker.spy(message_queue, "delete_message")

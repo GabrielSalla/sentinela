@@ -30,12 +30,9 @@ prometheus_message_processing_count = prometheus_client.Gauge(
 
 async def _change_visibility_loop(message: message_queue.Message) -> None:
     """Change the message visibility while it's been processed"""
-    try:
-        while app.running():
-            await message_queue.change_visibility(message)
-            await app.sleep(message_queue.get_queue_wait_message_time())
-    except asyncio.CancelledError:
-        return
+    while app.running():
+        await message_queue.change_visibility(message)
+        await app.sleep(message_queue.get_queue_wait_message_time())
 
 
 class Runner:
@@ -81,6 +78,9 @@ class Runner:
             _change_visibility_loop(self.message), parent_task=asyncio.current_task()
         )
 
+        # Give control back to the event loop to allow the change visibility task to start
+        await asyncio.sleep(0)
+
         # Protect execution from exceptions
         try:
             # Handle the message accordingly
@@ -100,7 +100,6 @@ class Runner:
 
             # Stop the message change visibility loop
             change_visibility_task.cancel()
-            await change_visibility_task
 
     async def process(self, semaphore: asyncio.Semaphore) -> None:
         """Get a message and process it"""

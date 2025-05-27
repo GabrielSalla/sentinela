@@ -15,8 +15,6 @@ from utils.time import format_datetime_iso, now, time_since
 
 from .runner import Runner
 
-TASKS_FINISH_CHECK_TIME = 1
-
 _logger = logging.getLogger("executor")
 
 last_message_at: datetime

@@ -66,7 +66,6 @@ async def test_run(monkeypatch, clear_queue):
     """Integration test of the 'run' method. It should wait for messages and process them using the
     runners"""
     monkeypatch.setattr(configs, "executor_concurrency", 5)
-    monkeypatch.setattr(executor, "TASKS_FINISH_CHECK_TIME", 0.01)
 
     registry.monitors_ready.set()
 
@@ -111,7 +110,6 @@ async def test_run_current_task_error(caplog, monkeypatch):
 
 async def test_run_no_messages(mocker, monkeypatch, clear_queue):
     """'run' should sleep for the configured time when there are no messages in the queue"""
-    monkeypatch.setattr(executor, "TASKS_FINISH_CHECK_TIME", 0.01)
     monkeypatch.setattr(
         message_queue.queue._config,  # type: ignore[attr-defined]
         "queue_wait_message_time",
@@ -150,7 +148,6 @@ async def test_run_error(caplog, monkeypatch, clear_queue):
         "queue_wait_message_time",
         0.2,
     )
-    monkeypatch.setattr(executor, "TASKS_FINISH_CHECK_TIME", 0.01)
 
     registry.monitors_ready.set()
 
