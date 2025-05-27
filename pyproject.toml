@@ -93,7 +93,10 @@ log_level = "INFO"
 log_format = "%(asctime)s [%(levelname)s] %(name)s.%(funcName)s.%(lineno)d: %(message)s"
 
 # Disable botocore 'datetime.datetime.utcnow()' deprecation warning
-filterwarnings = "ignore:datetime.datetime.utcnow:DeprecationWarning:botocore"
+filterwarnings = [
+    "error",
+    "ignore:datetime.datetime.utcnow:DeprecationWarning:botocore",
+]
 
 [tool.coverage.report]
 omit =[
