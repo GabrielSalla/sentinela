@@ -4,6 +4,7 @@ from unittest.mock import AsyncMock
 import pytest
 
 import components.controller.procedures.monitors_stuck as monitors_stuck
+from configs import configs
 from models import Monitor
 from tests.test_utils import assert_message_in_log, assert_message_not_in_log
 from utils.time import now
@@ -18,6 +19,10 @@ def get_time(reference: str) -> datetime | None:
         "five_minutes_ago": now() - timedelta(seconds=301),
     }
     return values.get(reference)
+
+
+async def test_configuration():
+    assert "monitors_stuck" in configs.controller_procedures
 
 
 @pytest.mark.parametrize("enabled", [False, True])

@@ -4,6 +4,7 @@ from unittest.mock import AsyncMock
 import pytest
 
 import components.controller.procedures.notifications_alert_solved as notifications_alert_solved
+from configs import configs
 from models import Alert, AlertStatus, Monitor, Notification, NotificationStatus
 from tests.test_utils import assert_message_in_log, assert_message_not_in_log
 from utils.time import now
@@ -18,6 +19,10 @@ def get_time(reference: str) -> datetime | None:
         "five_minutes_ago": now() - timedelta(seconds=301),
     }
     return values.get(reference)
+
+
+async def test_configuration():
+    assert "notifications_alert_solved" in configs.controller_procedures
 
 
 @pytest.mark.parametrize("alert_status", [AlertStatus.active, AlertStatus.solved])
