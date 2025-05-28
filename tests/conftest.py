@@ -156,8 +156,7 @@ async def start_queue():
 
 @pytest.fixture(scope="function")
 def clear_queue():
-    """Clear the internal queue. Ignoring the 'attr-defined' error because the Protocol doesn't
-    have the attribute '_queue', but the 'InternalQueue' class does"""
+    """Clear the internal queue."""
     get_queue_items()
 
 
