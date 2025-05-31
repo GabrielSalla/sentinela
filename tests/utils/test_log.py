@@ -2,6 +2,7 @@ import json
 import logging
 import re
 import time
+from dataclasses import dataclass
 
 import pytest
 
@@ -121,3 +122,17 @@ def test_json_formatter_no_fields(capsys, monkeypatch):
     message_dict = json.loads(captured_message)
 
     assert message_dict == {"message": "message for 'info' level"}
+
+
+def test_unknown_logging_mode(monkeypatch):
+    """'setup' should raise a ValueError if an unknown logging mode is provided"""
+
+    @dataclass
+    class UnknownLogConfig:
+        mode: str
+
+    monkeypatch.setattr(logging.root, "handlers", [])
+    monkeypatch.setattr(configs, "logging", UnknownLogConfig(mode="unknown"))
+
+    with pytest.raises(ValueError, match="Unknown logging mode: 'unknown'"):
+        log.setup()
