@@ -53,7 +53,7 @@ class SlackNotification:
     unacknowledged and the priority is greater than or equal to the minimum priority to mention. If
     the alert is updated and the alert continues to be unacknowledged, the mention will persist.
     When set to 'True', the mention will be deleted and sent again every time alert is updated, if
-    the alert is not acknowledged and the priority is greater than or equal to the minimum priority
+    the alert is unacknowledged and the priority is greater than or equal to the minimum priority
     to mention. This option can be used as a renotification. Defaults to `False`.
     -  `issue_show_limit`: Maximum number of issues to show in the notification. If the limit is
     reached, the message `XXX more...` will be shown at the and of the issues list, where `XXX` is

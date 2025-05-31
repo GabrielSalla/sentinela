@@ -327,7 +327,7 @@ The available events are:
 - `alert_priority_increased`: Alert priority increased
 - `alert_solved`: Alert was solved
 - `alert_unlocked`: Alert was unlocked
-- `alert_updated`: Alert was updated. It doesn't means that any information changed, only that the alert went through the update process. Not triggered when the alert was solved
+- `alert_updated`: Alert was updated. An alert is updated every time the monitor executes the `update` process. This event doesn't imply that any information about the alert or its linked issues has changed, only that the alert went through the update process. Not triggered when the alert was solved
 
 **Issue events**
 - `issue_linked`: Issue was linked to an alert
