@@ -41,3 +41,11 @@ class CodeModule(Base):
             cls.monitor_id.in_(monitors_ids),
             cls.registered_at > reference_timestamp,
         )
+
+    @Base.lock_change
+    async def register(self, code: str, additional_files: dict[str, str] | None = None) -> None:
+        """Register a code module with the given code and additional files"""
+        self.code = code
+        self.additional_files = additional_files or {}
+        self.registered_at = datetime.now()
+        await self.save()
