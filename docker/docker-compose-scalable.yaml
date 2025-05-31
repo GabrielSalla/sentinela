@@ -1,0 +1,81 @@
+services:
+  postgres:
+    image: postgres:16.4-alpine
+    ports:
+      - 5432:5432
+    environment:
+      - POSTGRES_PASSWORD=postgres
+
+  motoserver:
+    image: ghcr.io/getmoto/motoserver:latest
+    ports:
+      - 5000:5000
+    healthcheck:
+      test: curl --fail localhost:5000 || exit 1
+      interval: 1s
+      timeout: 1s
+      retries: 5
+      start_period: 1s
+
+  sentinela-controller:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: sentinela
+      args:
+        CONFIGS_FILE: configs/configs-scalable.yaml
+    image: sentinela-scalable:latest
+    ports:
+      - 8000:8000
+    healthcheck:
+      test: python tools/health_check.py 8000
+      interval: 10s
+      timeout: 1s
+      retries: 3
+      start_period: 2s
+    environment:
+      CONFIGS_FILE: configs-scalable.yaml
+      SAMPLE_SLACK_CHANNEL: C07NCL94SDT
+      SAMPLE_SLACK_MENTION: U07NFGGMB98
+      SLACK_WEBSOCKET_ENABLED: true
+      SLACK_MAIN_CHANNEL: C07NCL94SDT
+      SLACK_MAIN_MENTION: U07NFGGMB98
+    env_file:
+      - .env.secrets
+    depends_on:
+      - postgres
+      - motoserver
+    command: python3 src/main.py controller
+
+  sentinela-executor:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: sentinela
+      args:
+        CONFIGS_FILE: configs/configs-scalable.yaml
+    image: sentinela-scalable:latest
+    deploy:
+      mode: replicated
+      replicas: 2
+    ports:
+      - 8001-8100:8000
+    healthcheck:
+      test: python tools/health_check.py 8000
+      interval: 10s
+      timeout: 1s
+      retries: 3
+      start_period: 2s
+    environment:
+      CONFIGS_FILE: configs-scalable.yaml
+      SAMPLE_SLACK_CHANNEL: C07NCL94SDT
+      SAMPLE_SLACK_MENTION: U07NFGGMB98
+      SLACK_WEBSOCKET_ENABLED: true
+      SLACK_MAIN_CHANNEL: C07NCL94SDT
+      SLACK_MAIN_MENTION: U07NFGGMB98
+    env_file:
+      - .env.secrets
+    depends_on:
+      - postgres
+      - motoserver
+    command: python3 src/main.py executor

@@ -3,10 +3,10 @@ The basic configs are set through the `configs.yaml` file. This file is read whe
 
 The monitors path is also defined in the `configs.yaml` file. By default, it's set to the `sample_monitors` folder, but it can be changed to another folder if desired. The `configs.yaml` file also have other configurations that can be adjusted.
 
+# Environment variables
 > [!IMPORTANT]
 > Check the documentation for the plugins that are being used to see if they have environment variables of their own.
 
-# Environment variables
 ## `CONFIGS_FILE`
 The application will try to load the configs file through the path defined in the `CONFIGS_FILE` environment variable. If this variable is not defined, it'll look for the file in the root directory of the application.
 

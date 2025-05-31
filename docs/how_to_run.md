@@ -1,68 +1,125 @@
-# How to run
-## Development execution
-Development execution should be used when developing or testing the platform features. It's not intended to be used to develop monitors as it might set variables that might interfere with the monitors execution.
+# How to Run
 
-To run the application in development mode, use the following command.
-```shell
-make run-dev
-```
+## Development Execution
+Development execution should be used when developing or testing the platform features. **It is not intended for developing monitors**, as it might set variables that interfere with monitor execution.
 
-For testing purposes, sometimes it's useful to start a container and be able to execute multiple commands without needing to create a new container every time. This is useful when testing features, for example, as it's possible to run `pytest` for a selected list of tests. To start a container in `shell` mode, use the following command.
-```shell
-# Migrate the database
-# Only necessary when it's the first time executing or if there're new versions
-make migrate-dev
+1. Migrate the database to the latest version. This is only necessary when running for the first time or after updates.
+    ```shell
+    make migrate-dev
+    ```
+2. Run the application in development mode.
+    ```shell
+    make run-dev
+    ```
 
-# Start the application container in shell mode
-make run-shell-dev
-```
+For testing purposes, it can be useful to start a container and execute multiple commands without creating a new container each time. This is helpful when testing features, such as running `pytest` for a selected list of tests.
 
-To run tests, linter and type checking for the whole project, use the following commands, respectively.
-```shell
-make test-dev
-make linter
-make mypy
-```
+1. Start the application container in shell mode.
+    ```shell
+    make run-shell-dev
+    ```
 
-## Local execution
-Local execution should be used when developing monitors and should not be used in production.
+The quality checks can also be run.
+1. Run the tests.
+    ```shell
+    make test-dev
+    ```
+2. Run the linter (ruff).
+    ```shell
+    make linter
+    ```
+3. Run the type checker (mypy).
+    ```shell
+    make mypy
+    ```
 
-For local development, set the secrets in the `.env.secrets`, as specified in the [Configs and secrets](#configs-and-secrets) section.
+## Local Execution - Single Container
+Local execution is recommended for developing monitors. It should not be used in production but provides a quick way to experiment with the application before committing to a more complex deployment.
 
-When running the application locally, it's recommended to use the internal queue instead of the SQS queue for a faster and more fluid process, but it's possible to use the AWS mock or a real SQS queue.
+**Pros**:
+- Quick to set up and run with the included `docker-compose` and config files.
+- Easy to create and modify monitors from the host machine.
+- No need for external services like a database or queues, as everything runs locally.
 
-To start the **controller** and a single **executor** (with concurrent internal executors) in the same container, run the following command.
-```shell
-# Only necessary when it's the first time executing or if there're new versions
-make migrate-local
+**Cons**:
+- Difficult to scale horizontally.
+- Creating and modifying monitors from outside the host can be cumbersome, as the client must connect to the controller.
+- Hard to monitor the application.
+- Running the database locally increases the risk of data loss.
 
-# Start the application
-make run-local
-```
+When running the application locally, it is recommended to use the internal queue instead of the SQS queue for faster and smoother operation. However, it is also possible to use the AWS queue mock or a real SQS queue.
 
-This will start the database and the application.
+1. Set the secrets in the `.env.secrets` file, as specified in the [Configuration](./configuration.md) documentation.
+2. Migrate the database to the latest version. This is only necessary when running for the first time or after updates.
+    ```shell
+    make migrate-local
+    ```
+3. Start the application. The local database will also be started.
+    ```shell
+    make run-local
+    ```
 
-## Production deployment
-### Building the image
-The [Dockerfile](../Dockerfile) is a starting point for building the application image. This file implements the logic to install all the enabled plugins dependencies correctly.
+## Local Execution - Multiple Containers
+For a more scalable deployment, it is recommended to use separate containers for the controller and executor. This approach allows running multiple executor containers, increasing concurrency when processing a high number of monitors. This setup can still run on a single machine without requiring external services.
 
-```shell
-# Install the dependencies for the application and enabled plugins
-poetry install --no-root --only $(python ./tools/get_plugins_list.py)
-```
+**Pros**:
+- Quick to set up and run with the included `docker-compose` and config files.
+- Easy to create and modify monitors from the host machine.
+- Easy to scale horizontally by increasing the number of executor replicas.
+- No need for external services like a database or queues, as everything runs locally.
 
-### Deploying the application
-In production deployment, it's recommended that the controller and executors to be deployed in different containers or pods (in case of a Kubernetes deployment). With this method a SQS queue is required to allow the controller communicate with the executors.
+**Cons**:
+- A local container for the queue is required if not using an external queue. One is already included in the `docker-compose-scalable.yml` file.
+- Creating and modifying monitors from outside the host can be cumbersome, as the client must connect to the controller.
+- Hard to monitor the application.
+- Running the database locally increases the risk of data loss.
+
+1. Set the `replicas` parameter in the `docker/docker-compose-scalable.yml` file to the desired number of executors.
+2. Set the secrets in the `.env.secrets` file, as specified in the [Configuration](./configuration.md) documentation.
+3. Migrate the database to the latest version. This is only necessary when running for the first time or after updates.
+    ```shell
+    make migrate-scalable
+    ```
+4. Start a container for the controller and executors.
+    ```shell
+    make run-scalable
+    ```
+
+## Production Deployment
+For production deployment, it is recommended to use a more complex setup with multiple containers or pods (in the case of a Kubernetes deployment) to allow for better resource management and scaling. This setup requires a database, a message queue, and the application itself.
+
+**Pros**:
+- Allows horizontal scaling of executors by adding more containers or pods.
+- Persistent storage with an external database.
+- Enables monitoring the application with external tools.
+- Allows creating and modifying monitors from any client that can connect to the controller.
+
+**Cons**:
+- More complex to set up and maintain.
+- Creating and modifying monitors can be more complicated, as a connection to the controller is required.
+- Requires an external database and message queue.
+
+### Building the Image
+The [Dockerfile](../Dockerfile) is a starting point for building the application image. This file implements the logic to install all dependencies for the enabled plugins.
+
+1. Install the dependencies for the application and enabled plugins.
+    ```shell
+    poetry install --no-root --only $(python ./tools/get_plugins_list.py)
+    ```
+
+### Deploying the Application
+In production deployment, it is recommended to deploy the controller and executors in separate containers or pods (in the case of a Kubernetes deployment). This method requires an external queue to allow communication between the controller and executors. A persistent database is also recommended to prevent data loss.
 
 The files provided in the [Kubernetes template](../resources/kubernetes_template) directory can be used as a reference for a Kubernetes deployment.
 
-All services must have the environment variables set as specified in the [Configs and secrets](#configs-and-secrets) section.
+All services must have the environment variables set as specified in the [Configuration](./configuration.md) documentation.
 
-Controllers and executors can be started specifying them as parameters.
-```shell
-# Controller
-python3 src/main.py controller
-
-# Executor
-python3 src/main.py executor
-```
+Controllers and executors can be run by specifying them as parameters when starting the application:
+1. Run the controller.
+    ```shell
+    python3 src/main.py controller
+    ```
+2. Run the executor.
+    ```shell
+    python3 src/main.py executor
+    ```

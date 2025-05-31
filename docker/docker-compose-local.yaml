@@ -11,16 +11,19 @@ services:
       context: .
       dockerfile: Dockerfile
       target: sentinela
+      args:
+        CONFIGS_FILE: configs/configs.yaml
     image: sentinela-local:latest
     ports:
       - 8000:8000
     healthcheck:
-      test: curl --fail localhost:8000/status || exit 1
+      test: python tools/health_check.py 8000
       interval: 10s
       timeout: 1s
       retries: 3
       start_period: 2s
     environment:
+      CONFIGS_FILE: configs/configs.yaml
       SAMPLE_SLACK_CHANNEL: C07NCL94SDT
       SAMPLE_SLACK_MENTION: U07NFGGMB98
       SLACK_WEBSOCKET_ENABLED: true
@@ -28,9 +31,6 @@ services:
       SLACK_MAIN_MENTION: U07NFGGMB98
     env_file:
       - .env.secrets
-    volumes:
-      - ./monitors:/app/monitors:Z
-      - ./internal_monitors:/app/internal_monitors:Z
     depends_on:
       - postgres
     command: python3 src/main.py controller executor
