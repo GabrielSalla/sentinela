@@ -1,10 +1,11 @@
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 
 import pytest
 import pytest_asyncio
 
 import databases
-from models import CodeModule
+from models import CodeModule, Monitor
+from utils.time import now
 
 pytestmark = pytest.mark.asyncio(loop_scope="session")
 
@@ -92,3 +93,22 @@ async def test_get_updated_code_modules_timestamp(
     monitors_ids = {code_module.monitor_id for code_module in code_modules}
 
     assert monitors_ids == expected_result
+
+
+async def test_register(sample_monitor: Monitor):
+    """'CodeModule.register' should register a code module with the given code and additional
+    files"""
+    code_module = await CodeModule.get(CodeModule.monitor_id == sample_monitor.id)
+
+    assert code_module is not None
+
+    await code_module.register(
+        code="def get_value(): return 20",
+        additional_files={"file1.py": "content1", "file2.py": "content2"},
+    )
+
+    await code_module.refresh()
+
+    assert code_module.code == "def get_value(): return 20"
+    assert code_module.additional_files == {"file1.py": "content1", "file2.py": "content2"}
+    assert code_module.registered_at > now() - timedelta(seconds=1)
