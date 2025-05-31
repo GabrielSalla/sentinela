@@ -74,7 +74,7 @@ For a more scalable deployment, it is recommended to use separate containers for
 - Hard to monitor the application.
 - Running the database locally increases the risk of data loss.
 
-1. Set the `replicas` parameter in the `docker-compose-scalable.yml` file to the desired number of executors.
+1. Set the `replicas` parameter in the `docker/docker-compose-scalable.yml` file to the desired number of executors.
 2. Set the secrets in the `.env.secrets` file, as specified in the [Configuration](./configuration.md) documentation.
 3. Migrate the database to the latest version. This is only necessary when running for the first time or after updates.
     ```shell

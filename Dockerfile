@@ -3,6 +3,7 @@ ARG PYTHON_VERSION=3.12
 # Base image
 FROM python:${PYTHON_VERSION}-alpine AS base
 
+ARG CONFIGS_FILE
 ENV VIRTUAL_ENV=/opt/venv \
     PATH="/opt/venv/bin:$PATH"
 

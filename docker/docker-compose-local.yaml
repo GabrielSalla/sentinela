@@ -11,6 +11,8 @@ services:
       context: .
       dockerfile: Dockerfile
       target: sentinela
+      args:
+        CONFIGS_FILE: configs/configs.yaml
     image: sentinela-local:latest
     ports:
       - 8000:8000
@@ -21,6 +23,7 @@ services:
       retries: 3
       start_period: 2s
     environment:
+      CONFIGS_FILE: configs/configs.yaml
       SAMPLE_SLACK_CHANNEL: C07NCL94SDT
       SAMPLE_SLACK_MENTION: U07NFGGMB98
       SLACK_WEBSOCKET_ENABLED: true

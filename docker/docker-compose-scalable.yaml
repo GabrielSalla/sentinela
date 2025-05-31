@@ -22,6 +22,8 @@ services:
       context: .
       dockerfile: Dockerfile
       target: sentinela
+      args:
+        CONFIGS_FILE: configs/configs-scalable.yaml
     image: sentinela-scalable:latest
     ports:
       - 8000:8000
@@ -50,6 +52,8 @@ services:
       context: .
       dockerfile: Dockerfile
       target: sentinela
+      args:
+        CONFIGS_FILE: configs/configs-scalable.yaml
     image: sentinela-scalable:latest
     deploy:
       mode: replicated
