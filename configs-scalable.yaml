@@ -1,0 +1,66 @@
+# The documentation for this configuration file can be found at "docs/configuration_file.md"
+plugins:
+  - aws
+  - postgres
+  - slack
+
+load_sample_monitors: true
+sample_monitors_path: sample_monitors
+internal_monitors_path: internal_monitors
+monitors_load_schedule: "*/5 * * * *"
+
+logging:
+  mode: friendly
+  format: "%(asctime)s [%(levelname)s] %(name)s.%(funcName)s.%(lineno)d: %(message)s"
+
+application_database_settings:
+  pool_size: 10
+
+application_queue:
+  type: plugin.aws.sqs
+  name: app
+  url: http://motoserver:5000/123456789012/app
+  region: us-east-1
+  create_queue: true
+  queue_wait_message_time: 2
+  queue_visibility_time: 15
+
+http_server:
+  port: 8000
+
+time_zone: America/Sao_Paulo
+
+controller_process_schedule: "* * * * *"
+controller_concurrency: 5
+controller_procedures:
+  monitors_stuck:
+    schedule: "*/5 * * * *"
+    params:
+      time_tolerance: 10
+  notifications_alert_solved:
+    schedule: "*/5 * * * *"
+
+executor_concurrency: 5
+executor_sleep: 5
+executor_monitor_timeout: 60
+executor_reaction_timeout: 5
+executor_request_timeout: 2
+executor_monitor_heartbeat_time: 5
+
+max_issues_creation: 100
+
+database_default_acquire_timeout: 30
+database_default_query_timeout: 30
+database_close_timeout: 30
+database_log_query_metrics: false
+
+databases_pools_configs:
+  local:
+    min_size: 0
+    max_size: 5
+    timeout: 10
+    max_inactive_connection_lifetime: 120
+    server_settings:
+      application_name: sentinela
+
+log_all_events: false

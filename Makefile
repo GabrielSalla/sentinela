@@ -1,3 +1,4 @@
+# Development
 build-dev:
 	docker compose -f docker-compose-dev.yaml build sentinela-dev
 
@@ -19,6 +20,7 @@ test-dev:
 down-dev:
 	docker compose -f docker-compose-dev.yaml down
 
+# Local development setup
 build-local:
 	docker compose -f docker-compose-local.yaml build sentinela-local
 
@@ -31,6 +33,20 @@ run-local:
 down-local:
 	docker compose -f docker-compose-local.yaml down
 
+# Scalable setup for production-like environment
+build-scalable:
+	docker compose -f docker-compose-scalable.yaml build sentinela-controller
+
+migrate-scalable:
+	docker compose -f docker-compose-scalable.yaml run --rm --service-ports sentinela-controller alembic upgrade head
+
+run-scalable:
+	docker compose -f docker-compose-scalable.yaml up sentinela-controller sentinela-executor
+
+down-scalable:
+	docker compose -f docker-compose-scalable.yaml down
+
+# Development utilities
 linter:
 	docker compose -f docker-compose-dev.yaml run --rm --no-deps sentinela-dev ruff check
 	docker compose -f docker-compose-dev.yaml run --rm --no-deps sentinela-dev ruff format --check --diff
