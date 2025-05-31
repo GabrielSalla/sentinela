@@ -42,6 +42,41 @@ async def delete_queue(queue_url: str) -> None:
         assert e.response["Error"]["Code"] == "AWS.SimpleQueueService.NonExistentQueue"
 
 
+@pytest.mark.parametrize(
+    "config",
+    [
+        {
+            "type": "plugin.aws.sqs",
+            "name": "app",
+            "url": "http://motoserver:5000/123456789012/app",
+            "region": "us-east-1",
+            "create_queue": True,
+            "queue_wait_message_time": 2,
+            "queue_visibility_time": 15,
+        },
+        {
+            "type": "plugin.aws.sqs",
+            "name": "other",
+            "url": "some_other_url",
+            # No region
+            "create_queue": False,
+            "queue_wait_message_time": 5,
+            "queue_visibility_time": 20,
+        },
+    ],
+)
+async def test_queue_init_aws_client_params(config):
+    """'Queue' should initialize with the correct AWS client parameters"""
+    queue = sqs_queue.Queue(config=config)
+
+    assert queue._aws_client_params["credential_name"] == "application"
+    assert queue._aws_client_params["service"] == "sqs"
+    if "region" in config:
+        assert queue._aws_client_params["region_name"] == config["region"]
+    else:
+        assert "region_name" not in queue._aws_client_params
+
+
 @pytest.mark.parametrize("queue_wait_message_time", [1, 2, 3, 4, 5])
 async def test_queue_wait_message_time(queue_wait_message_time):
     queue = sqs_queue.Queue(
