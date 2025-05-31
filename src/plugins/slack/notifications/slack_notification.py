@@ -40,12 +40,24 @@ class SlackNotification:
     - `channel`: The Slack channel where notifications will be sent (e.g., `C0011223344`).
     - `title`: A title for the notification to help users to identify the problem.
     - `issues_fields`: A list of fields from the issue data to include in the notification.
+    - `min_priority_to_send`: Minimum alert priority that triggers a notification. Notifications
+    will be sent if the alert is not acknowledged at the current priority level and it's greater
+    than or equal to this setting. Defaults to `low` (P4).
     - `mention`: Slack user or group to mention if the alert reaches a specified priority. Provide
     the Slack identifier for a user (e.g., `U0011223344`) or a group (e.g., `G0011223344`). Set to
     `None` to avoid mentioning anyone. Defaults to `None`.
     - `min_priority_to_mention`: Minimum alert priority that triggers a mention. Mentions will
     occur if the alert is not acknowledged at the current priority level and it's is greater than
     or equal to this setting. Defaults to `moderate` (P3).
+    - `mention_on_update`: If set to 'False', the mention will be sent when the alert becomes
+    unacknowledged and the priority is greater than or equal to the minimum priority to mention. If
+    the alert is updated and the alert continues to be unacknowledged, the mention will persist.
+    When set to 'True', the mention will be deleted and sent again every time alert is updated, if
+    the alert is not acknowledged and the priority is greater than or equal to the minimum priority
+    to mention. This option can be used as a renotification. Defaults to `False`.
+    -  `issue_show_limit`: Maximum number of issues to show in the notification. If the limit is
+    reached, the message `XXX more...` will be shown at the and of the issues list, where `XXX` is
+    the number of issues not being shown. Defaults to `10`.
     """
 
     channel: str
@@ -53,6 +65,7 @@ class SlackNotification:
     issues_fields: list[str]
     min_priority_to_send: int = AlertPriority.low
     mention: str | None = None
+    mention_on_update: bool = False
     min_priority_to_mention: int = AlertPriority.moderate
     issue_show_limit: int = 10
 
@@ -372,7 +385,11 @@ async def notification_mention(
         await _delete_mention(notification)
         return
 
-    # If already has a mention message, just return
+    # If the mention should be sent on update, delete the previous mention message
+    if notification_options.mention_on_update:
+        await _delete_mention(notification)
+
+    # If the mention message already exists, do not send it again
     if notification.data.get("mention_ts") is not None:
         return
 

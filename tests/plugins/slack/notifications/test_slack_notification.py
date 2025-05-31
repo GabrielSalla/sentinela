@@ -1196,6 +1196,42 @@ async def test_notification_mention_already_sent(mocker, monkeypatch, sample_mon
     send_mention_spy.assert_not_called()
 
 
+async def test_notification_mention_mention_on_update(mocker, monkeypatch, sample_monitor: Monitor):
+    """'notification_mention' should resend a mention message if the notification already has
+    a notification mention message and the option 'mention_on_update' is set to 'True'"""
+    monkeypatch.setattr(slack_mock, "response_ts", "123123")
+    monkeypatch.setattr(slack_notification, "_should_have_mention", lambda *args: True)
+    delete_mention_spy: AsyncMock = mocker.spy(slack_notification, "_delete_mention")
+    send_mention_spy: AsyncMock = mocker.spy(slack_notification, "_send_mention")
+
+    alert = await Alert.create(
+        monitor_id=sample_monitor.id,
+    )
+    notification_options = slack_notification.SlackNotification(
+        channel="channel",
+        title="title",
+        issues_fields=["col"],
+        mention="mention",
+        min_priority_to_mention=5,
+        mention_on_update=True,
+    )
+    notification = await Notification.create(
+        monitor_id=sample_monitor.id,
+        alert_id=alert.id,
+        target="slack",
+        data={"channel": "channel", "ts": "33.55", "mention_ts": "11.22"},
+    )
+
+    await slack_notification.notification_mention(
+        sample_monitor, alert, notification, notification_options
+    )
+
+    delete_mention_spy.assert_awaited_once()
+    send_mention_spy.assert_awaited_once()
+    await notification.refresh()
+    assert notification.data == {"channel": "channel", "ts": "33.55", "mention_ts": "123123"}
+
+
 async def test_handle_slack_notification_no_alert(mocker):
     """'_handle_slack_notification' should just return if couldn't find an alert with the provided
     id"""
