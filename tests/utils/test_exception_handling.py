@@ -42,6 +42,16 @@ async def test_catch_exceptions_timeout(caplog, mocker, logger):
         logger_error_spy.assert_called_once_with("error function timed out")
 
 
+async def test_catch_exceptions_timeout_no_message(caplog):
+    """'catch_exceptions' should not log any message if a 'TimeoutError' exception is raised and
+    no timeout message is provided"""
+    with catch_exceptions():
+        await asyncio.wait_for(asyncio.sleep(0.1), timeout=0.01)
+
+    assert_message_not_in_log(caplog, "Exception caught successfully, going on")
+    assert_message_not_in_log(caplog, "TimeoutError")
+
+
 async def test_catch_exceptions_base_exception(caplog):
     """'catch_exceptions' should log the exception message if an exception inherited from
     'BaseSentinelaException' is raised"""
