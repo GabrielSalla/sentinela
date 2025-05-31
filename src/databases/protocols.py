@@ -2,7 +2,7 @@ from typing import Any, Protocol, runtime_checkable
 
 
 @runtime_checkable
-class Pool(Protocol):
+class Pool(Protocol):  # pragma: no cover
     PATTERNS: list[str]
     name: str
 

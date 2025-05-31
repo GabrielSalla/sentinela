@@ -1,7 +1,7 @@
 from typing import Any, Protocol, runtime_checkable
 
 
-class Message(Protocol):
+class Message(Protocol):  # pragma: no cover
     id: str
 
     @property
@@ -9,7 +9,7 @@ class Message(Protocol):
 
 
 @runtime_checkable
-class Queue(Protocol):
+class Queue(Protocol):  # pragma: no cover
     def __init__(self, config: dict[str, Any]) -> None: ...
 
     @property
