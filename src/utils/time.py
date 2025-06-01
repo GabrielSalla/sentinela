@@ -55,7 +55,7 @@ def time_until_next_trigger(
     if datetime_reference is None:
         datetime_reference = now()
 
-    cron = croniter(cron_configuration, datetime_reference)
-    next_expected_trigger: datetime.datetime = cron.get_next(datetime.datetime)
+    cron = croniter(cron_configuration, datetime_reference, ret_type=datetime.datetime)
+    next_expected_trigger: datetime.datetime = cron.get_next()
     interval = next_expected_trigger - datetime_reference
     return ceil(interval.total_seconds())

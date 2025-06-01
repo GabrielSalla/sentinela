@@ -1,9 +1,8 @@
 # Still missing tests for main.py, so it's been ignored in the .coveragerc file
 
+import asyncio
 import logging
 import sys
-
-import uvloop
 
 import components.controller as controller
 import components.executor as executor
@@ -81,4 +80,4 @@ async def main() -> None:
 
 
 if __name__ == "__main__":
-    uvloop.run(main())
+    asyncio.run(main())
