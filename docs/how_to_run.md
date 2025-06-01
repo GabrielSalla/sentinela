@@ -49,7 +49,7 @@ Local execution is recommended for developing monitors. It should not be used in
 
 When running the application locally, it is recommended to use the internal queue instead of the SQS queue for faster and smoother operation. However, it is also possible to use the AWS queue mock or a real SQS queue.
 
-1. Set the secrets in the `.env.secrets` file, as specified in the [Configuration](./configuration.md) documentation.
+1. Set the secrets in the `.env.secrets` file and environment variables in the `docker/docker-compose-local.yml` file, as specified in the [Configuration](./configuration.md) documentation.
 2. Migrate the database to the latest version. This is only necessary when running for the first time or after updates.
     ```shell
     make migrate-local
@@ -74,8 +74,10 @@ For a more scalable deployment, it is recommended to use separate containers for
 - Hard to monitor the application.
 - Running the database locally increases the risk of data loss.
 
-1. Set the `replicas` parameter in the `docker/docker-compose-scalable.yml` file to the desired number of executors.
-2. Set the secrets in the `.env.secrets` file, as specified in the [Configuration](./configuration.md) documentation.
+The `docker-compose` file for this setup includes a SQS queue mock, which is used by default. However, it is also possible to use the internal queue or a real SQS queue.
+
+1. Set the secrets in the `.env.secrets` file and environment variables in the `docker/docker-compose-scalable.yml` file, as specified in the [Configuration](./configuration.md) documentation.
+2. Set the `replicas` parameter in the `docker/docker-compose-scalable.yml` file to the desired number of executors.
 3. Migrate the database to the latest version. This is only necessary when running for the first time or after updates.
     ```shell
     make migrate-scalable
