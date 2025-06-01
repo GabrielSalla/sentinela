@@ -11,7 +11,6 @@ import alembic.command
 import alembic.config
 import pytest
 import pytest_asyncio
-import uvloop
 from _pytest.monkeypatch import MonkeyPatch
 
 import components.monitors_loader.monitors_loader as monitors_loader
@@ -24,12 +23,6 @@ import utils.app as app
 from models import CodeModule, Monitor
 from registry import registry
 from tests.message_queue.utils import get_queue_items
-
-
-@pytest.fixture(scope="session")
-def event_loop_policy():
-    """Set the event loop policy to uvloop's policy"""
-    return uvloop.EventLoopPolicy()
 
 
 @pytest.fixture(scope="module")
