@@ -394,6 +394,34 @@ async def test_run(monkeypatch, clear_queue, clear_database):
     )
 
 
+async def test_run_no_sleep(mocker, monkeypatch):
+    """'run' should not sleep if the controller completes the loop and another one is already
+    triggered"""
+    monkeypatch.setattr(configs, "load_sample_monitors", True)
+    monkeypatch.setattr(configs, "internal_monitors_path", "tests/sample_monitors/internal")
+    monkeypatch.setattr(configs, "sample_monitors_path", "tests/sample_monitors/others")
+
+    run_procedures_mock = AsyncMock()
+    monkeypatch.setattr(controller, "run_procedures", run_procedures_mock)
+
+    monkeypatch.setattr(controller, "is_triggered", lambda *args, **kwargs: True)
+
+    sleep_spy: AsyncMock = mocker.spy(app, "sleep")
+
+    # Run the controller for a while then stop it
+    await monitors_loader._register_monitors()
+    await monitors_loader._load_monitors(None)
+
+    controller_task = asyncio.create_task(controller.run())
+    await asyncio.sleep(0.5)
+
+    # Stop the app and wait for the controller task
+    app.stop()
+    await asyncio.wait_for(controller_task, timeout=0.5)
+
+    sleep_spy.assert_not_called()
+
+
 async def test_run_current_task_error(caplog, monkeypatch):
     """'run' should log an error if it can't get the current task and finish the execution"""
     monkeypatch.setattr(asyncio, "current_task", lambda: None)

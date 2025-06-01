@@ -5,7 +5,7 @@ from data_models.monitor_options import AlertOptions, IssueOptions, MonitorOptio
 from notifications import BaseNotification
 
 
-class MonitorModule(Protocol):
+class MonitorModule(Protocol):  # pragma: no cover
     """Class that represents a base monitor module structure"""
 
     SENTINELA_MONITOR_ID: int

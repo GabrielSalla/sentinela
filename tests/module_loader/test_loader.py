@@ -288,3 +288,18 @@ def test_load_module_from_string():
 
     assert module_path == Path("tmp") / module_name / f"{module_name}.py"
     assert module.get_value() == 200
+
+
+def test_load_module_from_string_with_base_path():
+    """'load_module_from_string' should create the module file and load it with a custom base
+    path"""
+    module_name = "test_load_module_from_string_with_base_path"
+    module_code = "def get_value(): return {n}"
+
+    base_path = Path("tmp") / "some_test_path"
+    module_path, module = loader.load_module_from_string(
+        module_name, module_code.format(n=987), base_path=str(base_path)
+    )
+
+    assert module_path == base_path / module_name / f"{module_name}.py"
+    assert module.get_value() == 987

@@ -65,5 +65,7 @@ def setup() -> None:
         stream.setFormatter(FriendlyFormatter(configs.logging.format))
     elif configs.logging.mode == "json":
         stream.setFormatter(JsonFormatter(configs.logging.fields))
+    else:
+        raise ValueError(f"Unknown logging mode: '{configs.logging.mode}'")
 
     logging.basicConfig(level=logging.INFO, handlers=[stream])
