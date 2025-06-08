@@ -20,7 +20,7 @@ services:
   sentinela-controller:
     build:
       context: .
-      dockerfile: Dockerfile
+      dockerfile: docker/Dockerfile
       target: sentinela
       args:
         CONFIGS_FILE: configs/configs-scalable.yaml
@@ -50,7 +50,7 @@ services:
   sentinela-executor:
     build:
       context: .
-      dockerfile: Dockerfile
+      dockerfile: docker/Dockerfile
       target: sentinela
       args:
         CONFIGS_FILE: configs/configs-scalable.yaml

@@ -9,7 +9,7 @@ services:
   sentinela-local:
     build:
       context: .
-      dockerfile: Dockerfile
+      dockerfile: docker/Dockerfile
       target: sentinela
       args:
         CONFIGS_FILE: configs/configs.yaml
