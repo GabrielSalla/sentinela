@@ -1,6 +1,5 @@
 import os
 import random
-from typing import TypedDict
 
 from monitor_utils import AlertOptions, CountRule, IssueOptions, MonitorOptions, PriorityLevels
 from plugins.slack import SlackNotification
@@ -27,12 +26,7 @@ alert_options = AlertOptions(
 )
 
 
-class IssueDataType(TypedDict):
-    id: int
-    value: int
-
-
-async def search() -> list[IssueDataType] | None:
+async def search() -> list[dict] | None:
     # Return 5 issues data with a random 'id' and a random 'value' between 1
     # and 10
     # As an issue is considered 'solved' (check the 'is_solved' function) if
@@ -49,7 +43,7 @@ async def search() -> list[IssueDataType] | None:
     ]
 
 
-async def update(issues_data: list[IssueDataType]) -> list[IssueDataType] | None:
+async def update(issues_data: list[dict]) -> list[dict] | None:
     # Each existing issue will have their 'value' field updated to a random
     # value between 1 and 10
     for issue_data in issues_data:
@@ -58,7 +52,7 @@ async def update(issues_data: list[IssueDataType]) -> list[IssueDataType] | None
     return issues_data
 
 
-def is_solved(issue_data: IssueDataType) -> bool:
+def is_solved(issue_data: dict) -> bool:
     # At the issues check stage, each issue data will be validated against this
     # rule and, if true, will be considered as solved
     return issue_data["value"] == 1

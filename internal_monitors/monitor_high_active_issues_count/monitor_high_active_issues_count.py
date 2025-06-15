@@ -4,7 +4,6 @@ affected from a high resource usage.
 """
 
 import os
-from typing import TypedDict, cast
 
 from databases import query_application
 from monitor_utils import (
@@ -43,25 +42,19 @@ alert_options = AlertOptions(
 )
 
 
-class IssueDataType(TypedDict):
-    monitor_id: int
-    monitor_name: str
-    active_issues_count: int
-
-
-async def search() -> list[IssueDataType] | None:
+async def search() -> list[dict] | None:
     sql = read_file("search_query.sql")
 
-    return cast(list[IssueDataType], await query_application(sql, TRIGGER_THRESHOLD))
+    return await query_application(sql, TRIGGER_THRESHOLD)
 
 
-async def update(issues_data: list[IssueDataType]) -> list[IssueDataType] | None:
+async def update(issues_data: list[dict]) -> list[dict] | None:
     sql = read_file("search_query.sql")
 
-    return cast(list[IssueDataType], await query_application(sql, TRIGGER_THRESHOLD))
+    return await query_application(sql, TRIGGER_THRESHOLD)
 
 
-def is_solved(issue_data: IssueDataType) -> bool:
+def is_solved(issue_data: dict) -> bool:
     active_issues_count = issue_data["active_issues_count"]
     return active_issues_count < TRIGGER_THRESHOLD / 2
 
