@@ -59,19 +59,19 @@ async def test_check_monitor_validation_error(caplog, log_error):
         monitor_code = file.read()
 
     # Add errors that should be caught by the validation
-    monitor_code = monitor_code.replace("id: str", "not_id: str")
     monitor_code = monitor_code.replace("issues_data", "issue_data")
+    monitor_code = monitor_code.replace("issue_data: dict", "abc: dict")
 
     try:
         monitors_loader.check_monitor(monitor_name, monitor_code, log_error=log_error)
     except monitors_loader.MonitorValidationError as exception:
         assert exception.monitor_name == monitor_name
         assert (
-            "'IssueDataType' must have the 'id' field, as specified by 'issue_options.model_id_key'"
+            "'update' function must have arguments 'issues_data: list[dict]'"
             in exception.errors_found
         )
         assert (
-            "'update' function must have arguments 'issues_data: list[IssueDataType]'"
+            "'is_solved' function must have arguments 'issue_data: dict'"
             in exception.errors_found
         )
 
@@ -192,8 +192,7 @@ async def test_register_monitor_monitor_already_exists_error():
 
     registered_at = code_module.registered_at
 
-    new_monitor_code = monitor_code.replace("id: str", "not_id: str")
-    new_monitor_code = new_monitor_code.replace("issues_data", "issue_data")
+    new_monitor_code = monitor_code.replace("issues_data", "issue_data")
     new_additional_files = {
         "file_1.sql": "SELECT * FROM table_1;",
         "file_2.sql": "SELECT * FROM table_2;",
@@ -206,11 +205,7 @@ async def test_register_monitor_monitor_already_exists_error():
     except monitors_loader.MonitorValidationError as exception:
         assert exception.monitor_name == monitor_name
         assert (
-            "'IssueDataType' must have the 'id' field, as specified by 'issue_options.model_id_key'"
-            in exception.errors_found
-        )
-        assert (
-            "'update' function must have arguments 'issues_data: list[IssueDataType]'"
+            "'update' function must have arguments 'issues_data: list[dict]'"
             in exception.errors_found
         )
 
@@ -233,7 +228,6 @@ async def test_register_monitor_validation_error():
         monitor_code = file.read()
 
     # Add errors that should be caught by the validation
-    monitor_code = monitor_code.replace("id: str", "not_id: str")
     monitor_code = monitor_code.replace("issues_data", "issue_data")
 
     try:
@@ -241,11 +235,7 @@ async def test_register_monitor_validation_error():
     except monitors_loader.MonitorValidationError as exception:
         assert exception.monitor_name == monitor_name
         assert (
-            "'IssueDataType' must have the 'id' field, as specified by 'issue_options.model_id_key'"
-            in exception.errors_found
-        )
-        assert (
-            "'update' function must have arguments 'issues_data: list[IssueDataType]'"
+            "'update' function must have arguments 'issues_data: list[dict]'"
             in exception.errors_found
         )
 

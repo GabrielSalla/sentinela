@@ -1,5 +1,5 @@
 from pathlib import Path
-from typing import Protocol, TypedDict
+from typing import Protocol
 
 from data_models.monitor_options import AlertOptions, IssueOptions, MonitorOptions, ReactionOptions
 from notifications import BaseNotification
@@ -16,16 +16,14 @@ class MonitorModule(Protocol):  # pragma: no cover
     issue_options: IssueOptions
     alert_options: AlertOptions
 
-    class IssueDataType(TypedDict): ...
+    @staticmethod
+    async def search() -> list[dict] | None: ...
 
     @staticmethod
-    async def search() -> list[IssueDataType] | None: ...
+    async def update(issues_data: list[dict]) -> list[dict] | None: ...
 
     @staticmethod
-    async def update(issues_data: list[IssueDataType]) -> list[IssueDataType] | None: ...
-
-    @staticmethod
-    def is_solved(issue_data: IssueDataType) -> bool: ...
+    def is_solved(issue_data: dict) -> bool: ...
 
     reaction_options: ReactionOptions
 

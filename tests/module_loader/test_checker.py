@@ -1,7 +1,7 @@
 import inspect
 import re
 from types import ModuleType
-from typing import Any, Coroutine, TypedDict
+from typing import Any, Coroutine
 from unittest.mock import MagicMock
 
 import pydantic
@@ -320,87 +320,14 @@ def test_check_notification_options_notifications_wrong_type(monitor_mock, notif
     ]
 
 
-# Test _check_issue_data_type
-
-
-def test_check_issue_data_type_defined(monitor_mock):
-    """'_check_issue_data_type' should return no erros if the 'IssueDataType' class is defined and
-    it inherits from 'TypedDict'"""
-    monitor_mock.issue_options = IssueOptions(
-        model_id_key="id",
-    )
-
-    class IssueDataType(TypedDict):
-        id: str
-        a: str
-        b: int
-
-    monitor_mock.IssueDataType = IssueDataType
-
-    assert checker._check_issue_data_type(monitor_mock) == []
-
-
-def test_check_issue_data_type_not_defined(monitor_mock):
-    """'_check_issue_data_type' should return errors if the 'IssueDataType' class is not defined"""
-    assert checker._check_issue_data_type(monitor_mock) == ["'IssueDataType' is required"]
-
-
-def test_check_issue_data_type_wrong_type(monitor_mock):
-    """'_check_issue_data_type' should return errors if the 'IssueDataType' class is not a class
-    inherited from 'TypedDict'"""
-    monitor_mock.IssueDataType = "IssueDataType"
-
-    assert checker._check_issue_data_type(monitor_mock) == [
-        "Class 'IssueDataType' must be inherited from 'typing.TypedDict'"
-    ]
-
-
-def test_check_issue_data_type_no_issue_options(monitor_mock):
-    """'_check_issue_data_type' should return errors if the 'IssueDataType' class is defined but
-    there is no 'issue_options' field"""
-
-    class IssueDataType(TypedDict):
-        id: str
-        a: str
-        b: int
-
-    monitor_mock.IssueDataType = IssueDataType
-
-    assert checker._check_issue_data_type(monitor_mock) == []
-
-
-def test_check_issue_data_type_missing_model_id_key(monitor_mock):
-    """'_check_issue_data_type' should return errors if the 'IssueDataType' class doesn't have the
-    field defined in the 'model_id_key' parameter of the 'issue_options' setting"""
-    monitor_mock.issue_options = IssueOptions(
-        model_id_key="id",
-    )
-
-    class IssueDataType(TypedDict):
-        a: str
-        b: int
-
-    monitor_mock.IssueDataType = IssueDataType
-
-    assert checker._check_issue_data_type(monitor_mock) == [
-        "'IssueDataType' must have the 'id' field, as specified by 'issue_options.model_id_key'"
-    ]
-
-
 # Test _check_search_function
 
 
 def test_check_search_function_defined(monitor_mock):
     """'_check_search_function' should return no erros if the 'search' function is defined and it is
     an asynchronous function with the correct signature"""
+    async def search() -> list[dict] | None: ...
 
-    class IssueDataType(TypedDict):
-        a: str
-        b: int
-
-    async def search() -> list[IssueDataType] | None: ...
-
-    monitor_mock.IssueDataType = IssueDataType
     monitor_mock.search = search
 
     assert checker._check_search_function(monitor_mock) == []
@@ -413,12 +340,7 @@ def test_check_search_function_not_defined(monitor_mock):
 
 def test_check_search_function_sync_function(monitor_mock):
     """'_check_search_function' should return errors if the 'search' function is synchronous"""
-
-    class IssueDataType(TypedDict):
-        a: str
-        b: int
-
-    def search() -> list[IssueDataType]: ...
+    def search() -> list[dict] | None: ...
 
     monitor_mock.search = search
 
@@ -427,45 +349,18 @@ def test_check_search_function_sync_function(monitor_mock):
     ]
 
 
-def test_check_search_function_no_issue_data_type(monitor_mock):
-    """'_check_search_function' should return no erros if the monitor doesn't have the
-    'IssueDataType' class defined"""
-
-    class IssueDataType(TypedDict):
-        a: str
-        b: int
-
-    async def search() -> list[IssueDataType]: ...
-
-    monitor_mock.search = search
-
-    assert checker._check_search_function(monitor_mock) == []
-
-
 class Test_check_search_function_type_signature:
-    class IssueDataType(TypedDict):
-        a: str
-        b: int
+    async def search_arg(a: int) -> list[dict] | None: ...
+    async def search_args(*args) -> list[dict] | None: ...
+    async def search_kwargs(**kwargs) -> list[dict] | None: ...
 
-    async def search_arg(a: int) -> list[IssueDataType] | None: ...
-    async def search_args(*args) -> list[IssueDataType] | None: ...
-    async def search_kwargs(**kwargs) -> list[IssueDataType] | None: ...
-
-    async def search_return_without_none() -> list[IssueDataType]: ...
+    async def search_return_without_none() -> list[dict]: ...
     async def search_return_none() -> None: ...
     async def search_return_other() -> str: ...
 
-    @pytest.mark.parametrize(
-        "function",
-        [
-            search_arg,
-            search_args,
-            search_kwargs,
-        ],
-    )
+    @pytest.mark.parametrize("function", [search_arg, search_args, search_kwargs])
     def test_check_search_function_wrong_arguments(self, monitor_mock, function):
         """'_check_search_function' should return errors if the 'search' function has arguments"""
-        monitor_mock.IssueDataType = self.IssueDataType
         monitor_mock.search = function
 
         assert checker._check_search_function(monitor_mock) == [
@@ -473,21 +368,15 @@ class Test_check_search_function_type_signature:
         ]
 
     @pytest.mark.parametrize(
-        "function",
-        [
-            search_return_without_none,
-            search_return_none,
-            search_return_other,
-        ],
+        "function", [search_return_without_none, search_return_none, search_return_other]
     )
     def test_check_search_function_wrong_return(self, monitor_mock, function):
         """'_check_search_function' should return errors if the 'search' function has a return type
-        different from 'list[IssueDataType] | None'"""
-        monitor_mock.IssueDataType = self.IssueDataType
+        different from 'list[dict] | None'"""
         monitor_mock.search = function
 
         assert checker._check_search_function(monitor_mock) == [
-            "'search' function must return 'list[IssueDataType] | None'"
+            "'search' function must return 'list[dict] | None'"
         ]
 
 
@@ -497,14 +386,8 @@ class Test_check_search_function_type_signature:
 def test_check_update_function_defined(monitor_mock):
     """'_check_update_function' should return no erros if the 'update' function is defined and it
     is an asynchronous function with the correct signature"""
+    async def update(issues_data: list[dict]) -> list[dict] | None: ...
 
-    class IssueDataType(TypedDict):
-        a: str
-        b: int
-
-    async def update(issues_data: list[IssueDataType]) -> list[IssueDataType] | None: ...
-
-    monitor_mock.IssueDataType = IssueDataType
     monitor_mock.update = update
 
     assert checker._check_update_function(monitor_mock) == []
@@ -518,29 +401,18 @@ def test_check_update_function_not_defined(monitor_mock):
 def test_check_update_function_without_issue_data(monitor_mock):
     """'_check_update_function' should return errors if the 'update' function doesn't have
     'issues_data' as argument"""
+    async def update(a: dict) -> list[dict] | None: ...
 
-    class IssueDataType(TypedDict):
-        a: str
-        b: int
-
-    async def update(a: IssueDataType) -> list[IssueDataType] | None: ...
-
-    monitor_mock.IssueDataType = IssueDataType
     monitor_mock.update = update
 
     assert checker._check_update_function(monitor_mock) == [
-        "'update' function must have arguments 'issues_data: list[IssueDataType]'"
+        "'update' function must have arguments 'issues_data: list[dict]'"
     ]
 
 
 def test_check_update_function_sync_function(monitor_mock):
     """'_check_update_function' should return errors if the 'update' function is synchronous"""
-
-    class IssueDataType(TypedDict):
-        a: str
-        b: int
-
-    def update(issues_data: list[IssueDataType]) -> list[IssueDataType] | None: ...
+    def update(issues_data: list[dict]) -> list[dict] | None: ...
 
     monitor_mock.update = update
 
@@ -549,92 +421,38 @@ def test_check_update_function_sync_function(monitor_mock):
     ]
 
 
-def test_check_update_function_no_issue_data_type(monitor_mock):
-    """'_check_update_function' should return no erros if the monitor doesn't have the
-    'IssueDataType' class defined"""
-
-    class IssueDataType(TypedDict):
-        a: str
-        b: int
-
-    async def update(issues_data: list[IssueDataType]) -> list[IssueDataType]: ...
-
-    monitor_mock.update = update
-
-    assert checker._check_update_function(monitor_mock) == []
-
-
 class Test_check_update_function_type_signature:
-    class IssueDataType(TypedDict):
-        a: str
-        b: int
+    async def update_more_args(issues_data: list[dict], a: int) -> list[dict] | None: ...
+    async def update_args(issues_data: list[dict], *args) -> list[dict] | None: ...
+    async def update_kwargs(issues_data: list[dict], **kwargs) -> list[dict] | None: ...
+    async def update_wrong_type(issues_data: list[str]) -> list[dict] | None: ...
 
-    async def update_more_args(
-        issues_data: list[IssueDataType], a: int
-    ) -> list[IssueDataType] | None: ...
-
-    async def update_args(
-        issues_data: list[IssueDataType], *args
-    ) -> list[IssueDataType] | None: ...
-
-    async def update_kwargs(
-        issues_data: list[IssueDataType], **kwargs
-    ) -> list[IssueDataType] | None: ...
-
-    async def update_wrong_type(issues_data: list[str]) -> list[IssueDataType] | None: ...
-
-    async def update_return_without_none(
-        issues_data: list[IssueDataType],
-    ) -> list[IssueDataType]: ...
-
-    async def update_return_none(issues_data: list[IssueDataType]) -> None: ...
-
-    async def update_return_other(issues_data: list[IssueDataType]) -> str: ...
+    async def update_return_without_none(issues_data: list[dict]) -> list[dict]: ...
+    async def update_return_none(issues_data: list[dict]) -> None: ...
+    async def update_return_other(issues_data: list[dict]) -> str: ...
 
     @pytest.mark.parametrize(
-        "function",
-        [
-            update_more_args,
-            update_args,
-            update_kwargs,
-        ],
+        "function", [update_more_args, update_args, update_kwargs, update_wrong_type]
     )
     def test_check_update_function_wrong_arguments(self, monitor_mock, function):
         """'_check_update_function' should return errors if the 'update' function has the wrong
         args signature"""
-        monitor_mock.IssueDataType = self.IssueDataType
         monitor_mock.update = function
 
         assert checker._check_update_function(monitor_mock) == [
-            "'update' function must have arguments 'issues_data: list[IssueDataType]'"
-        ]
-
-    def test_check_update_function_wrong_argument_type(self, monitor_mock):
-        """'_check_update_function' should return errors if the 'update' function has the wrong
-        argument type"""
-        monitor_mock.IssueDataType = self.IssueDataType
-        monitor_mock.update = Test_check_update_function_type_signature.update_wrong_type
-
-        assert checker._check_update_function(monitor_mock) == [
-            "'update' function must have arguments 'issues_data: list[IssueDataType]'"
+            "'update' function must have arguments 'issues_data: list[dict]'"
         ]
 
     @pytest.mark.parametrize(
-        "function",
-        [
-            update_return_without_none,
-            update_return_none,
-            update_return_other,
-        ],
+        "function", [update_return_without_none, update_return_none, update_return_other]
     )
     def test_check_update_function_wrong_return(self, monitor_mock, function):
         """'_check_update_function' should return errors if the 'update' function has the wrong
         return type"""
-        monitor_mock.IssueDataType = self.IssueDataType
         monitor_mock.update = function
 
         assert checker._check_update_function(monitor_mock) == [
-            "'update' function must return 'list[IssueDataType] | None'"
+            "'update' function must return 'list[dict] | None'"
         ]
 
 
@@ -644,14 +462,8 @@ class Test_check_update_function_type_signature:
 def test_check_is_solved_function_defined(monitor_mock):
     """'_check_is_solved_function' should return no erros if the 'is_solved' function is defined
     and it is a synchronous function with the correct signature"""
+    def is_solved(issue_data: dict) -> bool: ...
 
-    class IssueDataType(TypedDict):
-        a: str
-        b: int
-
-    def is_solved(issue_data: IssueDataType) -> bool: ...
-
-    monitor_mock.IssueDataType = IssueDataType
     monitor_mock.is_solved = is_solved
 
     assert checker._check_is_solved_function(monitor_mock) == []
@@ -680,30 +492,19 @@ def test_check_is_solved_function_not_defined_solvable(monitor_mock):
 def test_check_is_solved_function_without_issues_data(monitor_mock):
     """'_check_is_solved_function' should return errors if the 'is_solved' function doesn't have
     the 'issue_data' as argument"""
+    def is_solved(a: dict) -> bool: ...
 
-    class IssueDataType(TypedDict):
-        a: str
-        b: int
-
-    def is_solved(a: IssueDataType) -> bool: ...
-
-    monitor_mock.IssueDataType = IssueDataType
     monitor_mock.is_solved = is_solved
 
     assert checker._check_is_solved_function(monitor_mock) == [
-        "'is_solved' function must have arguments 'issue_data: IssueDataType'"
+        "'is_solved' function must have arguments 'issue_data: dict'"
     ]
 
 
 def test_check_is_solved_function_async_function(monitor_mock):
     """'_check_is_solved_function' should return errors if the 'is_solved' function is
     asynchronous"""
-
-    class IssueDataType(TypedDict):
-        a: str
-        b: int
-
-    async def is_solved(issue_data: IssueDataType) -> bool: ...
+    async def is_solved(issue_data: dict) -> bool: ...
 
     monitor_mock.is_solved = is_solved
 
@@ -712,73 +513,33 @@ def test_check_is_solved_function_async_function(monitor_mock):
     ]
 
 
-def test_check_is_solved_function_no_issue_data_type(monitor_mock):
-    """'_check_is_solved_function' should return no errors if the monitor doesn't have the
-    'IssueDataType' class defined"""
-
-    class IssueDataType(TypedDict):
-        a: str
-        b: int
-
-    def is_solved(issue_data: IssueDataType) -> bool: ...
-
-    monitor_mock.is_solved = is_solved
-
-    assert checker._check_is_solved_function(monitor_mock) == []
-
-
 class Test_check_is_solved_function_type_signature:
-    class IssueDataType(TypedDict):
-        a: str
-        b: int
-
-    def is_solved_more_args(issue_data: IssueDataType, a: int) -> bool: ...
-    def is_solved_args(issue_data: IssueDataType, *args) -> bool: ...
-    def is_solved_kwargs(issue_data: IssueDataType, **kwargs) -> bool: ...
+    def is_solved_more_args(issue_data: dict, a: int) -> bool: ...
+    def is_solved_args(issue_data: dict, *args) -> bool: ...
+    def is_solved_kwargs(issue_data: dict, **kwargs) -> bool: ...
     def is_solved_wrong_type(issue_data: str) -> bool: ...
 
-    def is_solved_return_none(issue_data: IssueDataType) -> None: ...
-    def is_solved_return_other(issue_data: IssueDataType) -> str: ...
+    def is_solved_return_none(issue_data: dict) -> None: ...
+    def is_solved_return_other(issue_data: dict) -> str: ...
 
     @pytest.mark.parametrize(
-        "function",
-        [
-            is_solved_more_args,
-            is_solved_args,
-            is_solved_kwargs,
-        ],
+        "function", [is_solved_more_args, is_solved_args, is_solved_kwargs, is_solved_wrong_type]
     )
     def test_check_is_solved_function_wrong_arguments(self, monitor_mock, function):
         """'_check_is_solved_function' should return errors if the 'is_solved' function has the
         wrong args signature"""
-        monitor_mock.IssueDataType = self.IssueDataType
         monitor_mock.is_solved = function
 
         assert checker._check_is_solved_function(monitor_mock) == [
-            "'is_solved' function must have arguments 'issue_data: IssueDataType'"
-        ]
-
-    def test_check_is_solved_function_wrong_argument_type(self, monitor_mock):
-        """'_check_is_solved_function' should return errors if the 'is_solved' function has the
-        wrong argument type"""
-        monitor_mock.IssueDataType = self.IssueDataType
-        monitor_mock.is_solved = Test_check_is_solved_function_type_signature.is_solved_wrong_type
-
-        assert checker._check_is_solved_function(monitor_mock) == [
-            "'is_solved' function must have arguments 'issue_data: IssueDataType'"
+            "'is_solved' function must have arguments 'issue_data: dict'"
         ]
 
     @pytest.mark.parametrize(
-        "function",
-        [
-            is_solved_return_none,
-            is_solved_return_other,
-        ],
+        "function", [is_solved_return_none, is_solved_return_other]
     )
     def test_check_is_solved_function_wrong_return(self, monitor_mock, function):
         """'_check_is_solved_function' should return errors if the 'is_solved' function has the
         wrong return type"""
-        monitor_mock.IssueDataType = self.IssueDataType
         monitor_mock.is_solved = function
 
         assert checker._check_is_solved_function(monitor_mock) == [
@@ -792,21 +553,14 @@ class Test_check_is_solved_function_type_signature:
 def test_check_module(mocker, monitor_mock):
     """'check_module' should call all the check functions with the correct arguments and return the
     list of errors. If there were no errors, the list should be empty"""
-
-    class IssueDataType(TypedDict):
-        id: str
-        a: str
-        b: int
-
     monitor_mock.monitor_options = MonitorOptions()
     monitor_mock.issue_options = IssueOptions(
         model_id_key="id",
     )
-    monitor_mock.IssueDataType = IssueDataType
 
-    async def search() -> list[IssueDataType] | None: ...
-    async def update(issues_data: list[IssueDataType]) -> list[IssueDataType] | None: ...
-    def is_solved(issue_data: IssueDataType) -> bool: ...
+    async def search() -> list[dict] | None: ...
+    async def update(issues_data: list[dict]) -> list[dict] | None: ...
+    def is_solved(issue_data: dict) -> bool: ...
 
     monitor_mock.search = search
     monitor_mock.update = update
@@ -817,19 +571,17 @@ def test_check_module(mocker, monitor_mock):
     _check_alert_options_spy: MagicMock = mocker.spy(checker, "_check_alert_options")
     _check_reaction_options_spy: MagicMock = mocker.spy(checker, "_check_reaction_options")
     _check_notification_options_spy: MagicMock = mocker.spy(checker, "_check_notification_options")
-    _check_issue_data_type_spy: MagicMock = mocker.spy(checker, "_check_issue_data_type")
     _check_search_function_spy: MagicMock = mocker.spy(checker, "_check_search_function")
     _check_update_function_spy: MagicMock = mocker.spy(checker, "_check_update_function")
     _check_is_solved_function_spy: MagicMock = mocker.spy(checker, "_check_is_solved_function")
 
-    checker.check_module(monitor_mock) == []
+    assert checker.check_module(monitor_mock) == []
 
     _check_monitor_options_spy.assert_called_once_with(monitor_mock)
     _check_issue_options_spy.assert_called_once_with(monitor_mock)
     _check_alert_options_spy.assert_called_once_with(monitor_mock)
     _check_reaction_options_spy.assert_called_once_with(monitor_mock)
     _check_notification_options_spy.assert_called_once_with(monitor_mock)
-    _check_issue_data_type_spy.assert_called_once_with(monitor_mock)
     _check_search_function_spy.assert_called_once_with(monitor_mock)
     _check_update_function_spy.assert_called_once_with(monitor_mock)
     _check_is_solved_function_spy.assert_called_once_with(monitor_mock)
@@ -838,20 +590,14 @@ def test_check_module(mocker, monitor_mock):
 def test_check_module_error(mocker, monitor_mock):
     """'check_module' should call all the check functions with the correct arguments and return the
     list of errors. If there were errors, the list should not be empty"""
-
-    class IssueDataType(TypedDict):
-        a: str
-        b: int
-
     monitor_mock.monitor_options = MonitorOptions()
     monitor_mock.issue_options = IssueOptions(
         model_id_key="id",
     )
-    monitor_mock.IssueDataType = IssueDataType
 
-    async def search() -> list[IssueDataType] | None: ...
-    async def update(issues_data: list[IssueDataType]) -> list[IssueDataType] | None: ...
-    def is_solved(issue_data: IssueDataType) -> bool: ...
+    async def search() -> list[dict] | None: ...
+    async def update(abc: list[dict]) -> list[dict] | None: ...
+    def is_solved(defg: dict) -> bool: ...
 
     monitor_mock.search = search
     monitor_mock.update = update
@@ -862,13 +608,13 @@ def test_check_module_error(mocker, monitor_mock):
     _check_alert_options_spy: MagicMock = mocker.spy(checker, "_check_alert_options")
     _check_reaction_options_spy: MagicMock = mocker.spy(checker, "_check_reaction_options")
     _check_notification_options_spy: MagicMock = mocker.spy(checker, "_check_notification_options")
-    _check_issue_data_type_spy: MagicMock = mocker.spy(checker, "_check_issue_data_type")
     _check_search_function_spy: MagicMock = mocker.spy(checker, "_check_search_function")
     _check_update_function_spy: MagicMock = mocker.spy(checker, "_check_update_function")
     _check_is_solved_function_spy: MagicMock = mocker.spy(checker, "_check_is_solved_function")
 
-    checker.check_module(monitor_mock) == [
-        "'IssueDataType' must have the 'id' field, as specified by 'issue_options.model_id_key'"
+    assert checker.check_module(monitor_mock) == [
+        "'update' function must have arguments 'issues_data: list[dict]'",
+        "'is_solved' function must have arguments 'issue_data: dict'",
     ]
 
     _check_monitor_options_spy.assert_called_once_with(monitor_mock)
@@ -876,7 +622,6 @@ def test_check_module_error(mocker, monitor_mock):
     _check_alert_options_spy.assert_called_once_with(monitor_mock)
     _check_reaction_options_spy.assert_called_once_with(monitor_mock)
     _check_notification_options_spy.assert_called_once_with(monitor_mock)
-    _check_issue_data_type_spy.assert_called_once_with(monitor_mock)
     _check_search_function_spy.assert_called_once_with(monitor_mock)
     _check_update_function_spy.assert_called_once_with(monitor_mock)
     _check_is_solved_function_spy.assert_called_once_with(monitor_mock)

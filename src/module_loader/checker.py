@@ -2,7 +2,7 @@ import inspect
 import logging
 import re
 from types import ModuleType
-from typing import Any, Callable, Optional, _TypedDictMeta  # type: ignore[attr-defined]
+from typing import Any, Callable, Optional
 
 from data_models.monitor_options import AlertOptions, IssueOptions, MonitorOptions, ReactionOptions
 from notifications import BaseNotification
@@ -211,46 +211,6 @@ def _check_notification_options(module: ModuleType) -> list[str]:
     return errors
 
 
-def _check_issue_data_type(module: ModuleType) -> list[str]:
-    """Check if the monitor's 'IssueDataType' attribute is a class inherited from
-    'typing.TypedDict' and has the model id key defined in the 'issue_options'"""
-    errors: list[str] = []
-
-    try:
-        issue_data_type = module.IssueDataType
-    except AttributeError:
-        errors.append(ERROR_MISSING_FIELD.format(display_name="IssueDataType"))
-        return errors
-
-    # This type checking is not ideal, but, currently, it's the only way to do
-    if not isinstance(issue_data_type, _TypedDictMeta):
-        errors.append(
-            ERROR_CLASS_NOT_INHERITED.format(
-                display_name="IssueDataType", expected_class="typing.TypedDict"
-            )
-        )
-        return errors
-
-    # The definition of the 'IssueDataType' class will be done in another check function, so just
-    # skip the check if it's not defined
-    try:
-        issue_options = module.issue_options
-    except AttributeError:
-        return errors
-
-    if issue_options.model_id_key not in issue_data_type.__required_keys__:
-        errors.append(
-            ERROR_MISSING_DATACLASS_ATTRIBUTE.format(
-                display_name="IssueDataType",
-                expected_attribute=issue_options.model_id_key,
-                requirer="issue_options.model_id_key",
-            )
-        )
-        return errors
-
-    return errors
-
-
 def _check_search_function(module: ModuleType) -> list[str]:
     """Check if the monitor's 'search' attribute is an async function and has the right signature
     and typing"""
@@ -273,19 +233,12 @@ def _check_search_function(module: ModuleType) -> list[str]:
         errors.append(ERROR_FUNCTION_MUST_HAVE_NO_ARGUMENTS.format(display_name="search"))
         return errors
 
-    # The definition of the 'IssueDataType' class will be done in another check function, so just
-    # skip the check if it's not defined
-    try:
-        module.IssueDataType
-    except AttributeError:
-        return errors
-
     # Check return type
     return_type_str = str(function_args.annotations["return"])
-    if not re.match(r"list\[[\w.<>]+.IssueDataType\] \| None", return_type_str):
+    if not re.match(r"list\[[\w.<>]+.dict\] \| None", return_type_str):
         errors.append(
             ERROR_FUNCTION_WRONG_RETURN_TYPE.format(
-                display_name="search", expected_type="list[IssueDataType] | None"
+                display_name="search", expected_type="list[dict] | None"
             )
         )
         return errors
@@ -314,24 +267,17 @@ def _check_update_function(module: ModuleType) -> list[str]:
     if "issues_data" not in function_args.args:
         errors.append(
             ERROR_FUNCTION_WRONG_ARGUMENTS.format(
-                display_name="update", expected_args="issues_data: list[IssueDataType]"
+                display_name="update", expected_args="issues_data: list[dict]"
             )
         )
         return errors
 
-    # The definition of the 'IssueDataType' class will be done in another check function, so just
-    # skip the check if it's not defined
-    try:
-        module.IssueDataType
-    except AttributeError:
-        return errors
-
     # Check the 'issues_data' argument type
     issues_data_argument_type_str = str(function_args.annotations["issues_data"])
-    if not re.match(r"list\[[\w.<>]+.IssueDataType\]", issues_data_argument_type_str):
+    if not re.match(r"list\[[\w.<>]+.dict\]", issues_data_argument_type_str):
         errors.append(
             ERROR_FUNCTION_WRONG_ARGUMENTS.format(
-                display_name="update", expected_args="issues_data: list[IssueDataType]"
+                display_name="update", expected_args="issues_data: list[dict]"
             )
         )
         return errors
@@ -340,17 +286,17 @@ def _check_update_function(module: ModuleType) -> list[str]:
     if any([function_args.varargs, function_args.varkw]) or function_args.args != ["issues_data"]:
         errors.append(
             ERROR_FUNCTION_WRONG_ARGUMENTS.format(
-                display_name="update", expected_args="issues_data: list[IssueDataType]"
+                display_name="update", expected_args="issues_data: list[dict]"
             )
         )
         return errors
 
     # Check return type
     return_type_str = str(function_args.annotations["return"])
-    if not re.match(r"list\[[\w.<>]+.IssueDataType\] \| None", return_type_str):
+    if not re.match(r"list\[[\w.<>]+.dict\] \| None", return_type_str):
         errors.append(
             ERROR_FUNCTION_WRONG_RETURN_TYPE.format(
-                display_name="update", expected_type="list[IssueDataType] | None"
+                display_name="update", expected_type="list[dict] | None"
             )
         )
         return errors
@@ -388,24 +334,17 @@ def _check_is_solved_function(module: ModuleType) -> list[str]:
     if "issue_data" not in function_args.args:
         errors.append(
             ERROR_FUNCTION_WRONG_ARGUMENTS.format(
-                display_name="is_solved", expected_args="issue_data: IssueDataType"
+                display_name="is_solved", expected_args="issue_data: dict"
             )
         )
         return errors
 
-    # The definition of the 'IssueDataType' class will be done in another check function, so just
-    # skip the check if it's not defined
-    try:
-        module.IssueDataType
-    except AttributeError:
-        return errors
-
     # Check the 'issue_data' argument type
     issue_data_argument_type_str = str(function_args.annotations["issue_data"])
-    if not re.match(r"<class '[\w.<>]+.IssueDataType'>", issue_data_argument_type_str):
+    if not re.match(r"<class '[\w.<>]+.dict'>", issue_data_argument_type_str):
         errors.append(
             ERROR_FUNCTION_WRONG_ARGUMENTS.format(
-                display_name="is_solved", expected_args="issue_data: IssueDataType"
+                display_name="is_solved", expected_args="issue_data: dict"
             )
         )
         return errors
@@ -414,7 +353,7 @@ def _check_is_solved_function(module: ModuleType) -> list[str]:
     if any([function_args.varargs, function_args.varkw]) or function_args.args != ["issue_data"]:
         errors.append(
             ERROR_FUNCTION_WRONG_ARGUMENTS.format(
-                display_name="is_solved", expected_args="issue_data: IssueDataType"
+                display_name="is_solved", expected_args="issue_data: dict"
             )
         )
         return errors
@@ -439,7 +378,6 @@ def check_module(module: ModuleType) -> list[str]:
     errors += _check_alert_options(module)
     errors += _check_reaction_options(module)
     errors += _check_notification_options(module)
-    errors += _check_issue_data_type(module)
     errors += _check_search_function(module)
     errors += _check_update_function(module)
     errors += _check_is_solved_function(module)

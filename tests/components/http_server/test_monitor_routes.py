@@ -280,7 +280,6 @@ async def test_monitor_validate_check_fail():
                         "Monitor has the following errors:",
                         "  'monitor_options' is required",
                         "  'issue_options' is required",
-                        "  'IssueDataType' is required",
                         "  'search' function is required",
                         "  'update' function is required",
                     ]
@@ -486,7 +485,6 @@ async def test_monitor_register_check_fail():
                         "Monitor 'test_monitor_register_check_fail' has the following errors:",
                         "  'monitor_options' is required",
                         "  'issue_options' is required",
-                        "  'IssueDataType' is required",
                         "  'search' function is required",
                         "  'update' function is required",
                     ]
