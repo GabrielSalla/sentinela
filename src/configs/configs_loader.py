@@ -2,7 +2,15 @@ import os
 from typing import Any, Literal
 
 import yaml
-from pydantic.dataclasses import Field, dataclass
+from pydantic.dataclasses import dataclass
+from pydantic.fields import Field
+
+
+@dataclass
+class InternalMonitorsNotificationConfig:
+    enabled: bool
+    notification_class: str
+    params: dict[str, Any] = Field(default_factory=dict)
 
 
 @dataclass
@@ -40,6 +48,8 @@ class Configs:
     load_sample_monitors: bool
     sample_monitors_path: str
     internal_monitors_path: str
+    internal_monitors_notification: InternalMonitorsNotificationConfig
+
     monitors_load_schedule: str
 
     application_database_settings: ApplicationDatabaseConfig
