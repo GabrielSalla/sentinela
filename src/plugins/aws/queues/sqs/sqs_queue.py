@@ -15,7 +15,7 @@ _logger = logging.getLogger("sqs_queue")
 
 @dataclass
 class SQSQueueConfig:
-    type: Literal["plugin.aws.sqs"]
+    type: Literal["plugin.aws.queues.sqs"]
     name: str
     url: str
     region: str | None = None

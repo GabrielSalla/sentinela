@@ -26,7 +26,7 @@ AWS_APPLICATION_SECRET_ACCESS_KEY=SOME_SECRET_ACCESS_KEY
 To use the AWS plugin queue, configure its parameters in the configuration file under the setting `application_queue`.
 
 The queue settings are:
-- `type`: The plugin type, which should be `plugin.aws.sqs`.
+- `type`: The plugin type, which should be `plugin.aws.queues.sqs`.
 - `name`: The queue name.
 - `url`: The queue URL.
 - `region`: The region where the queue is located. If not configured, the region will be taken from the environment variables for the provided credentials.
@@ -37,7 +37,7 @@ The queue settings are:
 Suggested configuration for local development or testing:
 ```yaml
 application_queue:
-  type: plugin.aws.sqs
+  type: plugin.aws.queues.sqs
   name: app
   url: http://motoserver:5000/123456789012/app
   region: us-east-1

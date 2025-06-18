@@ -17,7 +17,7 @@ application_database_settings:
   pool_size: 10
 
 application_queue:
-  type: plugin.aws.sqs
+  type: plugin.aws.queues.sqs
   name: app
   url: http://motoserver:5000/123456789012/app
   region: us-east-1

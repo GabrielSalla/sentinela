@@ -24,16 +24,19 @@ def queue_mocks(monkeypatch) -> tuple[type, type]:
         delete_message = AsyncMock()
 
     class PluginQueueMock:
-        __init__ = MagicMock(return_value=None)
-        queue_wait_message_time = MagicMock()
-        init = AsyncMock()
-        send_message = AsyncMock()
-        get_message = AsyncMock()
-        change_visibility = AsyncMock()
-        delete_message = AsyncMock()
+        class Queue:
+            __init__ = MagicMock(return_value=None)
+            queue_wait_message_time = MagicMock()
+            init = AsyncMock()
+            send_message = AsyncMock()
+            get_message = AsyncMock()
+            change_visibility = AsyncMock()
+            delete_message = AsyncMock()
 
     monkeypatch.setattr(message_queue, "InternalQueue", InternalQueueMock)
-    monkeypatch.setattr(message_queue, "get_plugin_queue", lambda queue_type: PluginQueueMock)
+    monkeypatch.setattr(
+        message_queue, "get_plugin_attribute", lambda attribute_path: PluginQueueMock
+    )
 
     return InternalQueueMock, PluginQueueMock
 
@@ -43,7 +46,8 @@ async def test_init(monkeypatch, queue_mocks, queue_type):
     """'init' should initialize the queue calling the right module"""
     monkeypatch.setitem(configs.application_queue, "type", queue_type)
 
-    internal_queue_mock, plugin_queue_mock = queue_mocks
+    internal_queue_mock, plugin_queue = queue_mocks
+    plugin_queue_mock = plugin_queue.Queue
 
     await message_queue.init()
 
@@ -69,12 +73,45 @@ async def test_init_invalid_queue_type(monkeypatch):
         await message_queue.init()
 
 
+async def test_init_no_queue_class(monkeypatch):
+    """'init' should raise a ValueError if the 'Queue' class is not found in the plugin"""
+    monkeypatch.setitem(configs.application_queue, "type", "plugin.test_queue")
+
+    class SomeQueueModule:
+        pass
+
+    monkeypatch.setattr(
+        message_queue, "get_plugin_attribute", lambda attribute_path: SomeQueueModule
+    )
+
+    with pytest.raises(ValueError, match="'Queue' class not found for 'plugin.test_queue'"):
+        await message_queue.init()
+
+
+async def test_init_queue_not_implementing_protocol(monkeypatch):
+    """'init' should raise a ValueError if the queue class does not implement the Queue protocol"""
+    monkeypatch.setitem(configs.application_queue, "type", "plugin.test_queue")
+
+    class SomeQueueModule:
+        class Queue:
+            pass
+
+    monkeypatch.setattr(
+        message_queue, "get_plugin_attribute", lambda attribute_path: SomeQueueModule
+    )
+
+    expected_error = "'Queue' class in 'plugin.test_queue' does not implement the Queue protocol"
+    with pytest.raises(ValueError, match=expected_error):
+        await message_queue.init()
+
+
 @pytest.mark.parametrize("queue_type", ["internal", "plugin."])
 async def test_get_queue_wait_message_time(monkeypatch, queue_mocks, queue_type):
     """'get_queue_wait_message_time' should return the time to wait for a message in the queue"""
     monkeypatch.setitem(configs.application_queue, "type", queue_type)
 
-    internal_queue_mock, plugin_queue_mock = queue_mocks
+    internal_queue_mock, plugin_queue = queue_mocks
+    plugin_queue_mock = plugin_queue.Queue
 
     await message_queue.init()
     result = message_queue.get_queue_wait_message_time()
@@ -92,7 +129,8 @@ async def test_send_message(monkeypatch, queue_mocks, queue_type):
     """'send_message' should send a message to the queue calling the right module"""
     monkeypatch.setitem(configs.application_queue, "type", queue_type)
 
-    internal_queue_mock, plugin_queue_mock = queue_mocks
+    internal_queue_mock, plugin_queue = queue_mocks
+    plugin_queue_mock = plugin_queue.Queue
 
     await message_queue.init()
     await message_queue.send_message("type", {"key": "value"})
@@ -112,7 +150,8 @@ async def test_get_message(monkeypatch, queue_mocks, queue_type):
     """'get_message' should get a message from the queue calling the right module"""
     monkeypatch.setitem(configs.application_queue, "type", queue_type)
 
-    internal_queue_mock, plugin_queue_mock = queue_mocks
+    internal_queue_mock, plugin_queue = queue_mocks
+    plugin_queue_mock = plugin_queue.Queue
 
     await message_queue.init()
     await message_queue.get_message()
@@ -132,7 +171,8 @@ async def test_change_visibility(monkeypatch, queue_mocks, queue_type):
     """'change_visibility' should change the visibility of a message calling the right module"""
     monkeypatch.setitem(configs.application_queue, "type", queue_type)
 
-    internal_queue_mock, plugin_queue_mock = queue_mocks
+    internal_queue_mock, plugin_queue = queue_mocks
+    plugin_queue_mock = plugin_queue.Queue
 
     message = internal_queue.InternalMessage(json.dumps({"type": "test", "payload": {"a": 1}}))
 
@@ -154,7 +194,8 @@ async def test_delete_message(monkeypatch, queue_mocks, queue_type):
     """'delete_message' should delete a message from the queue calling the right module"""
     monkeypatch.setitem(configs.application_queue, "type", queue_type)
 
-    internal_queue_mock, plugin_queue_mock = queue_mocks
+    internal_queue_mock, plugin_queue = queue_mocks
+    plugin_queue_mock = plugin_queue.Queue
 
     message = internal_queue.InternalMessage(json.dumps({"type": "test", "payload": {"a": 1}}))
 
