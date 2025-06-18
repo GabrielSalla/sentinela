@@ -63,10 +63,10 @@ class SlackNotification:
     channel: str
     title: str
     issues_fields: list[str]
-    min_priority_to_send: int = AlertPriority.low
+    min_priority_to_send: AlertPriority = AlertPriority.low
     mention: str | None = None
     mention_on_update: bool = False
-    min_priority_to_mention: int = AlertPriority.moderate
+    min_priority_to_mention: AlertPriority = AlertPriority.moderate
     issue_show_limit: int = 10
 
     def reactions_list(self) -> list[tuple[str, list[reaction_function_type]]]:

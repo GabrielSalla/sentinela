@@ -16,6 +16,7 @@ from data_models.monitor_options import (
     PriorityLevels,
     ReactionOptions,
 )
+from models.utils.priority import AlertPriority
 
 
 @pytest.fixture(scope="function")
@@ -265,7 +266,7 @@ def test_check_reaction_options_wrong_type(monitor_mock):
 class BaseNotification:
     """Notification class to be used in the tests"""
 
-    min_priority_to_send: int = 5
+    min_priority_to_send: AlertPriority = AlertPriority.informational
 
     def reactions_list(self) -> list[tuple[str, list[Coroutine[Any, Any, Any]]]]:
         return []

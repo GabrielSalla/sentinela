@@ -54,10 +54,11 @@ Notifications must have the structure defined by the `src.notifications.base_not
 Notification base structure must be as follows:
 ```python
 from data_models.monitor_options import reaction_function_type
+from monitor_utils import AlertPriority
 
 
 class Notification:
-    min_priority_to_send: int = 5
+    min_priority_to_send: AlertPriority = AlertPriority.low
 
     def reactions_list(self) -> list[tuple[str, list[reaction_function_type]]]:
         ...
@@ -66,10 +67,11 @@ class Notification:
 An example of a notification implementation is shown bellow, where there are 3 different events with reactions set for them.
 ```python
 from data_models.monitor_options import reaction_function_type
+from monitor_utils import AlertPriority
 
 
 class MyNotification:
-    min_priority_to_send: int = 5
+    min_priority_to_send: AlertPriority = AlertPriority.low
 
     def reactions_list(self) -> list[tuple[str, list[reaction_function_type]]]:
         """Get a list of events that the notification will react to"""
