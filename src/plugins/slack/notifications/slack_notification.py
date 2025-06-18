@@ -69,6 +69,45 @@ class SlackNotification:
     min_priority_to_mention: AlertPriority = AlertPriority.moderate
     issue_show_limit: int = 10
 
+    @classmethod
+    def create(
+        cls: type["SlackNotification"],
+        name: str,
+        issues_fields: list[str],
+        params: dict[str, Any] = {},
+    ) -> "SlackNotification":
+        """Create a new instance of the 'SlackNotification' class from the notification protocol."""
+        try:
+            channel = os.environ["SLACK_MAIN_CHANNEL"]
+        except KeyError:
+            raise KeyError(
+                "Environment variable 'SLACK_MAIN_CHANNEL' is not set. "
+                "Unable to create 'SlackNotification' instance"
+            )
+
+        init_params: dict[str, Any] = {
+            "channel": channel,
+            "title": name,
+            "issues_fields": issues_fields,
+            "mention": os.environ.get("SLACK_MAIN_MENTION"),
+        }
+
+        if "min_priority_to_send" in params:
+            init_params["min_priority_to_send"] = AlertPriority[params["min_priority_to_send"]]
+
+        if "mention_on_update" in params:
+            init_params["mention_on_update"] = params["mention_on_update"]
+
+        if "min_priority_to_mention" in params:
+            init_params["min_priority_to_mention"] = AlertPriority[
+                params["min_priority_to_mention"]
+            ]
+
+        if "issue_show_limit" in params:
+            init_params["issue_show_limit"] = params["issue_show_limit"]
+
+        return cls(**init_params)
+
     def reactions_list(self) -> list[tuple[str, list[reaction_function_type]]]:
         """Get a list of events that the notification will react to"""
         handle_notification_function = partial(handle_event, notification_options=self)

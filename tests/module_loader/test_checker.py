@@ -268,6 +268,14 @@ class BaseNotification:
 
     min_priority_to_send: AlertPriority = AlertPriority.informational
 
+    @classmethod
+    def create(
+        cls: type["BaseNotification"],
+        name: str,
+        issues_fields: list[str],
+        params: dict[str, Any],
+    ) -> "BaseNotification": ...
+
     def reactions_list(self) -> list[tuple[str, list[Coroutine[Any, Any, Any]]]]:
         return []
 
