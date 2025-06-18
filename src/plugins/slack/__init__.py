@@ -1,8 +1,7 @@
-from . import actions, services
-from .notifications.slack_notification import SlackNotification
+from . import actions, notifications, services
 
 __all__ = [
     "actions",
+    "notifications",
     "services",
-    "SlackNotification",
 ]
