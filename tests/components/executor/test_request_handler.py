@@ -1,6 +1,6 @@
 import asyncio
 import time
-from unittest.mock import AsyncMock
+from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 
@@ -165,54 +165,27 @@ async def test_get_action_plugin(monkeypatch):
 
     monkeypatch.setattr(plugins, "loaded_plugins", {"plugin1": Plugin}, raising=False)
 
-    assert request_handler.get_action("plugin.plugin1.test_action") == Plugin.actions.test_action
+    expected_action = Plugin.actions.test_action
+    assert request_handler.get_action("plugin.plugin1.actions.test_action") == expected_action
 
 
 async def test_get_action_unknown_plugin(caplog, monkeypatch):
-    """'get_action' should return 'None' when the plugin doesn't exists"""
-    monkeypatch.setattr(plugins, "loaded_plugins", {"plugin1": "plugin1"}, raising=False)
+    """'get_action' should return 'None' when the attribute path could not be resolved"""
+    monkeypatch.setattr(
+        request_handler,
+        "get_plugin_attribute",
+        MagicMock(side_effect=ValueError("Some error from the function")),
+    )
 
     action = request_handler.get_action("plugin.plugin2.test_action")
 
     assert action is None
-    assert_message_in_log(caplog, "Plugin 'plugin2' unknown")
-
-
-async def test_get_action_plugin_no_actions(caplog, monkeypatch):
-    """'get_action' should return 'None' when the plugin doesn't have actions"""
-
-    class Plugin: ...
-
-    monkeypatch.setattr(plugins, "loaded_plugins", {"plugin1": Plugin}, raising=False)
-
-    action = request_handler.get_action("plugin.plugin1.test_action")
-
-    assert action is None
-    assert_message_in_log(caplog, "Plugin 'plugin1' doesn't have actions")
-
-
-async def test_get_action_unknown_action(caplog, monkeypatch):
-    """'get_action' should return 'None' when the action doesn't exists"""
-
-    class Plugin:
-        class actions: ...
-
-    monkeypatch.setattr(plugins, "loaded_plugins", {"plugin1": Plugin}, raising=False)
-
-    action = request_handler.get_action("plugin.plugin1.test_action")
-
-    assert action is None
-    assert_message_in_log(caplog, "Action 'plugin1.test_action' unknown")
+    assert_message_in_log(caplog, "Some error from the function")
 
 
 @pytest.mark.parametrize(
     "action_name",
-    [
-        "alert_acknowledge",
-        "alert_lock",
-        "alert_solve",
-        "issue_drop",
-    ],
+    ["alert_acknowledge", "alert_lock", "alert_solve", "issue_drop"],
 )
 async def test_run_action(monkeypatch, action_name):
     """'run' should executed the requested action"""
