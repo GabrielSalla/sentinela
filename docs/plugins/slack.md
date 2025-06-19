@@ -12,10 +12,8 @@ The following environment variables are used by the Slack plugin:
 - `SLACK_TOKEN`: The token used to send messages to Slack. This token is generated when you create your Slack app and install it in your workspace. Example: `xoxb-1234567890-1234567890123-12345678901234567890abcdef`.
 - `SLACK_WEBSOCKET_ENABLED`: A flag to enable or disable the websocket connection for receiving events from Slack. Set this to `true` to enable the websocket or `false` to disable it. Defaults to `false`.
 - `SLACK_APP_TOKEN`: The token used to start the websocket connection for receiving events from interactions with the Sentinela Slack app. This token is generated when you create your Slack app and enable the Socket Mode. Example: `xapp-1234567890-1234567890123-12345678901234567890abcdef`.
-- `SAMPLE_SLACK_CHANNEL`: The Slack channel where notifications for **sample monitors** will be sent. Example: `C0011223344`.
-- `SAMPLE_SLACK_MENTION`: The Slack user or group to mention in notifications for **sample monitors**. Example: `U0011223344`.
-- `SLACK_MAIN_CHANNEL`: The Slack channel where notifications for **internal monitors** will be sent. Example: `C0011223344`.
-- `SLACK_MAIN_MENTION`: The Slack user or group to mention in notifications for **internal monitors**. Example: `U0011223344`.
+- `SLACK_MAIN_CHANNEL`: The Slack channel where notifications for **internal monitors** and **sample monitors** will be sent. Example: `C0011223344`.
+- `SLACK_MAIN_MENTION`: The Slack user or group to mention in notifications for **internal monitors** and **sample monitors**. Example: `U0011223344`.
 
 ## Slack commands
 Sentinela provides two main ways to interact through Slack:

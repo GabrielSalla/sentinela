@@ -1,9 +1,8 @@
-import os
 import random
 from typing import TypedDict
 
 from monitor_utils import AlertOptions, CountRule, IssueOptions, MonitorOptions, PriorityLevels
-from plugins.slack import SlackNotification
+from notifications.internal_monitor_notification import internal_monitor_notification
 
 monitor_options = MonitorOptions(
     search_cron="* * * * *",
@@ -64,11 +63,6 @@ def is_solved(issue_data: IssueDataType) -> bool:
     return issue_data["value"] == 1
 
 
-notification_options = [
-    SlackNotification(
-        channel=os.environ["SAMPLE_SLACK_CHANNEL"],
-        title="Test monitor",
-        issues_fields=["id", "value"],
-        mention=os.environ["SAMPLE_SLACK_MENTION"],
-    )
-]
+notification_options = internal_monitor_notification(
+    name="Test monitor", issues_fields=["id", "value"]
+)

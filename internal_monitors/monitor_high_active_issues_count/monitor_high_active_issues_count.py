@@ -3,20 +3,18 @@ Objective: check for Monitors with high active issues count to prevent the appli
 affected from a high resource usage.
 """
 
-import os
 from typing import TypedDict, cast
 
 from databases import query_application
 from monitor_utils import (
     AlertOptions,
-    AlertPriority,
     IssueOptions,
     MonitorOptions,
     PriorityLevels,
     ValueRule,
     read_file,
 )
-from plugins.slack import SlackNotification
+from notifications.internal_monitor_notification import internal_monitor_notification
 
 TRIGGER_THRESHOLD = 500
 
@@ -66,13 +64,7 @@ def is_solved(issue_data: IssueDataType) -> bool:
     return active_issues_count < TRIGGER_THRESHOLD / 2
 
 
-notification_options = [
-    SlackNotification(
-        channel=os.environ["SLACK_MAIN_CHANNEL"],
-        title="Monitor with high active issues count",
-        issues_fields=["monitor_id", "monitor_name", "active_issues_count"],
-        mention=os.environ["SLACK_MAIN_MENTION"],
-        min_priority_to_send=AlertPriority.low,
-        min_priority_to_mention=AlertPriority.moderate,
-    )
-]
+notification_options = internal_monitor_notification(
+    name="Monitor with high active issues count",
+    issues_fields=["monitor_id", "monitor_name", "active_issues_count"],
+)
