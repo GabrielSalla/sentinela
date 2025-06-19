@@ -16,7 +16,6 @@ def get_time(reference: str) -> datetime | None:
     values = {
         "now": now(),
         "ten_seconds_ago": now() - timedelta(seconds=11),
-        "five_minutes_ago": now() - timedelta(seconds=301),
     }
     return values.get(reference)
 
@@ -28,6 +27,8 @@ async def test_configuration():
 @pytest.mark.parametrize("enabled", [False, True])
 @pytest.mark.parametrize("queued", [False, True])
 @pytest.mark.parametrize("running", [False, True])
+@pytest.mark.parametrize("queued_at", [None, "now", "ten_seconds_ago"])
+@pytest.mark.parametrize("running_at", [None, "now", "ten_seconds_ago"])
 @pytest.mark.parametrize("last_heartbeat", [None, "now", "ten_seconds_ago"])
 async def test_monitors_stuck(
     caplog,
@@ -35,12 +36,16 @@ async def test_monitors_stuck(
     enabled,
     queued,
     running,
+    queued_at,
+    running_at,
     last_heartbeat,
 ):
     """'monitors_stuck' should fix monitors that are stuck"""
     sample_monitor.enabled = enabled
     sample_monitor.queued = queued
     sample_monitor.running = running
+    sample_monitor.queued_at = get_time(queued_at)  # type:ignore[assignment]
+    sample_monitor.running_at = get_time(running_at)  # type:ignore[assignment]
     sample_monitor.last_heartbeat = get_time(last_heartbeat)  # type:ignore[assignment]
     await sample_monitor.save()
 
@@ -51,6 +56,10 @@ async def test_monitors_stuck(
     if not enabled:
         triggered = False
     elif last_heartbeat is None:
+        triggered = False
+    elif queued_at == "now":
+        triggered = False
+    elif running_at == "now":
         triggered = False
     elif last_heartbeat == "now":
         triggered = False
