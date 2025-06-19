@@ -9,12 +9,133 @@ import plugins.slack.slack as slack
 import utils.time as time_utils
 from configs import configs
 from data_models.event_payload import EventPayload
-from models import Alert, AlertStatus, Issue, IssueStatus, Monitor, Notification, NotificationStatus
+from models import (
+    Alert,
+    AlertPriority,
+    AlertStatus,
+    Issue,
+    IssueStatus,
+    Monitor,
+    Notification,
+    NotificationStatus,
+)
 from tests.test_utils import assert_message_in_log
 
 from .. import slack_mock
 
 pytestmark = pytest.mark.asyncio(loop_scope="session")
+
+
+@pytest.mark.parametrize(
+    "channel, mention, name, issues_fields, params",
+    [
+        (
+            "C1234567890",
+            "U1234567890",
+            "Test Monitor",
+            ["id", "name", "value"],
+            {},
+        ),
+        (
+            "C0987654321",
+            "U0987654321",
+            "Another Monitor",
+            ["other_id", "other_value"],
+            {},
+        ),
+        (
+            "C1234567890",
+            "U1234567890",
+            "Priority to send test",
+            ["id"],
+            {"min_priority_to_send": "moderate"},
+        ),
+        (
+            "C1234567890",
+            "U1234567890",
+            "Mention on update test",
+            ["id"],
+            {"mention_on_update": True},
+        ),
+        (
+            "C1234567890",
+            "U1234567890",
+            "Priority to mention test",
+            ["id"],
+            {"min_priority_to_mention": "high"},
+        ),
+        (
+            "C1234567890",
+            "U1234567890",
+            "Issue show limit test",
+            ["id"],
+            {"issue_show_limit": 25},
+        ),
+        (
+            "C1234567890",
+            "U1234567890",
+            "All parameters test",
+            ["id"],
+            {
+                "min_priority_to_send": "critical",
+                "min_priority_to_mention": "high",
+                "mention_on_update": True,
+                "issue_show_limit": 5,
+            },
+        ),
+    ],
+)
+async def test_slacknotification_create(monkeypatch, channel, mention, name, issues_fields, params):
+    """'SlackNotification.create' should create a SlackNotification instance with correct
+    default values and properly apply custom parameters"""
+    # Set up environment variables that the create method expects
+    monkeypatch.setenv("SLACK_MAIN_CHANNEL", channel)
+    monkeypatch.setenv("SLACK_MAIN_MENTION", mention)
+
+    result = slack_notification.SlackNotification.create(
+        name=name,
+        issues_fields=issues_fields,
+        params=params,
+    )
+
+    assert isinstance(result, slack_notification.SlackNotification)
+
+    assert result.channel == channel
+    assert result.title == name
+    assert result.issues_fields == issues_fields
+
+    if "min_priority_to_send" in params:
+        assert result.min_priority_to_send == AlertPriority[params["min_priority_to_send"]]
+    else:
+        assert result.min_priority_to_send == AlertPriority.low
+
+    if "mention_on_update" in params:
+        assert result.mention_on_update == params["mention_on_update"]
+    else:
+        assert not result.mention_on_update
+
+    if "min_priority_to_mention" in params:
+        assert result.min_priority_to_mention == AlertPriority[params["min_priority_to_mention"]]
+    else:
+        assert result.min_priority_to_mention == AlertPriority.moderate
+
+    if "issue_show_limit" in params:
+        assert result.issue_show_limit == params["issue_show_limit"]
+    else:
+        assert result.issue_show_limit == 10
+
+
+async def test_slacknotification_create_without_channel(monkeypatch):
+    """'SlackNotification.create' should raise KeyError if the SLACK_MAIN_CHANNEL environment
+    variable is not set"""
+    monkeypatch.delenv("SLACK_MAIN_CHANNEL", raising=False)
+
+    expected_error = (
+        "Environment variable 'SLACK_MAIN_CHANNEL' is not set. "
+        "Unable to create 'SlackNotification' instance"
+    )
+    with pytest.raises(KeyError, match=expected_error):
+        slack_notification.SlackNotification.create(name="Test", issues_fields=["id"])
 
 
 async def test_slacknotification_reactions_list():

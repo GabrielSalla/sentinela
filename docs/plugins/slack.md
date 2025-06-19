@@ -12,10 +12,8 @@ The following environment variables are used by the Slack plugin:
 - `SLACK_TOKEN`: The token used to send messages to Slack. This token is generated when you create your Slack app and install it in your workspace. Example: `xoxb-1234567890-1234567890123-12345678901234567890abcdef`.
 - `SLACK_WEBSOCKET_ENABLED`: A flag to enable or disable the websocket connection for receiving events from Slack. Set this to `true` to enable the websocket or `false` to disable it. Defaults to `false`.
 - `SLACK_APP_TOKEN`: The token used to start the websocket connection for receiving events from interactions with the Sentinela Slack app. This token is generated when you create your Slack app and enable the Socket Mode. Example: `xapp-1234567890-1234567890123-12345678901234567890abcdef`.
-- `SAMPLE_SLACK_CHANNEL`: The Slack channel where notifications for **sample monitors** will be sent. Example: `C0011223344`.
-- `SAMPLE_SLACK_MENTION`: The Slack user or group to mention in notifications for **sample monitors**. Example: `U0011223344`.
-- `SLACK_MAIN_CHANNEL`: The Slack channel where notifications for **internal monitors** will be sent. Example: `C0011223344`.
-- `SLACK_MAIN_MENTION`: The Slack user or group to mention in notifications for **internal monitors**. Example: `U0011223344`.
+- `SLACK_MAIN_CHANNEL`: The Slack channel where notifications for **internal monitors** and **sample monitors** will be sent. Example: `C0011223344`.
+- `SLACK_MAIN_MENTION`: The Slack user or group to mention in notifications for **internal monitors** and **sample monitors**. Example: `U0011223344`.
 
 ## Slack commands
 Sentinela provides two main ways to interact through Slack:
@@ -90,6 +88,16 @@ notification_options = [
     )
 ]
 ```
+
+### Using Slack notification for internal monitors
+To use the Slack notification for internal monitors, the settings for the `internal_monitors_notification` key in the `configs.yaml` file must be configured as follows:
+- `notification_class`: Should be set to `plugin.slack.notifications.SlackNotification`
+- `params`: Should include the desired parameters for the notification.
+    - `channel` and `mention` will be obtained from the environment variables `SLACK_MAIN_CHANNEL` and `SLACK_MAIN_MENTION`, respectively, as specified in [Environment variables](#environment-variables).
+  - `title` and `issues_fields` are specific to each monitor and are already defined in the internal monitors. If configured in the `params` field, they will be ignored.
+  - `min_priority_to_send`, `min_priority_to_mention`, `mention_on_update`, and `issue_show_limit` can be set in the `params` field to customize the notification behavior. If not set, the default values will be used.
+
+The provided settings will be applied to every internal and sample monitors.
 
 ## Services
 The Slack plugin includes a service that connects to the Slack websocket API to receive mentions and button press events. Any event received will queue an action to be processed by Sentinela.

@@ -7,6 +7,12 @@ plugins:
 load_sample_monitors: true
 sample_monitors_path: sample_monitors
 internal_monitors_path: internal_monitors
+internal_monitors_notification:
+  enabled: true
+  notification_class: plugin.slack.notifications.SlackNotification
+  params:
+    min_priority_to_send: low
+    min_priority_to_mention: moderate
 monitors_load_schedule: "*/5 * * * *"
 
 logging:

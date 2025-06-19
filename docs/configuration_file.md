@@ -8,12 +8,16 @@ This document provides an overview of the configuration parameters available in 
 - `load_sample_monitors`: Boolean. Flag to enable the sample monitors.
 - `sample_monitors_path`: String. Path relative to the project root, where the sample monitors are stored.
 - `internal_monitors_path`: String. Path relative to the project root, where the internal monitors are stored.
+- `internal_monitors_notification`: Map. Settings for the notification to be sent by the internal monitors.
+  - `enabled`: Boolean. Flag to enable the internal monitors notification.
+  - `notification_class`: String. Class to be used for the notification. Example: `plugin.my_plugin.notifications.SomeNotificationClass`.
+  - `params`: Map. The desired parameters for the notification. Each notification class will have its own set of parameters. Check the documentation for each notification class to learn more about the available parameters.
 - `monitors_load_schedule`: String using Cron format. Schedule to reload monitors from the database.
 
 ## Logging
 - `logging.mode`: String. Logging mode. Can be "friendly" or "json".
 - `logging.format`: String. Settings for formatting the "friendly" logs.
-- `logging.fields`: Object. Fields to include in the "json" logs and their name from the `logging` module.
+- `logging.fields`: Map. Fields to include in the "json" logs and their name from the `logging` module.
 
 Suggested configuration for `friendly` logs:
 ```yaml
@@ -59,8 +63,8 @@ application_queue:
 ## Controller Settings
 - `controller_process_schedule`: String using Cron format. Schedule to check if monitors need to be processed.
 - `controller_concurrency`: Integer. Number of monitors that can be processed at the same time by the Controller.
-- `controller_procedures`: Object. Procedures to be executed by the Controller and their settings.
-- `controller_procedures.monitors_stuck`: Object. Settings for the procedure to fix monitors stuck in "queued" or "running" status.
+- `controller_procedures`: Map. Procedures to be executed by the Controller and their settings.
+- `controller_procedures.monitors_stuck`: Map. Settings for the procedure to fix monitors stuck in "queued" or "running" status.
 - `controller_procedures.monitors_stuck.schedule`: String using Cron format. Schedule to execute the `monitors_stuck` procedure.
 - `controller_procedures.monitors_stuck.params.time_tolerance`: Integer. Time tolerance in seconds for a monitor to be considered as stuck. This parameter is directly impacted by the `executor_monitor_heartbeat_time` setting and the recommended value is 2 times the heartbeat time.
 

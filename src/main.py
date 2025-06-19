@@ -28,12 +28,15 @@ async def init(controller_enabled: bool, executor_enabled: bool) -> None:
     log.setup()
     app.setup()
     registry.init()
+
+    # Plugins must be initialized before the monitors loader as the register process will require
+    # the plugins to be loaded
+    plugins.load_plugins()
+    await plugins.services.init_plugin_services(controller_enabled, executor_enabled)
+
     # Depends on internal database migrated
     await monitors_loader.init(controller_enabled)
     await http_server.init(controller_enabled)
-
-    plugins.load_plugins()
-    await plugins.services.init_plugin_services(controller_enabled, executor_enabled)
 
     # The following modules depend on the plugins being loaded
     await databases.init()
