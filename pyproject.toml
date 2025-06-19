@@ -1,6 +1,6 @@
 [project]
 name = "Sentinela"
-version = "0.5.0"
+version = "0.6.0"
 description = "Sentinela Monitoring Platform"
 authors = [
     { name = "Gabriel Salla", email = "gabriel.c.salla@gmail.com" }
