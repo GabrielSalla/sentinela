@@ -46,7 +46,7 @@ async def delete_queue(queue_url: str) -> None:
     "config",
     [
         {
-            "type": "plugin.aws.sqs",
+            "type": "plugin.aws.queues.sqs",
             "name": "app",
             "url": "http://motoserver:5000/123456789012/app",
             "region": "us-east-1",
@@ -55,7 +55,7 @@ async def delete_queue(queue_url: str) -> None:
             "queue_visibility_time": 15,
         },
         {
-            "type": "plugin.aws.sqs",
+            "type": "plugin.aws.queues.sqs",
             "name": "other",
             "url": "some_other_url",
             # No region
@@ -81,7 +81,7 @@ async def test_queue_init_aws_client_params(config):
 async def test_queue_wait_message_time(queue_wait_message_time):
     queue = sqs_queue.Queue(
         config={
-            "type": "plugin.aws.sqs",
+            "type": "plugin.aws.queues.sqs",
             "name": "app",
             "url": "http://motoserver:5000/123456789012/app",
             "region": "us-east-1",
@@ -97,7 +97,7 @@ async def test_init_already_exists(mocker):
     """'init' should do nothing if the queue already exists"""
     queue = sqs_queue.Queue(
         config={
-            "type": "plugin.aws.sqs",
+            "type": "plugin.aws.queues.sqs",
             "name": "app",
             "url": "http://motoserver:5000/123456789012/app",
             "region": "us-east-1",
@@ -124,7 +124,7 @@ async def test_init_queue_not_exists(mocker):
 
     queue = sqs_queue.Queue(
         config={
-            "type": "plugin.aws.sqs",
+            "type": "plugin.aws.queues.sqs",
             "name": "new_queue",
             "url": "http://motoserver:5000/123456789012/new_queue",
             "region": "us-east-1",
@@ -147,7 +147,7 @@ async def test_init_queue_not_exists_not_create(mocker):
 
     queue = sqs_queue.Queue(
         config={
-            "type": "plugin.aws.sqs",
+            "type": "plugin.aws.queues.sqs",
             "name": "other_queue",
             "url": "http://motoserver:5000/123456789012/other_queue",
             "region": "us-east-1",
@@ -176,7 +176,7 @@ async def test_send_message_and_get_message(message_type, message_payload):
     using 'get_message'"""
     queue = sqs_queue.Queue(
         config={
-            "type": "plugin.aws.sqs",
+            "type": "plugin.aws.queues.sqs",
             "name": "app",
             "url": "http://motoserver:5000/123456789012/app",
             "region": "us-east-1",
@@ -207,7 +207,7 @@ async def test_send_message_after_get_message(message_type, message_payload):
     queue using 'send_message', while it's waiting"""
     queue = sqs_queue.Queue(
         config={
-            "type": "plugin.aws.sqs",
+            "type": "plugin.aws.queues.sqs",
             "name": "app",
             "url": "http://motoserver:5000/123456789012/app",
             "region": "us-east-1",
@@ -235,7 +235,7 @@ async def test_get_message_timeout():
     """'get_message' should wait for a message and if the timeout is reached, return 'None'"""
     queue = sqs_queue.Queue(
         config={
-            "type": "plugin.aws.sqs",
+            "type": "plugin.aws.queues.sqs",
             "name": "app",
             "url": "http://motoserver:5000/123456789012/app",
             "region": "us-east-1",
@@ -261,7 +261,7 @@ async def test_get_message_not_deleted():
     before it's timeout"""
     queue = sqs_queue.Queue(
         config={
-            "type": "plugin.aws.sqs",
+            "type": "plugin.aws.queues.sqs",
             "name": "app",
             "url": "http://motoserver:5000/123456789012/app",
             "region": "us-east-1",
@@ -293,7 +293,7 @@ async def test_change_visibility():
     being consumed again while still not visible"""
     queue = sqs_queue.Queue(
         config={
-            "type": "plugin.aws.sqs",
+            "type": "plugin.aws.queues.sqs",
             "name": "app",
             "url": "http://motoserver:5000/123456789012/app",
             "region": "us-east-1",
@@ -326,7 +326,7 @@ async def test_delete_message():
     """'delete_message' should remove the message from the queue permanently"""
     queue = sqs_queue.Queue(
         config={
-            "type": "plugin.aws.sqs",
+            "type": "plugin.aws.queues.sqs",
             "name": "app",
             "url": "http://motoserver:5000/123456789012/app",
             "region": "us-east-1",

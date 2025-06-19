@@ -1,7 +1,7 @@
 from typing import Any
 
 from configs import configs
-from plugins.queue_select import get_plugin_queue
+from plugins.attribute_select import get_plugin_attribute
 
 from .internal_queue import InternalQueue
 from .protocols import Message, Queue
@@ -18,7 +18,18 @@ async def init() -> None:
     if queue_type == "internal":
         queue = InternalQueue(config=configs.application_queue)
     elif queue_type.startswith("plugin."):
-        queue_class = get_plugin_queue(queue_type)
+        queue_module = get_plugin_attribute(queue_type)
+
+        try:
+            queue_class: type[Queue] = queue_module.Queue
+        except AttributeError:
+            raise ValueError(f"'Queue' class not found for '{queue_type}'")
+
+        if not isinstance(queue_class, Queue):
+            raise ValueError(
+                f"'Queue' class in '{queue_type}' does not implement the Queue protocol"
+            )
+
         queue = queue_class(config=configs.application_queue)
     else:
         raise ValueError(f"Invalid queue type '{queue_type}'")

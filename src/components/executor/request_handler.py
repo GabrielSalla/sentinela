@@ -7,12 +7,12 @@ from typing import Any, Callable, Coroutine, cast
 import prometheus_client
 from pydantic import ValidationError
 
-import plugins
 import registry as registry
 from base_exception import BaseSentinelaException
 from configs import configs
 from data_models.request_payload import RequestPayload
 from models import Alert, Issue
+from plugins.attribute_select import get_plugin_attribute
 
 _logger = logging.getLogger("request_handler")
 
@@ -88,21 +88,10 @@ actions = {
 def get_action(action_name: str) -> Callable[[RequestPayload], Coroutine[Any, Any, None]] | None:
     """Get the action function by its name, checking if it is a plugin action"""
     if action_name.startswith("plugin."):
-        plugin_name, action_name = action_name.split(".")[1:3]
-
-        plugin = plugins.loaded_plugins.get(plugin_name)
-        if plugin is None:
-            _logger.warning(f"Plugin '{plugin_name}' unknown")
-            return None
-
-        plugin_actions = getattr(plugin, "actions", None)
-        if plugin_actions is None:
-            _logger.warning(f"Plugin '{plugin_name}' doesn't have actions")
-            return None
-
-        action = getattr(plugin_actions, action_name, None)
-        if action is None:
-            _logger.warning(f"Action '{plugin_name}.{action_name}' unknown")
+        try:
+            action = get_plugin_attribute(action_name)
+        except ValueError as e:
+            _logger.warning(e.args[0])
             return None
 
         return cast(Callable[[RequestPayload], Coroutine[Any, Any, None]], action)
