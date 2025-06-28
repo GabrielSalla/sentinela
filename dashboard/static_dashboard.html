@@ -424,17 +424,19 @@
                     </div>
                 </div>
 
-                <!-- Create New Monitor Popover -->
-                <div id="create-monitor-section" class="popover">
-                    <button class="btn btn-secondary" onclick="toggleCustomPopover('create-monitor-popover')">
-                        Create new monitor
-                    </button>
-                    <div id="create-monitor-popover" class="popover-content">
-                        <div class="form-group">
-                            <label for="new-monitor-name">Monitor name:</label>
-                            <input type="text" id="new-monitor-name" placeholder="my_monitor">
-                        </div>
-                        <button class="btn" onclick="createNewMonitor()">Create</button>
+                <!-- Monitor Name Input (for new monitors) -->
+                <div id="new-monitor-section" class="hidden">
+                    <div class="form-group">
+                        <label for="new-monitor-name-input">Monitor name:</label>
+                        <input type="text" id="new-monitor-name-input" placeholder="my_monitor">
+                    </div>
+                    <div class="button-group">
+                        <button class="btn btn-secondary" onclick="cancelNewMonitor()">
+                            Cancel
+                        </button>
+                        <button class="btn" onclick="createNewMonitor()">
+                            Create
+                        </button>
                     </div>
                 </div>
             </div>
@@ -548,7 +550,23 @@
 
         function updateMonitorSelect() {
             const select = document.getElementById('monitor-select');
-            select.innerHTML = '<option value="">Choose a monitor</option>';
+            select.innerHTML = '';
+            
+            // Add placeholder option that is disabled and hidden from dropdown
+            const placeholderOption = document.createElement('option');
+            placeholderOption.value = '';
+            placeholderOption.textContent = 'Choose a monitor';
+            placeholderOption.disabled = true;
+            placeholderOption.hidden = true;
+            select.appendChild(placeholderOption);
+            
+            // Add "Create new monitor" option as the first visible item
+            const createOption = document.createElement('option');
+            createOption.value = '___CREATE_NEW___';
+            createOption.textContent = '+ Create new monitor...';
+            createOption.style.fontStyle = 'italic';
+            createOption.style.color = '#58a6ff';
+            select.appendChild(createOption);
 
             state.monitors.forEach(monitor => {
                 const option = document.createElement('option');
@@ -556,18 +574,34 @@
                 option.textContent = monitor.name;
                 select.appendChild(option);
             });
+
+            // Set to placeholder by default
+            select.value = '';
         }
 
         // Monitor functions
         async function loadMonitorInfo() {
             const monitorName = document.getElementById('monitor-select').value;
 
+            // Handle empty selection (placeholder)
             if (!monitorName) {
                 toggleVisibility('monitor-controls', false);
                 toggleVisibility('monitor-form', false);
-                toggleVisibility('create-monitor-section', true);
+                toggleVisibility('new-monitor-section', false);
                 return;
             }
+
+            // Handle "Create new monitor" selection
+            if (monitorName === '___CREATE_NEW___') {
+                toggleVisibility('monitor-controls', false);
+                toggleVisibility('monitor-form', false);
+                toggleVisibility('new-monitor-section', true);
+                document.getElementById('new-monitor-name-input').focus();
+                return;
+            }
+
+            // Hide new monitor section
+            toggleVisibility('new-monitor-section', false);
 
             // Always switch to code tab when loading a monitor
             switchTab('code-tab');
@@ -619,7 +653,7 @@
         function showMonitorUI() {
             toggleVisibility('monitor-controls', true);
             toggleVisibility('monitor-form', true);
-            toggleVisibility('create-monitor-section', false);
+            toggleVisibility('new-monitor-section', false);
         }
 
         function populateMonitorData(monitorInfo) {
@@ -767,19 +801,37 @@
         }
 
         function createNewMonitor() {
-            const monitorName = document.getElementById('new-monitor-name').value.trim();
-            if (!monitorName) return;
-
-            if (!state.monitors.some(m => m.name === monitorName)) {
-                state.monitors.push({ name: monitorName, enabled: true });
-                updateMonitorSelect();
+            const monitorName = document.getElementById('new-monitor-name-input').value.trim();
+            if (!monitorName) {
+                showToast('Monitor name is required', 'error');
+                return;
             }
 
-            document.getElementById('monitor-select').value = monitorName;
-            loadMonitorInfo();
+            if (state.monitors.some(m => m.name === monitorName)) {
+                showToast('Monitor name already exists', 'error');
+                return;
+            }
 
-            document.getElementById('new-monitor-name').value = '';
-            toggleCustomPopover('create-monitor-popover');
+            // Add to monitors list
+            state.monitors.push({ name: monitorName, enabled: true });
+            updateMonitorSelect();
+
+            // Select the new monitor and load it
+            document.getElementById('monitor-select').value = monitorName;
+            
+            // Clear the input
+            document.getElementById('new-monitor-name-input').value = '';
+            
+            // Load the new monitor
+            loadNewMonitor();
+        }
+
+        function cancelNewMonitor() {
+            // Reset to placeholder
+            document.getElementById('monitor-select').value = '';
+            document.getElementById('new-monitor-name-input').value = '';
+            toggleVisibility('new-monitor-section', false);
+            loadMonitorInfo();
         }
 
         async function validateMonitor() {
@@ -932,7 +984,7 @@
                 if (e.key === 'Enter') createAdditionalFile();
             });
 
-            document.getElementById('new-monitor-name').addEventListener('keypress', (e) => {
+            document.getElementById('new-monitor-name-input').addEventListener('keypress', (e) => {
                 if (e.key === 'Enter') createNewMonitor();
             });
 
