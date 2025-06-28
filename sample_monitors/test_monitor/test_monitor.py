@@ -4,6 +4,12 @@ from typing import TypedDict
 from monitor_utils import AlertOptions, CountRule, IssueOptions, MonitorOptions, PriorityLevels
 from notifications.internal_monitor_notification import internal_monitor_notification
 
+
+class IssueDataType(TypedDict):
+    id: int
+    value: int
+
+
 monitor_options = MonitorOptions(
     search_cron="* * * * *",
     update_cron="* * * * *",
@@ -24,11 +30,6 @@ alert_options = AlertOptions(
         )
     )
 )
-
-
-class IssueDataType(TypedDict):
-    id: int
-    value: int
 
 
 async def search() -> list[IssueDataType] | None:
