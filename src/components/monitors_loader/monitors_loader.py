@@ -236,7 +236,7 @@ async def _get_monitors_to_load(
         monitors_ids=list(monitors.keys()),
         reference_timestamp=reference_timestamp,
     )
-    code_modules = [code_module for code_module in updated_code_modules]
+    code_modules = list(updated_code_modules)
 
     # Add monitors that are enabled but aren't in the registry
     registry_monitors_ids = set(registry.get_monitors_ids())

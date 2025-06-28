@@ -255,9 +255,7 @@ async def test_get_monitors_files_from_path():
     monitors_files = list(monitors_loader._get_monitors_files_from_path("tests/sample_monitors"))
 
     assert len(monitors_files) == 3
-    monitors_files = list(
-        sorted(monitors_files, key=lambda monitor_files: monitor_files.monitor_name)
-    )
+    monitors_files = sorted(monitors_files, key=lambda monitor_files: monitor_files.monitor_name)
     assert monitors_files == [
         monitors_loader.MonitorFiles(
             monitor_name="monitor_1",
@@ -287,12 +285,10 @@ async def test_get_monitors_files_from_path_with_additional_files():
     )
 
     assert len(monitors_files) == 2
-    monitors_files = list(
-        sorted(monitors_files, key=lambda monitor_files: monitor_files.monitor_name)
-    )
+    monitors_files = sorted(monitors_files, key=lambda monitor_files: monitor_files.monitor_name)
     for monitor_files in monitors_files:
-        monitor_files.additional_files = list(
-            sorted(monitor_files.additional_files, key=lambda additional_file: additional_file.name)
+        monitor_files.additional_files = sorted(
+            monitor_files.additional_files, key=lambda additional_file: additional_file.name
         )
     assert monitors_files == [
         monitors_loader.MonitorFiles(
