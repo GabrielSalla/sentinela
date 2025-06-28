@@ -532,7 +532,7 @@ async def test_build_attachments(
     call_args = slack_build_attachments_spy.call_args
 
     # Assert there are no 'None' or '[]' blocks
-    assert all([block for block in call_args[0]])
+    assert all(block for block in call_args[0])
     assert call_args[1]["attachment_color"] is not None
     assert call_args[1]["fallback"] is not None
 

@@ -470,8 +470,8 @@ async def test_search_routine_store_to_monitor(
     )
     assert len(issues) == number_of_issues
     assert all(issue.monitor_id == sample_monitor.id for issue in issues)
-    issues_ids = set(issue.id for issue in issues)
-    monitors_issues_ids = set(issue.id for issue in sample_monitor.active_issues)
+    issues_ids = {issue.id for issue in issues}
+    monitors_issues_ids = {issue.id for issue in sample_monitor.active_issues}
     assert monitors_issues_ids == issues_ids
 
 

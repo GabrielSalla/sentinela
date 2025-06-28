@@ -78,7 +78,7 @@ async def test_plugin_service_run_single_service(
         ("service_type1", "service_type2"),
         ("service_type1",),
         ("service_type2",),
-        tuple(),
+        (),
     ],
 )
 async def test_plugin_service_run_multiple_services(caplog, mocker, enabled_services):

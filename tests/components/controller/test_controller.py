@@ -361,37 +361,35 @@ async def test_run(monkeypatch, clear_queue, clear_database):
     # Assert the tasks were queued
     queue_items_set = set(get_queue_items())
 
-    assert queue_items_set == set(
-        [
-            json.dumps(
-                {
-                    "type": "process_monitor",
-                    "payload": {
-                        "monitor_id": monitors_instances[0].id,
-                        "tasks": ["search", "update"],
-                    },
-                }
-            ),
-            json.dumps(
-                {
-                    "type": "process_monitor",
-                    "payload": {
-                        "monitor_id": monitors_instances[1].id,
-                        "tasks": ["search", "update"],
-                    },
-                }
-            ),
-            json.dumps(
-                {
-                    "type": "process_monitor",
-                    "payload": {
-                        "monitor_id": monitors_instances[2].id,
-                        "tasks": ["search", "update"],
-                    },
-                }
-            ),
-        ]
-    )
+    assert queue_items_set == {
+        json.dumps(
+            {
+                "type": "process_monitor",
+                "payload": {
+                    "monitor_id": monitors_instances[0].id,
+                    "tasks": ["search", "update"],
+                },
+            }
+        ),
+        json.dumps(
+            {
+                "type": "process_monitor",
+                "payload": {
+                    "monitor_id": monitors_instances[1].id,
+                    "tasks": ["search", "update"],
+                },
+            }
+        ),
+        json.dumps(
+            {
+                "type": "process_monitor",
+                "payload": {
+                    "monitor_id": monitors_instances[2].id,
+                    "tasks": ["search", "update"],
+                },
+            }
+        ),
+    }
 
 
 async def test_run_no_sleep(mocker, monkeypatch):
