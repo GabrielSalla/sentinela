@@ -279,15 +279,279 @@
             padding: 20px;
             height: 500px;
             overflow: hidden;
+            display: flex;
+            flex-direction: column;
         }
 
         .tab-pane {
             display: none;
             height: 100%;
+            flex-direction: column;
         }
 
         .tab-pane.active {
+            display: flex;
+        }
+
+        .code-editor-container {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            min-height: 0;
+        }
+
+        .validation-errors {
+            background-color: #2c1618;
+            border: 1px solid #da3633;
+            border-radius: 6px;
+            padding: 15px;
+            margin-top: 15px;
+            display: none;
+            max-height: 150px;
+            overflow-y: auto;
+        }
+
+        .validation-errors.show {
             display: block;
+        }
+
+        .validation-errors h4 {
+            color: #ffa198;
+            margin: 0 0 10px 0;
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+        .validation-errors .error-message {
+            color: #ffa198;
+            font-size: 13px;
+            line-height: 1.4;
+            margin-bottom: 8px;
+        }
+
+        .validation-errors .error-message:last-child {
+            margin-bottom: 0;
+        }
+
+        .validation-errors .error-details {
+            background-color: #1c0f11;
+            border: 1px solid #8b4348;
+            border-radius: 4px;
+            padding: 8px;
+            margin-top: 5px;
+            font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+            font-size: 12px;
+            white-space: pre-wrap;
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        .checkbox-group {
+            display: flex;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .checkbox-group input[type="checkbox"] {
+            width: auto;
+            margin-right: 10px;
+        }
+
+        .divider {
+            height: 1px;
+            background-color: #30363d;
+            margin: 20px 0;
+        }
+
+        .button-group {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 30px;
+        }
+
+        .button-group .btn {
+            flex: 1;
+        }
+
+        .tabs {
+            margin-bottom: 20px;
+        }
+
+        .tab-buttons {
+            display: flex;
+            background-color: #161b22;
+            border-radius: 6px 6px 0 0;
+            border: 1px solid #30363d;
+            border-bottom: none;
+            position: relative;
+        }
+
+        .tab-button {
+            padding: 12px 20px;
+            background-color: transparent;
+            border: none;
+            cursor: pointer;
+            font-size: 14px;
+            border-right: 1px solid #30363d;
+            transition: background-color 0.2s;
+            color: #f0f6fc;
+        }
+
+        .tab-button:last-child {
+            border-right: none;
+        }
+
+        .tab-button.active {
+            background-color: #238636;
+            color: white;
+        }
+
+        .tab-button:hover:not(.active) {
+            background-color: #21262d;
+        }
+
+        .add-file-btn {
+            position: absolute;
+            right: 10px;
+            top: 50%;
+            transform: translateY(-50%);
+            background-color: #238636;
+            color: white;
+            border: none;
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: background-color 0.2s;
+        }
+
+        .add-file-btn:hover {
+            background-color: #2ea043;
+        }
+
+        .delete-file-btn {
+            position: absolute;
+            right: 40px;
+            top: 50%;
+            transform: translateY(-50%);
+            background-color: #da3633;
+            color: white;
+            border: none;
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: bold;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            transition: background-color 0.2s;
+        }
+
+        .delete-file-btn:hover {
+            background-color: #b62324;
+        }
+
+        .delete-file-btn.show {
+            display: flex;
+        }
+
+        .add-file-popover {
+            position: absolute;
+            top: 100%;
+            right: 10px;
+            background-color: #161b22;
+            border: 1px solid #30363d;
+            border-radius: 6px;
+            padding: 15px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+            z-index: 1000;
+            min-width: 250px;
+            display: none;
+        }
+
+        .add-file-popover.active {
+            display: block;
+        }
+
+        .tab-content {
+            background-color: #0d1117;
+            border: 1px solid #30363d;
+            border-radius: 0 0 6px 6px;
+            padding: 20px;
+            height: 500px;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .tab-pane {
+            display: none;
+            height: 100%;
+            flex-direction: column;
+        }
+
+        .tab-pane.active {
+            display: flex;
+        }
+
+        .code-editor-container {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            min-height: 0;
+        }
+
+        .validation-errors {
+            background-color: #2c1618;
+            border: 1px solid #da3633;
+            border-radius: 6px;
+            padding: 15px;
+            margin-top: 15px;
+            display: none;
+            max-height: 150px;
+            overflow-y: auto;
+        }
+
+        .validation-errors.show {
+            display: block;
+        }
+
+        .validation-errors h4 {
+            color: #ffa198;
+            margin: 0 0 10px 0;
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+        .validation-errors .error-message {
+            color: #ffa198;
+            font-size: 13px;
+            line-height: 1.4;
+            margin-bottom: 8px;
+        }
+
+        .validation-errors .error-message:last-child {
+            margin-bottom: 0;
+        }
+
+        .validation-errors .error-details {
+            background-color: #1c0f11;
+            border: 1px solid #8b4348;
+            border-radius: 4px;
+            padding: 8px;
+            margin-top: 5px;
+            font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+            font-size: 12px;
+            white-space: pre-wrap;
         }
 
         /* CodeMirror customizations */
@@ -465,7 +729,13 @@
                     </div>
                     <div class="tab-content">
                         <div id="code-tab" class="tab-pane active">
-                            <textarea id="monitor-code" class="code-editor" placeholder="# Write your monitor code here..."></textarea>
+                            <div class="code-editor-container">
+                                <textarea id="monitor-code" class="code-editor" placeholder="# Write your monitor code here..."></textarea>
+                                <div id="validation-errors" class="validation-errors">
+                                    <h4>Validation Errors</h4>
+                                    <div id="validation-errors-content"></div>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -521,6 +791,57 @@
             requestAnimationFrame(() => {
                 editor.refresh();
             });
+        }
+
+        function hideValidationErrors() {
+            document.getElementById('validation-errors').classList.remove('show');
+        }
+
+        function showValidationErrors(errors) {
+            const errorsContainer = document.getElementById('validation-errors');
+            const errorsContent = document.getElementById('validation-errors-content');
+            
+            errorsContent.innerHTML = '';
+            
+            if (typeof errors === 'string') {
+                // Simple string error
+                const errorDiv = document.createElement('div');
+                errorDiv.className = 'error-message';
+                errorDiv.textContent = errors;
+                errorsContent.appendChild(errorDiv);
+            } else if (Array.isArray(errors)) {
+                // Array of validation errors
+                errors.forEach(error => {
+                    const errorDiv = document.createElement('div');
+                    errorDiv.className = 'error-message';
+                    
+                    let errorText = error.msg || error.message || 'Unknown error';
+                    if (error.loc && error.loc.length > 0) {
+                        errorText = `${error.loc.join('.')}: ${errorText}`;
+                    }
+                    if (error.type) {
+                        errorText = `[${error.type}] ${errorText}`;
+                    }
+                    
+                    errorDiv.textContent = errorText;
+                    errorsContent.appendChild(errorDiv);
+                });
+            } else if (typeof errors === 'object' && errors !== null) {
+                // Object with error details
+                const errorDiv = document.createElement('div');
+                errorDiv.className = 'error-message';
+                errorDiv.textContent = errors.message || errors.error || JSON.stringify(errors);
+                errorsContent.appendChild(errorDiv);
+                
+                if (errors.details || errors.traceback) {
+                    const detailsDiv = document.createElement('div');
+                    detailsDiv.className = 'error-details';
+                    detailsDiv.textContent = errors.details || errors.traceback;
+                    errorsContent.appendChild(detailsDiv);
+                }
+            }
+            
+            errorsContainer.classList.add('show');
         }
 
         // Connection functions
@@ -585,6 +906,9 @@
         // Monitor functions
         async function loadMonitorInfo() {
             const monitorName = document.getElementById('monitor-select').value;
+
+            // Clear validation errors when switching monitors
+            hideValidationErrors();
 
             // Handle empty selection (placeholder)
             if (!monitorName) {
@@ -841,9 +1165,12 @@
             const code = state.codeEditors.main?.getValue() || document.getElementById('monitor-code').value;
 
             if (!code.trim()) {
-                showToast('Monitor code is required', 'error');
+                showValidationErrors('Monitor code is required');
                 return;
             }
+
+            // Hide previous errors
+            hideValidationErrors();
 
             try {
                 const response = await fetch(`${state.apiUrl}/monitor/validate`, {
@@ -857,11 +1184,18 @@
                 if (response.ok) {
                     showToast('Monitor validated successfully!');
                 } else {
-                    showToast(`Validation failed: ${result.message || result.error}`, 'error');
+                    // Show detailed validation errors
+                    if (result.error) {
+                        showValidationErrors(result.error);
+                    } else if (result.message) {
+                        showValidationErrors(result.message);
+                    } else {
+                        showValidationErrors('Validation failed');
+                    }
                 }
             } catch (error) {
                 console.error('Validation error:', error);
-                showToast('Validation error: ' + error.message, 'error');
+                showValidationErrors(`Network error: ${error.message}`);
             }
         }
 
@@ -871,9 +1205,12 @@
             const enabled = document.getElementById('monitor-enabled').checked;
 
             if (!monitorName || !code.trim()) {
-                showToast('Monitor name and code are required', 'error');
+                showValidationErrors('Monitor name and code are required');
                 return;
             }
+
+            // Hide validation errors when saving
+            hideValidationErrors();
 
             try {
                 const additionalFiles = {};
@@ -901,11 +1238,18 @@
                             .catch(error => console.error('Error disabling monitor:', error));
                     }
                 } else {
-                    showToast(`Save failed: ${result.message || result.error}`, 'error');
+                    // Show detailed save errors in the error panel
+                    if (result.error) {
+                        showValidationErrors(result.error);
+                    } else if (result.message) {
+                        showValidationErrors(result.message);
+                    } else {
+                        showValidationErrors('Save failed');
+                    }
                 }
             } catch (error) {
                 console.error('Save error:', error);
-                showToast('Save error: ' + error.message, 'error');
+                showValidationErrors(`Network error: ${error.message}`);
             }
         }
 
