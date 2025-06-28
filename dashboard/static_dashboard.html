@@ -357,7 +357,7 @@
             color: white;
             font-weight: 500;
             z-index: 1001;
-            transform: translateX(100%);
+            transform: translateX(150%);
             transition: transform 0.3s ease;
         }
 
@@ -486,7 +486,7 @@
 
     <script>
         // Global state
-        let state = {
+        const state = {
             apiUrl: '',
             monitors: [],
             currentMonitor: null,
@@ -495,54 +495,48 @@
             codeEditors: {}
         };
 
+        // Utility functions
         function showToast(message, type = 'success') {
             const toast = document.getElementById('toast');
-            toast.style.display = 'block'; // Ensure toast is visible
             toast.textContent = message;
-            toast.className = `toast ${type}`;
-            toast.classList.add('show');
+            toast.className = `toast ${type} show`;
 
             setTimeout(() => {
                 toast.classList.remove('show');
-                // Hide the toast completely after the animation finishes
-                setTimeout(() => {
-                    toast.style.display = 'none';
-                }, 300); // Match the transition duration
             }, 3000);
+        }
+
+        function toggleVisibility(elementId, show) {
+            document.getElementById(elementId).classList.toggle('hidden', !show);
+        }
+
+        function refreshEditor(editor) {
+            if (!editor) return;
+            
+            // Use requestAnimationFrame for better performance
+            requestAnimationFrame(() => {
+                editor.refresh();
+            });
         }
 
         // Connection functions
         async function connectToSentinela() {
             const serverUrl = document.getElementById('server-url').value || 'localhost:8000';
-            const statusEl = document.getElementById('connection-status');
-
-            // Parse the server URL to extract host and port
-            let apiUrl;
-            if (serverUrl.startsWith('http://') || serverUrl.startsWith('https://')) {
-                apiUrl = serverUrl;
-            } else {
-                apiUrl = `http://${serverUrl}`;
-            }
-
-            state.apiUrl = apiUrl;
-
-            statusEl.classList.add('hidden');
+            
+            state.apiUrl = serverUrl.startsWith('http') ? serverUrl : `http://${serverUrl}`;
 
             try {
-                // Try to get monitors list from the monitor API
-                const monitorsResponse = await fetch(`${state.apiUrl}/monitor/list`);
-                if (!monitorsResponse.ok) {
-                    throw new Error(`HTTP ${monitorsResponse.status}: ${monitorsResponse.statusText}`);
+                const response = await fetch(`${state.apiUrl}/monitor/list`);
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
                 }
 
-                const monitors = await monitorsResponse.json();
-                state.monitors = monitors;
-
-                // Update UI
+                state.monitors = await response.json();
                 updateMonitorSelect();
-                showToast('Connected successfully!', 'success');
-                document.getElementById('monitor-section').classList.remove('hidden');
-                document.getElementById('welcome-message').classList.add('hidden');
+                showToast('Connected successfully!');
+                
+                toggleVisibility('monitor-section', true);
+                toggleVisibility('welcome-message', false);
 
             } catch (error) {
                 console.error('Connection error:', error);
@@ -564,88 +558,81 @@
 
         // Monitor functions
         async function loadMonitorInfo() {
-            const select = document.getElementById('monitor-select');
-            const monitorName = select.value;
+            const monitorName = document.getElementById('monitor-select').value;
 
             if (!monitorName) {
-                document.getElementById('monitor-controls').classList.add('hidden');
-                document.getElementById('monitor-form').classList.add('hidden');
-                document.getElementById('create-monitor-section').classList.remove('hidden');
+                toggleVisibility('monitor-controls', false);
+                toggleVisibility('monitor-form', false);
+                toggleVisibility('create-monitor-section', true);
                 return;
             }
 
             // Always switch to code tab when loading a monitor
             switchTab('code-tab');
 
-            // Check if this is a monitor that exists in the server or just added locally
             const existsOnServer = state.monitors.some(m => m.id !== undefined && m.name === monitorName);
 
             if (existsOnServer) {
-                try {
-                    const response = await fetch(`${state.apiUrl}/monitor/${monitorName}`);
-                    if (response.ok) {
-                        const monitorInfo = await response.json();
-                        state.currentMonitor = monitorInfo;
-
-                        // Show UI elements first
-                        document.getElementById('monitor-controls').classList.remove('hidden');
-                        document.getElementById('monitor-form').classList.remove('hidden');
-                        document.getElementById('create-monitor-section').classList.add('hidden');
-
-                        // Update UI after elements are visible
-                        document.getElementById('monitor-enabled').checked = monitorInfo.enabled;
-                        
-                        // Handle additional files first
-                        state.additionalFiles = Object.entries(monitorInfo.additional_files || {})
-                            .map(([fileName, content]) => ({ fileName, content }));
-
-                        updateAdditionalFileTabs();
-
-                        // Update main code editor last and force refresh
-                        if (state.codeEditors.main) {
-                            state.codeEditors.main.setValue(monitorInfo.code);
-                            // Force refresh multiple times to ensure it works
-                            setTimeout(() => {
-                                state.codeEditors.main.refresh();
-                                setTimeout(() => {
-                                    state.codeEditors.main.refresh();
-                                }, 50);
-                            }, 150);
-                        }
-
-                    } else {
-                        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-                    }
-                } catch (error) {
-                    console.error('Error loading monitor:', error);
-                    showToast('Error loading monitor: ' + error.message, 'error');
-                    return;
-                }
+                await loadExistingMonitor(monitorName);
             } else {
-                // This is a new monitor, show default values
-                state.currentMonitor = { enabled: true, code: '', additional_files: {} };
-                
-                // Show UI elements first
-                document.getElementById('monitor-controls').classList.remove('hidden');
-                document.getElementById('monitor-form').classList.remove('hidden');
-                document.getElementById('create-monitor-section').classList.add('hidden');
-                
-                // Update UI after elements are visible
-                document.getElementById('monitor-enabled').checked = true;
-                
-                state.additionalFiles = [];
-                updateAdditionalFileTabs();
-                
-                // Clear main code editor and force refresh
-                if (state.codeEditors.main) {
-                    state.codeEditors.main.setValue('');
-                    setTimeout(() => {
-                        state.codeEditors.main.refresh();
-                        setTimeout(() => {
-                            state.codeEditors.main.refresh();
-                        }, 50);
-                    }, 150);
+                loadNewMonitor();
+            }
+        }
+
+        async function loadExistingMonitor(monitorName) {
+            try {
+                const response = await fetch(`${state.apiUrl}/monitor/${monitorName}`);
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
                 }
+
+                const monitorInfo = await response.json();
+                state.currentMonitor = monitorInfo;
+
+                showMonitorUI();
+                populateMonitorData(monitorInfo);
+
+            } catch (error) {
+                console.error('Error loading monitor:', error);
+                showToast('Error loading monitor: ' + error.message, 'error');
+            }
+        }
+
+        function loadNewMonitor() {
+            state.currentMonitor = { enabled: true, code: '', additional_files: {} };
+            state.additionalFiles = [];
+            
+            showMonitorUI();
+            
+            document.getElementById('monitor-enabled').checked = true;
+            
+            if (state.codeEditors.main) {
+                state.codeEditors.main.setValue('');
+                refreshEditor(state.codeEditors.main);
+            }
+            
+            updateAdditionalFileTabs();
+        }
+
+        function showMonitorUI() {
+            toggleVisibility('monitor-controls', true);
+            toggleVisibility('monitor-form', true);
+            toggleVisibility('create-monitor-section', false);
+        }
+
+        function populateMonitorData(monitorInfo) {
+            document.getElementById('monitor-enabled').checked = monitorInfo.enabled;
+            
+            // Handle additional files
+            state.additionalFiles = Object.entries(monitorInfo.additional_files || {})
+                .map(([fileName, content]) => ({ fileName, content }));
+
+            updateAdditionalFileTabs();
+
+            // Update main code editor
+            if (state.codeEditors.main) {
+                state.codeEditors.main.setValue(monitorInfo.code);
+                refreshEditor(state.codeEditors.main);
             }
         }
 
@@ -653,7 +640,7 @@
             const extension = fileName.split('.').pop().toLowerCase();
             const languageMap = {
                 'py': 'python',
-                'js': 'javascript',
+                'js': 'javascript', 
                 'json': { name: 'javascript', json: true },
                 'yaml': 'yaml',
                 'yml': 'yaml',
@@ -662,14 +649,13 @@
                 'md': 'markdown',
                 'html': 'htmlmixed',
                 'css': 'css',
-                'xml': 'xml',
-                'txt': null
+                'xml': 'xml'
             };
             return languageMap[extension] || null;
         }
 
         function createCodeEditor(element, mode, value = '') {
-            const editor = CodeMirror.fromTextArea(element, {
+            return CodeMirror.fromTextArea(element, {
                 mode: mode,
                 theme: 'material-darker',
                 lineNumbers: true,
@@ -681,22 +667,17 @@
                 matchBrackets: true,
                 value: value
             });
-            
-            return editor;
         }
 
         function updateAdditionalFileTabs() {
             const tabButtons = document.getElementById('tab-buttons');
             const tabContent = document.querySelector('.tab-content');
 
-            // Clear existing additional file tabs
-            const existingTabs = tabButtons.querySelectorAll('.tab-button:not([onclick="switchTab(\'code-tab\')"])');
-            existingTabs.forEach(tab => tab.remove());
+            // Clear existing additional file tabs and editors
+            tabButtons.querySelectorAll('.tab-button:not([onclick="switchTab(\'code-tab\')"])').forEach(tab => tab.remove());
+            tabContent.querySelectorAll('.tab-pane:not(#code-tab)').forEach(pane => pane.remove());
 
-            const existingPanes = tabContent.querySelectorAll('.tab-pane:not(#code-tab)');
-            existingPanes.forEach(pane => pane.remove());
-
-            // Clear existing editors
+            // Cleanup existing editors
             Object.keys(state.codeEditors).forEach(key => {
                 if (key !== 'main') {
                     state.codeEditors[key].toTextArea();
@@ -706,58 +687,60 @@
 
             // Add additional file tabs
             state.additionalFiles.forEach((file, index) => {
-                const tabId = `file-tab-${index}`;
-                const mode = getLanguageFromFileName(file.fileName);
-
-                // Create tab button
-                const tabButton = document.createElement('button');
-                tabButton.className = 'tab-button';
-                tabButton.textContent = file.fileName;
-                tabButton.onclick = () => switchTab(tabId);
-                tabButtons.appendChild(tabButton);
-
-                // Create tab pane
-                const tabPane = document.createElement('div');
-                tabPane.id = tabId;
-                tabPane.className = 'tab-pane';
-
-                const fileEditor = document.createElement('div');
-                fileEditor.className = 'file-editor';
-
-                const editorContent = document.createElement('div');
-                editorContent.className = 'file-editor-content';
-
-                const textarea = document.createElement('textarea');
-                textarea.id = `editor-${index}`;
-                textarea.value = file.content;
-
-                editorContent.appendChild(textarea);
-                fileEditor.appendChild(editorContent);
-                tabPane.appendChild(fileEditor);
-                tabContent.appendChild(tabPane);
-
-                // Create CodeMirror editor after DOM insertion
-                setTimeout(() => {
-                    const editor = createCodeEditor(textarea, mode, file.content);
-                    state.codeEditors[`file-${index}`] = editor;
-                    
-                    editor.on('change', () => {
-                        state.additionalFiles[index].content = editor.getValue();
-                    });
-                    
-                    // Refresh the editor to ensure proper display
-                    setTimeout(() => {
-                        editor.refresh();
-                    }, 100);
-                }, 50);
+                createFileTab(file, index);
             });
+        }
+
+        function createFileTab(file, index) {
+            const tabId = `file-tab-${index}`;
+            const mode = getLanguageFromFileName(file.fileName);
+
+            // Create tab button
+            const tabButton = document.createElement('button');
+            tabButton.className = 'tab-button';
+            tabButton.textContent = file.fileName;
+            tabButton.onclick = () => switchTab(tabId);
+            
+            const deleteBtn = document.getElementById('delete-file-btn');
+            deleteBtn.parentNode.insertBefore(tabButton, deleteBtn);
+
+            // Create tab pane with editor
+            const tabPane = document.createElement('div');
+            tabPane.id = tabId;
+            tabPane.className = 'tab-pane';
+
+            const fileEditor = document.createElement('div');
+            fileEditor.className = 'file-editor';
+
+            const editorContent = document.createElement('div');
+            editorContent.className = 'file-editor-content';
+
+            const textarea = document.createElement('textarea');
+            textarea.id = `editor-${index}`;
+            textarea.value = file.content;
+
+            editorContent.appendChild(textarea);
+            fileEditor.appendChild(editorContent);
+            tabPane.appendChild(fileEditor);
+            document.querySelector('.tab-content').appendChild(tabPane);
+
+            // Create CodeMirror editor
+            setTimeout(() => {
+                const editor = createCodeEditor(textarea, mode, file.content);
+                state.codeEditors[`file-${index}`] = editor;
+                
+                editor.on('change', () => {
+                    state.additionalFiles[index].content = editor.getValue();
+                });
+                
+                refreshEditor(editor);
+            }, 50);
         }
 
         function createAdditionalFile() {
             const fileName = document.getElementById('new-file-name').value.trim();
             if (!fileName) return;
 
-            // Check if file already exists
             if (state.additionalFiles.some(file => file.fileName === fileName)) {
                 showToast('File already exists', 'error');
                 return;
@@ -769,35 +752,27 @@
             toggleAddFilePopover();
 
             // Switch to the new file tab
-            const newTabId = `file-tab-${state.additionalFiles.length - 1}`;
-            switchTab(newTabId);
-        }
-
-        function deleteAdditionalFile(index) {
-            state.additionalFiles.splice(index, 1);
-            updateAdditionalFileTabs();
-            switchTab('code-tab');
+            switchTab(`file-tab-${state.additionalFiles.length - 1}`);
         }
 
         function deleteCurrentFile() {
             if (state.activeTab === 'code-tab') return;
             
-            // Extract index from tab id (file-tab-0, file-tab-1, etc.)
             const index = parseInt(state.activeTab.split('-')[2]);
-            deleteAdditionalFile(index);
+            state.additionalFiles.splice(index, 1);
+            updateAdditionalFileTabs();
+            switchTab('code-tab');
         }
 
         function createNewMonitor() {
             const monitorName = document.getElementById('new-monitor-name').value.trim();
             if (!monitorName) return;
 
-            // Add to monitors list if not exists
             if (!state.monitors.some(m => m.name === monitorName)) {
                 state.monitors.push({ name: monitorName, enabled: true });
                 updateMonitorSelect();
             }
 
-            // Select the new monitor
             document.getElementById('monitor-select').value = monitorName;
             loadMonitorInfo();
 
@@ -806,7 +781,7 @@
         }
 
         async function validateMonitor() {
-            const code = state.codeEditors.main ? state.codeEditors.main.getValue() : document.getElementById('monitor-code').value;
+            const code = state.codeEditors.main?.getValue() || document.getElementById('monitor-code').value;
 
             if (!code.trim()) {
                 showToast('Monitor code is required', 'error');
@@ -816,18 +791,14 @@
             try {
                 const response = await fetch(`${state.apiUrl}/monitor/validate`, {
                     method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({
-                        monitor_code: code
-                    })
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ monitor_code: code })
                 });
 
                 const result = await response.json();
 
                 if (response.ok) {
-                    showToast('Monitor validated successfully!', 'success');
+                    showToast('Monitor validated successfully!');
                 } else {
                     showToast(`Validation failed: ${result.message || result.error}`, 'error');
                 }
@@ -839,16 +810,11 @@
 
         async function saveMonitor() {
             const monitorName = document.getElementById('monitor-select').value;
-            const code = state.codeEditors.main ? state.codeEditors.main.getValue() : document.getElementById('monitor-code').value;
+            const code = state.codeEditors.main?.getValue() || document.getElementById('monitor-code').value;
             const enabled = document.getElementById('monitor-enabled').checked;
 
-            if (!monitorName) {
-                showToast('Please select a monitor', 'error');
-                return;
-            }
-
-            if (!code.trim()) {
-                showToast('Monitor code is required', 'error');
+            if (!monitorName || !code.trim()) {
+                showToast('Monitor name and code are required', 'error');
                 return;
             }
 
@@ -860,9 +826,7 @@
 
                 const response = await fetch(`${state.apiUrl}/monitor/register/${monitorName}`, {
                     method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
+                    headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
                         monitor_code: code,
                         additional_files: additionalFiles
@@ -872,17 +836,12 @@
                 const result = await response.json();
 
                 if (response.ok) {
-                    showToast('Monitor saved successfully!', 'success');
+                    showToast('Monitor saved successfully!');
                     
-                    // Update the enabled state via API if needed
+                    // Handle enabled state
                     if (!enabled) {
-                        try {
-                            await fetch(`${state.apiUrl}/monitor/${monitorName}/disable`, {
-                                method: 'POST'
-                            });
-                        } catch (error) {
-                            console.error('Error disabling monitor:', error);
-                        }
+                        await fetch(`${state.apiUrl}/monitor/${monitorName}/disable`, { method: 'POST' })
+                            .catch(error => console.error('Error disabling monitor:', error));
                     }
                 } else {
                     showToast(`Save failed: ${result.message || result.error}`, 'error');
@@ -895,122 +854,92 @@
 
         // UI helper functions
         function switchTab(tabId) {
-            // Remove active class from all tabs
+            // Update UI state
             document.querySelectorAll('.tab-button').forEach(btn => btn.classList.remove('active'));
             document.querySelectorAll('.tab-pane').forEach(pane => pane.classList.remove('active'));
 
-            // Add active class to selected tab button
-            const activeButton = Array.from(document.querySelectorAll('.tab-button')).find(btn => {
-                return btn.onclick && btn.onclick.toString().includes(`switchTab('${tabId}')`);
-            });
+            // Activate selected tab
+            const activeButton = Array.from(document.querySelectorAll('.tab-button'))
+                .find(btn => btn.onclick?.toString().includes(`switchTab('${tabId}')`));
             
-            if (activeButton) {
-                activeButton.classList.add('active');
-            }
+            if (activeButton) activeButton.classList.add('active');
 
-            // Add active class to selected tab pane
             const activePane = document.getElementById(tabId);
-            if (activePane) {
-                activePane.classList.add('active');
-            }
+            if (activePane) activePane.classList.add('active');
 
-            // Show/hide delete button based on active tab
-            const deleteBtn = document.getElementById('delete-file-btn');
-            if (tabId === 'code-tab') {
-                deleteBtn.classList.remove('show');
-            } else {
-                deleteBtn.classList.add('show');
-            }
+            // Update delete button visibility
+            document.getElementById('delete-file-btn').classList.toggle('show', tabId !== 'code-tab');
 
             state.activeTab = tabId;
 
-            // Refresh CodeMirror when switching tabs to ensure proper display
+            // Refresh active editor
             setTimeout(() => {
-                if (tabId === 'code-tab' && state.codeEditors.main) {
-                    state.codeEditors.main.refresh();
+                if (tabId === 'code-tab') {
+                    refreshEditor(state.codeEditors.main);
                 } else {
                     const fileIndex = tabId.split('-')[2];
-                    const editorKey = `file-${fileIndex}`;
-                    if (state.codeEditors[editorKey]) {
-                        state.codeEditors[editorKey].refresh();
-                    }
+                    refreshEditor(state.codeEditors[`file-${fileIndex}`]);
                 }
             }, 50);
         }
 
         function toggleAddFilePopover() {
-            const popover = document.getElementById('add-file-popover');
-            popover.classList.toggle('active');
+            document.getElementById('add-file-popover').classList.toggle('active');
         }
 
         function toggleCustomPopover(popoverId) {
             const popover = document.querySelector(`#${popoverId}`).parentElement;
-            popover.classList.toggle('active');
-
+            
             // Close other popovers
             document.querySelectorAll('.popover').forEach(p => {
-                if (p !== popover) {
-                    p.classList.remove('active');
-                }
+                if (p !== popover) p.classList.remove('active');
             });
+            
+            popover.classList.toggle('active');
         }
 
-        // Initialize main code editor with syntax highlighting
         function initializeCodeEditor() {
             const mainCodeEditor = document.getElementById('monitor-code');
             const editor = createCodeEditor(mainCodeEditor, 'python');
             state.codeEditors.main = editor;
             
             editor.on('change', () => {
-                // Keep the textarea in sync for form submission
                 mainCodeEditor.value = editor.getValue();
             });
         }
 
-        // Close popovers when clicking outside
+        // Event listeners
         document.addEventListener('click', (e) => {
             if (!e.target.closest('.popover') && !e.target.closest('.add-file-btn') && !e.target.closest('.add-file-popover')) {
-                document.querySelectorAll('.popover').forEach(p => {
-                    p.classList.remove('active');
-                });
+                document.querySelectorAll('.popover').forEach(p => p.classList.remove('active'));
                 document.getElementById('add-file-popover').classList.remove('active');
             }
         });
 
-        // Initialize
+        // Initialize on DOM load
         document.addEventListener('DOMContentLoaded', () => {
-            // Initialize main code editor with syntax highlighting
             initializeCodeEditor();
-            
-            // Auto-connect on load
             connectToSentinela();
-        });
 
-        // Add Enter key detection for server URL input
-        document.getElementById('server-url').addEventListener('keypress', (e) => {
-            if (e.key === 'Enter') {
-                connectToSentinela();
-            }
-        });
+            // Add keyboard shortcuts
+            document.getElementById('server-url').addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') connectToSentinela();
+            });
 
-        // Add Enter key detection for new file name input
-        document.getElementById('new-file-name').addEventListener('keypress', (e) => {
-            if (e.key === 'Enter') {
-                createAdditionalFile();
-            }
-        });
+            document.getElementById('new-file-name').addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') createAdditionalFile();
+            });
 
-        // Auto-connect when URL changes (after a delay to avoid too many requests while typing)
-        let urlChangeTimeout;
-        document.getElementById('server-url').addEventListener('input', (e) => {
-            clearTimeout(urlChangeTimeout);
-            urlChangeTimeout = setTimeout(() => {
-                // Only auto-connect if there was a previous connection attempt that failed
-                const statusEl = document.getElementById('connection-status');
-                if (!statusEl.classList.contains('hidden') && statusEl.classList.contains('status-error')) {
-                    connectToSentinela();
-                }
-            }, 1000); // Wait 1 second after user stops typing
+            document.getElementById('new-monitor-name').addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') createNewMonitor();
+            });
+
+            // Auto-reconnect on URL change
+            let urlChangeTimeout;
+            document.getElementById('server-url').addEventListener('input', () => {
+                clearTimeout(urlChangeTimeout);
+                urlChangeTimeout = setTimeout(connectToSentinela, 1000);
+            });
         });
     </script>
 </body>
