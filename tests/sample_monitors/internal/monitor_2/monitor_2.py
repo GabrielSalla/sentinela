@@ -8,6 +8,12 @@ from monitor_utils import IssueOptions, MonitorOptions
 configs.application_queue
 
 
+class IssueDataType(TypedDict):
+    id: str
+    a: str
+    b: int
+
+
 monitor_options = MonitorOptions(
     search_cron="* * * * *",
     update_cron="* * * * *",
@@ -16,12 +22,6 @@ monitor_options = MonitorOptions(
 issue_options = IssueOptions(
     model_id_key="id",
 )
-
-
-class IssueDataType(TypedDict):
-    id: str
-    a: str
-    b: int
 
 
 async def search() -> list[IssueDataType] | None: ...

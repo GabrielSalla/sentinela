@@ -1,5 +1,5 @@
 # Creating a new monitor
-This guide will walk through the steps to set up a new Monitor.
+This guide will walk through the steps to set up a new Monitor. The file [monitor_template.py](../resources/monitor_template.py) serves as a template for creating a new monitor. It includes all the necessary imports and settings to get started.
 
 As a demonstration, the Monitor that will be designed is intended to **search for users with invalid registration data**, specifically when their name is empty.
 
@@ -74,6 +74,13 @@ from monitor_utils import (
     PriorityLevels,
 )
 ```
+
+# The issue data type
+The `IssueDataType` class defines the structure of the data that represents an issue. It serves as a type annotation in the monitor's default functions, making development more intuitive and error-resistant while also providing a clear contract for the issue data structure.
+
+Define a class called `IssueDataType`, that inherits from `TypedDict`, and includes all the fields that will be present in the issue data for the monitor.
+
+**Attention**: The `IssueDataType` class must contain the field specified in the `model_id_key` parameter of the `IssueOptions` setting. This ensures that the issue’s unique identifier is consistently used across your monitor’s configuration. This setting will be presented in the [**Issue options**](#issue-options) section.
 
 # The settings
 To set up the monitor’s behavior, issues, and alerts, use the provided Options dataclasses. These settings define how the monitor will manage issues and alerts.
@@ -165,13 +172,6 @@ Priority levels definition. For the defined rule, what value should trigger each
 - `critical`: Level that triggers **critical P1** alerts.
 
 All priority levels defaults to `None`. If a level is set to `None`, it will not be triggered.
-
-# The issue data type
-The `IssueDataType` class defines the structure of the data that represents an issue. It serves as a type annotation in the monitor's default functions, making development more intuitive and error-resistant.
-
-Define a class called `IssueDataType`, that inherits from `TypedDict`, and includes all the fields that will be present in the issue data for the monitor.
-
-**Attention**: The `IssueDataType` class must contain the field specified in the `model_id_key` parameter of the `IssueOptions` setting. This ensures that the issue’s unique identifier is consistently used across your monitor’s configuration.
 
 ### Example
 For the user registration monitor, the issue data type should include the `id` and `name` fields, as these are the essential fields for identifying and tracking the issue.

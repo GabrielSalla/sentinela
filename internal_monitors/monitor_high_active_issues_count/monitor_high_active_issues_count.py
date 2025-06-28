@@ -18,6 +18,13 @@ from notifications.internal_monitor_notification import internal_monitor_notific
 
 TRIGGER_THRESHOLD = 500
 
+
+class IssueDataType(TypedDict):
+    monitor_id: int
+    monitor_name: str
+    active_issues_count: int
+
+
 monitor_options = MonitorOptions(
     update_cron="*/2 * * * *",
     search_cron="*/5 * * * *",
@@ -39,12 +46,6 @@ alert_options = AlertOptions(
         ),
     )
 )
-
-
-class IssueDataType(TypedDict):
-    monitor_id: int
-    monitor_name: str
-    active_issues_count: int
 
 
 async def search() -> list[IssueDataType] | None:
