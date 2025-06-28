@@ -1,5 +1,5 @@
 # Creating a new monitor
-This guide will walk through the steps to set up a new Monitor.
+This guide will walk through the steps to set up a new Monitor. The file [monitor_template.py](../resources/monitor_template.py) serves as a template for creating a new monitor. It includes all the necessary imports and settings to get started.
 
 As a demonstration, the Monitor that will be designed is intended to **search for users with invalid registration data**, specifically when their name is empty.
 
