@@ -14,7 +14,7 @@ from base_exception import BaseSentinelaException
 from configs import configs
 from data_models.process_monitor_payload import ProcessMonitorPayload
 from internal_database import get_session
-from models import Alert, Issue, Monitor
+from models import Alert, Event, EventType, Issue, Monitor
 from utils.async_tools import do_concurrently
 
 _logger = logging.getLogger("monitor_handler")
@@ -374,16 +374,42 @@ async def run(message: dict[Any, Any]) -> None:
             await asyncio.wait_for(
                 _run_routines(monitor, message_payload.tasks), monitor.options.execution_timeout
             )
-    except asyncio.TimeoutError:
+        await Event.create(
+            event_type=EventType.monitor_execution_success,
+            model="monitor",
+            model_id=monitor.id,
+            payload={},
+        )
+    except asyncio.TimeoutError as e:
         monitor_timeout_count = prometheus_monitor_timeout_count.labels(**prometheus_labels)
         monitor_timeout_count.inc()
+        await Event.create(
+            event_type=EventType.monitor_execution_error,
+            model="monitor",
+            model_id=monitor.id,
+            payload={"error": str(e)},
+        )
 
         _logger.warning(f"Execution for monitor '{monitor}' timed out")
     except BaseSentinelaException as e:
+        await Event.create(
+            event_type=EventType.monitor_execution_error,
+            model="monitor",
+            model_id=monitor.id,
+            payload={"error": str(e)},
+        )
+
         raise e
-    except Exception:
+    except Exception as e:
         monitor_error_count = prometheus_monitor_error_count.labels(**prometheus_labels)
         monitor_error_count.inc()
+
+        await Event.create(
+            event_type=EventType.monitor_execution_error,
+            model="monitor",
+            model_id=monitor.id,
+            payload={"error": str(e)},
+        )
 
         _logger.error(f"Error in execution for monitor '{monitor}'")
         _logger.error(traceback.format_exc().strip())
