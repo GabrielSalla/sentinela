@@ -34,6 +34,10 @@ time_zone: America/Sao_Paulo
 controller_process_schedule: "* * * * *"
 controller_concurrency: 5
 controller_procedures:
+  clean_events:
+    schedule: "0 */2 * * *"
+    params:
+      retention_days: 7
   monitors_stuck:
     schedule: "*/5 * * * *"
     params:
