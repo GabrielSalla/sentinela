@@ -16,6 +16,8 @@ A Sentinela Monitor is configured through 3 main parts, along some basic setting
 
 These implementations are enough for Sentinela to autonomously execute monitoring logic and automatically manages the issues.
 
+![sentinela example](./docs/images/example.gif)
+
 ## Example scenario: Monitoring orders without shipments
 An online store where orders are expected to be shipped within 5 days. If an order is delayed beyond this threshold, someone might need to check what’s wrong with the shipment system.
 
