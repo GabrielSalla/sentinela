@@ -7,3 +7,4 @@ _monitors_load
 .vscode
 **/__pycache__
 tmp
+run.sh
