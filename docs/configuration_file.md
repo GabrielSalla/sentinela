@@ -67,6 +67,7 @@ application_queue:
 - `controller_procedures.monitors_stuck`: Map. Settings for the procedure to fix monitors stuck in "queued" or "running" status.
 - `controller_procedures.monitors_stuck.schedule`: String using Cron format. Schedule to execute the `monitors_stuck` procedure.
 - `controller_procedures.monitors_stuck.params.time_tolerance`: Integer. Time tolerance in seconds for a monitor to be considered as stuck. This parameter is directly impacted by the `executor_monitor_heartbeat_time` setting and the recommended value is 2 times the heartbeat time.
+- `controller_procedures.notifications_alert_solved.schedule`: String using Cron format. Schedule to execute the `notifications_alert_solved` procedure.
 
 ## Executor Settings
 - `executor_concurrency`: Integer. Number of tasks that can be executed at the same time by each Executor.
