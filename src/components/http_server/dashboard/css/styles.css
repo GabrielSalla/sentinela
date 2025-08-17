@@ -415,6 +415,10 @@ body {
     transform: translateX(0);
 }
 
+.toast.info {
+    background-color: #1887b3;
+}
+
 .toast.success {
     background-color: #238636;
 }

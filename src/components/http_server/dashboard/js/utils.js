@@ -5,7 +5,7 @@ function showToast(message, type = 'success') {
 
     setTimeout(() => {
         toast.classList.remove('show');
-    }, 3000);
+    }, 5000);
 }
 
 function toggleVisibility(elementId, show) {
