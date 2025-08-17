@@ -16,7 +16,6 @@ from utils.time import localize
 
 _logger = logging.getLogger("monitor_routes")
 
-
 monitor_routes = web.RouteTableDef()
 base_route = "/monitor"
 
