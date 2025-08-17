@@ -133,26 +133,53 @@ function populateMonitorData(monitorInfo) {
     }
 }
 
-function createNewMonitor() {
+async function createNewMonitor() {
     const monitorName = document.getElementById('new-monitor-name-input').value.trim();
     if (!monitorName) {
         showToast('Monitor name is required', 'error');
         return;
     }
 
-    if (state.monitors.some(m => m.name === monitorName)) {
-        showToast('Monitor name already exists', 'error');
-        return;
+    try {
+        const formatResponse = await fetch(`${window.location.origin}/monitor/format_name/${encodeURIComponent(monitorName)}`, {
+            method: 'POST'
+        });
+
+        if (!formatResponse.ok) {
+            throw new Error(`HTTP ${formatResponse.status}: ${formatResponse.statusText}`);
+        }
+
+        const formatResult = await formatResponse.json();
+        const formattedName = formatResult.formatted_name;
+
+        const existingMonitor = state.monitors.find(m => m.name === formattedName);
+
+        if (existingMonitor) {
+            showToast(`Monitor with formatted name "${formattedName}" already exists. Loading existing monitor.`, 'info');
+
+            document.getElementById('monitor-select').value = formattedName;
+            document.getElementById('new-monitor-name-input').value = '';
+
+            await loadExistingMonitor(formattedName);
+            return;
+        }
+
+        state.monitors.push({ name: formattedName, enabled: true });
+        updateMonitorSelect();
+
+        document.getElementById('monitor-select').value = formattedName;
+        document.getElementById('new-monitor-name-input').value = '';
+
+        setNewMonitor();
+
+        if (formattedName !== monitorName) {
+            showToast(`Monitor name formatted from "${monitorName}" to "${formattedName}"`, 'info');
+        }
+
+    } catch (error) {
+        console.error('Error creating monitor:', error);
+        showToast(`Error creating monitor: ${error.message}`, 'error');
     }
-
-    state.monitors.push({ name: monitorName, enabled: true });
-    updateMonitorSelect();
-
-    document.getElementById('monitor-select').value = monitorName;
-
-    document.getElementById('new-monitor-name-input').value = '';
-
-    setNewMonitor();
 }
 
 function cancelNewMonitor() {
