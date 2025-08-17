@@ -99,7 +99,7 @@ async function loadExistingMonitor(monitorName) {
 }
 
 function setNewMonitor() {
-    state.currentMonitor = { enabled: true, code: '', additional_files: {} };
+    state.currentMonitor = { enabled: true, code: MONITOR_TEMPLATE, additional_files: {} };
     state.additionalFiles = {};
 
     showMonitorUI();
@@ -107,7 +107,7 @@ function setNewMonitor() {
     document.getElementById('monitor-enabled').checked = true;
 
     if (state.codeEditors.main) {
-        state.codeEditors.main.setValue('');
+        state.codeEditors.main.setValue(state.currentMonitor.code);
         refreshEditor(state.codeEditors.main);
     }
 
