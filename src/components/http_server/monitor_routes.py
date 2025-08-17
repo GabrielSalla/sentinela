@@ -7,7 +7,8 @@ from aiohttp import web
 from aiohttp.web_request import Request
 from aiohttp.web_response import Response
 
-import commands as commands
+import commands
+from components.http_server.format_monitor_name import format_monitor_name
 from components.monitors_loader import MonitorValidationError
 from models import CodeModule, Monitor
 
@@ -153,6 +154,16 @@ async def monitor_validate(request: Request) -> Response:
     return web.json_response(success_response)
 
 
+@monitor_routes.post(base_route + "/format_name/{monitor_name}")
+@monitor_routes.post(base_route + "/format_name/{monitor_name}/")
+async def format_name(request: Request) -> Response:
+    """Route to format a monitor name"""
+    monitor_name = request.match_info["monitor_name"]
+    return web.json_response(
+        {"name": monitor_name, "formatted_name": format_monitor_name(monitor_name)}
+    )
+
+
 @monitor_routes.post(base_route + "/register/{monitor_name}")
 @monitor_routes.post(base_route + "/register/{monitor_name}/")
 async def monitor_register(request: Request) -> Response:
@@ -169,8 +180,7 @@ async def monitor_register(request: Request) -> Response:
         error_response = {"status": "error", "message": "'monitor_code' parameter is required"}
         return web.json_response(error_response, status=400)
 
-    # Remove any dots from the monitor name
-    monitor_name = monitor_name.replace(".", "_")
+    monitor_name = format_monitor_name(monitor_name)
 
     try:
         monitor = await commands.monitor_register(monitor_name, monitor_code, additional_files)

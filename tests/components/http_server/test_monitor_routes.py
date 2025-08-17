@@ -318,6 +318,25 @@ async def test_monitor_validate_invalid_monitor_code(mocker, monitor_code, expec
 
 
 @pytest.mark.parametrize(
+    "monitor_name, expected_formatted_name",
+    [
+        ("test_monitor_format_name", "test_monitor_format_name"),
+        ("a.b.c", "a_b_c"),
+        ("My.Monitor-Name@123", "my_monitorname123"),
+    ],
+)
+async def test_format_name(monitor_name, expected_formatted_name):
+    """The 'format name' route should return the formatted name of the monitor"""
+    url = BASE_URL + f"/format_name/{monitor_name}"
+    async with aiohttp.ClientSession() as session:
+        async with session.post(url) as response:
+            assert await response.json() == {
+                "name": monitor_name,
+                "formatted_name": expected_formatted_name,
+            }
+
+
+@pytest.mark.parametrize(
     "monitor_name",
     [
         "test_monitor_register",
