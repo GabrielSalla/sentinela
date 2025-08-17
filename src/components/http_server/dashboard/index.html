@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sentinela Dashboard</title>
+
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/codemirror.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/theme/material-darker.min.css">
+
+    <link rel="stylesheet" href="/dashboard/css/styles.css">
+</head>
+<body>
+    <div class="container">
+        <div class="sidebar">
+            <h1>Sentinela</h1>
+
+            <div id="monitor-section">
+                <div class="form-group">
+                    <label for="monitor-select">Monitor:</label>
+                    <select id="monitor-select" onchange="loadMonitorInfo()">
+                        <option value="">Choose a monitor</option>
+                    </select>
+                </div>
+
+                <div id="monitor-controls" class="hidden">
+                    <div class="checkbox-group">
+                        <input type="checkbox" id="monitor-enabled">
+                        <label for="monitor-enabled">Enabled</label>
+                    </div>
+
+                    <div class="divider"></div>
+
+                    <div class="button-group">
+                        <button class="btn btn-secondary" onclick="validateMonitor()">
+                            Validate
+                        </button>
+                        <button class="btn" onclick="saveMonitor()">
+                            Save
+                        </button>
+                    </div>
+                </div>
+
+                <div id="new-monitor-section" class="hidden">
+                    <div class="form-group">
+                        <label for="new-monitor-name-input">Monitor name:</label>
+                        <input type="text" id="new-monitor-name-input" placeholder="my_monitor">
+                    </div>
+                    <div class="button-group">
+                        <button class="btn btn-secondary" onclick="cancelNewMonitor()">
+                            Cancel
+                        </button>
+                        <button class="btn" onclick="createNewMonitor()">
+                            Create
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="main-content">
+            <div id="monitor-form" class="hidden">
+                <div class="tabs">
+                    <div class="tab-buttons" id="tab-buttons">
+                        <button class="tab-button active" onclick="switchTab('code-tab')">Code</button>
+                        <button class="delete-file-btn" id="delete-file-btn" onclick="deleteCurrentFile()" title="Delete current file">×</button>
+                        <button class="add-file-btn" onclick="toggleAddFilePopover()" title="Add new file">+</button>
+                        <div id="add-file-popover" class="add-file-popover">
+                            <div class="form-group">
+                                <label for="new-file-name">File name:</label>
+                                <input type="text" id="new-file-name" placeholder="filename.py">
+                            </div>
+                            <button class="btn" onclick="createAdditionalFile()">Create</button>
+                        </div>
+                    </div>
+                    <div class="tab-content">
+                        <div id="code-tab" class="tab-pane active">
+                            <div class="code-editor-container">
+                                <textarea id="monitor-code" class="code-editor" placeholder="# Write your monitor code here..."></textarea>
+                                <div id="validation-errors" class="validation-errors">
+                                    <h4>Validation Errors</h4>
+                                    <div id="validation-errors-content"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="toast" class="toast"></div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/codemirror.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/mode/css/css.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/mode/htmlmixed/htmlmixed.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/mode/javascript/javascript.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/mode/markdown/markdown.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/mode/python/python.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/mode/shell/shell.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/mode/sql/sql.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/mode/xml/xml.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/mode/yaml/yaml.min.js"></script>
+
+    <script src="/dashboard/js/app.js"></script>
+    <script src="/dashboard/js/editor.js"></script>
+    <script src="/dashboard/js/monitor.js"></script>
+    <script src="/dashboard/js/monitor-template.js"></script>
+    <script src="/dashboard/js/state.js"></script>
+    <script src="/dashboard/js/ui.js"></script>
+    <script src="/dashboard/js/utils.js"></script>
+    <script src="/dashboard/js/validation.js"></script>
+</body>
+</html>
