@@ -48,4 +48,6 @@ function showValidationErrors(result) {
     }
 
     errorsContainer.classList.add('show');
+
+    switchTab('code-tab');
 }
