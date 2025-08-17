@@ -1,11 +1,57 @@
-// Monitor functions
+async function loadMonitors() {
+    const apiUrl = window.location.origin;
+
+    try {
+        const response = await fetch(`${apiUrl}/monitor/list`);
+        if (!response.ok) {
+            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        }
+
+        state.monitors = await response.json();
+        updateMonitorSelect();
+
+        toggleVisibility('monitor-section', true);
+        toggleVisibility('welcome-message', false);
+
+    } catch (error) {
+        console.error('Connection error:', error);
+        showToast(`Connection failed: ${error.message}`, 'error');
+    }
+}
+
+function updateMonitorSelect() {
+    const select = document.getElementById('monitor-select');
+    select.innerHTML = '';
+
+    const placeholderOption = document.createElement('option');
+    placeholderOption.value = '';
+    placeholderOption.textContent = 'Choose a monitor';
+    placeholderOption.disabled = true;
+    placeholderOption.hidden = true;
+    select.appendChild(placeholderOption);
+
+    const createOption = document.createElement('option');
+    createOption.value = '___CREATE_NEW___';
+    createOption.textContent = '+ Create new monitor';
+    createOption.style.fontStyle = 'italic';
+    createOption.style.color = '#58a6ff';
+    select.appendChild(createOption);
+
+    state.monitors.forEach(monitor => {
+        const option = document.createElement('option');
+        option.value = monitor.name;
+        option.textContent = monitor.name;
+        select.appendChild(option);
+    });
+
+    select.value = '';
+}
+
 async function loadMonitorInfo() {
     const monitorName = document.getElementById('monitor-select').value;
 
-    // Clear validation errors when switching monitors
     hideValidationErrors();
 
-    // Handle empty selection (placeholder)
     if (!monitorName) {
         toggleVisibility('monitor-controls', false);
         toggleVisibility('monitor-form', false);
@@ -13,7 +59,6 @@ async function loadMonitorInfo() {
         return;
     }
 
-    // Handle "Create new monitor" selection
     if (monitorName === '___CREATE_NEW___') {
         toggleVisibility('monitor-controls', false);
         toggleVisibility('monitor-form', false);
@@ -22,10 +67,8 @@ async function loadMonitorInfo() {
         return;
     }
 
-    // Hide new monitor section
     toggleVisibility('new-monitor-section', false);
 
-    // Always switch to code tab when loading a monitor
     switchTab('code-tab');
 
     const existsOnServer = state.monitors.some(m => m.id !== undefined && m.name === monitorName);
@@ -33,13 +76,13 @@ async function loadMonitorInfo() {
     if (existsOnServer) {
         await loadExistingMonitor(monitorName);
     } else {
-        loadNewMonitor();
+        setNewMonitor();
     }
 }
 
 async function loadExistingMonitor(monitorName) {
     try {
-        const response = await fetch(`${state.apiUrl}/monitor/${monitorName}`);
+        const response = await fetch(`${window.location.origin}/monitor/${monitorName}`);
         if (!response.ok) {
             throw new Error(`HTTP ${response.status}: ${response.statusText}`);
         }
@@ -56,19 +99,19 @@ async function loadExistingMonitor(monitorName) {
     }
 }
 
-function loadNewMonitor() {
+function setNewMonitor() {
     state.currentMonitor = { enabled: true, code: '', additional_files: {} };
-    state.additionalFiles = [];
-    
+    state.additionalFiles = {};
+
     showMonitorUI();
-    
+
     document.getElementById('monitor-enabled').checked = true;
-    
+
     if (state.codeEditors.main) {
         state.codeEditors.main.setValue('');
         refreshEditor(state.codeEditors.main);
     }
-    
+
     updateAdditionalFileTabs();
 }
 
@@ -80,14 +123,11 @@ function showMonitorUI() {
 
 function populateMonitorData(monitorInfo) {
     document.getElementById('monitor-enabled').checked = monitorInfo.enabled;
-    
-    // Handle additional files
-    state.additionalFiles = Object.entries(monitorInfo.additional_files || {})
-        .map(([fileName, content]) => ({ fileName, content }));
+
+    state.additionalFiles = monitorInfo.additional_files || {};
 
     updateAdditionalFileTabs();
 
-    // Update main code editor
     if (state.codeEditors.main) {
         state.codeEditors.main.setValue(monitorInfo.code);
         refreshEditor(state.codeEditors.main);
@@ -106,22 +146,17 @@ function createNewMonitor() {
         return;
     }
 
-    // Add to monitors list
     state.monitors.push({ name: monitorName, enabled: true });
     updateMonitorSelect();
 
-    // Select the new monitor and load it
     document.getElementById('monitor-select').value = monitorName;
-    
-    // Clear the input
+
     document.getElementById('new-monitor-name-input').value = '';
-    
-    // Load the new monitor
-    loadNewMonitor();
+
+    setNewMonitor();
 }
 
 function cancelNewMonitor() {
-    // Reset to placeholder
     document.getElementById('monitor-select').value = '';
     document.getElementById('new-monitor-name-input').value = '';
     toggleVisibility('new-monitor-section', false);
@@ -129,18 +164,17 @@ function cancelNewMonitor() {
 }
 
 async function validateMonitor() {
-    const code = state.codeEditors.main?.getValue() || document.getElementById('monitor-code').value;
+    const code = document.getElementById('monitor-code').value;
 
     if (!code.trim()) {
         showValidationErrors('Monitor code is required');
         return;
     }
 
-    // Hide previous errors
     hideValidationErrors();
 
     try {
-        const response = await fetch(`${state.apiUrl}/monitor/validate`, {
+        const response = await fetch(`${window.location.origin}/monitor/validate`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ monitor_code: code })
@@ -151,7 +185,6 @@ async function validateMonitor() {
         if (response.ok) {
             showToast('Monitor validated successfully!');
         } else {
-            // Show detailed validation errors
             if (result.error) {
                 showValidationErrors(result.error);
             } else if (result.message) {
@@ -168,7 +201,7 @@ async function validateMonitor() {
 
 async function saveMonitor() {
     const monitorName = document.getElementById('monitor-select').value;
-    const code = state.codeEditors.main?.getValue() || document.getElementById('monitor-code').value;
+    const code = document.getElementById('monitor-code').value;
     const enabled = document.getElementById('monitor-enabled').checked;
 
     if (!monitorName || !code.trim()) {
@@ -176,21 +209,15 @@ async function saveMonitor() {
         return;
     }
 
-    // Hide validation errors when saving
     hideValidationErrors();
 
     try {
-        const additionalFiles = {};
-        state.additionalFiles.forEach(file => {
-            additionalFiles[file.fileName] = file.content;
-        });
-
-        const response = await fetch(`${state.apiUrl}/monitor/register/${monitorName}`, {
+        const response = await fetch(`${window.location.origin}/monitor/register/${monitorName}`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
                 monitor_code: code,
-                additional_files: additionalFiles
+                additional_files: state.additionalFiles
             })
         });
 
@@ -198,14 +225,16 @@ async function saveMonitor() {
 
         if (response.ok) {
             showToast('Monitor saved successfully!');
-            
-            // Handle enabled state
-            if (!enabled) {
-                await fetch(`${state.apiUrl}/monitor/${monitorName}/disable`, { method: 'POST' })
+
+            if (enabled) {
+                await fetch(`${window.location.origin}/monitor/${monitorName}/enable`, { method: 'POST' })
+                    .catch(error => console.error('Error enabling monitor:', error));
+            }
+            else {
+                await fetch(`${window.location.origin}/monitor/${monitorName}/disable`, { method: 'POST' })
                     .catch(error => console.error('Error disabling monitor:', error));
             }
         } else {
-            // Show detailed save errors in the error panel
             if (result.error) {
                 showValidationErrors(result.error);
             } else if (result.message) {

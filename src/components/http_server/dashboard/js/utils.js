@@ -1,4 +1,3 @@
-// Utility functions
 function showToast(message, type = 'success') {
     const toast = document.getElementById('toast');
     toast.textContent = message;
@@ -14,9 +13,9 @@ function toggleVisibility(elementId, show) {
 }
 
 function refreshEditor(editor) {
-    if (!editor) return;
-    
-    // Use requestAnimationFrame for better performance
+    if (!editor)
+        return;
+
     requestAnimationFrame(() => {
         editor.refresh();
     });

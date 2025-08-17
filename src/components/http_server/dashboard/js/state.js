@@ -1,9 +1,7 @@
-// Global state
 const state = {
-    apiUrl: '',
     monitors: [],
     currentMonitor: null,
-    additionalFiles: [],
+    additionalFiles: {},
     activeTab: 'code-tab',
-    codeEditors: {}
+    codeEditors: {},
 };

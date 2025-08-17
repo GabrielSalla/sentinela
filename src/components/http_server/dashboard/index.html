@@ -4,12 +4,10 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Sentinela Dashboard</title>
-    
-    <!-- CodeMirror CSS for syntax highlighting -->
+
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/codemirror.min.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/theme/material-darker.min.css">
-    
-    <!-- Custom CSS -->
+
     <link rel="stylesheet" href="/dashboard/css/styles.css">
 </head>
 <body>
@@ -17,18 +15,7 @@
         <div class="sidebar">
             <h1>Sentinela</h1>
 
-            <!-- Connection Configuration -->
-            <div id="connection-config">
-                <div class="form-group">
-                    <label for="server-url">Server URL:</label>
-                    <input type="text" id="server-url" placeholder="localhost:8000" value="localhost:8000">
-                </div>
-                <div id="connection-status" class="connection-status hidden"></div>
-                <div class="divider"></div>
-            </div>
-
-            <!-- Monitor Selection -->
-            <div id="monitor-section" class="hidden">
+            <div id="monitor-section">
                 <div class="form-group">
                     <label for="monitor-select">Monitor:</label>
                     <select id="monitor-select" onchange="loadMonitorInfo()">
@@ -36,7 +23,6 @@
                     </select>
                 </div>
 
-                <!-- Monitor Controls -->
                 <div id="monitor-controls" class="hidden">
                     <div class="checkbox-group">
                         <input type="checkbox" id="monitor-enabled">
@@ -55,7 +41,6 @@
                     </div>
                 </div>
 
-                <!-- Monitor Name Input (for new monitors) -->
                 <div id="new-monitor-section" class="hidden">
                     <div class="form-group">
                         <label for="new-monitor-name-input">Monitor name:</label>
@@ -75,11 +60,10 @@
 
         <div class="main-content">
             <div id="welcome-message">
-                <h2 style="color: #f0f6fc; margin-bottom: 16px;">Welcome to Sentinela Dashboard</h2>
-                <p style="color: #8b949e;">Please configure your connection settings in the sidebar to get started.</p>
+                <h2 style="color: #f0f6fc; margin-bottom: 16px;">Sentinela Dashboard</h2>
+                <p style="color: #8b949e;">Select a monitor</p>
             </div>
 
-            <!-- Monitor Form -->
             <div id="monitor-form" class="hidden">
                 <div class="tabs">
                     <div class="tab-buttons" id="tab-buttons">
@@ -110,29 +94,25 @@
         </div>
     </div>
 
-    <!-- Toast notifications -->
     <div id="toast" class="toast"></div>
 
-    <!-- CodeMirror JavaScript for syntax highlighting -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/codemirror.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/mode/python/python.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/mode/javascript/javascript.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/mode/sql/sql.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/mode/shell/shell.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/mode/yaml/yaml.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/mode/xml/xml.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/mode/css/css.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/mode/htmlmixed/htmlmixed.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/mode/javascript/javascript.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/mode/markdown/markdown.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/mode/python/python.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/mode/shell/shell.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/mode/sql/sql.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/mode/xml/xml.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/mode/yaml/yaml.min.js"></script>
 
-    <!-- Custom JavaScript modules -->
-    <script src="/dashboard/js/state.js"></script>
-    <script src="/dashboard/js/utils.js"></script>
-    <script src="/dashboard/js/validation.js"></script>
-    <script src="/dashboard/js/api.js"></script>
+    <script src="/dashboard/js/app.js"></script>
     <script src="/dashboard/js/editor.js"></script>
     <script src="/dashboard/js/monitor.js"></script>
+    <script src="/dashboard/js/state.js"></script>
     <script src="/dashboard/js/ui.js"></script>
-    <script src="/dashboard/js/app.js"></script>
+    <script src="/dashboard/js/utils.js"></script>
+    <script src="/dashboard/js/validation.js"></script>
 </body>
 </html>

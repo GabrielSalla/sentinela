@@ -2,16 +2,11 @@ function getLanguageFromFileName(fileName) {
     const extension = fileName.split('.').pop().toLowerCase();
     const languageMap = {
         'py': 'python',
-        'js': 'javascript', 
         'json': { name: 'javascript', json: true },
         'yaml': 'yaml',
         'yml': 'yaml',
         'sql': 'sql',
-        'sh': 'shell',
         'md': 'markdown',
-        'html': 'htmlmixed',
-        'css': 'css',
-        'xml': 'xml'
     };
     return languageMap[extension] || null;
 }
@@ -35,7 +30,7 @@ function initializeCodeEditor() {
     const mainCodeEditor = document.getElementById('monitor-code');
     const editor = createCodeEditor(mainCodeEditor, 'python');
     state.codeEditors.main = editor;
-    
+
     editor.on('change', () => {
         mainCodeEditor.value = editor.getValue();
     });
@@ -58,27 +53,27 @@ function updateAdditionalFileTabs() {
     });
 
     // Add additional file tabs
-    state.additionalFiles.forEach((file, index) => {
-        createFileTab(file, index);
+    Object.keys(state.additionalFiles).forEach((fileName) => {
+        createFileTab(fileName);
     });
 }
 
-function createFileTab(file, index) {
-    const tabId = `file-tab-${index}`;
-    const mode = getLanguageFromFileName(file.fileName);
+function createFileTab(fileName) {
+    const mode = getLanguageFromFileName(fileName);
+    const content = state.additionalFiles[fileName];
 
     // Create tab button
     const tabButton = document.createElement('button');
     tabButton.className = 'tab-button';
-    tabButton.textContent = file.fileName;
-    tabButton.onclick = () => switchTab(tabId);
-    
+    tabButton.textContent = fileName;
+    tabButton.onclick = () => switchTab(fileName);
+
     const deleteBtn = document.getElementById('delete-file-btn');
     deleteBtn.parentNode.insertBefore(tabButton, deleteBtn);
 
     // Create tab pane with editor
     const tabPane = document.createElement('div');
-    tabPane.id = tabId;
+    tabPane.id = fileName;
     tabPane.className = 'tab-pane';
 
     const fileEditor = document.createElement('div');
@@ -88,23 +83,22 @@ function createFileTab(file, index) {
     editorContent.className = 'file-editor-content';
 
     const textarea = document.createElement('textarea');
-    textarea.id = `editor-${index}`;
-    textarea.value = file.content;
+    textarea.id = `editor-${fileName}`;
+    textarea.value = content;
 
     editorContent.appendChild(textarea);
     fileEditor.appendChild(editorContent);
     tabPane.appendChild(fileEditor);
     document.querySelector('.tab-content').appendChild(tabPane);
 
-    // Create CodeMirror editor
     setTimeout(() => {
-        const editor = createCodeEditor(textarea, mode, file.content);
-        state.codeEditors[`file-${index}`] = editor;
-        
+        const editor = createCodeEditor(textarea, mode, content);
+        state.codeEditors[fileName] = editor;
+
         editor.on('change', () => {
-            state.additionalFiles[index].content = editor.getValue();
+            state.additionalFiles[fileName] = editor.getValue();
         });
-        
+
         refreshEditor(editor);
     }, 50);
 }
@@ -113,25 +107,28 @@ function createAdditionalFile() {
     const fileName = document.getElementById('new-file-name').value.trim();
     if (!fileName) return;
 
-    if (state.additionalFiles.some(file => file.fileName === fileName)) {
+    if (state.additionalFiles[fileName] !== undefined) {
         showToast('File already exists', 'error');
         return;
     }
 
-    state.additionalFiles.push({ fileName, content: '' });
+    state.additionalFiles[fileName] = '';
     updateAdditionalFileTabs();
     document.getElementById('new-file-name').value = '';
     toggleAddFilePopover();
 
-    // Switch to the new file tab
-    switchTab(`file-tab-${state.additionalFiles.length - 1}`);
+    switchTab(fileName);
 }
 
 function deleteCurrentFile() {
     if (state.activeTab === 'code-tab') return;
-    
-    const index = parseInt(state.activeTab.split('-')[2]);
-    state.additionalFiles.splice(index, 1);
-    updateAdditionalFileTabs();
-    switchTab('code-tab');
+
+    const fileName = state.activeTab;
+    if (!fileName) return;
+
+    if (state.additionalFiles[fileName] !== undefined) {
+        delete state.additionalFiles[fileName];
+        updateAdditionalFileTabs();
+        switchTab('code-tab');
+    }
 }

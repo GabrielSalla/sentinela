@@ -1,6 +1,5 @@
 import logging
 import random
-from pathlib import Path
 from typing import Any
 
 import prometheus_client
@@ -12,6 +11,7 @@ import components.controller.controller as controller
 import components.executor.executor as executor
 import registry as registry
 from components.http_server.alert_routes import alert_routes
+from components.http_server.dashboard_routes import dashboard_routes
 from components.http_server.issue_routes import issue_routes
 from components.http_server.monitor_routes import monitor_routes
 from configs import configs
@@ -72,62 +72,16 @@ async def get_metrics(request: Request) -> Response:
     return response
 
 
-@base_routes.get("/dashboard")
-@base_routes.get("/dashboard/")
-async def get_dashboard(request: Request) -> Response:
-    """Serve the dashboard HTML page"""
-    dashboard_path = Path(__file__).parent / "dashboard" / "index.html"
-
-    try:
-        with open(dashboard_path, "r", encoding="utf-8") as f:
-            html_content = f.read()
-        return web.Response(text=html_content, content_type="text/html")
-    except FileNotFoundError:
-        return web.Response(text="Dashboard not found", status=404)
-
-
-@base_routes.get("/dashboard/{path:.*}")
-async def serve_dashboard_assets(request: Request) -> Response:
-    """Serve dashboard static assets (CSS, JS files)"""
-    try:
-        asset_path = request.match_info["path"]
-    except KeyError:
-        return web.Response(text="Asset path not provided", status=400)
-
-    try:
-        if ".." in asset_path or asset_path.startswith("/"):
-            return web.Response(text="Forbidden", status=403)
-
-        full_path = Path(__file__).parent / "dashboard" / asset_path
-        with open(full_path, "r", encoding="utf-8") as f:
-            content = f.read()
-
-        # Determine content type based on file extension
-        content_type = "text/plain"
-        if asset_path.endswith(".css"):
-            content_type = "text/css"
-        elif asset_path.endswith(".js"):
-            content_type = "application/javascript"
-        elif asset_path.endswith(".html"):
-            content_type = "text/html"
-
-        return web.Response(text=content, content_type=content_type)
-    except FileNotFoundError:
-        return web.Response(text="Asset not found", status=404)
-    except Exception as e:
-        _logger.error(f"Error serving dashboard asset {asset_path}: {e}")
-        return web.Response(text="Internal server error", status=500)
-
-
 async def init(controller_enabled: bool = False) -> None:
     global _runner
 
     app = web.Application()
     app.add_routes(base_routes)
 
-    # Only the controller can receive action requests
+    # Only the controller can receive action requests and serve the dashboard
     if controller_enabled:
         app.add_routes(alert_routes)
+        app.add_routes(dashboard_routes)
         app.add_routes(issue_routes)
         app.add_routes(monitor_routes)
 

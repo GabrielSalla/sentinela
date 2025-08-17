@@ -14,7 +14,6 @@ from models import CodeModule, Monitor
 
 _logger = logging.getLogger("monitor_routes")
 
-
 monitor_routes = web.RouteTableDef()
 base_route = "/monitor"
 
