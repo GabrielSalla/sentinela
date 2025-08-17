@@ -1,7 +1,7 @@
 # HTTP server
 The HTTP server provides an API to interact with Sentinela. The available routes are organized into two main categories, based on the deployment setup.
 
-If the container is deployed with the **Controller** (either standalone or alongside the Executor in the same container), all routes are available, allowing interactions with Monitors, Issues, and Alerts.
+If the container is deployed with the **Controller** (either standalone or alongside the Executor in the same container), all routes are available, allowing interactions with Monitors, Issues, Alerts and the dashboard.
 
 If the container is deployed with only the **Executor**, only base routes are available.
 
@@ -22,6 +22,11 @@ Exposes Prometheus-formatted metrics, enabling external monitoring and observabi
 
 # Interaction routes
 These routes are available only when the container deployment includes the **Controller** component.
+
+## Dashboard
+**`/dashboard`**
+
+Serves a simple dashboard interface, providing a quick way to create, enable or disable and change the monitors code.
 
 ## List monitors
 **`GET /monitors/list`**

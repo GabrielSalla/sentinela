@@ -11,6 +11,7 @@ import components.controller.controller as controller
 import components.executor.executor as executor
 import registry as registry
 from components.http_server.alert_routes import alert_routes
+from components.http_server.dashboard_routes import dashboard_routes
 from components.http_server.issue_routes import issue_routes
 from components.http_server.monitor_routes import monitor_routes
 from configs import configs
@@ -81,11 +82,13 @@ async def init(controller_enabled: bool = False) -> None:
 
     app.add_routes(base_routes)
 
-    # Only the controller can receive action requests
+    # Only the controller can receive action requests and serve the dashboard
     if controller_enabled:
         app.add_routes(alert_routes)
         app.add_routes(issue_routes)
         app.add_routes(monitor_routes)
+        if configs.http_server.dashboard_enabled:
+            app.add_routes(dashboard_routes)
 
     _runner = web.AppRunner(app)
     await _runner.setup()
