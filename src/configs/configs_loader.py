@@ -33,6 +33,7 @@ class ApplicationDatabaseConfig:
 @dataclass
 class HttpServerConfig:
     port: int
+    dashboard_enabled: bool = False
 
 
 @dataclass
