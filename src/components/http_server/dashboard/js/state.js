@@ -1,5 +1,5 @@
 const state = {
-    monitors: [],
+    monitors: {},
     currentMonitor: null,
     additionalFiles: {},
     activeTab: 'code-tab',

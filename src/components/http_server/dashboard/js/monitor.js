@@ -7,7 +7,11 @@ async function loadMonitors() {
             throw new Error(`HTTP ${response.status}: ${response.statusText}`);
         }
 
-        state.monitors = await response.json();
+        const monitorsArray = await response.json();
+        state.monitors = {};
+        monitorsArray.forEach(monitor => {
+            state.monitors[monitor.name] = monitor;
+        });
         updateMonitorSelect();
 
         toggleVisibility('monitor-section', true);
@@ -36,7 +40,7 @@ function updateMonitorSelect() {
     createOption.style.color = '#58a6ff';
     select.appendChild(createOption);
 
-    state.monitors.forEach(monitor => {
+    Object.values(state.monitors).forEach(monitor => {
         const option = document.createElement('option');
         option.value = monitor.name;
         option.textContent = monitor.name;
@@ -70,7 +74,7 @@ async function loadMonitorInfo() {
 
     switchTab('code-tab');
 
-    const existsOnServer = state.monitors.some(m => m.id !== undefined && m.name === monitorName);
+    const existsOnServer = state.monitors[monitorName] && state.monitors[monitorName].id !== undefined;
 
     if (existsOnServer) {
         await loadExistingMonitor(monitorName);
@@ -152,7 +156,7 @@ async function createNewMonitor() {
         const formatResult = await formatResponse.json();
         const formattedName = formatResult.formatted_name;
 
-        const existingMonitor = state.monitors.find(m => m.name === formattedName);
+        const existingMonitor = state.monitors[formattedName];
 
         if (existingMonitor) {
             showToast(`Monitor with formatted name "${formattedName}" already exists. Loading existing monitor.`, 'info');
@@ -164,7 +168,7 @@ async function createNewMonitor() {
             return;
         }
 
-        state.monitors.push({ name: formattedName, enabled: true });
+        state.monitors[formattedName] = { name: formattedName, enabled: true };
         updateMonitorSelect();
 
         document.getElementById('monitor-select').value = formattedName;
