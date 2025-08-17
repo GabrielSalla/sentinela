@@ -2,45 +2,49 @@ function hideValidationErrors() {
     document.getElementById('validation-errors').classList.remove('show');
 }
 
-function showValidationErrors(errors) {
+function showValidationErrors(result) {
     const errorsContainer = document.getElementById('validation-errors');
     const errorsContent = document.getElementById('validation-errors-content');
 
     errorsContent.innerHTML = '';
 
-    if (typeof errors === 'string') {
-        const errorDiv = document.createElement('div');
-        errorDiv.className = 'error-message';
-        errorDiv.textContent = errors;
-        errorsContent.appendChild(errorDiv);
-    } else if (Array.isArray(errors)) {
-        errors.forEach(error => {
-            const errorDiv = document.createElement('div');
-            errorDiv.className = 'error-message';
+    // Show the main message first (if present)
+    if (result.message) {
+        const messageDiv = document.createElement('div');
+        messageDiv.className = 'error-message';
+        messageDiv.innerHTML = result.message.replace(/\n/g, '<br>');
+        errorsContent.appendChild(messageDiv);
+    }
 
-            let errorText = error.msg || error.message || 'Unknown error';
-            if (error.loc && error.loc.length > 0) {
-                errorText = `${error.loc.join('.')}: ${errorText}`;
-            }
-            if (error.type) {
-                errorText = `[${error.type}] ${errorText}`;
-            }
+    // Show detailed error information (if present)
+    if (result.error) {
+        const detailsDiv = document.createElement('div');
+        detailsDiv.className = 'error-details';
 
-            errorDiv.textContent = errorText;
-            errorsContent.appendChild(errorDiv);
-        });
-    } else if (typeof errors === 'object' && errors !== null) {
-        const errorDiv = document.createElement('div');
-        errorDiv.className = 'error-message';
-        errorDiv.textContent = errors.message || errors.error || JSON.stringify(errors);
-        errorsContent.appendChild(errorDiv);
+        if (typeof result.error === 'string') {
+            detailsDiv.innerHTML = result.error.replace(/\n/g, '<br>');
+        } else if (Array.isArray(result.error)) {
+            result.error.forEach((error) => {
+                const errorDiv = document.createElement('div');
+                errorDiv.className = 'error-item';
 
-        if (errors.details || errors.traceback) {
-            const detailsDiv = document.createElement('div');
-            detailsDiv.className = 'error-details';
-            detailsDiv.textContent = errors.details || errors.traceback;
-            errorsContent.appendChild(detailsDiv);
+                let parts = [];
+                if (error.loc && error.loc.length > 0) {
+                    parts.push(`Location: ${error.loc.join('.')}`);
+                }
+                if (error.type) {
+                    parts.push(`Type: ${error.type}`);
+                }
+                if (error.msg) {
+                    parts.push(`Message: ${error.msg}`);
+                }
+
+                errorDiv.textContent = parts.join(' | ');
+                detailsDiv.appendChild(errorDiv);
+            });
         }
+
+        errorsContent.appendChild(detailsDiv);
     }
 
     errorsContainer.classList.add('show');

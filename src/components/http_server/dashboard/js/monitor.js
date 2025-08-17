@@ -11,7 +11,6 @@ async function loadMonitors() {
         updateMonitorSelect();
 
         toggleVisibility('monitor-section', true);
-        toggleVisibility('welcome-message', false);
 
     } catch (error) {
         console.error('Connection error:', error);
@@ -32,7 +31,7 @@ function updateMonitorSelect() {
 
     const createOption = document.createElement('option');
     createOption.value = '___CREATE_NEW___';
-    createOption.textContent = '+ Create new monitor';
+    createOption.textContent = 'Create new monitor';
     createOption.style.fontStyle = 'italic';
     createOption.style.color = '#58a6ff';
     select.appendChild(createOption);
@@ -185,13 +184,7 @@ async function validateMonitor() {
         if (response.ok) {
             showToast('Monitor validated successfully!');
         } else {
-            if (result.error) {
-                showValidationErrors(result.error);
-            } else if (result.message) {
-                showValidationErrors(result.message);
-            } else {
-                showValidationErrors('Validation failed');
-            }
+            showValidationErrors(result);
         }
     } catch (error) {
         console.error('Validation error:', error);
@@ -235,13 +228,7 @@ async function saveMonitor() {
                     .catch(error => console.error('Error disabling monitor:', error));
             }
         } else {
-            if (result.error) {
-                showValidationErrors(result.error);
-            } else if (result.message) {
-                showValidationErrors(result.message);
-            } else {
-                showValidationErrors('Save failed');
-            }
+            showValidationErrors(result);
         }
     } catch (error) {
         console.error('Save error:', error);

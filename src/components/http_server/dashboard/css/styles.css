@@ -12,7 +12,7 @@ body {
 
 .container {
     display: flex;
-    min-height: 100vh;
+    height: 100vh;
 }
 
 .sidebar {
@@ -27,6 +27,9 @@ body {
     flex: 1;
     padding: 20px;
     background-color: #0d1117;
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
 }
 
 .sidebar h1 {
@@ -155,6 +158,10 @@ body {
 
 .tabs {
     margin-bottom: 20px;
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    min-height: 0;
 }
 
 .tab-buttons {
@@ -265,16 +272,18 @@ body {
     border: 1px solid #30363d;
     border-radius: 0 0 6px 6px;
     padding: 20px;
-    height: 500px;
-    overflow: hidden;
+    flex: 1;
     display: flex;
     flex-direction: column;
+    min-height: 0;
+    max-height: calc(100vh - 110px);
 }
 
 .tab-pane {
     display: none;
-    height: 100%;
+    flex: 1;
     flex-direction: column;
+    min-height: 0;
 }
 
 .tab-pane.active {
@@ -295,7 +304,8 @@ body {
     padding: 15px;
     margin-top: 15px;
     display: none;
-    max-height: 150px;
+    flex-shrink: 0;
+    max-height: 15vh;
     overflow-y: auto;
 }
 
