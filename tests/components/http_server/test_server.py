@@ -20,6 +20,12 @@ async def setup_http_server():
     await http_server.wait_stop()
 
 
+async def restart_http_server(controller_enabled: bool):
+    """Restart the HTTP server"""
+    await http_server.wait_stop()
+    await http_server.init(controller_enabled=controller_enabled)
+
+
 @pytest.fixture(scope="function", autouse=True)
 def reset_components(setup_http_server):
     """Reset the running flags for the 'controller' and 'executor'"""
@@ -155,8 +161,23 @@ async def test_metrics():
 
 
 async def test_init_controller_enabled():
-    """'ini' should not include the alerts, issues and monitor routes if the controller is not
-    enabled"""
+    """'init' should include the alerts, issues and monitor routes and the dashboard if the
+    controller is enabled"""
+    await restart_http_server(controller_enabled=True)
+
     async with aiohttp.ClientSession() as session:
-        async with session.get(BASE_URL + "/alert/1/acknowledge") as response:
+        async with session.get(BASE_URL + "/monitor/list") as response:
+            assert response.status == 200
+            result = await response.json()
+            assert isinstance(result, list)
+
+
+async def test_init_controller_disabled():
+    """'init' should not include the alerts, issues and monitor routes and the dashboard if the
+    controller is not enabled"""
+    await restart_http_server(controller_enabled=False)
+
+    async with aiohttp.ClientSession() as session:
+        async with session.get(BASE_URL + "/monitor/list") as response:
+            assert response.status == 404
             assert await response.text() == "404: Not Found"
