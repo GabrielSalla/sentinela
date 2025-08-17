@@ -10,7 +10,8 @@ async function loadMonitors() {
         const monitorsArray = await response.json();
         state.monitors = {};
         monitorsArray.forEach(monitor => {
-            state.monitors[monitor.name] = monitor;
+            if (!monitor.name.startsWith('internal.'))
+                state.monitors[monitor.name] = monitor;
         });
         updateMonitorSelect();
 
