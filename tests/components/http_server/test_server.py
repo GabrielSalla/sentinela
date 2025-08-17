@@ -6,6 +6,7 @@ from prometheus_client import parser
 import components.controller.controller as controller
 import components.executor.executor as executor
 import components.http_server as http_server
+from configs import configs
 
 pytestmark = pytest.mark.asyncio(loop_scope="session")
 
@@ -18,6 +19,12 @@ async def setup_http_server():
     await http_server.init()
     yield
     await http_server.wait_stop()
+
+
+async def restart_http_server(controller_enabled: bool):
+    """Restart the HTTP server"""
+    await http_server.wait_stop()
+    await http_server.init(controller_enabled=controller_enabled)
 
 
 @pytest.fixture(scope="function", autouse=True)
@@ -155,8 +162,34 @@ async def test_metrics():
 
 
 async def test_init_controller_enabled():
-    """'ini' should not include the alerts, issues and monitor routes if the controller is not
-    enabled"""
+    """'init' should include the alerts, issues and monitor routes and the dashboard if the
+    controller is enabled"""
+    await restart_http_server(controller_enabled=True)
+
     async with aiohttp.ClientSession() as session:
-        async with session.get(BASE_URL + "/alert/1/acknowledge") as response:
+        async with session.get(BASE_URL + "/monitor/list") as response:
+            assert await response.json() == []
+
+
+async def test_init_controller_disabled():
+    """'init' should not include the alerts, issues and monitor routes and the dashboard if the
+    controller is not enabled"""
+    await restart_http_server(controller_enabled=False)
+
+    async with aiohttp.ClientSession() as session:
+        async with session.get(BASE_URL + "/monitor/list") as response:
             assert await response.text() == "404: Not Found"
+
+
+@pytest.mark.parametrize("dashboard_enabled", [True, False])
+async def test_dashboard_route_active(monkeypatch, dashboard_enabled):
+    """The 'dashboard' route should be active only if the dashboard is enabled"""
+    monkeypatch.setattr(configs.http_server, "dashboard_enabled", dashboard_enabled)
+    await restart_http_server(controller_enabled=True)
+
+    async with aiohttp.ClientSession() as session:
+        async with session.get(BASE_URL + "/dashboard") as response:
+            if dashboard_enabled:
+                assert response.status == 200
+            else:
+                assert response.status == 404

@@ -81,9 +81,10 @@ async def init(controller_enabled: bool = False) -> None:
     # Only the controller can receive action requests and serve the dashboard
     if controller_enabled:
         app.add_routes(alert_routes)
-        app.add_routes(dashboard_routes)
         app.add_routes(issue_routes)
         app.add_routes(monitor_routes)
+        if configs.http_server.dashboard_enabled:
+            app.add_routes(dashboard_routes)
 
     _runner = web.AppRunner(app)
     await _runner.setup()
