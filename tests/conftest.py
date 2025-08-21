@@ -75,14 +75,14 @@ async def init_databases(load_plugins):
 async def init_application_database():
     """Recreate all tables in the database for each test session"""
 
-    def reset_database(connection, config):
-        config.attributes["connection"] = connection
+    def reset_database(connection):
+        alembic_config = alembic.config.Config("alembic.ini")
+        alembic_config.attributes["connection"] = connection
         alembic.command.downgrade(alembic_config, "base")
         alembic.command.upgrade(alembic_config, "head")
 
-    alembic_config = alembic.config.Config("alembic.ini")
     async with internal_database.engine.begin() as connection:
-        await connection.run_sync(reset_database, alembic_config)
+        await connection.run_sync(reset_database)
 
     yield
 
