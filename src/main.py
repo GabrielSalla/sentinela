@@ -16,6 +16,7 @@ import plugins as plugins
 import registry as registry
 import utils.app as app
 import utils.log as log
+from base_exception import InitializationError
 from utils.exception_handling import protected_task
 
 _logger = logging.getLogger("main")
@@ -26,6 +27,11 @@ async def init(controller_enabled: bool, executor_enabled: bool) -> None:
     they start with or without the controller."""
     # Log setup must be the first one
     log.setup()
+
+    # Check database migrations
+    await internal_database.check_database()
+
+    # Application startup
     app.setup()
     registry.init()
 
@@ -60,10 +66,18 @@ async def main() -> None:
     else:
         operation_modes = sys.argv[1:]
 
-    await init(
-        controller_enabled="controller" in operation_modes,
-        executor_enabled="executor" in operation_modes,
-    )
+    try:
+        await init(
+            controller_enabled="controller" in operation_modes,
+            executor_enabled="executor" in operation_modes,
+        )
+    except InitializationError as e:
+        _logger.error("Failed to initialize")
+        _logger.error(e)
+        return
+    except Exception:
+        _logger.error("Failed to initialize", exc_info=True)
+        return
 
     modes = {
         "controller": controller.run,
