@@ -1,6 +1,5 @@
 import asyncio
 import logging
-import traceback
 from datetime import datetime
 from typing import Any, Coroutine
 
@@ -74,8 +73,7 @@ async def _queue_task(monitor: Monitor, tasks: list[str]) -> None:
     except Exception:
         prometheus_task_queue_error_count.inc()
 
-        _logger.error("Error while queueing the task, reverting queued state")
-        _logger.error(traceback.format_exc().strip())
+        _logger.error("Error while queueing the task, reverting queued state", exc_info=True)
         await monitor.set_queued(False)
 
 

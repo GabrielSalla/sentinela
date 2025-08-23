@@ -1,7 +1,6 @@
 import asyncio
 import json
 import logging
-import traceback
 from functools import partial
 from typing import Any
 
@@ -91,6 +90,6 @@ async def run(message: dict[Any, Any]) -> None:
             prometheus_reaction_error_count.labels(**prometheus_labels).inc()
             _logger.error(
                 f"Error executing reaction '{reaction_name}' with payload "
-                f"'{json.dumps(event_payload.to_dict())}'"
+                f"'{json.dumps(event_payload.to_dict())}'",
+                exc_info=True,
             )
-            _logger.error(traceback.format_exc().strip())

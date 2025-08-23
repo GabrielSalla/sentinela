@@ -11,31 +11,36 @@ class FriendlyFormatter(logging.Formatter):
     BOLD_RED = "\x1b[31;1m"
     RESET_COLOR = "\x1b[0m"
 
-    FORMATS: dict[int, str]
+    COLOR_FORMAT = {
+        logging.DEBUG: (GREY, RESET_COLOR),
+        logging.INFO: (GREY, RESET_COLOR),
+        logging.WARNING: (YELLOW, RESET_COLOR),
+        logging.ERROR: (RED, RESET_COLOR),
+        logging.CRITICAL: (BOLD_RED, RESET_COLOR),
+    }
+
+    _log_format: str
 
     def __init__(self, log_format: str | None = None) -> None:
+        """Initialize the log formatter."""
         if log_format is None:
             log_format = "%(asctime)s [%(levelname)s]: %(message)s"
 
-        self.FORMATS = {
-            logging.DEBUG: self.GREY + log_format + self.RESET_COLOR,
-            logging.INFO: self.GREY + log_format + self.RESET_COLOR,
-            logging.WARNING: self.YELLOW + log_format + self.RESET_COLOR,
-            logging.ERROR: self.RED + log_format + self.RESET_COLOR,
-            logging.CRITICAL: self.BOLD_RED + log_format + self.RESET_COLOR,
-        }
+        self._log_format = log_format
 
     def format(self, record: logging.LogRecord) -> str:
         """Format the log record in a friendly way"""
-        log_format = self.FORMATS.get(record.levelno)
-        formatter = logging.Formatter(log_format)
-        return formatter.format(record)
+        prefix, suffix = self.COLOR_FORMAT.get(record.levelno, ("", ""))
+
+        formatter = logging.Formatter(self._log_format)
+        return prefix + formatter.format(record) + suffix
 
 
 class JsonFormatter(logging.Formatter):
     fields: dict[str, str]
 
     def __init__(self, fields: dict[str, str] | None = None) -> None:
+        """Initialize the JSON log formatter."""
         if fields is None:
             fields = {"message": "message"}
 

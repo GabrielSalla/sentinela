@@ -1,7 +1,6 @@
 import importlib
 import logging
 import os
-import traceback
 from pathlib import Path
 from types import ModuleType
 
@@ -39,7 +38,6 @@ def load_plugins(path: str | None = None) -> dict[str, ModuleType]:
             plugin = importlib.import_module(f"{plugins_import_path}.{plugin_name}")
             plugins[plugin_name] = plugin
         except Exception:
-            _logger.error(f"Error loading plugin '{plugin_name}'")
-            _logger.error(traceback.format_exc().strip())
+            _logger.error(f"Error loading plugin '{plugin_name}'", exc_info=True)
 
     return plugins

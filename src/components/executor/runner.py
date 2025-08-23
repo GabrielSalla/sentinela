@@ -1,7 +1,6 @@
 import asyncio
 import json
 import logging
-import traceback
 from typing import Any, Callable, Coroutine
 
 import prometheus_client
@@ -92,7 +91,7 @@ class Runner:
         except Exception:
             prometheus_message_error_count.labels(message_type=message_type).inc()
 
-            self._logger.error(traceback.format_exc().strip())
+            self._logger.error("Error processing message", exc_info=True)
             self._logger.error(f"Message: '{json.dumps(self.message.content)}'")
             self._logger.info("Exception caught successfully, going on")
         finally:
