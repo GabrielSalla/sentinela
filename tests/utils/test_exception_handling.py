@@ -107,7 +107,6 @@ async def test_protected_task(caplog, mocker):
 async def test_protected_task_error(caplog, mocker):
     """'protected_task' should log the exception message if an exception is raised"""
     logger = logging.getLogger("test_protected_task")
-    logger_error_spy: MagicMock = mocker.spy(logger, "error")
 
     async def error() -> None:
         raise ValueError("should be raised")
@@ -116,5 +115,3 @@ async def test_protected_task_error(caplog, mocker):
 
     assert_message_in_log(caplog, "Exception with task")
     assert_message_in_log(caplog, "ValueError: should be raised")
-
-    assert logger_error_spy.call_count == 2

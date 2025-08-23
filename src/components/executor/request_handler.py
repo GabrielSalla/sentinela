@@ -1,7 +1,6 @@
 import asyncio
 import json
 import logging
-import traceback
 from typing import Any, Callable, Coroutine, cast
 
 import prometheus_client
@@ -130,5 +129,6 @@ async def run(message: dict[Any, Any]) -> None:
         raise e
     except Exception:
         prometheus_request_error_count.labels(action_name=action_name).inc()
-        _logger.error(f"Error executing request '{json.dumps(message_payload.to_dict())}'")
-        _logger.error(traceback.format_exc().strip())
+        _logger.error(
+            f"Error executing request '{json.dumps(message_payload.to_dict())}'", exc_info=True
+        )

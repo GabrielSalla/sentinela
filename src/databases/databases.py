@@ -55,8 +55,9 @@ async def init() -> None:
             await pool.init()
             _pools[database_name] = pool
         except Exception:
-            _logger.error(traceback.format_exc().strip())
-            _logger.info(f"Skipping pool for '{env_var_name}'")
+            _logger.error(
+                f"Error initializing pool for database '{env_var_name}', skipping", exc_info=True
+            )
 
 
 async def _fetch(

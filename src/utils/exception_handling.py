@@ -1,6 +1,5 @@
 import asyncio
 import logging
-import traceback
 from contextlib import contextmanager
 from typing import Coroutine, Generator
 
@@ -25,7 +24,7 @@ def catch_exceptions(
     except BaseSentinelaException as e:
         logger.error(str(e))
     except Exception:
-        logger.error(traceback.format_exc().strip())
+        logger.error("Got an error", exc_info=True)
         if error_message:
             logger.error(error_message)
         logger.info("Exception caught successfully, going on")
@@ -35,5 +34,4 @@ async def protected_task(logger: logging.Logger, task: Coroutine[None, None, Non
     try:
         await task
     except Exception:
-        logger.error(f"Exception with task '{task}'")
-        logger.error(traceback.format_exc().strip())
+        logger.error(f"Exception with task '{task}'", exc_info=True)

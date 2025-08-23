@@ -1,7 +1,6 @@
 import asyncio
 import json
 import logging
-import traceback
 from datetime import datetime
 from typing import Any, Literal, cast
 
@@ -385,8 +384,7 @@ async def run(message: dict[Any, Any]) -> None:
         monitor_error_count = prometheus_monitor_error_count.labels(**prometheus_labels)
         monitor_error_count.inc()
 
-        _logger.error(f"Error in execution for monitor '{monitor}'")
-        _logger.error(traceback.format_exc().strip())
+        _logger.error(f"Error in execution for monitor '{monitor}'", exc_info=True)
         _logger.info("Exception caught successfully, going on")
     finally:
         # Cancel the heartbeat task

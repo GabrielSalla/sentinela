@@ -92,7 +92,7 @@ async def test_init_error(caplog, mocker, empty_pools):
 
     assert databases._pools.keys() == {"application"}
 
-    assert_message_in_log(caplog, "Skipping pool for 'DATABASE_LOCAL'")
+    assert_message_in_log(caplog, "Error initializing pool for database 'DATABASE_LOCAL', skipping")
     assert_message_in_log(caplog, "ValueError: some error")
 
 
