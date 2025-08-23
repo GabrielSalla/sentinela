@@ -1,3 +1,4 @@
+from .exceptions import PendingDatabaseUpgrade
 from .internal_database import CallbackSession, close, engine, get_session
 
 __all__ = [
@@ -5,4 +6,5 @@ __all__ = [
     "close",
     "engine",
     "get_session",
+    "PendingDatabaseUpgrade",
 ]
