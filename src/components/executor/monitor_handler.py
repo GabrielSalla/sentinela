@@ -290,7 +290,7 @@ async def _run_routines(monitor: Monitor, tasks: list[Literal["search", "update"
         "monitor_id": monitor.id,
         "monitor_name": monitor.name,
     }
-    monitor_update_time = prometheus_monitor_execution_time.labels(**prometheus_labels)
+    monitor_update_time = prometheus_monitor_update_time.labels(**prometheus_labels)
     monitor_solve_time = prometheus_monitor_solve_time.labels(**prometheus_labels)
     monitor_search_time = prometheus_monitor_search_time.labels(**prometheus_labels)
     monitor_alert_time = prometheus_monitor_alert_time.labels(**prometheus_labels)
