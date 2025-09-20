@@ -6,7 +6,7 @@ Issues can be dropped either via an [HTTP request](./http_server.md) or a [Slack
 > [!IMPORTANT]
 > Since dropping issues is intended only for specific scenarios, issues IDs should be manually retrieved by querying the Sentinela application database.
 
-# Example Scenario Requiring Issue Dropping
+# Example scenario requiring issue dropping
 Consider a monitor that checks for inconsistencies in user registration information. If an issue is created for a specific user who is later deleted from the database, the monitor may be unable to resolve this issue automatically as there won't be updated information for the user.
 
 Unless the monitor handles the case of missing information and creates the updated data for the issue to a value that will result in it being considered as solved, the issue will need to be manually dropped.
@@ -35,9 +35,9 @@ def is_solved(issue_data: IssueDataType) -> bool:
 ```
 
 **Explanation**
-- **User Data Retrieval**: The `update` function first retrieves the issues ids from `issues_data` and then fetches data for these users with `get_users_data`.
-- **Missing User Detection**: By comparing the IDs from `issues_data` with those in the retrieved `users` list, the function identifies any users that no longer exist.
-- **Placeholder Update**: For each missing user, a placeholder entry with `name: "deleted_user"` is appended to `users`. This "updated issue data" ensures the issue can be considered as resolved.
-- **Automatic Resolution**: The `is_solved` function checks if `issue_data["name"]` is populated. Issues for deleted users are automatically considered resolved based on this logic.
+- **User data retrieval**: The `update` function first retrieves the issues ids from `issues_data` and then fetches data for these users with `get_users_data`.
+- **Missing user detection**: By comparing the IDs from `issues_data` with those in the retrieved `users` list, the function identifies any users that no longer exist.
+- **Force update**: For each missing user, an entry with `name: "deleted_user"` is appended to `users`. This "updated issue data" ensures the issue can be considered as resolved.
+- **Automatic resolution**: The `is_solved` function checks if `issue_data["name"]` is not empty. Issues for deleted users are automatically considered resolved based on this logic.
 
 This approach lets the monitor handle edge cases seamlessly, removing the need to drop issues manually.
