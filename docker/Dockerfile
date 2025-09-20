@@ -31,7 +31,7 @@ COPY --from=base /opt /opt
 # Base dev image
 FROM base AS base_dev
 
-RUN poetry install --only dev
+RUN sh tools/install_tests_dependencies.sh
 
 
 # Sentinela dev image
