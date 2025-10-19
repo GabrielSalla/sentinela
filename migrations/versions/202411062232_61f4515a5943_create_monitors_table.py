@@ -29,6 +29,7 @@ def upgrade() -> None:
         sa.Column("search_executed_at", sa.DateTime(timezone=True), nullable=True),
         sa.Column("update_executed_at", sa.DateTime(timezone=True), nullable=True),
         sa.Column("last_heartbeat", sa.DateTime(timezone=True), nullable=True),
+        sa.Column("last_successful_execution", sa.DateTime(timezone=True), nullable=True),
     )
 
 
