@@ -13,8 +13,9 @@ from base_exception import BaseSentinelaException
 from configs import configs
 from data_models.process_monitor_payload import ProcessMonitorPayload
 from internal_database import get_session
-from models import Alert, Issue, Monitor
+from models import Alert, ExecutionStatus, Issue, Monitor, MonitorExecution
 from utils.async_tools import do_concurrently
+from utils.time import now
 
 _logger = logging.getLogger("monitor_handler")
 
@@ -365,6 +366,11 @@ async def run(message: dict[Any, Any]) -> None:
         _heartbeat_routine(monitor), parent_task=asyncio.current_task()
     )
 
+    monitor_execution = {
+        "monitor_id": monitor.id,
+        "started_at": now(),
+    }
+
     try:
         await monitor.set_running(True)
 
@@ -373,20 +379,33 @@ async def run(message: dict[Any, Any]) -> None:
             await asyncio.wait_for(
                 _run_routines(monitor, message_payload.tasks), monitor.options.execution_timeout
             )
+        monitor_execution["status"] = ExecutionStatus.success
     except asyncio.TimeoutError:
+        monitor_execution["status"] = ExecutionStatus.failed
+        monitor_execution["error_type"] = "timeout"
+
         monitor_timeout_count = prometheus_monitor_timeout_count.labels(**prometheus_labels)
         monitor_timeout_count.inc()
 
         _logger.warning(f"Execution for monitor '{monitor}' timed out")
     except BaseSentinelaException as e:
+        monitor_execution["status"] = ExecutionStatus.failed
+        monitor_execution["error_type"] = str(e)
+
         raise e
-    except Exception:
+    except Exception as e:
+        monitor_execution["status"] = ExecutionStatus.failed
+        monitor_execution["error_type"] = str(e)
+
         monitor_error_count = prometheus_monitor_error_count.labels(**prometheus_labels)
         monitor_error_count.inc()
 
         _logger.error(f"Error in execution for monitor '{monitor}'", exc_info=True)
         _logger.info("Exception caught successfully, going on")
     finally:
+        monitor_execution["finished_at"] = now()
+        await MonitorExecution.create(**monitor_execution)
+
         # Cancel the heartbeat task
         heartbeat_task.cancel()
 

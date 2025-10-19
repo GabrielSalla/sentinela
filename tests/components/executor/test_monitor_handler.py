@@ -9,7 +9,16 @@ import components.executor.monitor_handler as monitor_handler
 import registry.registry as registry
 from base_exception import BaseSentinelaException
 from data_models.monitor_options import AlertOptions, CountRule, IssueOptions, PriorityLevels
-from models import Alert, AlertPriority, AlertStatus, Issue, IssueStatus, Monitor
+from models import (
+    Alert,
+    AlertPriority,
+    AlertStatus,
+    ExecutionStatus,
+    Issue,
+    IssueStatus,
+    Monitor,
+    MonitorExecution,
+)
 from tests.test_utils import assert_message_in_log, assert_message_not_in_log
 from utils.time import now, time_since
 
@@ -1166,6 +1175,9 @@ async def test_run_monitor_not_registered(monkeypatch, sample_monitor: Monitor):
     assert total_time > 0.1 - 0.001
     assert total_time < 0.1 + 0.03
 
+    monitor_execution = await MonitorExecution.get(MonitorExecution.monitor_id == sample_monitor.id)
+    assert monitor_execution is None
+
 
 async def test_run_monitor_skip_running(caplog, mocker, sample_monitor: Monitor):
     """'run' should skip running the monitor if it's 'running' flag is 'True'"""
@@ -1177,6 +1189,9 @@ async def test_run_monitor_skip_running(caplog, mocker, sample_monitor: Monitor)
 
     assert_message_not_in_log(caplog, "Invalid payload")
     run_routines_spy.assert_not_called()
+
+    monitor_execution = await MonitorExecution.get(MonitorExecution.monitor_id == sample_monitor.id)
+    assert monitor_execution is None
 
 
 @pytest.mark.flaky(reruns=2)
@@ -1205,6 +1220,11 @@ async def test_run_monitor_heartbeat(monkeypatch, sample_monitor: Monitor):
 
     await run_task
 
+    monitor_execution = await MonitorExecution.get(MonitorExecution.monitor_id == sample_monitor.id)
+    assert monitor_execution is not None
+    assert monitor_execution.status == ExecutionStatus.success
+    assert monitor_execution.error_type is None
+
 
 @pytest.mark.parametrize("tasks", [["search"], ["update"], ["search", "update"]])
 async def test_run_monitor_set_running(mocker, sample_monitor: Monitor, tasks):
@@ -1221,6 +1241,11 @@ async def test_run_monitor_set_running(mocker, sample_monitor: Monitor, tasks):
     assert set_running_spy.await_args_list[0].args[1] is True
     assert set_running_spy.await_args_list[1].args[0].id == sample_monitor.id
     assert set_running_spy.await_args_list[1].args[1] is False
+
+    monitor_execution = await MonitorExecution.get(MonitorExecution.monitor_id == sample_monitor.id)
+    assert monitor_execution is not None
+    assert monitor_execution.status == ExecutionStatus.success
+    assert monitor_execution.error_type is None
 
 
 @pytest.mark.flaky(reruns=2)
@@ -1258,6 +1283,11 @@ async def test_run_monitor_timeout(caplog, mocker, monkeypatch, sample_monitor: 
     assert set_queued_spy.await_args_list[0].args[0].id == sample_monitor.id
     assert set_queued_spy.await_args_list[0].args[1] is False
 
+    monitor_execution = await MonitorExecution.get(MonitorExecution.monitor_id == sample_monitor.id)
+    assert monitor_execution is not None
+    assert monitor_execution.status == ExecutionStatus.failed
+    assert monitor_execution.error_type == "timeout"
+
 
 @pytest.mark.parametrize("tasks", [["search"], ["update"], ["search", "update"]])
 async def test_run_monitor_sentinela_exception(mocker, monkeypatch, sample_monitor: Monitor, tasks):
@@ -1287,6 +1317,11 @@ async def test_run_monitor_sentinela_exception(mocker, monkeypatch, sample_monit
     assert set_queued_spy.await_args_list[0].args[0].id == sample_monitor.id
     assert set_queued_spy.await_args_list[0].args[1] is False
 
+    monitor_execution = await MonitorExecution.get(MonitorExecution.monitor_id == sample_monitor.id)
+    assert monitor_execution is not None
+    assert monitor_execution.status == ExecutionStatus.failed
+    assert monitor_execution.error_type == "SomeException: Something is not right"
+
 
 @pytest.mark.parametrize("tasks", [["search"], ["update"], ["search", "update"]])
 async def test_run_monitor_error(caplog, mocker, monkeypatch, sample_monitor: Monitor, tasks):
@@ -1315,3 +1350,8 @@ async def test_run_monitor_error(caplog, mocker, monkeypatch, sample_monitor: Mo
     set_queued_spy.assert_awaited_once()
     assert set_queued_spy.await_args_list[0].args[0].id == sample_monitor.id
     assert set_queued_spy.await_args_list[0].args[1] is False
+
+    monitor_execution = await MonitorExecution.get(MonitorExecution.monitor_id == sample_monitor.id)
+    assert monitor_execution is not None
+    assert monitor_execution.status == ExecutionStatus.failed
+    assert monitor_execution.error_type == "Something is not right"
