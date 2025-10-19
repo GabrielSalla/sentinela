@@ -1178,6 +1178,9 @@ async def test_run_monitor_not_registered(monkeypatch, sample_monitor: Monitor):
     monitor_execution = await MonitorExecution.get(MonitorExecution.monitor_id == sample_monitor.id)
     assert monitor_execution is None
 
+    await sample_monitor.refresh()
+    assert sample_monitor.last_successful_execution is None
+
 
 async def test_run_monitor_skip_running(caplog, mocker, sample_monitor: Monitor):
     """'run' should skip running the monitor if it's 'running' flag is 'True'"""
@@ -1192,6 +1195,9 @@ async def test_run_monitor_skip_running(caplog, mocker, sample_monitor: Monitor)
 
     monitor_execution = await MonitorExecution.get(MonitorExecution.monitor_id == sample_monitor.id)
     assert monitor_execution is None
+
+    await sample_monitor.refresh()
+    assert sample_monitor.last_successful_execution is None
 
 
 @pytest.mark.flaky(reruns=2)
@@ -1225,6 +1231,9 @@ async def test_run_monitor_heartbeat(monkeypatch, sample_monitor: Monitor):
     assert monitor_execution.status == ExecutionStatus.success
     assert monitor_execution.error_type is None
 
+    await sample_monitor.refresh()
+    assert sample_monitor.last_successful_execution > now() - timedelta(seconds=0.1)
+
 
 @pytest.mark.parametrize("tasks", [["search"], ["update"], ["search", "update"]])
 async def test_run_monitor_set_running(mocker, sample_monitor: Monitor, tasks):
@@ -1246,6 +1255,9 @@ async def test_run_monitor_set_running(mocker, sample_monitor: Monitor, tasks):
     assert monitor_execution is not None
     assert monitor_execution.status == ExecutionStatus.success
     assert monitor_execution.error_type is None
+
+    await sample_monitor.refresh()
+    assert sample_monitor.last_successful_execution > now() - timedelta(seconds=0.1)
 
 
 @pytest.mark.flaky(reruns=2)
@@ -1288,6 +1300,9 @@ async def test_run_monitor_timeout(caplog, mocker, monkeypatch, sample_monitor: 
     assert monitor_execution.status == ExecutionStatus.failed
     assert monitor_execution.error_type == "timeout"
 
+    await sample_monitor.refresh()
+    assert sample_monitor.last_successful_execution is None
+
 
 @pytest.mark.parametrize("tasks", [["search"], ["update"], ["search", "update"]])
 async def test_run_monitor_sentinela_exception(mocker, monkeypatch, sample_monitor: Monitor, tasks):
@@ -1322,6 +1337,9 @@ async def test_run_monitor_sentinela_exception(mocker, monkeypatch, sample_monit
     assert monitor_execution.status == ExecutionStatus.failed
     assert monitor_execution.error_type == "SomeException: Something is not right"
 
+    await sample_monitor.refresh()
+    assert sample_monitor.last_successful_execution is None
+
 
 @pytest.mark.parametrize("tasks", [["search"], ["update"], ["search", "update"]])
 async def test_run_monitor_error(caplog, mocker, monkeypatch, sample_monitor: Monitor, tasks):
@@ -1355,3 +1373,6 @@ async def test_run_monitor_error(caplog, mocker, monkeypatch, sample_monitor: Mo
     assert monitor_execution is not None
     assert monitor_execution.status == ExecutionStatus.failed
     assert monitor_execution.error_type == "Something is not right"
+
+    await sample_monitor.refresh()
+    assert sample_monitor.last_successful_execution is None

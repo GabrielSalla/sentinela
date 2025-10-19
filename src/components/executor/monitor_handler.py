@@ -379,6 +379,7 @@ async def run(message: dict[Any, Any]) -> None:
             await asyncio.wait_for(
                 _run_routines(monitor, message_payload.tasks), monitor.options.execution_timeout
             )
+        await monitor.set_last_successful_execution()
         monitor_execution["status"] = ExecutionStatus.success
     except asyncio.TimeoutError:
         monitor_execution["status"] = ExecutionStatus.failed
