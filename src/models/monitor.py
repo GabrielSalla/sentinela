@@ -31,6 +31,9 @@ class Monitor(Base):
     search_executed_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=True)
     update_executed_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=True)
     last_heartbeat: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=True)
+    last_successful_execution: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
 
     active_alerts: list[Alert]
     active_issues: list[Issue]
@@ -169,6 +172,12 @@ class Monitor(Base):
     async def set_last_heartbeat(self) -> None:
         """Set the 'last_heartbeat' to the current timestamp and save"""
         self.last_heartbeat = time_utils.now()
+        await self.save()
+
+    @Base.lock_change
+    async def set_last_successful_execution(self) -> None:
+        """Set the 'last_successful_execution' to the current timestamp and save"""
+        self.last_successful_execution = time_utils.now()
         await self.save()
 
     @Base.lock_change
