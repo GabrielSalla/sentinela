@@ -6,5 +6,5 @@ _monitors_load
 .ruff_cache
 .vscode
 **/__pycache__
+sentinela_tools
 tmp
-run.sh
