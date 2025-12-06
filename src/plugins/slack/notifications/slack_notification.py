@@ -224,13 +224,13 @@ async def _build_notification_buttons(
     if alert.status == AlertStatus.solved:
         return buttons
 
-    if not alert.is_priority_acknowledged:
+    if alert.can_acknowledge:
         buttons.append(
             slack.MessageButton(
                 text="Ack", action_id=f"sentinela_ack_{alert.id}", value=f"ack {alert.id}"
             )
         )
-    if not alert.locked:
+    if alert.can_lock:
         buttons.append(
             slack.MessageButton(
                 text="Lock", action_id=f"sentinela_lock_{alert.id}", value=f"lock {alert.id}"
