@@ -64,6 +64,16 @@ class Alert(Base):
             return False
         return self.acknowledge_priority <= self.priority
 
+    @property
+    def can_acknowledge(self) -> bool:
+        """Check if the alert can be acknowledged"""
+        return not self.is_priority_acknowledged
+
+    @property
+    def can_lock(self) -> bool:
+        """Check if the alert can be locked"""
+        return not self.locked
+
     @staticmethod
     def calculate_priority(
         rule: AgeRule | CountRule | ValueRule, issues: list[Issue] | Sequence[Issue]

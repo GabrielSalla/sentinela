@@ -116,7 +116,48 @@ async def test_is_priority_acknowledged(
         priority=priority,
     )
 
-    assert alert.is_priority_acknowledged == expected_result
+    assert alert.is_priority_acknowledged is expected_result
+
+
+@pytest.mark.parametrize(
+    "acknowledged, acknowledge_priority, priority, expected_result",
+    [
+        (False, 1, 1, True),
+        (False, 1, 5, True),
+        (False, 5, 1, True),
+        (False, None, 1, True),
+        (True, 5, 1, True),
+        (True, 5, 4, True),
+        (True, 5, 5, False),
+        (True, 2, 1, True),
+        (True, 1, 1, False),
+        (True, 1, 5, False),
+        (True, 1, 2, False),
+        (True, None, 1, True),
+    ],
+)
+async def test_can_acknowledge(
+    sample_monitor: Monitor, acknowledged, acknowledge_priority, priority, expected_result
+):
+    """'Alert.can_acknowledge' should return 'True' if the current alert can be acknowledged,
+    'False' otherwise"""
+    alert = await Alert.create(
+        monitor_id=sample_monitor.id,
+        acknowledged=acknowledged,
+        acknowledge_priority=acknowledge_priority,
+        priority=priority,
+    )
+
+    assert alert.can_acknowledge is expected_result
+
+
+@pytest.mark.parametrize("locked", [False, True])
+async def test_can_lock(sample_monitor: Monitor, locked):
+    """'Alert.can_lock' should return 'True' if the current alert can be locked, 'False'
+    otherwise"""
+    alert = await Alert.create(monitor_id=sample_monitor.id, locked=locked)
+
+    assert alert.can_lock is not locked
 
 
 async def test_calculate_priority(mocker, sample_monitor: Monitor):
