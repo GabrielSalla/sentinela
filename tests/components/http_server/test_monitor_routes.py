@@ -9,7 +9,7 @@ import components.controller.controller as controller
 import components.http_server as http_server
 import components.monitors_loader as monitors_loader
 import databases as databases
-from models import CodeModule, Monitor
+from models import Alert, AlertStatus, CodeModule, Monitor
 
 pytestmark = pytest.mark.asyncio(loop_scope="session")
 
@@ -37,8 +37,101 @@ async def test_list_monitors(clear_database, sample_monitor: Monitor):
             "id": sample_monitor.id,
             "name": sample_monitor.name,
             "enabled": sample_monitor.enabled,
+            "active_alerts": 0,
         },
     ]
+
+
+@pytest.mark.parametrize("active_alerts", range(1, 5))
+async def test_list_monitors_with_alerts(clear_database, sample_monitor: Monitor, active_alerts):
+    """The 'monitor list' route should return a list of all monitors and the count of active alerts
+    for them"""
+    await Alert.create_batch(
+        Alert(
+            monitor_id=sample_monitor.id,
+            priority=i,
+            acknowledge_priority=5 - i,
+        )
+        for i in range(active_alerts)
+    )
+    await Alert.create(
+        monitor_id=sample_monitor.id,
+        status=AlertStatus.solved,
+        priority=1,
+        acknowledge_priority=1,
+    )
+
+    url = BASE_URL + "/list"
+    async with aiohttp.ClientSession() as session:
+        async with session.get(url) as response:
+            response_data = await response.json()
+
+    assert response_data == [
+        {
+            "id": sample_monitor.id,
+            "name": sample_monitor.name,
+            "enabled": sample_monitor.enabled,
+            "active_alerts": active_alerts,
+        },
+    ]
+
+
+async def test_list_monitors_not_enabled(clear_database, sample_monitor: Monitor):
+    """The 'monitor list' route should return a list of all monitors and the count of active alerts
+    for them"""
+    await Alert.create(
+        monitor_id=sample_monitor.id,
+        priority=1,
+        acknowledge_priority=1,
+    )
+    sample_monitor.enabled = False
+    await sample_monitor.save()
+
+    url = BASE_URL + "/list"
+    async with aiohttp.ClientSession() as session:
+        async with session.get(url) as response:
+            response_data = await response.json()
+
+    assert response_data == [
+        {
+            "id": sample_monitor.id,
+            "name": sample_monitor.name,
+            "enabled": sample_monitor.enabled,
+            "active_alerts": 0,
+        },
+    ]
+
+
+@pytest.mark.parametrize("alerts_number", [1, 2])
+async def test_list_monitor_active_alerts(clear_database, alerts_number, sample_monitor: Monitor):
+    """The 'monitor active alerts' route should return a list of all active alerts for a monitor"""
+    alerts = await Alert.create_batch(
+        Alert(
+            monitor_id=sample_monitor.id,
+            priority=i,
+            acknowledge_priority=5 - 1,
+        )
+        for i in range(alerts_number)
+    )
+
+    url = BASE_URL + f"/{sample_monitor.id}/alerts"
+    async with aiohttp.ClientSession() as session:
+        async with session.get(url) as response:
+            response_data = await response.json()
+
+    assert isinstance(response_data, list)
+    assert len(response_data) == alerts_number
+    for alert, response_alert in zip(alerts, response_data):
+        assert alert.id == response_alert["id"]
+        assert alert.status == response_alert["status"]
+        assert alert.acknowledged == response_alert["acknowledged"]
+        assert alert.locked == response_alert["locked"]
+        assert alert.priority == response_alert["priority"]
+        assert alert.acknowledge_priority == response_alert["acknowledge_priority"]
+        assert alert.can_acknowledge == response_alert["can_acknowledge"]
+        assert alert.can_lock == response_alert["can_lock"]
+        assert alert.can_solve == response_alert["can_solve"]
+        assert alert.created_at.strftime("%Y-%m-%d %H:%M:%S") == response_alert["created_at"]
 
 
 async def test_get_monitor(clear_database, sample_monitor: Monitor):
