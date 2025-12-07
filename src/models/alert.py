@@ -74,6 +74,11 @@ class Alert(Base):
         """Check if the alert can be locked"""
         return not self.locked
 
+    @property
+    def can_solve(self) -> bool:
+        """Check if the alert can be solved"""
+        return not self.issue_options.solvable
+
     @staticmethod
     def calculate_priority(
         rule: AgeRule | CountRule | ValueRule, issues: list[Issue] | Sequence[Issue]
