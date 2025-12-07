@@ -12,6 +12,11 @@ def now() -> datetime.datetime:
     return datetime.datetime.now(tz=timezone(configs.time_zone))
 
 
+def localize(dt: datetime.datetime) -> datetime.datetime:
+    """Localize a datetime object to the configured timezone"""
+    return dt.astimezone(timezone(configs.time_zone))
+
+
 def format_datetime_iso(timestamp: datetime.datetime | None) -> str | None:
     return timestamp.isoformat(timespec="milliseconds") if timestamp is not None else None
 

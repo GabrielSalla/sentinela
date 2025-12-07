@@ -5,7 +5,14 @@ import pytest
 from pytz import timezone
 
 from configs import configs
-from utils.time import format_datetime_iso, is_triggered, now, time_since, time_until_next_trigger
+from utils.time import (
+    format_datetime_iso,
+    is_triggered,
+    localize,
+    now,
+    time_since,
+    time_until_next_trigger,
+)
 
 
 @pytest.mark.parametrize("local_timezone", ["UTC", "America/Sao_Paulo", "Europe/London"])
@@ -24,6 +31,38 @@ def test_now(monkeypatch, local_timezone):
     assert now_2 == now_2.astimezone(timezone(local_timezone))
     time_diff = now_2 - now_1
     assert time_diff < datetime.timedelta(milliseconds=201)
+
+
+@pytest.mark.parametrize(
+    "dt, tz, expected_dt",
+    [
+        (
+            timezone("utc").localize(datetime.datetime(2024, 1, 1, 12, 0, 0)),
+            "utc",
+            timezone("utc").localize(datetime.datetime(2024, 1, 1, 12, 0, 0)),
+        ),
+        (
+            timezone("America/Sao_Paulo").localize(datetime.datetime(2024, 1, 1, 12, 0, 0)),
+            "utc",
+            timezone("utc").localize(datetime.datetime(2024, 1, 1, 15, 0, 0)),
+        ),
+        (
+            timezone("utc").localize(datetime.datetime(2024, 1, 1, 12, 34, 0)),
+            "America/Sao_Paulo",
+            timezone("America/Sao_Paulo").localize(datetime.datetime(2024, 1, 1, 9, 34, 0)),
+        ),
+        (
+            timezone("America/Sao_Paulo").localize(datetime.datetime(2024, 1, 1, 12, 0, 0)),
+            "America/Sao_Paulo",
+            timezone("America/Sao_Paulo").localize(datetime.datetime(2024, 1, 1, 12, 0, 0)),
+        ),
+    ],
+)
+def test_localize(monkeypatch, dt, tz, expected_dt):
+    """'localize' should convert a datetime to the configured timezone"""
+    monkeypatch.setattr(configs, "time_zone", tz)
+
+    assert localize(dt) == expected_dt
 
 
 @pytest.mark.parametrize(
