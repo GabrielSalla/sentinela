@@ -160,6 +160,17 @@ async def test_can_lock(sample_monitor: Monitor, locked):
     assert alert.can_lock is not locked
 
 
+@pytest.mark.parametrize("solvable", [False, True])
+async def test_can_solve(monkeypatch, sample_monitor: Monitor, solvable):
+    """'Alert.can_solve' should return 'True' if the current alert can be solved, 'False'
+    otherwise"""
+    monkeypatch.setattr(sample_monitor.issue_options, "solvable", solvable)
+
+    alert = await Alert.create(monitor_id=sample_monitor.id)
+
+    assert alert.can_solve is not solvable
+
+
 async def test_calculate_priority(mocker, sample_monitor: Monitor):
     """'Alert.calculate_priority' should use the 'calculate_priority' function to calculate an
     alert priority"""

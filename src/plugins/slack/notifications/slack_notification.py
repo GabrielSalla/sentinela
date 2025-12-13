@@ -236,7 +236,7 @@ async def _build_notification_buttons(
                 text="Lock", action_id=f"sentinela_lock_{alert.id}", value=f"lock {alert.id}"
             )
         )
-    if not monitor.code.issue_options.solvable:
+    if alert.can_solve:
         buttons.append(
             slack.MessageButton(
                 text="Solve", action_id=f"sentinela_solve_{alert.id}", value=f"solve {alert.id}"

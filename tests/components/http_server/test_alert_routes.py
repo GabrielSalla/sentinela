@@ -6,8 +6,9 @@ import pytest_asyncio
 
 import components.controller.controller as controller
 import components.http_server as http_server
-from models import Alert, Monitor
+from models import Alert, Issue, Monitor
 from tests.message_queue.utils import get_queue_items
+from utils.time import localize
 
 pytestmark = pytest.mark.asyncio(loop_scope="session")
 
@@ -21,6 +22,78 @@ async def setup_http_server():
     await http_server.init(controller_enabled=True)
     yield
     await http_server.wait_stop()
+
+
+async def test_get_alert(sample_monitor: Monitor):
+    alerts = await Alert.create_batch(
+        [
+            Alert(
+                monitor_id=sample_monitor.id,
+                priority=1,
+            ),
+            Alert(
+                monitor_id=sample_monitor.id,
+                priority=2,
+            ),
+        ]
+    )
+
+    for alert in alerts:
+        async with aiohttp.ClientSession() as session:
+            async with session.get(BASE_URL + f"/{alert.id}") as response:
+                assert await response.json() == {
+                    "id": alert.id,
+                    "status": alert.status.value,
+                    "acknowledged": alert.acknowledged,
+                    "locked": alert.locked,
+                    "priority": alert.priority,
+                    "acknowledge_priority": alert.acknowledge_priority,
+                    "can_acknowledge": alert.can_acknowledge,
+                    "can_lock": alert.can_lock,
+                    "can_solve": alert.can_solve,
+                    "created_at": localize(alert.created_at).strftime("%Y-%m-%d %H:%M:%S"),
+                }
+
+
+async def test_get_alert_not_found(sample_monitor: Monitor):
+    async with aiohttp.ClientSession() as session:
+        async with session.get(BASE_URL + "/0") as response:
+            assert response.status == 404
+            assert await response.json() == {"status": "error", "message": "alert '0' not found"}
+
+
+@pytest.mark.parametrize("issues_count", range(4))
+async def test_list_alert_active_issues(sample_monitor: Monitor, issues_count):
+    alert = await Alert.create(monitor_id=sample_monitor.id)
+
+    issues = await Issue.create_batch(
+        [
+            Issue(
+                monitor_id=sample_monitor.id,
+                alert_id=alert.id,
+            )
+            for _ in range(issues_count)
+        ]
+    )
+
+    async with aiohttp.ClientSession() as session:
+        async with session.get(BASE_URL + f"/{alert.id}/issues") as response:
+            assert await response.json() == [
+                {
+                    "id": issue.id,
+                    "status": issue.status.value,
+                    "model_id": issue.model_id,
+                    "data": issue.data,
+                    "created_at": localize(issue.created_at).strftime("%Y-%m-%d %H:%M:%S"),
+                }
+                for issue in issues
+            ]
+
+
+async def test_list_alert_active_issues_alert_not_found():
+    async with aiohttp.ClientSession() as session:
+        async with session.get(BASE_URL + "/0/issues") as response:
+            assert await response.json() == []
 
 
 async def test_alert_acknowledge(clear_queue, sample_monitor: Monitor):

@@ -1,5 +1,6 @@
 import logging
 import traceback
+from collections import Counter
 from typing import Any
 
 import pydantic
@@ -10,7 +11,8 @@ from aiohttp.web_response import Response
 import commands
 from components.http_server.format_monitor_name import format_monitor_name
 from components.monitors_loader import MonitorValidationError
-from models import CodeModule, Monitor
+from models import Alert, AlertStatus, CodeModule, Monitor
+from utils.time import localize
 
 _logger = logging.getLogger("monitor_routes")
 
@@ -22,14 +24,57 @@ base_route = "/monitor"
 @monitor_routes.get(base_route + "/list")
 @monitor_routes.get(base_route + "/list/")
 async def list_monitors(request: Request) -> Response:
-    monitors = await Monitor.get_raw(columns=[Monitor.id, Monitor.name, Monitor.enabled])
+    """Route to list all monitors"""
+    monitors = await Monitor.get_all()
+    enabled_monitors = (monitor for monitor in monitors if monitor.enabled)
+
+    active_alerts = await Alert.get_raw(
+        columns=[Alert.monitor_id],
+        column_filters=[
+            Alert.status == AlertStatus.active,
+            Alert.monitor_id.in_(monitor.id for monitor in enabled_monitors),
+        ],
+    )
+    alerts_counter = Counter(alert.monitor_id for alert in active_alerts)
+
     response = [
         {
-            "id": monitor[0],
-            "name": monitor[1],
-            "enabled": monitor[2],
+            "id": monitor.id,
+            "name": monitor.name,
+            "enabled": monitor.enabled,
+            "active_alerts": alerts_counter.get(monitor.id, 0),
         }
         for monitor in monitors
+    ]
+    return web.json_response(response)
+
+
+@monitor_routes.get(base_route + "/{monitor_id}/alerts")
+@monitor_routes.get(base_route + "/{monitor_id}/alerts/")
+async def list_monitor_active_alerts(request: Request) -> Response:
+    """Route to list active alerts for a monitor"""
+    monitor_id = int(request.match_info["monitor_id"])
+
+    alerts = await Alert.get_all(
+        Alert.monitor_id == monitor_id,
+        Alert.status == AlertStatus.active,
+        order_by=[Alert.id],
+    )
+
+    response = [
+        {
+            "id": alert.id,
+            "status": alert.status.value,
+            "acknowledged": alert.acknowledged,
+            "locked": alert.locked,
+            "priority": alert.priority,
+            "acknowledge_priority": alert.acknowledge_priority,
+            "can_acknowledge": alert.can_acknowledge,
+            "can_lock": alert.can_lock,
+            "can_solve": alert.can_solve,
+            "created_at": localize(alert.created_at).strftime("%Y-%m-%d %H:%M:%S"),
+        }
+        for alert in alerts
     ]
     return web.json_response(response)
 
@@ -37,6 +82,7 @@ async def list_monitors(request: Request) -> Response:
 @monitor_routes.get(base_route + "/{monitor_name}")
 @monitor_routes.get(base_route + "/{monitor_name}/")
 async def get_monitor(request: Request) -> Response:
+    """Route to get a monitor by name"""
     monitor_name = request.match_info["monitor_name"]
 
     monitor = await Monitor.get(Monitor.name == monitor_name)
