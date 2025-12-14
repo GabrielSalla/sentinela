@@ -90,6 +90,11 @@ async function loadActiveMonitors(isAutoRefresh = false) {
         const sortedMonitors = [...regularMonitors, ...internalMonitors];
 
         if (isAutoRefresh) {
+            // Clear error message if it exists
+            if (monitorsListEl.querySelector('.placeholder-text')) {
+                monitorsListEl.innerHTML = '';
+            }
+
             const existingMonitors = Array.from(monitorsListEl.querySelectorAll('.monitor-item'));
             const existingMonitorsMap = new Map(existingMonitors.map(el => {
                 const monitorName = el.querySelector('.list-item-name').textContent;
@@ -191,6 +196,11 @@ async function loadAlertsForMonitor(monitorId, isAutoRefresh = false) {
         const previouslySelectedAlertId = selectedAlert ? selectedAlert.id : null;
 
         if (isAutoRefresh) {
+            // Clear error/placeholder message if it exists
+            if (alertsListEl.querySelector('.placeholder-text, .loading-text')) {
+                alertsListEl.innerHTML = '';
+            }
+
             const existingAlerts = new Map();
             alertsListEl.querySelectorAll('.alert-item').forEach(el => {
                 const alertId = parseInt(el.querySelector('[id^="alert-actions-"]').id.replace('alert-actions-', ''));
@@ -312,6 +322,11 @@ async function loadIssuesForAlert(alertId, isAutoRefresh = false) {
         }
 
         if (isAutoRefresh) {
+            // Clear error/placeholder message if it exists
+            if (issuesListEl.querySelector('.placeholder-text, .loading-text')) {
+                issuesListEl.innerHTML = '';
+            }
+
             const existingIssues = Array.from(issuesListEl.querySelectorAll('.issue-item'));
             const existingIssuesMap = new Map(existingIssues.map(el => {
                 const issueId = parseInt(el.querySelector('[id^="issue-"]').id.replace('issue-', ''));
