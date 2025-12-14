@@ -1,5 +1,6 @@
 import json
 import logging
+from typing import Literal
 
 from configs import configs
 
@@ -60,6 +61,18 @@ class JsonFormatter(logging.Formatter):
             message_dict["stack_info"] = self.formatStack(record.stack_info)
 
         return json.dumps(message_dict, default=str)
+
+
+def set_logger_level(
+    logger: logging.Logger, level: Literal["none", "error", "warning", "default"]
+) -> logging.Logger:
+    if level == "none":
+        logger.disabled = True
+    elif level == "error":
+        logger.setLevel(logging.ERROR)
+    elif level == "warning":
+        logger.setLevel(logging.WARNING)
+    return logger
 
 
 def setup() -> None:
