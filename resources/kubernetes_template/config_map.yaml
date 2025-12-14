@@ -39,6 +39,7 @@ data:
 
     http_server:
       port: 8000
+      log_level: error
 
     time_zone: America/Sao_Paulo
 

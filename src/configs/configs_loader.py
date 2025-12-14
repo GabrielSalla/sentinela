@@ -33,6 +33,7 @@ class ApplicationDatabaseConfig:
 @dataclass
 class HttpServerConfig:
     port: int
+    log_level: Literal["default", "warning", "error", "none"] = "default"
 
 
 @dataclass
