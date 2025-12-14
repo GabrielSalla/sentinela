@@ -57,7 +57,10 @@ application_queue:
 ```
 
 ## HTTP Server
-- `http_server.port`: Integer. Port for the HTTP server.
+- `http_server`:
+  - `port`: Integer. Port for the HTTP server.
+  - `log_level`: String. Log level for the HTTP server. Can be `default`, `warning`, `error` or `none`. Defaults to `default`.
+  - `dashboard_enabled`: Boolean. Flag to enable the Sentinela dashboard. Defaults to `false`.
 
 ## Time Zone
 - `time_zone`: String. Time zone to use for cron scheduling and notification messages.
