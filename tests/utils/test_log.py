@@ -24,6 +24,94 @@ def set_json_formatter(monkeypatch, fields: dict[str, str] | None) -> None:
     log.setup()
 
 
+def test_set_logger_level_none(capsys, monkeypatch):
+    """'set_logger_level' should disable the logger if log level is 'none'"""
+    set_json_formatter(monkeypatch, None)
+
+    logger = logging.getLogger("test_set_logger_level_none")
+    log.set_logger_level(logger, "none")
+
+    logger.info("Info log message")
+    logger.warning("Warning log message")
+    logger.error("Error log message")
+    logger.critical("Critical log message")
+
+    captured_message = capsys.readouterr().err.strip()
+
+    assert captured_message == ""
+
+
+def test_set_logger_level_error(capsys, monkeypatch):
+    """'set_logger_level' should show only error and critical messages if log level is 'error'"""
+    set_json_formatter(monkeypatch, None)
+
+    logger = logging.getLogger("test_set_logger_level_error")
+    log.set_logger_level(logger, "error")
+
+    logger.info("Info log message")
+    logger.warning("Warning log message")
+    logger.error("Error log message")
+    logger.critical("Critical log message")
+
+    captured_message = capsys.readouterr().err.strip()
+
+    assert captured_message == "\n".join(
+        [
+            '{"message": "Error log message"}',
+            '{"message": "Critical log message"}',
+        ]
+    )
+
+
+def test_set_logger_level_warning(capsys, monkeypatch):
+    """'set_logger_level' should show only warning, error and critical messages if log level is
+    'warning'"""
+    set_json_formatter(monkeypatch, None)
+
+    logger = logging.getLogger("test_set_logger_level_warning")
+    log.set_logger_level(logger, "warning")
+
+    logger.info("Info log message")
+    logger.warning("Warning log message")
+    logger.error("Error log message")
+    logger.critical("Critical log message")
+
+    captured_message = capsys.readouterr().err.strip()
+
+    assert captured_message == "\n".join(
+        [
+            '{"message": "Warning log message"}',
+            '{"message": "Error log message"}',
+            '{"message": "Critical log message"}',
+        ]
+    )
+
+
+def test_set_logger_level_default(capsys, monkeypatch):
+    """'set_logger_level' should show info, warning, error and critical messages if log level is
+    'default'"""
+    set_json_formatter(monkeypatch, None)
+
+    logger = logging.getLogger("test_set_logger_level_default")
+    log.set_logger_level(logger, "default")
+
+    logger.info("Info log message")
+    logger.warning("Warning log message")
+    logger.error("Error log message")
+    logger.critical("Critical log message")
+
+    captured_message = capsys.readouterr().err.strip()
+
+    assert captured_message == "\n".join(
+        [
+            '{"message": "Info log message"}',
+            '{"message": "Warning log message"}',
+            '{"message": "Error log message"}',
+            '{"message": "Critical log message"}',
+        ]
+    )
+
+
 @pytest.mark.parametrize(
     "log_format",
     [

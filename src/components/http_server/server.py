@@ -14,6 +14,7 @@ from components.http_server.alert_routes import alert_routes
 from components.http_server.issue_routes import issue_routes
 from components.http_server.monitor_routes import monitor_routes
 from configs import configs
+from utils.log import set_logger_level
 
 _logger = logging.getLogger("http_server")
 
@@ -75,6 +76,9 @@ async def init(controller_enabled: bool = False) -> None:
     global _runner
 
     app = web.Application()
+    set_logger_level(logging.getLogger("aiohttp.web"), configs.http_server.log_level)
+    set_logger_level(logging.getLogger("aiohttp.access"), configs.http_server.log_level)
+
     app.add_routes(base_routes)
 
     # Only the controller can receive action requests
