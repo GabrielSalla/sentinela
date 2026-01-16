@@ -30,12 +30,20 @@ Once an inconsistent order is detected, Sentinela will track it and periodically
 Below is a simplified monitor implementation for this scenario and the real implementation will require more configuration and steps. This example focuses only on the core logic of the monitor to demonstrate how it can be used.
 
 ```python
-# Each issue represents an order that is still 'awaiting_delivery' while its related shipment is
-# already 'completed'.
+# Each issue represents an order that is still "awaiting_delivery" while its related
+# shipment is already "completed".
 
 def search():
     # Queries the database to get the pending orders with completed shipments
-    # Example: [{'order_id': 123, 'order_status': 'awaiting_delivery', 'shipment_status': 'completed'}, ...]
+    # Example:
+    #   [
+    #     {
+    #       "order_id": 123,
+    #       "order_status": "awaiting_delivery",
+    #       "shipment_status": "completed",
+    #     },
+    #     ...
+    #   ]
     #
     # Example SQL:
     # select
