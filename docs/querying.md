@@ -19,6 +19,16 @@ For a database named `users`, set up an environment variable `DATABASE_USERS` co
 # Querying data
 Monitors can query data from available databases using the `query` function, provided in the `monitor_utils` module.
 
+```python
+async def query(
+    name: str,
+    sql: str,
+    *args: str | int | float | bool | list[str] | list[int] | list[float] | None,
+    acquire_timeout: int = configs.database_default_acquire_timeout,
+    query_timeout: int = configs.database_default_query_timeout,
+) -> list[dict[Any, Any]] | None:
+```
+
 The function has the following parameters:
 - `name`: Name of the database where the query will be executed. For an environment variable `DATABASE_USERS` the database name is `users`.
 - `sql`: SQL query to execute.

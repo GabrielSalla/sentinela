@@ -210,14 +210,17 @@ Issues that are considered as "already solved", will be discarded. Check the [**
 If no user should have a `name` equal to `null`, the search function would locate all such users and return a list of dictionaries, each one representing an issue. Each issue should include the fields defined in the `IssueDataType` class.
 
 ```python
-async def search() -> list[IssueDataType] | None:
-    # users = [{"id": 1234, "name": None}, {"id": 2345, "name": None}]
-    users = await get_invalid_users()
+async def _get_invalid_users() -> list[dict[Any, Any]]:
+    sql = "select id, name from users where name is null;"
+    result = await query("my_database", sql)
     return [
-        user
-        for user in users
-        if user["name"] is None
+        {"id": row["id"], "name": row["name"]}
+        for row in result
     ]
+
+async def search() -> list[IssueDataType] | None:
+    # Return value example: [{"id": 1234, "name": None}, {"id": 2345, "name": None}]
+    return await _get_invalid_users()
 ```
 
 ## Update function
@@ -241,13 +244,20 @@ If no updates are needed, the function can return an empty list, `None`, or simp
 The update function should get the updated data for all the users that were identified as having invalid registration data. The function should return a list of dictionaries, each containing the updated information for the issues.
 
 ```python
+async def _get_users_data(user_ids: list[int]) -> list[dict[Any, Any]]:
+    sql = "select id, name from users where id = any($1);"
+    result = await query("my_database", sql, user_ids)
+    return [
+        {"id": row["id"], "name": row["name"]}
+        for row in result
+    ]
+
 async def update(issues_data: list[IssueDataType]) -> list[IssueDataType] | None:
     user_ids = [user["id"] for user in issues_data]
     # Getting the updated users data for the active issues
-    # updated_users = [{"id": 1234, "name": "Some name"}, {"id": 2345, "name": None}]
-    updated_users = await get_users_data(user_ids)
     # Return all the updated data, without any filters
-    return updated_users
+    # Return value example: [{"id": 1234, "name": "Some name"}, {"id": 2345, "name": None}]
+    return await _get_users_data(user_ids)
 ```
 
 ## Is solved function
@@ -353,6 +363,13 @@ The `query` function allows querying data from available databases. For more det
 ## Read file
 The `read_file` function reads files in the same directory as the monitor code, making it useful for accessing other resources that the monitor relies on, such as SQL query files.
 
+```python
+def read_file(
+    file_name: str,
+    mode: str = "r",
+) -> Any
+```
+
 The function takes 2 parameters:
 - `file_name`: The name of the file located in the same directory as the monitor code.
 - `mode`: Specifies the file access mode. Values allowed are `r` and `rb`. Defaults to `r`.
@@ -367,6 +384,11 @@ The `variables` module allows storing and retrieving variables that can be used 
 Available functions are:
 
 **`get_variable`**
+```python
+async def get_variable(
+    name: str,
+) -> str | None:
+```
 
 The function takes one parameter:
 - `name`: The name of the variable to retrieve.
@@ -374,6 +396,12 @@ The function takes one parameter:
 Return the value of a variable. If the variable does not exist, returns `None`.
 
 **`set_variable`**
+```python
+async def set_variable(
+    name: str,
+    value: str,
+) -> None:
+```
 
 The function takes two parameters:
 - `name`: The name of the variable to set.

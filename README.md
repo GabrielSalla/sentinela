@@ -7,7 +7,7 @@ The Sentinela monitoring platform was created to cover a special case of monitor
 # Use case
 Sentinela is designed to provide users with the ability to implement custom Python code that will be used to search, update and check if detected issues are solved. It excels when information is not easily accessible through conventional logs or metrics, such as querying databases or APIs, or when complex logic is required to retrieve and interpret the necessary data.
 
-An **issue** is an unique unit of a problem that is identified and tracked by Sentinela. When monitoring invalid **user** data, an issue will represent an **user**. When tracking failed **transactions**, each issue represents a specific **transaction**.
+The platform is developed to track and update **issues**, which are unique units of a problem. When monitoring invalid **user** data, an issue will represent an **user**. When tracking failed **transactions**, each issue represents a specific **transaction**.
 
 A Sentinela Monitor is configured through 3 main parts, along some basic settings:
 1. **Data Retrieval and Issue Detection**: Define how to get the information and what’s considered an issue.
@@ -18,40 +18,60 @@ These implementations are enough for Sentinela to autonomously execute monitorin
 
 ![sentinela example](./docs/images/example.gif)
 
-## Example scenario: Monitoring orders without shipments
-An online store where orders are expected to be shipped within 5 days. If an order is delayed beyond this threshold, someone might need to check what’s wrong with the shipment system.
+## Example scenario: Pending orders with completed shipments
+Consider an online store where an order is expected to transition to `completed` as soon as its shipment is marked `completed`. Occasionally, inconsistencies arise: the shipment finishes but the order status remains stuck as `awaiting_delivery` or other intermediate state.
 
-To identify orders that haven't been shipped within the 5-day window, it’s necessary to cross-reference orders and shipments data, requiring a more complex logic than what can be easily achieved through conventional logs or metrics.
+This inconsistency is hard to catch with conventional logs or simple metrics because it requires correlating the current state of two entities (orders and shipments) and enforcing a business rule that the order must be updated when the shipment is done.
 
-This kind of problem is one that is, usually, detected when the customer opens a support ticket asking why the order hasn’t been shipped yet. Without a dedicated internal routine to check for unsent orders, this problem may go unnoticed until a complaint is raised.
+Sentinela addresses this by allowing you to configure a monitor that queries for orders whose status is still `awaiting_delivery` while the related shipment is already `completed`. When found, the monitor can alert the responsible team to reconcile the state or fix the update flow.
 
-Sentinela addresses this issue by enabling users to configure a monitor that queries the database for orders that exceed the 5-day threshold without a corresponding shipment. When such an order is found, the monitor can trigger notifications to alert the appropriate team.
+Once an inconsistent order is detected, Sentinela will track it and periodically refresh its data using the provided implementations. When the order status transitions to `completed`, the issue is automatically resolved.
 
-When an issue is found, it'll be tracked and updated periodically by Sentinela (using the provided implementations) and, when it's detected that the order has a shipment, the issue will be automatically solved.
-
-The Monitor implementation that demonstrates this behavior is shown below. This example clarifies what's needed to be implemented to monitor the outlined scenario. **Note that the code provided is an overly simplified version meant to demonstrate the core concepts, and will need to be adjusted for each use case**.
+Below is a simplified monitor implementation for this scenario and the real implementation will require more configuration and steps. This example focuses only on the core logic of the monitor to demonstrate how it can be used.
 
 ```python
-# Each issue represents an order that has not been shipped after 5 days of
-# creation
+# Each issue represents an order that is still 'awaiting_delivery' while its related shipment is
+# already 'completed'.
+
 def search():
-    # The 'get_orders_without_shipments' function queries the database or an
-    # API and returns the orders that have not been shipped after 5 days
-    issues = get_orders_without_shipments()
+    # Queries the database to get the pending orders with completed shipments
+    # Example: [{'order_id': 123, 'order_status': 'awaiting_delivery', 'shipment_status': 'completed'}, ...]
+    #
+    # Example SQL:
+    # select
+    #   orders.id as order_id,
+    #   orders.status as order_status
+    # from orders
+    #   left join shipments
+    #     on shipments.order_id = orders.id
+    # where
+    #   orders.status != 'completed' and
+    #   shipments.status = 'completed';
+    issues = get_orders_still_awaiting_with_completed_shipments()
     return issues
 
 def update(issues):
-    # The 'get_orders_shipments' function fetches updated shipment information
-    # for the provided order IDs. The issues will be updated with this new data
+    # Refreshes order and shipment statuses for the provided order IDs
+    #
+    # Example SQL:
+    # select
+    #   orders.id as order_id,
+    #   orders.status as order_status
+    # from orders
+    #   left join shipments
+    #     on shipments.order_id = orders.id
+    # where
+    #   orders.id in (<list_of_order_ids>);
     order_ids = [issue["order_id"] for issue in issues]
-    updated_issues = get_orders_shipments(order_ids)
+    updated_issues = get_orders_and_shipments_status(order_ids)
     return updated_issues
 
 def is_solved(issue):
-    # This step validates if the issue has a valid shipment ID. The issue is
-    # considered solved when a shipment ID is assigned
-    return issue["shipment_id"] is not None
+    # The issue is resolved when the order status transitions to 'completed'
+    return issue["order_status"] == "completed"
 ```
+
+This is a simplified example. Sentinela’s open, function-based monitor structure offers the flexibility to build more sophisticated checks: combine multiple data sources, perform multi-step validations, reconcile state machines and tailor resolution criteria to complex business rules.
 
 ## Monitoring state machines
 where it is crucial to track and verify the consistency of an entity's state. This is especially useful in scenarios where processes involve multiple transitions between states, and business logic must be enforced.
@@ -77,7 +97,7 @@ State machine-related issues often require several data checks and conditional l
 8. [Plugins](./docs/plugins/plugins.md)
     1. [AWS](./docs/plugins/aws.md)
     2. [Postgres](./docs/plugins/postgres.md)
-    2. [Slack](./docs/plugins/slack.md)
+    3. [Slack](./docs/plugins/slack.md)
 9. Interacting with Sentinela
     1. [HTTP server](./docs/http_server.md)
 10. Special cases
