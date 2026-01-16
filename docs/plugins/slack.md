@@ -64,6 +64,18 @@ from plugins.slack.notifications import SlackNotification
 
 The **SlackNotification** class manages sending notifications for alerts to a specified Slack channel.
 
+```python
+class SlackNotification:
+    channel: str
+    title: str
+    issues_fields: list[str]
+    min_priority_to_send: AlertPriority = AlertPriority.low
+    mention: str | None = None
+    mention_on_update: bool = False
+    min_priority_to_mention: AlertPriority = AlertPriority.moderate
+    issue_show_limit: int = 10
+```
+
 Parameters:
 - `channel`: The Slack channel where notifications will be sent.
 - `title`: A title for the notification to help users to identify the problem.
@@ -93,7 +105,7 @@ notification_options = [
 To use the Slack notification for internal monitors, the settings for the `internal_monitors_notification` key in the `configs.yaml` file must be configured as follows:
 - `notification_class`: Should be set to `plugin.slack.notifications.SlackNotification`
 - `params`: Should include the desired parameters for the notification.
-    - `channel` and `mention` will be obtained from the environment variables `SLACK_MAIN_CHANNEL` and `SLACK_MAIN_MENTION`, respectively, as specified in [Environment variables](#environment-variables).
+  - `channel` and `mention` will be obtained from the environment variables `SLACK_MAIN_CHANNEL` and `SLACK_MAIN_MENTION`, respectively, as specified in [Environment variables](#environment-variables).
   - `title` and `issues_fields` are specific to each monitor and are already defined in the internal monitors. If configured in the `params` field, they will be ignored.
   - `min_priority_to_send`, `min_priority_to_mention`, `mention_on_update`, and `issue_show_limit` can be set in the `params` field to customize the notification behavior. If not set, the default values will be used.
 

@@ -50,7 +50,9 @@ The AWS plugin client can be used to interact with AWS services. The client is i
 
 ```python
 async def aws_client(
-    credential_name: str, service: str, region_name: str | None = None
+    credential_name: str,
+    service: str,
+    region_name: str | None = None,
 ) -> AsyncGenerator[AioBaseClient, None]
 ```
 

@@ -15,9 +15,10 @@ This document provides an overview of the configuration parameters available in 
 - `monitors_load_schedule`: String using Cron format. Schedule to reload monitors from the database.
 
 ## Logging
-- `logging.mode`: String. Logging mode. Can be "friendly" or "json".
-- `logging.format`: String. Settings for formatting the "friendly" logs.
-- `logging.fields`: Map. Fields to include in the "json" logs and their name from the `logging` module.
+- `logging`: Map. Settings for logging.
+  - `mode`: String. Logging mode. Can be "friendly" or "json".
+  - `format`: String. Settings for formatting the "friendly" logs.
+  - `fields`: Map. Fields to include in the "json" logs and their name from the `logging` module.
 
 Suggested configuration for `friendly` logs:
 ```yaml
@@ -44,8 +45,9 @@ logging:
 - `application_database_settings.pool_size`: Integer. Application database pool size.
 
 ## Queue
-- `application_queue.type`: String. Queue to be used. Can be `internal` or a queue from an installed plugin.
-- `application_queue.queue_wait_message_time`: Integer. Time, in seconds, to wait for a message when using the internal queue.
+- `application_queue`: Map. Settings for the application queue.
+  - `type`: String. Queue to be used. Can be `internal` or a queue from an installed plugin.
+  - `queue_wait_message_time`: Integer. Time, in seconds, to wait for a message when using the internal queue.
 
 Suggested configuration for the internal queue when running locally or developing:
 ```yaml
