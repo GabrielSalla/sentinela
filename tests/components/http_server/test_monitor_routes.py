@@ -1,4 +1,4 @@
-from unittest.mock import AsyncMock, MagicMock
+from unittest.mock import AsyncMock
 
 import aiohttp
 import pytest
@@ -7,7 +7,6 @@ import pytest_asyncio
 import commands as commands
 import components.controller.controller as controller
 import components.http_server as http_server
-import components.monitors_loader as monitors_loader
 import databases as databases
 from models import Alert, AlertStatus, CodeModule, Monitor
 
@@ -381,22 +380,32 @@ async def test_monitor_validate_check_fail():
             }
 
 
+async def test_monitor_validate_syntax_error(mocker):
+    """The 'monitor validate' route should return an error if the provided module code has any
+    errors"""
+    request_payload = {
+        "monitor_code": "print('a",
+    }
+
+    url = BASE_URL + "/validate"
+    async with aiohttp.ClientSession() as session:
+        async with session.post(url, json=request_payload) as response:
+            assert await response.json() == {
+                "status": "error",
+                "error": "'print('a' unterminated string literal (detected at line 1)",
+            }
+
+
 @pytest.mark.parametrize(
     "monitor_code, expected_error",
     [
         ("something", "name 'something' is not defined"),
         ("import time;\n\ntime.abc()", "module 'time' has no attribute 'abc'"),
-        (
-            "print('a",
-            "unterminated string literal (detected at line 1) ({monitor_name}.py, line 1)",
-        ),
     ],
 )
 async def test_monitor_validate_invalid_monitor_code(mocker, monitor_code, expected_error):
     """The 'monitor validate' route should return an error if the provided module code has any
     errors"""
-    check_monitor_spy: MagicMock = mocker.spy(monitors_loader, "check_monitor")
-
     request_payload = {
         "monitor_code": monitor_code,
     }
@@ -406,7 +415,7 @@ async def test_monitor_validate_invalid_monitor_code(mocker, monitor_code, expec
         async with session.post(url, json=request_payload) as response:
             assert await response.json() == {
                 "status": "error",
-                "error": expected_error.format(monitor_name=check_monitor_spy.call_args.args[0]),
+                "error": expected_error,
             }
 
 
