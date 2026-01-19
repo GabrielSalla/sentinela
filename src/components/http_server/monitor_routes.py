@@ -190,6 +190,9 @@ async def monitor_validate(request: Request) -> Response:
             "error": e.get_error_message(include_monitor_name=False),
         }
         return web.json_response(error_response, status=400)
+    except SyntaxError as e:
+        error_response = {"status": "error", "error": f"'{e.args[1][3]}' {e.msg}"}
+        return web.json_response(error_response, status=400)
     except Exception as e:
         error_response = {"status": "error", "error": str(e)}
         _logger.error(traceback.format_exc().strip())
