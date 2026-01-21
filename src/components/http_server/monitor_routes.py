@@ -191,7 +191,12 @@ async def monitor_validate(request: Request) -> Response:
         }
         return web.json_response(error_response, status=400)
     except SyntaxError as e:
-        error_response = {"status": "error", "error": f"'{e.args[1][3]}' {e.msg}"}
+        syntax_error_line = e.lineno
+        syntax_error_code = e.args[1][3].strip()
+        error_response = {
+            "status": "error",
+            "error": f"Syntax error at line {syntax_error_line}: {syntax_error_code}",
+        }
         return web.json_response(error_response, status=400)
     except Exception as e:
         error_response = {"status": "error", "error": str(e)}

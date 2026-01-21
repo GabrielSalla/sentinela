@@ -380,11 +380,18 @@ async def test_monitor_validate_check_fail():
             }
 
 
-async def test_monitor_validate_syntax_error(mocker):
-    """The 'monitor validate' route should return an error if the provided module code has any
-    errors"""
+@pytest.mark.parametrize(
+    "monitor_code, expected_error",
+    [
+        ("print('a\n", "Syntax error at line 1: print('a"),
+        ("print('a')\n  def f(): ...", "Syntax error at line 2: def f(): ..."),
+    ],
+)
+async def test_monitor_validate_syntax_error(mocker, monitor_code, expected_error):
+    """The 'monitor validate' route should return an error if the provided module code has a syntax
+    error"""
     request_payload = {
-        "monitor_code": "print('a",
+        "monitor_code": monitor_code,
     }
 
     url = BASE_URL + "/validate"
@@ -392,7 +399,7 @@ async def test_monitor_validate_syntax_error(mocker):
         async with session.post(url, json=request_payload) as response:
             assert await response.json() == {
                 "status": "error",
-                "error": "'print('a' unterminated string literal (detected at line 1)",
+                "error": expected_error,
             }
 
 
