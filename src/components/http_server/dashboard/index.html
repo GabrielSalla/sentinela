@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sentinela Dashboard</title>
+
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/codemirror.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/theme/material-darker.min.css">
+
+    <link rel="stylesheet" href="/dashboard/css/styles.css">
+    <script src="/dashboard/js/preload.js"></script>
+</head>
+<body x-data="dashboardApp()">
+    <nav class="top-bar">
+        <h1>Sentinela</h1>
+        <button class="nav-btn" :class="{ 'active': currentSection === 'overview' }" @click="showSection('overview')">Overview</button>
+        <button class="nav-btn" :class="{ 'active': currentSection === 'editor' }" @click="showSection('editor')">Editor</button>
+    </nav>
+
+    <div id="overview-section" class="section-content" x-show="currentSection === 'overview'">
+        <div class="overview-container">
+            <div class="overview-column" id="monitors-column">
+                <h2>Active Monitors</h2>
+                <div class="monitor-filters">
+                    <label class="filter-checkbox">
+                        <input type="checkbox" x-model="includeInternal" @change="onFilterChange()">
+                        <span>Include internal monitors</span>
+                    </label>
+                    <label class="filter-checkbox">
+                        <input type="checkbox" x-model="withAlerts" @change="onFilterChange()">
+                        <span>Monitors with active alerts</span>
+                    </label>
+                </div>
+                <div id="monitors-list" class="list-container">
+                    <template x-if="monitorsLoading">
+                        <p class="loading-text">Loading monitors...</p>
+                    </template>
+                    <template x-if="!monitorsLoading && monitors.length === 0">
+                        <p class="placeholder-text">No monitors match the filters</p>
+                    </template>
+                    <template x-if="!monitorsLoading && monitors.length > 0">
+                        <div>
+                            <template x-for="monitor in monitors" :key="monitor.id">
+                                <div class="list-item monitor-item"
+                                     :class="{ 'selected': selectedMonitor?.id === monitor.id }"
+                                     @click="selectMonitor(monitor)">
+                                    <div class="list-item-name" x-text="monitor.name"></div>
+                                    <span x-show="monitor.active_alerts > 0"
+                                          class="badge badge-alert"
+                                          x-text="monitor.active_alerts"></span>
+                                </div>
+                            </template>
+                        </div>
+                    </template>
+                </div>
+            </div>
+            <div class="resize-handle" data-column="monitors-column"></div>
+            <div class="overview-column" id="alerts-column">
+                <h2>Active Alerts</h2>
+                <div id="alerts-list" class="list-container">
+                    <template x-if="!selectedMonitor">
+                        <p class="placeholder-text">Select a monitor to view alerts</p>
+                    </template>
+                    <template x-if="selectedMonitor && alertsLoading">
+                        <p class="loading-text">Loading alerts...</p>
+                    </template>
+                    <template x-if="selectedMonitor && !alertsLoading && alerts.length === 0">
+                        <p class="placeholder-text">No active alerts for this monitor</p>
+                    </template>
+                    <template x-if="selectedMonitor && !alertsLoading && alerts.length > 0">
+                        <div>
+                            <template x-for="alert in alerts" :key="alert.id">
+                                <div class="list-item alert-item"
+                                     :class="{ 'selected': selectedAlert?.id === alert.id }"
+                                     @click="selectAlert(alert)">
+                                    <div class="list-item-name">
+                                        <span x-text="`#${alert.id}`"></span>
+                                        <span class="list-item-badge"
+                                              :class="getPriorityBadge(alert.priority).class"
+                                              x-text="getPriorityBadge(alert.priority).text"></span>
+                                        <span class="list-item-badge"
+                                              :class="getStatusBadgeClass(alert.acknowledged)"
+                                              x-text="'Acknowledged'"></span>
+                                        <span class="list-item-badge"
+                                              :class="getStatusBadgeClass(alert.locked)"
+                                              x-text="'Locked'"></span>
+                                    </div>
+                                    <div class="list-item-info" x-text="`Triggered: ${alert.created_at}`"></div>
+                                    <div class="alert-actions" x-show="selectedAlert?.id === alert.id">
+                                        <button class="alert-action-btn"
+                                                :disabled="alert.acknowledged"
+                                                @click="acknowledgeAlert(alert, $event)">Ack</button>
+                                        <button class="alert-action-btn"
+                                                :disabled="alert.locked"
+                                                @click="lockAlert(alert, $event)">Lock</button>
+                                        <button x-show="alert.can_solve === true"
+                                                class="alert-action-btn"
+                                                @click="solveAlert(alert, $event)">Solve</button>
+                                    </div>
+                                </div>
+                            </template>
+                        </div>
+                    </template>
+                </div>
+            </div>
+            <div class="resize-handle" data-column="alerts-column"></div>
+            <div class="overview-column" id="issues-column">
+                <h2>Active Issues</h2>
+                <div id="issues-list" class="list-container">
+                    <template x-if="!selectedAlert">
+                        <p class="placeholder-text">Select an alert to view issues</p>
+                    </template>
+                    <template x-if="selectedAlert && issuesLoading">
+                        <p class="loading-text">Loading issues...</p>
+                    </template>
+                    <template x-if="selectedAlert && !issuesLoading && issues.length === 0">
+                        <p class="placeholder-text">No active issues for this alert</p>
+                    </template>
+                    <template x-if="selectedAlert && !issuesLoading && issues.length > 0">
+                        <div>
+                            <template x-for="issue in issues" :key="issue.id">
+                                <div class="list-item issue-item" @click="toggleIssue(issue)">
+                                    <div class="list-item-name" x-text="`#${issue.id} - ${issue.model_id}`"></div>
+                                    <div class="list-item-info" x-text="`Created: ${issue.created_at}`"></div>
+                                    <div class="issue-metadata" x-show="selectedIssue?.id === issue.id">
+                                        <pre class="json-highlight" x-html="syntaxHighlightJSON(issue.data || {})"></pre>
+                                    </div>
+                                </div>
+                            </template>
+                        </div>
+                    </template>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="editor-section" class="section-content" x-show="currentSection === 'editor'">
+        <div class="container">
+            <div class="sidebar">
+                <div id="monitor-section">
+                    <div class="form-group">
+                        <label for="monitor-select">Monitor:</label>
+                        <select id="monitor-select" @change="onMonitorSelect($event)">
+                            <option value="" disabled selected hidden></option>
+                            <option value="___CREATE_NEW___" style="font-style: italic; color: #58a6ff;">Create new monitor</option>
+                            <template x-for="monitor in monitorsList" :key="monitor.name">
+                                <option :value="monitor.name" x-text="monitor.name" :class="monitor.enabled ? 'monitor-enabled' : 'monitor-disabled'"></option>
+                            </template>
+                        </select>
+                    </div>
+
+                    <div id="monitor-controls" x-show="currentMonitor && !currentMonitor.isNew">
+                        <div class="checkbox-group">
+                            <button class="toggle-button" :class="currentMonitor?.enabled ? 'enabled' : 'disabled'" @click="toggleMonitorEnabled()">
+                                <span x-text="currentMonitor?.enabled ? 'Enabled' : 'Disabled'"></span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <div id="new-monitor-section" x-show="currentMonitor?.isNew">
+                        <div class="form-group">
+                            <label for="new-monitor-name-input">Monitor name:</label>
+                            <input type="text" id="new-monitor-name-input" placeholder="my_monitor" @keydown.enter="createNewMonitor()">
+                        </div>
+                        <div class="button-group">
+                            <button class="btn btn-secondary" @click="cancelNewMonitor()">
+                                Cancel
+                            </button>
+                            <button class="btn" @click="createNewMonitor()">
+                                Create
+                            </button>
+                        </div>
+                    </div>
+
+                    <div id="monitor-actions" x-show="currentMonitor && !currentMonitor.isNew" class="monitor-actions">
+                        <span class="pending-change-message" x-show="monitorHasPendingChanges">Changes will be applied on save</span>
+                        <div class="button-group">
+                            <button class="btn btn-secondary" @click="validateMonitor()">Validate</button>
+                            <button class="btn" @click="saveMonitor()" :disabled="!monitorHasPendingChanges">Save</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="main-content">
+                <div id="monitor-form" x-show="currentMonitor && !currentMonitor.isNew">
+                    <div class="tabs">
+                        <div class="tab-buttons" id="tab-buttons">
+                            <button class="tab-button" :class="{ 'active': activeTab === 'code-tab' }" data-tab-id="code-tab" @click="switchTab('code-tab')">Code</button>
+                            <template x-for="fileName in Object.keys(additionalFiles)" :key="fileName">
+                                <button class="tab-button" :class="{ 'active': activeTab === fileName }" :data-tab-id="fileName" @click="switchTab(fileName)" x-text="fileName"></button>
+                            </template>
+                            <button class="delete-file-btn" :class="{ 'show': activeTab !== 'code-tab' }" @click="deleteCurrentFile()" title="Delete current file">×</button>
+                            <button class="add-file-btn" @click="showAddFilePopover = !showAddFilePopover" title="Add new file">+</button>
+                            <div id="add-file-popover" class="add-file-popover" :class="{ 'active': showAddFilePopover }">
+                                <div class="form-group">
+                                    <label for="new-file-name">File name:</label>
+                                    <input type="text" id="new-file-name" placeholder="filename.py" x-model="newFileName" @keydown.enter="createAdditionalFile()">
+                                </div>
+                                <button class="btn" @click="createAdditionalFile()">Create</button>
+                            </div>
+                        </div>
+                        <div class="tab-content">
+                            <div id="code-tab" class="tab-pane" :class="{ 'active': activeTab === 'code-tab' }">
+                                <div class="code-editor-container">
+                                    <textarea id="monitor-code" class="code-editor" placeholder="# Write your monitor code here..."></textarea>
+                                    <div id="validation-errors" class="validation-errors">
+                                        <h4>Validation Errors</h4>
+                                        <div id="validation-errors-content"></div>
+                                    </div>
+                                </div>
+                            </div>
+                            <template x-for="fileName in Object.keys(additionalFiles)" :key="fileName">
+                                <div class="tab-pane" :id="fileName" :class="{ 'active': activeTab === fileName }">
+                                    <div class="file-editor">
+                                        <div class="file-editor-content"></div>
+                                    </div>
+                                </div>
+                            </template>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="toast" class="toast"></div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/codemirror.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/mode/css/css.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/mode/htmlmixed/htmlmixed.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/mode/javascript/javascript.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/mode/markdown/markdown.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/mode/python/python.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/mode/shell/shell.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/mode/sql/sql.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/mode/xml/xml.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/mode/yaml/yaml.min.js"></script>
+
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+
+    <script src="/dashboard/js/dashboard.js"></script>
+    <script src="/dashboard/js/editor.js"></script>
+    <script src="/dashboard/js/monitor-template.js"></script>
+    <script src="/dashboard/js/utils.js"></script>
+    <script src="/dashboard/js/validation.js"></script>
+</body>
+</html>

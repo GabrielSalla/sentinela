@@ -90,6 +90,17 @@ Common use cases:
 
 State machine-related issues often require several data checks and conditional logic to identify. These issues are typically difficult to capture using standard logs and metrics but can be easily addressed using Sentinela Monitoring.
 
+# Dashboard
+Sentinela provides a web dashboard with 2 sections:
+1. an overview of the monitors and their alerts and issues
+2. a monitor editor, where you can create and edit monitors directly from the browser
+
+**Overview**
+![dashboard overview](./docs/images/dashboard_overview.png)
+
+**Editor**
+![dashboard monitor editor](./docs/images/dashboard_editor.png)
+
 # Documentation
 1. [Overview](./docs/overview.md)
 2. [Building a Monitor](./docs/monitor.md)
