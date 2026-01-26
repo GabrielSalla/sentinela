@@ -3,13 +3,23 @@ name = "Sentinela"
 version = "0.7.0"
 description = "Sentinela Monitoring Platform"
 authors = [
-    { name = "Gabriel Salla", email = "gabriel.c.salla@gmail.com" }
+    { name = "Gabriel Salla", email = "gabriel.c.salla@gmail.com" },
 ]
 license = { file = "LICENSE.txt" }
 readme = "README.md"
 
 [tool.poetry]
-package-mode = false
+name = "sentinela"
+packages = [
+    {include = "*", from = "src"},
+    {include = "tools"},
+]
+
+[tool.poetry.scripts]
+sentinela = "main:start"
+get_plugins_list = "tools.get_plugins_list:main"
+health_check = "tools.health_check:main"
+register_monitor = "tools.register_monitor:main"
 
 [tool.poetry.dependencies]
 python = "^3.12"
@@ -96,9 +106,9 @@ log_format = "%(asctime)s [%(levelname)s] %(name)s.%(funcName)s.%(lineno)d: %(me
 
 # Disable botocore 'datetime.datetime.utcnow()' deprecation warning
 filterwarnings = [
-    "error",
     "ignore:datetime.datetime.utcnow:DeprecationWarning:botocore",
 ]
+
 [tool.coverage.run]
 branch = true
 

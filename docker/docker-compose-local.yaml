@@ -17,7 +17,7 @@ services:
     ports:
       - 8000:8000
     healthcheck:
-      test: python tools/health_check.py 8000
+      test: health_check 8000
       interval: 10s
       timeout: 1s
       retries: 3
@@ -33,4 +33,4 @@ services:
       - .env.secrets
     depends_on:
       - postgres
-    command: python3 src/main.py controller executor
+    command: sentinela controller executor

@@ -28,7 +28,7 @@ services:
     ports:
       - 8000:8000
     healthcheck:
-      test: python tools/health_check.py 8000
+      test: health_check 8000
       interval: 10s
       timeout: 1s
       retries: 3
@@ -45,7 +45,7 @@ services:
     depends_on:
       - postgres
       - motoserver
-    command: python3 src/main.py controller
+    command: sentinela controller
 
   sentinela-executor:
     build:
@@ -61,7 +61,7 @@ services:
     ports:
       - 8001-8100:8000
     healthcheck:
-      test: python tools/health_check.py 8000
+      test: health_check 8000
       interval: 10s
       timeout: 1s
       retries: 3
@@ -78,4 +78,4 @@ services:
     depends_on:
       - postgres
       - motoserver
-    command: python3 src/main.py executor
+    command: sentinela executor
