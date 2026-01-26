@@ -18,7 +18,7 @@ spec:
       - name: sentinela-executor
         image: sentinela-local:latest
         imagePullPolicy: Never
-        command: ["python3", "src/main.py", "executor"]
+        command: ["sentinela", "executor"]
         ports:
         - containerPort: 8000
         env:

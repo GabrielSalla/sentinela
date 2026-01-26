@@ -14,11 +14,16 @@ def _make_plugin_name(environment: str | None, plugin: str) -> str:
     return plugin_name
 
 
-environment = sys.argv[1] if len(sys.argv) > 1 else None
+def main() -> None:
+    environment = sys.argv[1] if len(sys.argv) > 1 else None
 
-with open(os.environ.get("CONFIGS_FILE", "configs.yaml"), "r") as file:
-    configs = yaml.load(file.read(), Loader=yaml.FullLoader)
+    with open(os.environ.get("CONFIGS_FILE", "configs.yaml"), "r") as file:
+        configs = yaml.load(file.read(), Loader=yaml.FullLoader)
 
-if configs["plugins"]:
-    plugins_list = [_make_plugin_name(environment, plugin) for plugin in configs["plugins"]]
-    print(",".join(plugins_list))
+    if configs["plugins"]:
+        plugins_list = [_make_plugin_name(environment, plugin) for plugin in configs["plugins"]]
+        print(",".join(plugins_list))
+
+
+if __name__ == "__main__":
+    main()
