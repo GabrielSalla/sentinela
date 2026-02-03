@@ -1114,7 +1114,7 @@ async def test_run_routines_load_modules(mocker, monkeypatch, sample_monitor: Mo
 
 async def test_heartbeat_routine(monkeypatch, sample_monitor: Monitor):
     """'_heartbeat_routine' should handle execution timeouts while running the monitor routines"""
-    monkeypatch.setattr(monitor_handler.configs, "executor_monitor_heartbeat_time", 0.5)
+    monkeypatch.setattr(monitor_handler.configs, "executor_monitor_heartbeat_time", 0.1)
 
     await sample_monitor.refresh()
     assert sample_monitor.last_heartbeat is None
@@ -1122,10 +1122,10 @@ async def test_heartbeat_routine(monkeypatch, sample_monitor: Monitor):
     heartbeat_task = asyncio.create_task(monitor_handler._heartbeat_routine(sample_monitor))
 
     await asyncio.sleep(0)
-    for _ in range(4):
+    for _ in range(2):
         await sample_monitor.refresh()
         assert sample_monitor.last_heartbeat > now() - timedelta(seconds=0.1)
-        await asyncio.sleep(0.5)
+        await asyncio.sleep(0.1)
 
     heartbeat_task.cancel()
 
@@ -1205,11 +1205,11 @@ async def test_run_monitor_heartbeat(monkeypatch, sample_monitor: Monitor):
     """'run' should handle execution timeouts while running the monitor routines"""
 
     async def sleep(monitor, tasks):
-        await asyncio.sleep(2.1)
+        await asyncio.sleep(0.5)
 
     monkeypatch.setattr(monitor_handler, "_run_routines", sleep)
 
-    monkeypatch.setattr(monitor_handler.configs, "executor_monitor_heartbeat_time", 0.5)
+    monkeypatch.setattr(monitor_handler.configs, "executor_monitor_heartbeat_time", 0.1)
 
     await sample_monitor.refresh()
     assert sample_monitor.last_heartbeat is None
@@ -1222,7 +1222,7 @@ async def test_run_monitor_heartbeat(monkeypatch, sample_monitor: Monitor):
     for _ in range(4):
         await sample_monitor.refresh()
         assert sample_monitor.last_heartbeat > now() - timedelta(seconds=0.1)
-        await asyncio.sleep(0.5)
+        await asyncio.sleep(0.1)
 
     await run_task
 

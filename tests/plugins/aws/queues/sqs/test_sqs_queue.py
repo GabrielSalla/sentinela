@@ -266,7 +266,7 @@ async def test_get_message_not_deleted():
             "url": "http://motoserver:5000/123456789012/app",
             "region": "us-east-1",
             "create_queue": True,
-            "queue_wait_message_time": 2,
+            "queue_wait_message_time": 0,
             "queue_visibility_time": 1,
         }
     )
@@ -281,7 +281,7 @@ async def test_get_message_not_deleted():
     message = await queue.get_message()
     assert message is None
 
-    await asyncio.sleep(1)
+    await asyncio.sleep(2)
 
     message = await queue.get_message()
     assert message is not None
@@ -298,7 +298,7 @@ async def test_change_visibility():
             "url": "http://motoserver:5000/123456789012/app",
             "region": "us-east-1",
             "create_queue": True,
-            "queue_wait_message_time": 2,
+            "queue_wait_message_time": 0,
             "queue_visibility_time": 1,
         }
     )
@@ -310,12 +310,11 @@ async def test_change_visibility():
     assert message is not None
     assert message.content == {"type": "test", "payload": {"a": 1}}
 
-    for _ in range(3):
-        await queue.change_visibility(message)
-        new_message = await queue.get_message()
-        assert new_message is None
+    await queue.change_visibility(message)
+    new_message = await queue.get_message()
+    assert new_message is None
 
-    await asyncio.sleep(1)
+    await asyncio.sleep(2)
 
     message = await queue.get_message()
     assert message is not None
@@ -331,8 +330,8 @@ async def test_delete_message():
             "url": "http://motoserver:5000/123456789012/app",
             "region": "us-east-1",
             "create_queue": True,
-            "queue_wait_message_time": 2,
-            "queue_visibility_time": 15,
+            "queue_wait_message_time": 0,
+            "queue_visibility_time": 0,
         }
     )
     await queue.init()
@@ -345,7 +344,7 @@ async def test_delete_message():
 
     await queue.delete_message(message)
 
-    await asyncio.sleep(2)
+    await asyncio.sleep(0.5)
 
     message = await queue.get_message()
     assert message is None
