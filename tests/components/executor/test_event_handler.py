@@ -263,15 +263,15 @@ async def test_run_function_no_name(caplog, mocker, monkeypatch, sample_monitor:
 async def test_run_timeout(caplog, monkeypatch, sample_monitor: Monitor):
     """'run' should execute all the reactions and the timeout should be independent for each
     function"""
-    monkeypatch.setattr(configs, "executor_reaction_timeout", 0.2)
+    monkeypatch.setattr(configs, "executor_reaction_timeout", 0.1)
 
     async def long_sleep(message_payload):
-        await asyncio.sleep(1)
+        await asyncio.sleep(0.5)
 
     long_sleep_mock = AsyncMock(side_effect=long_sleep)
 
     async def short_sleep(message_payload):
-        await asyncio.sleep(0.1)
+        await asyncio.sleep(0.01)
 
     short_sleep_mock = AsyncMock(side_effect=short_sleep)
 
@@ -295,8 +295,8 @@ async def test_run_timeout(caplog, monkeypatch, sample_monitor: Monitor):
     end_time = time.perf_counter()
 
     total_time = end_time - start_time
-    assert total_time > 1 - 0.001
-    assert total_time < 1 + 0.03
+    assert total_time > 0.4 - 0.001
+    assert total_time < 0.4 + 0.03
 
     assert long_sleep_mock.call_count == 4
     assert_message_in_log(caplog, "Timed out executing reaction", count=4)

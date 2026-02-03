@@ -202,8 +202,8 @@ def test_load_module_from_file_reload_replace_variables():
     module.v.append(10)
     assert module.v == [10]
 
-    # As python checks for the timestamp to change to reload a module, sleep for 1 second
-    time.sleep(1)
+    # As python checks for the timestamp to change to reload a module, sleep until the next second
+    time.sleep(1 - time.time() % 1 + 0.01)
 
     module = loader.load_module_from_file(module_path)
 

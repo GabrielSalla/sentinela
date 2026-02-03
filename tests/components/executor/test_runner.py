@@ -23,14 +23,14 @@ async def test_change_visibility_loop(mocker, monkeypatch, clear_queue):
     monkeypatch.setattr(
         message_queue.queue._config,  # type: ignore[attr-defined]
         "queue_wait_message_time",
-        0.2,
+        0.1,
     )
     change_visibility_spy: MagicMock = mocker.spy(message_queue, "change_visibility")
 
     message = InternalMessage(json.dumps({"type": "type", "payload": "payload"}))
 
     task = asyncio.create_task(runner._change_visibility_loop(message))
-    await asyncio.sleep(1.0)
+    await asyncio.sleep(0.5)
     task.cancel()
 
     await asyncio.sleep(0.1)

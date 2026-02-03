@@ -25,7 +25,6 @@ pyyaml = "^6.0.2"
 sqlalchemy = "^2.0.36"
 
 [tool.poetry.group.dev.dependencies]
-isort = "*"
 mypy = "*"
 pytest = "*"
 pytest-asyncio = "*"
@@ -33,11 +32,9 @@ pytest-cov = "*"
 pytest-mock = "*"
 pytest-rerunfailures = "*"
 ruff = "*"
-types-setuptools = "*"
 types-requests = "*"
 types-pyyaml = "*"
 types-pytz = "*"
-types-pymysql = "*"
 types-croniter = "*"
 
 [tool.poetry.group.plugin-aws.dependencies]
