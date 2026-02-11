@@ -48,5 +48,6 @@ The Prometheus metrics provided by Sentinela are:
     - Labels: `action_name`
 - `executor_request_execution_seconds`: Summary - Time to run the request
     - Labels: `action_name`
+- `heartbeat_average_time`: Gauge - Average time between heartbeats in seconds
 - `registry_monitors_ready_timeout_count`: Counter - Count of times the application timed out waiting for monitors to be ready
 - `registry_monitor_not_registered_count`: Counter - Count of times a monitor is not registered after a load attempt
