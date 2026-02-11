@@ -18,8 +18,13 @@ For testing purposes, it can be useful to start a container and execute multiple
     ```shell
     make run-shell-dev
     ```
+2. When inside the container, the application can be run in development mode.
+    ```shell
+    sentinela controller executor
+    ```
+    or omitting the parameters to run both the controller and executor.
 
-The quality checks can also be run.
+The quality checks can also be run using the following commands:
 1. Run the tests.
     ```shell
     make test-dev
@@ -106,7 +111,7 @@ The [Dockerfile](../Dockerfile) is a starting point for building the application
 
 1. Install the dependencies for the application and enabled plugins.
     ```shell
-    poetry install --no-root --only $(python ./tools/get_plugins_list.py)
+    poetry install --no-root --only $(get_plugins_list)
     ```
 
 ### Deploying the Application
@@ -119,9 +124,9 @@ All services must have the environment variables set as specified in the [Config
 Controllers and executors can be run by specifying them as parameters when starting the application:
 1. Run the controller.
     ```shell
-    python3 src/main.py controller
+    sentinela controller
     ```
 2. Run the executor.
     ```shell
-    python3 src/main.py executor
+    sentinela executor
     ```

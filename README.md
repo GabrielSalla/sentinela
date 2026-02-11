@@ -40,7 +40,6 @@ def search():
     #     {
     #       "order_id": 123,
     #       "order_status": "awaiting_delivery",
-    #       "shipment_status": "completed",
     #     },
     #     ...
     #   ]
@@ -59,19 +58,17 @@ def search():
     return issues
 
 def update(issues):
-    # Refreshes order and shipment statuses for the provided order IDs
+    # Refreshes order status for the provided order IDs
     #
     # Example SQL:
     # select
     #   orders.id as order_id,
     #   orders.status as order_status
     # from orders
-    #   left join shipments
-    #     on shipments.order_id = orders.id
     # where
     #   orders.id in (<list_of_order_ids>);
     order_ids = [issue["order_id"] for issue in issues]
-    updated_issues = get_orders_and_shipments_status(order_ids)
+    updated_issues = get_orders_status(order_ids)
     return updated_issues
 
 def is_solved(issue):

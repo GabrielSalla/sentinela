@@ -58,7 +58,7 @@ To simplify the registration process, a Python script is available in the `tools
 The following example demonstrates how to use the script to register a new monitor:
 
 ```bash
-python tools/register_monitor.py \
+register_monitor \
     my_monitor \
     monitors/my_monitor/my_monitor.py \
     monitors/my_monitor/search_query.sql \
