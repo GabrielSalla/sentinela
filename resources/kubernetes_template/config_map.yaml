@@ -44,6 +44,8 @@ data:
 
     time_zone: America/Sao_Paulo
 
+    heartbeat_time: 2
+
     controller_process_schedule: "* * * * *"
     controller_concurrency: 5
     controller_procedures:

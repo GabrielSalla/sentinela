@@ -1,6 +1,9 @@
 # HTTP server
 The HTTP server provides an API to interact with Sentinela. The available routes are organized into two main categories, based on the deployment setup.
 
+> [!IMPORTANT]
+> By default the API is served at port `8000`. The docker compose files also expose the port `8000`, so if the port for the server changes, the compose files should be updated accordingly. Another option is to keep the server port at `8000` and changing only the compose files. Using the configuration `8080:8000`, for example, will keep the server running at port `8000`, but it will be accessible through the container's port `8080`.
+
 If the container is deployed with the **Controller** (either standalone or alongside the Executor in the same container), all routes are available, allowing interactions with Monitors, Issues, Alerts and the dashboard.
 
 If the container is deployed with only the **Executor**, only base routes are available.

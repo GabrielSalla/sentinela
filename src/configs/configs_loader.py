@@ -62,6 +62,8 @@ class Configs:
 
     time_zone: str
 
+    heartbeat_time: int
+
     controller_process_schedule: str
     controller_concurrency: int
     controller_procedures: dict[str, ControllerProcedureConfig]

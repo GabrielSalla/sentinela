@@ -65,14 +65,19 @@ application_queue:
 ## Time Zone
 - `time_zone`: String. Time zone to use for cron scheduling and notification messages.
 
+## Heartbeat
+- `heartbeat_time`: Integer. Time, in seconds, between each heartbeat. This heartbeat is used to identify when a task is not yielding the control back to the event loop for too much time, generating a Warning log.
+
 ## Controller Settings
 - `controller_process_schedule`: String using Cron format. Schedule to check if monitors need to be processed.
 - `controller_concurrency`: Integer. Number of monitors that can be processed at the same time by the Controller.
 - `controller_procedures`: Map. Procedures to be executed by the Controller and their settings.
-- `controller_procedures.monitors_stuck`: Map. Settings for the procedure to fix monitors stuck in "queued" or "running" status.
-- `controller_procedures.monitors_stuck.schedule`: String using Cron format. Schedule to execute the `monitors_stuck` procedure.
-- `controller_procedures.monitors_stuck.params.time_tolerance`: Integer. Time tolerance in seconds for a monitor to be considered as stuck. This parameter is directly impacted by the `executor_monitor_heartbeat_time` setting and the recommended value is 2 times the heartbeat time.
-- `controller_procedures.notifications_alert_solved.schedule`: String using Cron format. Schedule to execute the `notifications_alert_solved` procedure.
+  - `monitors_stuck`: Map. Settings for the procedure to fix monitors stuck in "queued" or "running" status.
+    - `schedule`: String using Cron format. Schedule to execute the `monitors_stuck` procedure.
+    - `params`: Map. Configuration parameters for the `monitors_stuck` procedure.
+      - `time_tolerance`: Integer. Time tolerance in seconds for a monitor to be considered as stuck. This parameter is directly impacted by the `executor_monitor_heartbeat_time` setting and the recommended value is 2 times the heartbeat time.
+  - `notifications_alert_solved`: Map. Settings for the procedure to identify and fix active notifications linked to alerts that have already been solved.
+    - `schedule`: String using Cron format. Schedule to execute the `notifications_alert_solved` procedure.
 
 ## Executor Settings
 - `executor_concurrency`: Integer. Number of tasks that can be executed at the same time by each Executor.
@@ -80,7 +85,7 @@ application_queue:
 - `executor_monitor_timeout`: Integer. Timeout, in seconds, for monitor execution.
 - `executor_reaction_timeout`: Integer. Timeout, in seconds, for reactions execution.
 - `executor_request_timeout`: Integer. Timeout, in seconds, for requests execution.
-- `executor_monitor_heartbeat_time`: Integer. Time, in seconds, between each monitor heartbeat. This parameter impacts the controller procedure `monitors_stuck.time_tolerance` parameter.
+- `executor_monitor_heartbeat_time`: Integer. Time, in seconds, between each executor heartbeat during monitor execution. This parameter impacts the controller procedure `monitors_stuck.time_tolerance` parameter.
 
 ## Issues Creation
 - `max_issues_creation`: Integer. Maximum number of issues that can be created by each monitor in a single search. Can be overridden by the monitors' configuration.

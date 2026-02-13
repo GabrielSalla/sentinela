@@ -6,6 +6,7 @@ import sys
 
 import components.controller as controller
 import components.executor as executor
+import components.heartbeat as heartbeat
 import components.http_server as http_server
 import components.monitors_loader as monitors_loader
 import components.task_manager as task_manager
@@ -86,6 +87,7 @@ async def main() -> None:
 
     for mode in operation_modes:
         task_manager.create_task(modes[mode]())
+    task_manager.create_task(heartbeat.run())
     task_manager.create_task(monitors_loader.run())
 
     await task_manager.run()
