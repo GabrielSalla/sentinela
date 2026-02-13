@@ -16,7 +16,7 @@ async def test_monitor_code_validate(mocker):
     """'monitor_code_validate' function should validate a monitor code"""
     check_monitor_spy: MagicMock = mocker.spy(monitors_loader, "check_monitor")
 
-    with open("tests/sample_monitors/others/monitor_1/monitor_1.py", "r") as file:
+    with open("tests/example_monitors/others/monitor_1/monitor_1.py", "r") as file:
         monitor_code = file.read()
 
     await requests.monitor_code_validate(monitor_code)
@@ -36,7 +36,7 @@ async def test_monitor_register(mocker):
     register_monitor_spy: AsyncMock = mocker.spy(monitors_loader, "register_monitor")
 
     monitor_name = "test_monitor_register"
-    with open("tests/sample_monitors/others/monitor_1/monitor_1.py", "r") as file:
+    with open("tests/example_monitors/others/monitor_1/monitor_1.py", "r") as file:
         monitor_code = file.read()
 
     monitor = await requests.monitor_register(monitor_name, monitor_code, {})
@@ -54,7 +54,7 @@ async def test_monitor_register_additional_files(mocker):
     register_monitor_spy: AsyncMock = mocker.spy(monitors_loader, "register_monitor")
 
     monitor_name = "test_monitor_register"
-    with open("tests/sample_monitors/others/monitor_1/monitor_1.py", "r") as file:
+    with open("tests/example_monitors/others/monitor_1/monitor_1.py", "r") as file:
         monitor_code = file.read()
 
     monitor = await requests.monitor_register(monitor_name, monitor_code, {"file.sql": "SELECT 1;"})

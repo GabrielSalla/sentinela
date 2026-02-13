@@ -72,7 +72,7 @@ The monitors loader execution is demonstrated in the following diagram.
 
 ![Monitors loader execution](./images/monitors_loader.png)
 
-The monitors loader registers internal and sample monitors (if configured as such) to the database. This process is only executed when the controller is enabled in the execution to make sure only one instance is trying to register the same monitors.
+The monitors loader registers internal and example monitors (if configured as such) to the database. This process is only executed when the controller is enabled in the execution to make sure only one instance is trying to register the same monitors.
 
 While waiting for the next loading cycle, some components can request for the monitors to be loaded again before waiting for the next cycle. One example where this might happen is if the executor receives a message for a monitor that is not loaded yet. This issue can occur if the monitor already loaded new monitors from the database but the executor is behind in the loading process.
 

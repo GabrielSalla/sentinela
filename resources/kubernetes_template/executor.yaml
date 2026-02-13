@@ -24,9 +24,9 @@ spec:
         env:
         - name: CONFIGS_FILE
           value: configs_sqs.yaml
-        - name: SAMPLE_SLACK_CHANNEL
+        - name: EXAMPLE_SLACK_CHANNEL
           value: C07NCL94SDT
-        - name: SAMPLE_SLACK_MENTION
+        - name: EXAMPLE_SLACK_MENTION
           value: U07NFGGMB98
         - name: SLACK_WEBSOCKET_ENABLED
           value: "true"

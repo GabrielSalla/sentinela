@@ -66,7 +66,7 @@ tabulate = "^0.9.0"
 types-tabulate = "*"
 
 [tool.ruff]
-include = ["src/**/*.py", "tests/**/*.py", "internal_monitors/**/*.py", "sample_monitors/**/*.py", "tools/**/*.py"]
+include = ["src/**/*.py", "tests/**/*.py", "internal_monitors/**/*.py", "example_monitors/**/*.py", "tools/**/*.py"]
 lint.extend-select = ["E", "W", "F", "Q", "I", "RET", "C4", "PERF"]
 line-length = 100
 
@@ -75,7 +75,7 @@ case-sensitive = true
 
 [tool.mypy]
 mypy_path = "src"
-files = ["src", "tests", "internal_monitors", "sample_monitors", "tools"]
+files = ["src", "tests", "internal_monitors", "example_monitors", "tools"]
 ignore_missing_imports = true
 warn_return_any = true
 check_untyped_defs = true

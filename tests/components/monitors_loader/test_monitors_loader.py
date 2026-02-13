@@ -40,7 +40,7 @@ async def test_check_monitor(caplog):
     """'check_monitor' function should check a monitor code without registering it"""
     monitor_name = "test_check_monitor"
 
-    with open("tests/sample_monitors/others/monitor_1/monitor_1.py", "r") as file:
+    with open("tests/example_monitors/others/monitor_1/monitor_1.py", "r") as file:
         monitor_code = file.read()
 
     monitors_loader.check_monitor(monitor_name, monitor_code)
@@ -55,7 +55,7 @@ async def test_check_monitor_validation_error(caplog, log_error):
     does not pass the validation"""
     monitor_name = f"test_check_monitor_validation_error_{log_error}"
 
-    with open("tests/sample_monitors/others/monitor_1/monitor_1.py", "r") as file:
+    with open("tests/example_monitors/others/monitor_1/monitor_1.py", "r") as file:
         monitor_code = file.read()
 
     # Add errors that should be caught by the validation
@@ -96,7 +96,7 @@ async def test_register_monitor(additional_files):
     code"""
     monitor_name = "test_register_monitor"
 
-    with open("tests/sample_monitors/others/monitor_1/monitor_1.py", "r") as file:
+    with open("tests/example_monitors/others/monitor_1/monitor_1.py", "r") as file:
         monitor_code = file.read()
 
     monitor = await monitors_loader.register_monitor(
@@ -127,7 +127,7 @@ async def test_register_monitor_monitor_already_exists(additional_files):
     monitor_name = "test_register_monitor_monitor_already_exists"
     timestamp = time_utils.now()
 
-    with open("tests/sample_monitors/others/monitor_1/monitor_1.py", "r") as file:
+    with open("tests/example_monitors/others/monitor_1/monitor_1.py", "r") as file:
         monitor_code = file.read()
 
     monitor = await monitors_loader.register_monitor(
@@ -173,7 +173,7 @@ async def test_register_monitor_monitor_already_exists_error():
     monitor_name = "test_register_monitor_monitor_already_exists_error"
     timestamp = time_utils.now()
 
-    with open("tests/sample_monitors/others/monitor_1/monitor_1.py", "r") as file:
+    with open("tests/example_monitors/others/monitor_1/monitor_1.py", "r") as file:
         monitor_code = file.read()
 
     monitor = await monitors_loader.register_monitor(
@@ -229,7 +229,7 @@ async def test_register_monitor_validation_error():
     does not pass the validation"""
     monitor_name = "test_register_monitor_validation_error"
 
-    with open("tests/sample_monitors/others/monitor_1/monitor_1.py", "r") as file:
+    with open("tests/example_monitors/others/monitor_1/monitor_1.py", "r") as file:
         monitor_code = file.read()
 
     # Add errors that should be caught by the validation
@@ -252,24 +252,24 @@ async def test_register_monitor_validation_error():
 
 async def test_get_monitors_files_from_path():
     """'_get_monitors_files_from_path' should return all the monitors files from a path"""
-    monitors_files = list(monitors_loader._get_monitors_files_from_path("tests/sample_monitors"))
+    monitors_files = list(monitors_loader._get_monitors_files_from_path("tests/example_monitors"))
 
     assert len(monitors_files) == 3
     monitors_files = sorted(monitors_files, key=lambda monitor_files: monitor_files.monitor_name)
     assert monitors_files == [
         monitors_loader.MonitorFiles(
             monitor_name="monitor_1",
-            monitor_path=Path("tests/sample_monitors/others/monitor_1/monitor_1.py"),
+            monitor_path=Path("tests/example_monitors/others/monitor_1/monitor_1.py"),
             additional_files=[],
         ),
         monitors_loader.MonitorFiles(
             monitor_name="monitor_2",
-            monitor_path=Path("tests/sample_monitors/internal/monitor_2/monitor_2.py"),
+            monitor_path=Path("tests/example_monitors/internal/monitor_2/monitor_2.py"),
             additional_files=[],
         ),
         monitors_loader.MonitorFiles(
             monitor_name="monitor_3",
-            monitor_path=Path("tests/sample_monitors/internal/monitor_3/monitor_3.py"),
+            monitor_path=Path("tests/example_monitors/internal/monitor_3/monitor_3.py"),
             additional_files=[],
         ),
     ]
@@ -280,7 +280,7 @@ async def test_get_monitors_files_from_path_with_additional_files():
     their additional files"""
     monitors_files = list(
         monitors_loader._get_monitors_files_from_path(
-            "tests/sample_monitors/internal", additional_file_extensions=["sql"]
+            "tests/example_monitors/internal", additional_file_extensions=["sql"]
         )
     )
 
@@ -293,20 +293,20 @@ async def test_get_monitors_files_from_path_with_additional_files():
     assert monitors_files == [
         monitors_loader.MonitorFiles(
             monitor_name="monitor_2",
-            monitor_path=Path("tests/sample_monitors/internal/monitor_2/monitor_2.py"),
+            monitor_path=Path("tests/example_monitors/internal/monitor_2/monitor_2.py"),
             additional_files=[],
         ),
         monitors_loader.MonitorFiles(
             monitor_name="monitor_3",
-            monitor_path=Path("tests/sample_monitors/internal/monitor_3/monitor_3.py"),
+            monitor_path=Path("tests/example_monitors/internal/monitor_3/monitor_3.py"),
             additional_files=[
                 monitors_loader.AdditionalFile(
                     name="other_file.sql",
-                    path=Path("tests/sample_monitors/internal/monitor_3/other_file.sql"),
+                    path=Path("tests/example_monitors/internal/monitor_3/other_file.sql"),
                 ),
                 monitors_loader.AdditionalFile(
                     name="some_file.sql",
-                    path=Path("tests/sample_monitors/internal/monitor_3/some_file.sql"),
+                    path=Path("tests/example_monitors/internal/monitor_3/some_file.sql"),
                 ),
             ],
         ),
@@ -327,7 +327,7 @@ async def test_register_monitors_from_path(clear_database):
 
     assert len(registered_monitors) == 0
 
-    await monitors_loader._register_monitors_from_path("tests/sample_monitors")
+    await monitors_loader._register_monitors_from_path("tests/example_monitors")
 
     registered_monitors = await Monitor.get_all()
     monitors_ids = [monitor.id for monitor in registered_monitors]
@@ -347,7 +347,7 @@ async def test_register_monitors_from_path_additional_files(clear_database):
     assert len(registered_monitors) == 0
 
     await monitors_loader._register_monitors_from_path(
-        "tests/sample_monitors", additional_file_extensions=["sql"]
+        "tests/example_monitors", additional_file_extensions=["sql"]
     )
 
     registered_monitors = await Monitor.get_all()
@@ -375,7 +375,7 @@ async def test_register_monitors_from_path_internal(clear_database):
 
     assert len(registered_monitors) == 0
 
-    await monitors_loader._register_monitors_from_path("tests/sample_monitors", internal=True)
+    await monitors_loader._register_monitors_from_path("tests/example_monitors", internal=True)
 
     registered_monitors = await Monitor.get_all()
 
@@ -397,7 +397,7 @@ async def test_register_monitors_from_path_validation_error(caplog, monkeypatch,
 
     assert len(registered_monitors) == 0
 
-    await monitors_loader._register_monitors_from_path("tests/sample_monitors")
+    await monitors_loader._register_monitors_from_path("tests/example_monitors")
 
     registered_monitors = await Monitor.get_all()
     assert len(registered_monitors) == 0
@@ -420,7 +420,7 @@ async def test_register_monitors_from_path_error(caplog, monkeypatch, clear_data
 
     assert len(registered_monitors) == 0
 
-    await monitors_loader._register_monitors_from_path("tests/sample_monitors")
+    await monitors_loader._register_monitors_from_path("tests/example_monitors")
 
     registered_monitors = await Monitor.get_all()
     assert len(registered_monitors) == 0
@@ -431,9 +431,9 @@ async def test_register_monitors_from_path_error(caplog, monkeypatch, clear_data
 async def test_register_monitors(monkeypatch, clear_database):
     """'register_monitors' should register all the internal and sample monitors if enabled,
     including their additional files"""
-    monkeypatch.setattr(configs, "load_sample_monitors", True)
-    monkeypatch.setattr(configs, "internal_monitors_path", "tests/sample_monitors/internal")
-    monkeypatch.setattr(configs, "sample_monitors_path", "tests/sample_monitors/others")
+    monkeypatch.setattr(configs, "load_example_monitors", True)
+    monkeypatch.setattr(configs, "internal_monitors_path", "tests/example_monitors/internal")
+    monkeypatch.setattr(configs, "example_monitors_path", "tests/example_monitors/others")
 
     registered_monitors = await Monitor.get_all()
 
@@ -460,12 +460,12 @@ async def test_register_monitors(monkeypatch, clear_database):
             assert code_modules_dict[monitor.id].additional_files == {}
 
 
-async def test_register_monitors_no_sample_monitors(monkeypatch, clear_database):
+async def test_register_monitors_no_example_monitors(monkeypatch, clear_database):
     """'register_monitors' should register all the internal monitors but not the sample monitors if
     it's disabled"""
-    monkeypatch.setattr(configs, "load_sample_monitors", False)
-    monkeypatch.setattr(configs, "internal_monitors_path", "tests/sample_monitors/internal")
-    monkeypatch.setattr(configs, "sample_monitors_path", "tests/sample_monitors/others")
+    monkeypatch.setattr(configs, "load_example_monitors", False)
+    monkeypatch.setattr(configs, "internal_monitors_path", "tests/example_monitors/internal")
+    monkeypatch.setattr(configs, "example_monitors_path", "tests/example_monitors/others")
 
     registered_monitors = await Monitor.get_all()
 
@@ -808,9 +808,9 @@ async def test_run_as_controller(mocker, monkeypatch, clear_database):
     When the app stops, the service's task should stop automatically"""
     # Disable the monitor loading schedule to control using the 'monitors_pending' event
     monkeypatch.setattr(configs, "monitors_load_schedule", "0 0 1 1 1")
-    monkeypatch.setattr(configs, "load_sample_monitors", False)
-    monkeypatch.setattr(configs, "internal_monitors_path", "tests/sample_monitors/internal")
-    monkeypatch.setattr(configs, "sample_monitors_path", "tests/sample_monitors/others")
+    monkeypatch.setattr(configs, "load_example_monitors", False)
+    monkeypatch.setattr(configs, "internal_monitors_path", "tests/example_monitors/internal")
+    monkeypatch.setattr(configs, "example_monitors_path", "tests/example_monitors/others")
     monkeypatch.setattr(monitors_loader, "COOL_DOWN_TIME", 0)
 
     _load_monitors_spy: AsyncMock = mocker.spy(monitors_loader, "_load_monitors")
