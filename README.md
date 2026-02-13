@@ -88,7 +88,7 @@ Common use cases:
 State machine-related issues often require several data checks and conditional logic to identify. These issues are typically difficult to capture using standard logs and metrics but can be easily addressed using Sentinela Monitoring.
 
 # Dashboard
-Sentinela provides a web dashboard with 2 sections:
+Sentinela provides a web dashboard, by default at port `8000`, with 2 sections:
 1. an overview of the monitors and their alerts and issues
 2. a monitor editor, where you can create and edit monitors directly from the browser
 
