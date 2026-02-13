@@ -101,7 +101,7 @@ Sentinela provides a web dashboard, by default at port `8000`, with 2 sections:
 # Documentation
 1. [Overview](./docs/overview.md)
 2. [Building a Monitor](./docs/monitor.md)
-    1. [Sample Monitor](./docs/sample_monitor.md)
+    1. [Example Monitors](./docs/example_monitors.md)
 3. [Querying data from databases](./docs/querying.md)
 4. [Validating a monitor](./docs/monitor_validating.md)
 5. [Registering a monitor](./docs/monitor_registering.md)
