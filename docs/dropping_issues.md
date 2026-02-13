@@ -1,7 +1,7 @@
 # Dropping issues
 In some cases, a monitor may encounter edge cases where certain issues cannot be resolved automatically. While these edge cases should be considered during monitor development, dropping issues manually can serve as a solution for unavoidable situations.
 
-Issues can be dropped either via an [HTTP request](./http_server.md) or a [Slack message](./slack_commands.md).
+Issues can be dropped either via an [HTTP request](http_server.md) or a [Slack message](slack_commands.md).
 
 > [!IMPORTANT]
 > Since dropping issues is intended only for specific scenarios, issues IDs should be manually retrieved by querying the Sentinela application database.

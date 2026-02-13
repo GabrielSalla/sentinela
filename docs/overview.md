@@ -33,21 +33,21 @@ The Sentinela platform comprises four main components:
 - HTTP Server
 - Monitors Loader
 
-![Sentinela components](./images/components.png)
+![Sentinela components](images/components.png)
 
 ## Controller
 The controller orchestrates the processing of monitors, queuing them for execution as needed.
 
 The controller execution is demonstrated in the following diagram.
 
-![Controller execution](./images/controller.png)
+![Controller execution](images/controller.png)
 
 ## Executor
 The executor handles the actual execution of monitor routines, as well as responses to requests and events. It performs the platform’s core processing tasks and can be scaled horizontally to enhance processing capacity.
 
 The executor execution is demonstrated in the following diagram.
 
-![Executor execution](./images/executor.png)
+![Executor execution](images/executor.png)
 
 The executor will wait for a message in the queue and do nothing while none are available. When a message is received, the executor will process it using the correct handler.
 
@@ -61,16 +61,16 @@ During the handling of a message, the executor will continuously reset the messa
 ## HTTP Server
 As the name suggests, the HTTP server serves as an entry point for user requests and actions on the platform. While not all interactions must occur through the HTTP server, it provides a central access point for user actions.
 
-More information can be found in the [HTTP Server](./docs/http_server.md) documentation.
+More information can be found in the [HTTP Server](http_server.md) documentation.
 
 ## Monitors Loader
 The monitors loader loads the monitors from the database and registers them to be used by the other components.
 
-![Monitors loading process](./images/monitors_loading_process.png)
+![Monitors loading process](images/monitors_loading_process.png)
 
 The monitors loader execution is demonstrated in the following diagram.
 
-![Monitors loader execution](./images/monitors_loader.png)
+![Monitors loader execution](images/monitors_loader.png)
 
 The monitors loader registers internal and example monitors (if configured as such) to the database. This process is only executed when the controller is enabled in the execution to make sure only one instance is trying to register the same monitors.
 

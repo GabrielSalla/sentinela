@@ -54,7 +54,7 @@ Local execution is recommended for developing monitors. It should not be used in
 
 When running the application locally, it is recommended to use the internal queue instead of the SQS queue for faster and smoother operation. However, it is also possible to use the AWS queue mock or a real SQS queue.
 
-1. Set the secrets in the `.env.secrets` file and environment variables in the `docker/docker-compose-local.yml` file, as specified in the [Configuration](./configuration.md) documentation.
+1. Set the secrets in the `.env.secrets` file and environment variables in the `docker/docker-compose-local.yml` file, as specified in the [Configuration](configuration.md) documentation.
 2. Migrate the database to the latest version. This is only necessary when running for the first time or after updates.
     ```shell
     make migrate-local
@@ -81,7 +81,7 @@ For a more scalable deployment, it is recommended to use separate containers for
 
 The `docker-compose` file for this setup includes a SQS queue mock, which is used by default. However, it is also possible to use the internal queue or a real SQS queue.
 
-1. Set the secrets in the `.env.secrets` file and environment variables in the `docker/docker-compose-scalable.yml` file, as specified in the [Configuration](./configuration.md) documentation.
+1. Set the secrets in the `.env.secrets` file and environment variables in the `docker/docker-compose-scalable.yml` file, as specified in the [Configuration](configuration.md) documentation.
 2. Set the `replicas` parameter in the `docker/docker-compose-scalable.yml` file to the desired number of executors.
 3. Migrate the database to the latest version. This is only necessary when running for the first time or after updates.
     ```shell
@@ -107,7 +107,7 @@ For production deployment, it is recommended to use a more complex setup with mu
 - Requires an external database and message queue.
 
 ### Building the Image
-The [Dockerfile](../Dockerfile) is a starting point for building the application image. This file implements the logic to install all dependencies for the enabled plugins.
+The [Dockerfile](/docker/Dockerfile) is a starting point for building the application image. This file implements the logic to install all dependencies for the enabled plugins.
 
 1. Install the dependencies for the application and enabled plugins.
     ```shell
@@ -123,9 +123,9 @@ The [Dockerfile](../Dockerfile) is a starting point for building the application
 ### Deploying the Application
 In production deployment, it is recommended to deploy the controller and executors in separate containers or pods (in the case of a Kubernetes deployment). This method requires an external queue to allow communication between the controller and executors. A persistent database is also recommended to prevent data loss.
 
-The files provided in the [Kubernetes template](../resources/kubernetes_template) directory can be used as a reference for a Kubernetes deployment.
+The files provided in the [Kubernetes template](/resources/kubernetes_template) directory can be used as a reference for a Kubernetes deployment.
 
-All services must have the environment variables set as specified in the [Configuration](./configuration.md) documentation.
+All services must have the environment variables set as specified in the [Configuration](configuration.md) documentation.
 
 Controllers and executors can be run by specifying them as parameters when starting the application:
 1. Run the controller.

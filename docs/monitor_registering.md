@@ -1,7 +1,7 @@
 # Registering a monitor
 Once the monitor code has been created, it needs to be registered on Sentinela. The process for registering a new monitor or updating an existing one is the same.
 
-![Registering a monitor process](./images/monitor_register.png)
+![Registering a monitor process](images/monitor_register.png)
 
 ## Monitor Composition
 A monitor consists of:

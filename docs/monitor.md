@@ -1,5 +1,5 @@
 # Creating a new monitor
-This guide will walk through the steps to set up a new Monitor. The file [monitor_template.py](../resources/monitor_template.py) serves as a template for creating a new monitor. It includes all the necessary imports and settings to get started.
+This guide will walk through the steps to set up a new Monitor. The file [monitor_template.py](/resources/monitor_template.py) serves as a template for creating a new monitor. It includes all the necessary imports and settings to get started.
 
 As a demonstration, the Monitor that will be designed is intended to **search for users with invalid registration data**, specifically when their name is empty.
 
@@ -290,7 +290,7 @@ result = await asyncio.to_thread(blocking_function)
 # Notifications
 Notifications are optional and can be configured to send notifications to different targets without needing extensive settings for ech monitor. Configure notifications by creating the `notification_options` variable with a list of the desired notifications. Each notification has it's own settings and behaviors.
 
-Notifications are provided as plugins. Check the [plugins documentation](./plugins/plugins.md) for more information.
+Notifications are provided as plugins. Check the [plugins documentation](plugins/plugins.md) for more information.
 
 # Reactions
 Reactions are optional and can be configured reactions to specific events by creating a `reaction_options` variable with an instance of the `ReactionOptions` class, available in the `monitor_utils` module.
@@ -358,7 +358,7 @@ The available events are:
 The monitor utils module also provides useful functions for developing a monitor.
 
 ## Query
-The `query` function allows querying data from available databases. For more details, refer to the [Querying Databases](./querying.md) documentation.
+The `query` function allows querying data from available databases. For more details, refer to the [Querying Databases](querying.md) documentation.
 
 ## Read file
 The `read_file` function reads files in the same directory as the monitor code, making it useful for accessing other resources that the monitor relies on, such as SQL query files.
