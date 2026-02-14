@@ -1,4 +1,3 @@
-pip install poetry --no-cache-dir
 poetry install --only main
 
 plugins=$(get_plugins_list)

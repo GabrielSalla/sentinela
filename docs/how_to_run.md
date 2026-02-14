@@ -111,7 +111,13 @@ The [Dockerfile](../Dockerfile) is a starting point for building the application
 
 1. Install the dependencies for the application and enabled plugins.
     ```shell
-    poetry install --no-root --only $(get_plugins_list)
+    poetry install --only main
+
+    plugins=$(get_plugins_list)
+
+    if ! [ "x$plugins" = "x" ]; then
+        poetry install --only $plugins
+    fi
     ```
 
 ### Deploying the Application

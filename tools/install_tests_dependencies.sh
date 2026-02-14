@@ -1,6 +1,7 @@
-plugins=$(get_plugins_list)
+plugins=$(get_plugins_list tests)
 
-poetry install --only dev
 if ! [ "x$plugins" = "x" ]; then
-    poetry install --only $plugins
+    poetry install --only dev,$plugins
+else
+    poetry install --only dev
 fi
