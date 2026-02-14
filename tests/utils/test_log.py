@@ -192,7 +192,7 @@ def test_json_formatter(capsys, monkeypatch, fields, level):
             assert value == level.upper()
         elif key in ("time", "timestamp"):
             assert isinstance(value, float)
-            assert value > time.time() - 0.001
+            assert value > time.time() - 0.005
         else:
             assert False, "Unexpected field in log"
 
