@@ -165,13 +165,13 @@ async def _register_monitors_from_path(
 
 
 async def _register_monitors() -> None:
-    """Register internal monitors and sample monitors, if enabled"""
+    """Register internal monitors and example monitors, if enabled"""
     await _register_monitors_from_path(
         configs.internal_monitors_path, internal=True, additional_file_extensions=["sql"]
     )
 
-    if configs.load_sample_monitors:
-        await _register_monitors_from_path(configs.sample_monitors_path)
+    if configs.load_example_monitors:
+        await _register_monitors_from_path(configs.example_monitors_path)
 
 
 def _configure_monitor(
@@ -327,7 +327,7 @@ async def run() -> None:
 
 
 async def init(controller_enabled: bool) -> None:
-    """Load the internal monitors and sample monitors if controller is enabled, and start the
+    """Load the internal monitors and example monitors if controller is enabled, and start the
     monitors load task"""
     if controller_enabled:
         await _register_monitors()

@@ -297,7 +297,7 @@ async def test_monitor_validate(mocker):
     """The 'monitor validate' route should validate the provided module code"""
     monitor_code_validate_spy: AsyncMock = mocker.spy(commands, "monitor_code_validate")
 
-    with open("tests/sample_monitors/others/monitor_1/monitor_1.py", "r") as file:
+    with open("tests/example_monitors/others/monitor_1/monitor_1.py", "r") as file:
         monitor_code = file.read()
 
     request_payload = {"monitor_code": monitor_code}
@@ -461,7 +461,7 @@ async def test_monitor_register(mocker, clear_database, monitor_name):
     monitor = await Monitor.get(Monitor.name == monitor_name)
     assert monitor is None
 
-    with open("tests/sample_monitors/others/monitor_1/monitor_1.py", "r") as file:
+    with open("tests/example_monitors/others/monitor_1/monitor_1.py", "r") as file:
         monitor_code = file.read()
 
     request_payload = {"monitor_code": monitor_code}
@@ -489,7 +489,7 @@ async def test_monitor_register(mocker, clear_database, monitor_name):
 async def test_monitor_register_batch(mocker, clear_database):
     """The 'monitor register' route should register a batch of monitors when multiple requests are
     received in a small time frame"""
-    with open("tests/sample_monitors/others/monitor_1/monitor_1.py", "r") as file:
+    with open("tests/example_monitors/others/monitor_1/monitor_1.py", "r") as file:
         monitor_code = file.read()
 
     request_payload = {"monitor_code": monitor_code}
@@ -521,7 +521,7 @@ async def test_monitor_register_additional_files(mocker, clear_database):
     monitor = await Monitor.get(Monitor.name == monitor_name)
     assert monitor is None
 
-    with open("tests/sample_monitors/others/monitor_1/monitor_1.py", "r") as file:
+    with open("tests/example_monitors/others/monitor_1/monitor_1.py", "r") as file:
         monitor_code = file.read()
 
     request_payload = {

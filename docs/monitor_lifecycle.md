@@ -1,5 +1,7 @@
-# Sample monitor
-This documentation explains the processes executed by the Sentinela monitoring platform, focusing on searching for issues, updating their data, and identifying when issues are solved. The provided [Sample Monitor](../sample_monitors/test_monitor/test_monitor.py) serves as an example implementation to understand these processes.
+# Monitor lifecycle
+This documentation explains the processes executed by the Sentinela monitoring platform, focusing on searching for issues, updating their data, and identifying when issues are solved. The provided [Example Monitors](example_monitors.md) implement various scenarios to help understand these processes.
+
+In this example, the monitor [Count Rule Monitor](/example_monitors/alert_options/count_rule_monitor/count_rule_monitor.py) is used to illustrate the monitor lifecycle. This monitor creates multiple issues with a `value` field that fluctuates randomly, demonstrating how issues are created, updated, and resolved based on their data.
 
 ## Issue options and issue data type
 Each issue is expected to have two fields:

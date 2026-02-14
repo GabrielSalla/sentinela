@@ -83,7 +83,7 @@ Enable the monitor with the provided `monitor_name`.
 
 Validate the monitor code provided without registering it.
 
-For more information, check the [Validating a monitor](./monitor_validating.md) documentation.
+For more information, check the [Validating a monitor](monitor_validating.md) documentation.
 
 Request body example:
 ```json
@@ -104,7 +104,7 @@ Response example:
 
 Register the monitor with the provided `monitor_name`.
 
-For more information, check the [Registering a monitor](./monitor_registering.md) documentation.
+For more information, check the [Registering a monitor](monitor_registering.md) documentation.
 
 Request body example:
 ```json

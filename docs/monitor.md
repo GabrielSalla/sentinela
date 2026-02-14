@@ -1,5 +1,5 @@
 # Creating a new monitor
-This guide will walk through the steps to set up a new Monitor. The file [monitor_template.py](../resources/monitor_template.py) serves as a template for creating a new monitor. It includes all the necessary imports and settings to get started.
+This guide will walk through the steps to set up a new Monitor. The file [monitor_template.py](/resources/monitor_template.py) serves as a template for creating a new monitor. It includes all the necessary imports and settings to get started.
 
 As a demonstration, the Monitor that will be designed is intended to **search for users with invalid registration data**, specifically when their name is empty.
 
@@ -290,7 +290,7 @@ result = await asyncio.to_thread(blocking_function)
 # Notifications
 Notifications are optional and can be configured to send notifications to different targets without needing extensive settings for ech monitor. Configure notifications by creating the `notification_options` variable with a list of the desired notifications. Each notification has it's own settings and behaviors.
 
-Notifications are provided as plugins. Check the [plugins documentation](./plugins/plugins.md) for more information.
+Notifications are provided as plugins. Check the [plugins documentation](plugins/plugins.md) for more information.
 
 # Reactions
 Reactions are optional and can be configured reactions to specific events by creating a `reaction_options` variable with an instance of the `ReactionOptions` class, available in the `monitor_utils` module.
@@ -358,7 +358,7 @@ The available events are:
 The monitor utils module also provides useful functions for developing a monitor.
 
 ## Query
-The `query` function allows querying data from available databases. For more details, refer to the [Querying Databases](./querying.md) documentation.
+The `query` function allows querying data from available databases. For more details, refer to the [Querying Databases](querying.md) documentation.
 
 ## Read file
 The `read_file` function reads files in the same directory as the monitor code, making it useful for accessing other resources that the monitor relies on, such as SQL query files.
@@ -379,9 +379,9 @@ content = read_file("search_query.sql")
 ```
 
 ## Variables
-The `variables` module allows storing and retrieving variables that can be used across executions of the monitor. This is useful for maintaining state or configuration information.
+The `variables` module allows storing and retrieving variables that persist across monitor executions. Variables store **monitor-level state** , not issue-specific data. When an information is exclusively related to the issue they should be stored in the issue data.
 
-Available functions are:
+### Available Functions
 
 **`get_variable`**
 ```python
@@ -393,7 +393,7 @@ async def get_variable(
 The function takes one parameter:
 - `name`: The name of the variable to retrieve.
 
-Return the value of a variable. If the variable does not exist, returns `None`.
+Returns the value of a variable. If the variable does not exist, returns `None`.
 
 **`set_variable`**
 ```python
@@ -411,15 +411,21 @@ Sets the value of a variable. If the variable does not exist yet, it's created.
 
 Both functions must be called from functions defined in the monitor base code. If they're called from any other Python file, they will raise an error as they won't be able to identify the monitor that's calling it.
 
+### Example: Using Variables for Pagination
 ```python
 from monitor_utils import variables
 
 async def search() -> list[IssueDataType] | None:
-    # Set a variable
-    await variables.set_variable("my_var", "some_value")
+    # Get the last timestamp we processed from variables.
+    last_timestamp = await variables.get_variable("last_processed_timestamp")
 
-async def update(issues_data: list[IssueDataType]) -> list[IssueDataType] | None:
-    value = await variables.get_variable("my_var")
+    # Query for events newer than last_timestamp
+    events = await query_data_source(since=last_timestamp)
+
+    # Update the bookmark for the next execution
+    await variables.set_variable("last_processed_timestamp", datetime.now().isoformat())
+
+    return events
 ```
 
 # Registering

@@ -4,8 +4,8 @@ plugins:
   - postgres
   - slack
 
-load_sample_monitors: true
-sample_monitors_path: sample_monitors
+load_example_monitors: true
+example_monitors_path: example_monitors
 internal_monitors_path: internal_monitors
 internal_monitors_notification:
   enabled: true

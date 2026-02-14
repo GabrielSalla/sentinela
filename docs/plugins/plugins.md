@@ -82,7 +82,7 @@ class MyNotification:
         ]
 ```
 
-The reaction functions must follow the same structure presented in the [Monitor](../monitor.md) documentation.
+The reaction functions must follow the same structure presented in the [Monitor](/docs/monitor.md) documentation.
 
 ## Services
 Services are used when the plugin has some initialization or running service. An example of a running service is a websocket connection to an external provider.
@@ -139,7 +139,7 @@ __all__ = ["queues"]
 ```
 
 ## Pools
-Plugins can provide different database pools to be used by Sentinela. Pools are a way to provide connections to databases to the monitors through a simple interface using the `query` function. More information about querying databases can be found in the [querying](../querying.md) documentation.
+Plugins can provide different database pools to be used by Sentinela. Pools are a way to provide connections to databases to the monitors through a simple interface using the `query` function. More information about querying databases can be found in the [querying](/docs/querying.md) documentation.
 
 An example of a plugin that provides the a database pool is shown below:
 
@@ -179,9 +179,9 @@ When the databases are being initialized, Sentinela will search for pools provid
 
 ## Built-in plugins
 Sentinela comes with some built-in plugins that can be used to extend the application's functionality.
-- [AWS](./aws.md)
-- [Postgres](./postgres.md)
-- [Slack](./slack.md)
+- [AWS](aws.md)
+- [Postgres](postgres.md)
+- [Slack](slack.md)
 
 ## Enabling plugins
 To enable a plugin, set the `plugins` field in the configuration file with the name of the desired plugins.

@@ -5,8 +5,8 @@ This document provides an overview of the configuration parameters available in 
 - `plugins`: List of strings. Plugins to be used by Sentinela. Check each plugin documentation to learn how to enable them.
 
 ## Monitors
-- `load_sample_monitors`: Boolean. Flag to enable the sample monitors.
-- `sample_monitors_path`: String. Path relative to the project root, where the sample monitors are stored.
+- `load_example_monitors`: Boolean. Flag to enable the example monitors.
+- `example_monitors_path`: String. Path relative to the project root, where the example monitors are stored.
 - `internal_monitors_path`: String. Path relative to the project root, where the internal monitors are stored.
 - `internal_monitors_notification`: Map. Settings for the notification to be sent by the internal monitors.
   - `enabled`: Boolean. Flag to enable the internal monitors notification.

@@ -16,7 +16,7 @@ A Sentinela Monitor is configured through 3 main parts, along some basic setting
 
 These implementations are enough for Sentinela to autonomously execute monitoring logic and automatically manages the issues.
 
-![sentinela example](./docs/images/example.gif)
+![sentinela example](/docs/images/example.gif)
 
 ## Example scenario: Pending orders with completed shipments
 Consider an online store where an order is expected to transition to `completed` as soon as its shipment is marked `completed`. Occasionally, inconsistencies arise: the shipment finishes but the order status remains stuck as `awaiting_delivery` or other intermediate state.
@@ -93,28 +93,29 @@ Sentinela provides a web dashboard, by default at port `8000`, with 2 sections:
 2. a monitor editor, where you can create and edit monitors directly from the browser
 
 **Overview**
-![dashboard overview](./docs/images/dashboard_overview.png)
+![dashboard overview](/docs/images/dashboard_overview.png)
 
 **Editor**
-![dashboard monitor editor](./docs/images/dashboard_editor.png)
+![dashboard monitor editor](/docs/images/dashboard_editor.png)
 
 # Documentation
-1. [Overview](./docs/overview.md)
-2. [Building a Monitor](./docs/monitor.md)
-    1. [Sample Monitor](./docs/sample_monitor.md)
-3. [Querying data from databases](./docs/querying.md)
-4. [Validating a monitor](./docs/monitor_validating.md)
-5. [Registering a monitor](./docs/monitor_registering.md)
+1. [Overview](/docs/overview.md)
+2. [Building a Monitor](/docs/monitor.md)
+    1. [Monitor lifecycle](/docs/monitor_lifecycle.md)
+    2. [Example Monitors](/docs/example_monitors.md)
+3. [Querying data from databases](/docs/querying.md)
+4. [Validating a monitor](/docs/monitor_validating.md)
+5. [Registering a monitor](/docs/monitor_registering.md)
 6. Deployment
-    1. [Configuration](./docs/configuration.md)
-    2. [Configuration file](./docs/configuration_file.md)
-    3. [How to run](./docs/how_to_run.md)
-7. [Monitoring Sentinela](./docs/monitoring_sentinela.md)
-8. [Plugins](./docs/plugins/plugins.md)
-    1. [AWS](./docs/plugins/aws.md)
-    2. [Postgres](./docs/plugins/postgres.md)
-    3. [Slack](./docs/plugins/slack.md)
+    1. [Configuration](/docs/configuration.md)
+    2. [Configuration file](/docs/configuration_file.md)
+    3. [How to run](/docs/how_to_run.md)
+7. [Monitoring Sentinela](/docs/monitoring_sentinela.md)
+8. [Plugins](/docs/plugins/plugins.md)
+    1. [AWS](/docs/plugins/aws.md)
+    2. [Postgres](/docs/plugins/postgres.md)
+    3. [Slack](/docs/plugins/slack.md)
 9. Interacting with Sentinela
-    1. [HTTP server](./docs/http_server.md)
+    1. [HTTP server](/docs/http_server.md)
 10. Special cases
-    1. [Dropping issues](./docs/dropping_issues.md)
+    1. [Dropping issues](/docs/dropping_issues.md)

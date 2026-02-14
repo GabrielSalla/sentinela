@@ -12,7 +12,7 @@ COPY . /app/
 
 RUN python3 -m venv $VIRTUAL_ENV \
     && pip install --no-cache-dir --upgrade pip \
-    && pip install poetry --no-cache-dir \
+    && pip install --no-cache-dir poetry \
     && sh tools/install_dependencies.sh
 
 

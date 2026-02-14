@@ -325,9 +325,9 @@ async def test_create_process_task_semaphore_wait(caplog, sample_monitor: Monito
 async def test_run(monkeypatch, clear_queue, clear_database):
     """Integration test of the 'run' method. It should loop through all monitors, create them in
     the database and process them accordingly. When the loop stops, it should stop automatically"""
-    monkeypatch.setattr(configs, "load_sample_monitors", True)
-    monkeypatch.setattr(configs, "internal_monitors_path", "tests/sample_monitors/internal")
-    monkeypatch.setattr(configs, "sample_monitors_path", "tests/sample_monitors/others")
+    monkeypatch.setattr(configs, "load_example_monitors", True)
+    monkeypatch.setattr(configs, "internal_monitors_path", "tests/example_monitors/internal")
+    monkeypatch.setattr(configs, "example_monitors_path", "tests/example_monitors/others")
 
     run_procedures_mock = AsyncMock()
     monkeypatch.setattr(controller, "run_procedures", run_procedures_mock)
@@ -395,9 +395,9 @@ async def test_run(monkeypatch, clear_queue, clear_database):
 async def test_run_no_sleep(mocker, monkeypatch):
     """'run' should not sleep if the controller completes the loop and another one is already
     triggered"""
-    monkeypatch.setattr(configs, "load_sample_monitors", True)
-    monkeypatch.setattr(configs, "internal_monitors_path", "tests/sample_monitors/internal")
-    monkeypatch.setattr(configs, "sample_monitors_path", "tests/sample_monitors/others")
+    monkeypatch.setattr(configs, "load_example_monitors", True)
+    monkeypatch.setattr(configs, "internal_monitors_path", "tests/example_monitors/internal")
+    monkeypatch.setattr(configs, "example_monitors_path", "tests/example_monitors/others")
 
     run_procedures_mock = AsyncMock()
     monkeypatch.setattr(controller, "run_procedures", run_procedures_mock)
@@ -430,9 +430,9 @@ async def test_run_current_task_error(caplog, monkeypatch):
 
 async def test_run_monitors_not_ready(caplog, monkeypatch, mocker):
     """'run' should loop until the monitors are ready, logging warning messages if they are not"""
-    monkeypatch.setattr(configs, "load_sample_monitors", True)
-    monkeypatch.setattr(configs, "internal_monitors_path", "tests/sample_monitors/internal")
-    monkeypatch.setattr(configs, "sample_monitors_path", "tests/sample_monitors/others")
+    monkeypatch.setattr(configs, "load_example_monitors", True)
+    monkeypatch.setattr(configs, "internal_monitors_path", "tests/example_monitors/internal")
+    monkeypatch.setattr(configs, "example_monitors_path", "tests/example_monitors/others")
     monkeypatch.setattr(registry.registry, "MONITORS_READY_TIMEOUT", 0.1)
 
     # Run the controller for a while then stop it
@@ -449,9 +449,9 @@ async def test_run_monitors_not_ready(caplog, monkeypatch, mocker):
 
 async def test_run_monitors_not_registered(caplog, monkeypatch, mocker):
     """'run' should handle monitors that are not registered"""
-    monkeypatch.setattr(configs, "load_sample_monitors", True)
-    monkeypatch.setattr(configs, "internal_monitors_path", "tests/sample_monitors/internal")
-    monkeypatch.setattr(configs, "sample_monitors_path", "tests/sample_monitors/others")
+    monkeypatch.setattr(configs, "load_example_monitors", True)
+    monkeypatch.setattr(configs, "internal_monitors_path", "tests/example_monitors/internal")
+    monkeypatch.setattr(configs, "example_monitors_path", "tests/example_monitors/others")
 
     monkeypatch.setattr(registry, "is_monitor_registered", lambda monitor_id: False)
 
@@ -468,9 +468,9 @@ async def test_run_monitors_not_registered(caplog, monkeypatch, mocker):
 
 async def test_run_error(caplog, monkeypatch, clear_queue, clear_database):
     """'run' should handle errors and don't break the loop if they happen"""
-    monkeypatch.setattr(configs, "load_sample_monitors", False)
-    monkeypatch.setattr(configs, "internal_monitors_path", "tests/sample_monitors/internal")
-    monkeypatch.setattr(configs, "sample_monitors_path", "tests/sample_monitors/others")
+    monkeypatch.setattr(configs, "load_example_monitors", False)
+    monkeypatch.setattr(configs, "internal_monitors_path", "tests/example_monitors/internal")
+    monkeypatch.setattr(configs, "example_monitors_path", "tests/example_monitors/others")
 
     def error(*args):
         raise ValueError("Not able to get the monitors")

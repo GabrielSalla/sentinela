@@ -47,8 +47,8 @@ class ControllerProcedureConfig:
 class Configs:
     plugins: list[str]
 
-    load_sample_monitors: bool
-    sample_monitors_path: str
+    load_example_monitors: bool
+    example_monitors_path: str
     internal_monitors_path: str
     internal_monitors_notification: InternalMonitorsNotificationConfig
 

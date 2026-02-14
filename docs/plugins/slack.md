@@ -5,15 +5,15 @@ The Slack plugin offers an interface to interact with Sentinela through Slack. I
 To enable the Slack plugin, add `slack` to the `plugins` list in the configuration file.
 
 ## Create the Slack app
-First create a Slack app in your workspace. The provided app manifest [template](../resources/slack_app_manifest.yaml) has the basic configuration and permissions needed for the Sentinela Slack app.
+First create a Slack app in your workspace. The provided app manifest [template](/resources/slack_app_manifest.yaml) has the basic configuration and permissions needed for the Sentinela Slack app.
 
 ## Environment variables
 The following environment variables are used by the Slack plugin:
 - `SLACK_TOKEN`: The token used to send messages to Slack. This token is generated when you create your Slack app and install it in your workspace. Example: `xoxb-1234567890-1234567890123-12345678901234567890abcdef`.
 - `SLACK_WEBSOCKET_ENABLED`: A flag to enable or disable the websocket connection for receiving events from Slack. Set this to `true` to enable the websocket or `false` to disable it. Defaults to `false`.
 - `SLACK_APP_TOKEN`: The token used to start the websocket connection for receiving events from interactions with the Sentinela Slack app. This token is generated when you create your Slack app and enable the Socket Mode. Example: `xapp-1234567890-1234567890123-12345678901234567890abcdef`.
-- `SLACK_MAIN_CHANNEL`: The Slack channel where notifications for **internal monitors** and **sample monitors** will be sent. Example: `C0011223344`.
-- `SLACK_MAIN_MENTION`: The Slack user or group to mention in notifications for **internal monitors** and **sample monitors**. Example: `U0011223344`.
+- `SLACK_MAIN_CHANNEL`: The Slack channel where notifications for **internal monitors** and **example monitors** will be sent. If using the provided docker compose implementations, these variables must be configured accordingly. They are located at the `docker/` directory. Example: `C0011223344`.
+- `SLACK_MAIN_MENTION`: The Slack user or group to mention in notifications for **internal monitors** and **example monitors**. If using the provided docker compose implementations, these variables must be configured accordingly. They are located at the `docker/` directory. Example: `U0011223344`.
 
 ## Slack commands
 Sentinela provides two main ways to interact through Slack:
@@ -28,7 +28,7 @@ Possible buttons:
 - **Lock**: Lock the alert. Visible if the alert is not already locked.
 - **Solve**: Solves the alert. Visible only if the monitor’s issue settings is set as **not solvable**.
 
-![Slack message with buttons](../images/slack_notification_message_with_buttons.png)
+![Slack message with buttons](/docs/images/slack_notification_message_with_buttons.png)
 
 ### Messages mentioning Sentinela
 As a Slack app, Sentinela can also respond to direct commands sent in a message. To interact this way, mention the Sentinela app, followed by the desired action.
@@ -109,7 +109,7 @@ To use the Slack notification for internal monitors, the settings for the `inter
   - `title` and `issues_fields` are specific to each monitor and are already defined in the internal monitors. If configured in the `params` field, they will be ignored.
   - `min_priority_to_send`, `min_priority_to_mention`, `mention_on_update`, and `issue_show_limit` can be set in the `params` field to customize the notification behavior. If not set, the default values will be used.
 
-The provided settings will be applied to every internal and sample monitors.
+The provided settings will be applied to every internal and example monitors.
 
 ## Services
 The Slack plugin includes a service that connects to the Slack websocket API to receive mentions and button press events. Any event received will queue an action to be processed by Sentinela.
