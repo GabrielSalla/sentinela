@@ -136,3 +136,10 @@ Controllers and executors can be run by specifying them as parameters when start
     ```shell
     sentinela executor
     ```
+
+# Gracefully Stopping Sentinela
+Sentinela can be gracefully stopped by sending a `SIGINT` or `SIGTERM` signal to the process. This allows the application to finish processing any ongoing tasks before shutting down.
+
+It's recommended to not forcefully kill the application because a monitor execution might be in progress, and killing the application would interrupt it, potentially leaving the monitor in an inconsistent state.
+
+Sentinela has it's own internal process to check if there are any monitors in this inconsistent state and fixes them. However, it's still recommended to allow the application to gracefully stop.
