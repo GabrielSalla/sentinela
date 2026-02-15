@@ -24,6 +24,11 @@ services:
       target: sentinela_dev
       args:
         CONFIGS_FILE: configs/configs.yaml
+    deploy:
+      resources:
+        limits:
+          cpus: 4
+          memory: 100M
     image: sentinela-dev:latest
     ports:
       - 8000:8000

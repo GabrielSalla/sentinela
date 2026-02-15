@@ -21,6 +21,13 @@ spec:
         command: ["sentinela", "executor"]
         ports:
         - containerPort: 8000
+        resources:
+          requests:
+            cpu: 100m
+            memory: 128Mi
+          limits:
+            cpu: 1000m
+            memory: 128Mi
         env:
         - name: CONFIGS_FILE
           value: configs_sqs.yaml
