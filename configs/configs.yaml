@@ -1,6 +1,7 @@
 # The documentation for this configuration file can be found at "docs/configuration_file.md"
 plugins:
   - aws
+  - odbc
   - postgres
   - slack
 

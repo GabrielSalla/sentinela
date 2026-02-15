@@ -11,6 +11,11 @@ The PostgreSQL pool will be used when the database DSN starts with one of the fo
 - `postgresql://`
 - `postgresql+asyncpg://`
 
+Example:
+```
+DATABASE_DSN=postgresql+asyncpg://user:password@localhost:5432/database
+```
+
 The default pool parameters are:
 - `min_size`: 0
 - `max_size`: 5
