@@ -13,6 +13,11 @@ services:
       target: sentinela
       args:
         CONFIGS_FILE: configs/configs.yaml
+    deploy:
+      resources:
+        limits:
+          cpus: 1
+          memory: 128M
     image: sentinela-local:latest
     ports:
       - 8000:8000
