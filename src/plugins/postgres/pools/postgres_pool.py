@@ -45,7 +45,7 @@ class PostgresPool:
                 "application_name": "sentinela_pool",
             },
         }
-        self.__connection_params.update(**configs)
+        self.__connection_params.update(configs)
 
     async def init(self) -> None:
         self._pool = await asyncpg.create_pool(dsn=self.__dsn, **self.__connection_params)
