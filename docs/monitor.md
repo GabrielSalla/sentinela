@@ -82,6 +82,15 @@ Define a class called `IssueDataType`, that inherits from `TypedDict`, and inclu
 
 **Attention**: The `IssueDataType` class must contain the field specified in the `model_id_key` parameter of the `IssueOptions` setting. This ensures that the issue’s unique identifier is consistently used across your monitor’s configuration. This setting will be presented in the [**Issue options**](#issue-options) section.
 
+### Example
+For the user registration monitor, the issue data type should include the `id` and `name` fields, as these are the essential fields for identifying and tracking the issue.
+
+```python
+class IssueDataType(TypedDict):
+    id: int
+    name: str
+```
+
 # The settings
 To set up the monitor’s behavior, issues, and alerts, use the provided Options dataclasses. These settings define how the monitor will manage issues and alerts.
 
@@ -173,16 +182,7 @@ Priority levels definition. For the defined rule, what value should trigger each
 
 All priority levels defaults to `None`. If a level is set to `None`, it will not be triggered.
 
-### Example
-For the user registration monitor, the issue data type should include the `id` and `name` fields, as these are the essential fields for identifying and tracking the issue.
-
-```python
-class IssueDataType(TypedDict):
-    id: int
-    name: str
-```
-
-# The functions
+# Control functions
 There are 3 functions that control the monitor's execution. They are `search`, `update` and `is_solved`.
 
 ## Search function
@@ -354,7 +354,7 @@ The available events are:
 - `notification_closed`: Notification was closed
 - `notification_created`: Notification was created
 
-# Functions
+# Utils Functions
 The monitor utils module also provides useful functions for developing a monitor.
 
 ## Query
