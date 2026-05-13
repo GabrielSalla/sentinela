@@ -145,6 +145,7 @@ def clear_monitors():
 async def start_queue():
     """Reset the queue for each new test file"""
     await message_queue.init()
+    raise Exception("test")
 
 
 @pytest.fixture(scope="function")
