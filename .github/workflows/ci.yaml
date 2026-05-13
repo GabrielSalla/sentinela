@@ -9,9 +9,47 @@ on:
       - main
 
 jobs:
+  check-version-change:
+    name: Check version change
+    runs-on: ubuntu-latest
+    outputs:
+      skip: ${{ steps.check.outputs.skip }}
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Check if only version changed
+        id: check
+        run: |
+          if [ "${{ github.event_name }}" == "pull_request" ]; then
+            BASE_SHA=${{ github.event.pull_request.base.sha }}
+            HEAD_SHA=${{ github.sha }}
+          else
+            BASE_SHA=$(git rev-parse HEAD~1)
+            HEAD_SHA=$(git rev-parse HEAD)
+          fi
+          CHANGED_FILES=$(git diff --name-only $BASE_SHA $HEAD_SHA)
+          if [ "$CHANGED_FILES" == "pyproject.toml" ]; then
+            DIFF=$(git diff $BASE_SHA $HEAD_SHA -- pyproject.toml)
+            # Check if diff changes version line
+            if echo "$DIFF" | grep -q "^+version = " && echo "$DIFF" | grep -q "^-version = "; then
+              echo "Only version change detected"
+              echo "skip=true" >> $GITHUB_OUTPUT
+            else
+              echo "skip=false" >> $GITHUB_OUTPUT
+              echo "Non-version change detected"
+            fi
+          else
+            echo "Non-version change detected"
+            echo "skip=false" >> $GITHUB_OUTPUT
+          fi
+
   build-image:
     name: Build image
     runs-on: ubuntu-latest
+    needs: check-version-change
+    if: needs.check-version-change.outputs.skip != 'true'
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v4
@@ -29,6 +67,7 @@ jobs:
     name: Run linter
     runs-on: ubuntu-latest
     needs: build-image
+    if: needs.check-version-change.outputs.skip != 'true'
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v4
@@ -46,6 +85,7 @@ jobs:
     name: Run mypy
     runs-on: ubuntu-latest
     needs: build-image
+    if: needs.check-version-change.outputs.skip != 'true'
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v4
@@ -63,6 +103,7 @@ jobs:
     name: Run tests
     runs-on: ubuntu-latest
     needs: build-image
+    if: needs.check-version-change.outputs.skip != 'true'
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v4
@@ -90,3 +131,33 @@ jobs:
       - uses: geekyeggo/delete-artifact@v5
         with:
           name: ${{ github.sha }}
+
+  merge-gate:
+    name: merge-gate
+    runs-on: ubuntu-latest
+    needs:
+      - check-version-change
+      - run-linter
+      - run-mypy
+      - run-tests
+    if: always()
+    steps:
+      - name: Check merge eligibility
+        run: |
+          if [ "${{ needs.check-version-change.outputs.skip }}" = "true" ]; then
+            echo "Version-only change detected; merge-gate job passes."
+            exit 0
+          fi
+          if [ "${{ needs.run-linter.result }}" != "success" ] && [ "${{ needs.run-linter.result }}" != "skipped" ]; then
+            echo "run-linter did not succeed or skip: ${{ needs.run-linter.result }}"
+            exit 1
+          fi
+          if [ "${{ needs.run-mypy.result }}" != "success" ] && [ "${{ needs.run-mypy.result }}" != "skipped" ]; then
+            echo "run-mypy did not succeed or skip: ${{ needs.run-mypy.result }}"
+            exit 1
+          fi
+          if [ "${{ needs.run-tests.result }}" != "success" ] && [ "${{ needs.run-tests.result }}" != "skipped" ]; then
+            echo "run-tests did not succeed or skip: ${{ needs.run-tests.result }}"
+            exit 1
+          fi
+          echo "All required jobs are either skipped or successful."
