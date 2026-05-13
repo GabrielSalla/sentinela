@@ -34,9 +34,9 @@ async def test_run(mocker, monkeypatch):
 
     task = asyncio.create_task(heartbeat.run())
 
-    await asyncio.sleep(0.1)
+    await asyncio.sleep(0.05)
     assert heartbeat_logger_warning_spy.call_count == 0
-    time.sleep(0.1)
+    time.sleep(0.15)
     await asyncio.sleep(0)
     assert heartbeat_logger_warning_spy.call_count == 1
 
@@ -52,10 +52,10 @@ async def test_run_cooldown(mocker, monkeypatch):
     task = asyncio.create_task(heartbeat.run())
 
     await asyncio.sleep(0.1)
-    time.sleep(0.1)
+    time.sleep(0.15)
     await asyncio.sleep(0)
     assert heartbeat_logger_warning_spy.call_count == 1
-    time.sleep(0.1)
+    time.sleep(0.15)
     await asyncio.sleep(0)
     assert heartbeat_logger_warning_spy.call_count == 1
 
