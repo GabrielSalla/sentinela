@@ -22,7 +22,7 @@ def main() -> None:
 
     if configs["plugins"]:
         plugins_list = [_make_plugin_name(environment, plugin) for plugin in configs["plugins"]]
-        print(",".join(plugins_list))
+        print(" ".join(plugins_list))
 
 
 if __name__ == "__main__":
