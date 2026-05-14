@@ -24,6 +24,11 @@ services:
       target: sentinela
       args:
         CONFIGS_FILE: configs/configs-scalable.yaml
+    deploy:
+      resources:
+        limits:
+          cpus: 1
+          memory: 100M
     image: sentinela-scalable:latest
     ports:
       - 8000:8000
@@ -58,6 +63,10 @@ services:
     deploy:
       mode: replicated
       replicas: 2
+      resources:
+        limits:
+          cpus: 1
+          memory: 128M
     ports:
       - 8001-8100:8000
     healthcheck:
