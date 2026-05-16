@@ -15,13 +15,17 @@ src/plugins/my_plugin
 ├── queues
 │   └── queue_type
 │       └── __init__.py
-└── services
-    └── __init__.py
+├── services
+│   └── __init__.py
+└── setup.sh
 ```
 
 More files or functionalities can be included with the plugin as long as they are available in each internal `actions`, `notifications` or `services` module.
 
 **Each plugin should provide it's own documentation to guide users on how to use their functionalities.**
+
+## Setup script
+The `setup.sh` file is an optional script that can be used to install dependencies or run any setup commands for the plugin. If the file is present, it will be executed when the `install_dependencies.sh` script is run.
 
 ## Actions
 Actions are used as custom behaviors to requests received by sentinela. If sentinela receives an action request named `plugin.my_plugin.some_action`, it'll look for the `some_action` function in the `actions` module of `my_plugin`.
@@ -180,6 +184,7 @@ When the databases are being initialized, Sentinela will search for pools provid
 ## Built-in plugins
 Sentinela comes with some built-in plugins that can be used to extend the application's functionality.
 - [AWS](aws.md)
+- [ODBC](odbc.md)
 - [Postgres](postgres.md)
 - [Slack](slack.md)
 
@@ -190,6 +195,7 @@ Example:
 ```yaml
 plugins:
   - aws
+  - odbc
   - postgres
   - slack
 ```
