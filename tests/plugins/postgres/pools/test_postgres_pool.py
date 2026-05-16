@@ -67,6 +67,7 @@ async def test_postgrespool_protocol():
 @pytest.mark.parametrize(
     "dsn, connection_params",
     [
+        ("postgres+asyncpg://postgres:postgres@postgres:5432/postgres", {}),
         ("postgres+asyncpg://postgres:postgres@postgres:5432/postgres", {"max_size": 123}),
         ("postgres://postgres:postgres@postgres:5432/postgres", {"min_size": 1, "max_size": 4}),
     ],
@@ -117,10 +118,29 @@ async def test_postgrespool_fetch():
     """'PostgresPool.fetch' should execute a query in the provided database and return the result"""
     pool = PostgresPool(dsn="postgres://postgres:postgres@postgres:5432/postgres", name="db1")
     await pool.init()
-    await pool.fetch("create table test_table (value int, float_value float);")
-    await pool.fetch("insert into test_table(value, float_value) values (1, 1.11), (2, 2.22);")
+    await pool.execute("create table test_table (value int, float_value float);")
+    await pool.execute("insert into test_table(value, float_value) values (1, 1.11), (2, 2.22);")
     data = await pool.fetch("select * from test_table order by value")
     assert data == [{"value": 1, "float_value": 1.11}, {"value": 2, "float_value": 2.22}]
+
+
+async def test_postgrespool_execute_rollbacks_on_error():
+    """A failed query should raise and leave the connection usable afterward"""
+    connection_params = {"max_size": 123}
+    pool = PostgresPool(
+        dsn="postgres://postgres:postgres@postgres:5432/postgres", name="db1", **connection_params
+    )
+    await pool.init()
+
+    await pool.execute("create table test_table (value int primary key);")
+    await pool.execute("insert into test_table values (1);")
+
+    with pytest.raises(Exception, match="duplicate key value violates unique constraint"):
+        await pool.execute("insert into test_table values (1);")
+
+    await pool.execute("insert into test_table values (2);")
+    data = await pool.fetch("select * from test_table order by value")
+    assert data == [{"value": 1}, {"value": 2}]
 
 
 async def test_postgrespool_close(mocker):
