@@ -124,6 +124,25 @@ async def test_postgrespool_fetch():
     assert data == [{"value": 1, "float_value": 1.11}, {"value": 2, "float_value": 2.22}]
 
 
+async def test_postgrespool_execute_rollbacks_on_error():
+    """A failed query should raise and leave the connection usable afterward"""
+    connection_params = {"max_size": 123}
+    pool = PostgresPool(
+        dsn="postgres://postgres:postgres@postgres:5432/postgres", name="db1", **connection_params
+    )
+    await pool.init()
+
+    await pool.execute("create table test_table (value int primary key);")
+    await pool.execute("insert into test_table values (1);")
+
+    with pytest.raises(Exception, match="duplicate key value violates unique constraint"):
+        await pool.execute("insert into test_table values (1);")
+
+    await pool.execute("insert into test_table values (2);")
+    data = await pool.fetch("select * from test_table order by value")
+    assert data == [{"value": 1}, {"value": 2}]
+
+
 async def test_postgrespool_close(mocker):
     """'PostgresPool.close' should close the pool connections"""
     pool_close_mock: AsyncMock = mocker.spy(asyncpg.Pool, "close")
