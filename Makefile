@@ -1,3 +1,5 @@
+ARGS = $(filter-out $@,$(MAKECMDGOALS))
+
 # Development
 build-dev:
 	docker compose --project-directory . -f ./docker/docker-compose-dev.yaml build sentinela-dev
@@ -15,7 +17,7 @@ run-shell-dev:
 	docker compose --project-directory . -f ./docker/docker-compose-dev.yaml run --rm --service-ports sentinela-dev /bin/sh
 
 test-dev:
-	docker compose --project-directory . -f ./docker/docker-compose-dev.yaml run --rm sentinela-dev pytest
+	docker compose --project-directory . -f ./docker/docker-compose-dev.yaml run --rm sentinela-dev pytest $(ARGS)
 
 down-dev:
 	docker compose --project-directory . -f ./docker/docker-compose-dev.yaml down
@@ -48,8 +50,8 @@ down-scalable:
 
 # Development utilities
 linter:
-	docker compose --project-directory . -f ./docker/docker-compose-dev.yaml run --rm --no-deps sentinela-dev ruff check
-	docker compose --project-directory . -f ./docker/docker-compose-dev.yaml run --rm --no-deps sentinela-dev ruff format --check --diff
+	docker compose --project-directory . -f ./docker/docker-compose-dev.yaml run --rm --no-deps sentinela-dev ruff check $(ARGS)
+	docker compose --project-directory . -f ./docker/docker-compose-dev.yaml run --rm --no-deps sentinela-dev ruff format --check --diff $(ARGS)
 
 mypy:
-	docker compose --project-directory . -f ./docker/docker-compose-dev.yaml run --rm --no-deps sentinela-dev mypy --install-types --non-interactive
+	docker compose --project-directory . -f ./docker/docker-compose-dev.yaml run --rm --no-deps sentinela-dev mypy --install-types --non-interactive $(ARGS)
