@@ -11,6 +11,7 @@ import registry as registry
 import utils.app as app
 from configs import configs
 from models import Monitor
+from models.exceptions import MonitorQueueException
 from utils.exception_handling import catch_exceptions
 from utils.time import format_datetime_iso, is_triggered, now, time_since, time_until_next_trigger
 
@@ -58,49 +59,17 @@ async def diagnostics() -> tuple[dict[str, Any], list[str]]:
     return status, issues
 
 
-async def _queue_task(monitor: Monitor, tasks: list[str]) -> None:
-    """Send a message to the queue with the monitor tasks that should be executed"""
-    await monitor.set_queued(True)
-
-    try:
-        await message_queue.send_message(
-            type="process_monitor",
-            payload={
-                "monitor_id": monitor.id,
-                "tasks": tasks,
-            },
-        )
-    except Exception:
-        prometheus_task_queue_error_count.inc()
-
-        _logger.error("Error while queueing the task, reverting queued state", exc_info=True)
-        await monitor.set_queued(False)
-
-
 async def _process_monitor(monitor: Monitor) -> None:
     """Check if the monitor triggers any task and queue them if there're any"""
     global last_monitor_processed_at
 
-    prometheus_monitors_processed_count.inc()
-
-    tasks: list[str] = []
-
-    search_triggered = monitor.is_search_triggered
-    if search_triggered:
-        tasks.append("search")
-
-    update_triggered = monitor.is_update_triggered
-    if update_triggered:
-        tasks.append("update")
-
-    last_monitor_processed_at = now()
-
-    if not tasks:
-        return
-
-    _logger.info(f"Triggered {tasks} for {monitor}")
-
-    await _queue_task(monitor, tasks)
+    try:
+        await monitor.process()
+    except MonitorQueueException:
+        # The error is already logged in the monitor's method
+        prometheus_task_queue_error_count.inc()
+    finally:
+        last_monitor_processed_at = now()
 
 
 async def _run_task(semaphore: asyncio.Semaphore, monitor: Monitor) -> None:
