@@ -16,6 +16,9 @@ Example:
 DATABASE_DSN=postgresql+asyncpg://user:password@localhost:5432/database
 ```
 
+## Pool settings
+The pool settings are configured in the `configs.yaml` file as described in [Configuration file](/docs/configuration_file.md).
+
 The default pool parameters are:
 - `min_size`: 0
 - `max_size`: 5

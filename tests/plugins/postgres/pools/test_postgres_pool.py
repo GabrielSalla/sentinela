@@ -36,7 +36,14 @@ async def drop_test_tables():
     """Drop test tables from the database"""
     pool = PostgresPool(dsn="postgres://postgres:postgres@postgres:5432/postgres", name="db1")
     await pool.init()
-    await pool.execute("drop table if exists test_table cascade")
+
+    try:
+        await pool.execute("drop table if exists test_table cascade")
+    except Exception:
+        # Table might not exist, which is fine
+        pass
+    finally:
+        await pool.close()
 
 
 @pytest.mark.parametrize("value", [1.234, 56.789])
@@ -78,12 +85,8 @@ async def test_postgrespool_init(dsn, connection_params):
     pool = PostgresPool(dsn=dsn, name="db1", **connection_params)
     await pool.init()
 
-    if connection_params is None:
-        assert pool._pool.get_min_size() == 0
-        assert pool._pool.get_max_size() == 5
-    else:
-        assert pool._pool.get_min_size() == connection_params.get("min_size", 0)
-        assert pool._pool.get_max_size() == connection_params.get("max_size", 5)
+    assert pool._pool.get_min_size() == connection_params.get("min_size", 0)
+    assert pool._pool.get_max_size() == connection_params.get("max_size", 5)
 
     result = await pool.fetch("select 1 as value")
     assert result == [{"value": 1}]

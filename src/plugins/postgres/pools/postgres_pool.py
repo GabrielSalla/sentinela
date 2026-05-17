@@ -48,6 +48,7 @@ class PostgresPool:
         self.__connection_params.update(configs)
 
     async def init(self) -> None:
+        """Initialize the pool"""
         self._pool = await asyncpg.create_pool(dsn=self.__dsn, **self.__connection_params)
         await self.fetch("select 1;")
 
