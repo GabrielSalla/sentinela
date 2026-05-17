@@ -6,15 +6,15 @@ from typing import TYPE_CHECKING, Any, Callable, Coroutine
 from sqlalchemy import Boolean, DateTime, Integer, String
 from sqlalchemy.orm import Mapped, mapped_column, reconstructor
 
+import message_queue
 import utils.time as time_utils
 from data_models.monitor_options import AlertOptions, IssueOptions, MonitorOptions, ReactionOptions
 from registry import get_monitor_module
 
-from .exceptions import MonitorQueueException
 from .alert import Alert, AlertStatus
 from .base import Base
+from .exceptions import MonitorQueueException
 from .issue import Issue, IssueStatus
-import message_queue
 
 if TYPE_CHECKING:
     from components.monitors_loader.monitor_module_type import MonitorModule
@@ -186,7 +186,6 @@ class Monitor(Base):
             await self.set_queued(False)
 
             raise MonitorQueueException() from e
-
 
     @Base.lock_change
     async def set_search_executed_at(self) -> None:
