@@ -7,6 +7,7 @@ from .monitor_executions import ExecutionStatus, MonitorExecution
 from .notification import Notification, NotificationStatus
 from .utils.priority import AlertPriority
 from .variable import Variable
+import exceptions
 
 __all__ = [
     "Alert",
@@ -14,6 +15,7 @@ __all__ = [
     "AlertStatus",
     "Base",
     "CodeModule",
+    "exceptions",
     "ExecutionStatus",
     "Issue",
     "IssueStatus",
