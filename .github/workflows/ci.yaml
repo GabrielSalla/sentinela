@@ -16,7 +16,7 @@ jobs:
       skip: ${{ steps.check.outputs.skip }}
     steps:
       - name: Checkout Repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
           fetch-depth: 0
       - name: Check if only version changed
@@ -52,13 +52,13 @@ jobs:
     if: needs.check-version-change.outputs.skip != 'true'
     steps:
       - name: Checkout Repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
       - name: Build image
         run: make build-dev
       - name: Save Docker image
         run: docker save sentinela-dev:latest > /tmp/sentinela_image.tar
       - name: Upload Docker image
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: ${{ github.sha }}
           path: /tmp/sentinela_image.tar
@@ -70,9 +70,9 @@ jobs:
     if: needs.check-version-change.outputs.skip != 'true'
     steps:
       - name: Checkout Repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
       - name: Download Docker image
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v8
         with:
           name: ${{ github.sha }}
           path: /tmp
@@ -88,9 +88,9 @@ jobs:
     if: needs.check-version-change.outputs.skip != 'true'
     steps:
       - name: Checkout Repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
       - name: Download Docker image
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v8
         with:
           name: ${{ github.sha }}
           path: /tmp
@@ -106,9 +106,9 @@ jobs:
     if: needs.check-version-change.outputs.skip != 'true'
     steps:
       - name: Checkout Repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
       - name: Download Docker image
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v8
         with:
           name: ${{ github.sha }}
           path: /tmp
@@ -128,7 +128,7 @@ jobs:
       - run-mypy
       - run-tests
     steps:
-      - uses: geekyeggo/delete-artifact@v5
+      - uses: geekyeggo/delete-artifact@v6
         with:
           name: ${{ github.sha }}
 
