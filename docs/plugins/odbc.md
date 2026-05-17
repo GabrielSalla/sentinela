@@ -16,6 +16,9 @@ DATABASE_DSN=odbc://Driver=postgresql;Server=postgres;Port=5432;Database=postgre
 > [!WARNING]
 > **The system must have the appropriate ODBC driver manager and the database-specific ODBC driver installed and configured.**
 
+## Pool settings
+The pool settings are configured in the `configs.yaml` file as described in [Configuration file](/docs/configuration_file.md).
+
 The default pool parameters are:
 - `minsize`: 0
 - `maxsize`: 5
