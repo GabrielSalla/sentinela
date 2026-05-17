@@ -98,7 +98,7 @@ Settings that will be applied to database queries executed by the monitors.
 - `database_log_query_metrics`: Boolean. Flag to log query metrics, useful for debugging slow monitors.
 
 ## Database Pools Configs
-Settings for the database pools that were defined in the environment variables. See the [Querying databases](docs/querying.md) document for more information.
+Settings for the database pools that were defined in the environment variables. See the [Querying databases](querying.md) document for more information.
 
 The object defined for each database are the parameters that will be provided when creating the database pool.
 
