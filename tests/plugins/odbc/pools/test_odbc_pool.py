@@ -69,37 +69,25 @@ async def test_odbcpool_protocol():
 
 
 @pytest.mark.parametrize(
-    "dsn, connection_params",
+    "connection_params",
     [
-        (
-            "odbc://Driver=postgresql;Server=postgres;Port=5432;"
-            "Database=postgres;UID=postgres;PWD=postgres",
-            {},
-        ),
-        (
-            "odbc://Driver=postgresql;Server=postgres;Port=5432;"
-            "Database=postgres;UID=postgres;PWD=postgres",
-            {"maxsize": 123},
-        ),
-        (
-            "odbc://Driver=postgresql;Server=postgres;Port=5432;"
-            "Database=postgres;UID=postgres;PWD=postgres",
-            {"minsize": 1, "maxsize": 4},
-        ),
+        {},
+        {"maxsize": 123},
+        {"minsize": 1, "maxsize": 4},
     ],
 )
-async def test_odbcpool_init(dsn, connection_params):
+async def test_odbcpool_init(connection_params):
     """'OdbcPool' should create a pool with the provided parameters using the default parameters
     if one wasn't provided"""
+    dsn = (
+        "odbc://Driver=postgresql;Server=postgres;Port=5432;"
+        "Database=postgres;UID=postgres;PWD=postgres"
+    )
     pool = OdbcPool(dsn=dsn, name="db1", **connection_params)
     await pool.init()
 
-    if connection_params is None:
-        assert pool._pool._minsize == 0
-        assert pool._pool._maxsize == 5
-    else:
-        assert pool._pool._minsize == connection_params.get("minsize", 0)
-        assert pool._pool._maxsize == connection_params.get("maxsize", 5)
+    assert pool._pool._minsize == connection_params.get("minsize", 0)
+    assert pool._pool._maxsize == connection_params.get("maxsize", 5)
 
     result = await pool.fetch("select 1 as value")
     assert result == [{"value": 1}]

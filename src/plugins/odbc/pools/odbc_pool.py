@@ -47,6 +47,7 @@ class OdbcPool:
         del self.__connection_params["max_inactive_connection_lifetime"]
 
     async def init(self) -> None:
+        """Initialize the pool"""
         self._pool = await aioodbc.create_pool(dsn=self.__dsn, **self.__connection_params)
         await self.fetch("select 1;")
 
