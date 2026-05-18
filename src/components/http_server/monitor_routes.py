@@ -130,7 +130,8 @@ async def monitor_disable(request: Request) -> Response:
     except Exception as e:
         error_response = {
             "status": "error",
-            "message": str(e),
+            "message": "Unexpected error",
+            "error": str(e),
         }
         _logger.error(traceback.format_exc().strip())
         return web.json_response(error_response, status=400)
@@ -156,7 +157,46 @@ async def monitor_enable(request: Request) -> Response:
     except Exception as e:
         error_response = {
             "status": "error",
-            "message": str(e),
+            "message": "Unexpected error",
+            "error": str(e),
+        }
+        _logger.error(traceback.format_exc().strip())
+        return web.json_response(error_response, status=400)
+
+
+@monitor_routes.post(base_route + "/{monitor_name}/refresh")
+@monitor_routes.post(base_route + "/{monitor_name}/refresh/")
+async def monitor_refresh(request: Request) -> Response:
+    """Route to refresh a monitor."""
+    monitor_name = request.match_info["monitor_name"]
+    request_data = await request.json()
+    tasks = request_data.get("tasks")
+
+    try:
+        if not isinstance(tasks, list):
+            raise ValueError("'tasks' parameter must be a list")
+
+        if not tasks:
+            raise ValueError("'tasks' parameter is required")
+
+        invalid_tasks = [task for task in tasks if task not in ("search", "update")]
+        if len(invalid_tasks) > 0:
+            raise ValueError(f"Invalid tasks: {invalid_tasks}")
+
+        await commands.monitor_refresh(monitor_name, tasks)
+        success_response = {
+            "status": "monitor_refresh_queued",
+            "monitor_name": monitor_name,
+            "tasks": tasks,
+        }
+        return web.json_response(success_response)
+    except commands.MonitorNotFoundError as e:
+        return web.json_response({"status": "error", "message": str(e)}, status=404)
+    except Exception as e:
+        error_response = {
+            "status": "error",
+            "message": "Unexpected error",
+            "error": str(e),
         }
         _logger.error(traceback.format_exc().strip())
         return web.json_response(error_response, status=400)
@@ -194,23 +234,28 @@ async def monitor_validate(request: Request) -> Response:
             ],
         }
         return web.json_response(error_response, status=400)
-    except MonitorValidationError as e:
-        error_response = {
-            "status": "error",
-            "message": "Module didn't pass check",
-            "error": e.get_error_message(include_monitor_name=False),
-        }
-        return web.json_response(error_response, status=400)
     except SyntaxError as e:
         syntax_error_line = e.lineno
         syntax_error_code = e.args[1][3].strip()
         error_response = {
             "status": "error",
+            "message": "Syntax error in monitor code",
             "error": f"Syntax error at line {syntax_error_line}: {syntax_error_code}",
         }
         return web.json_response(error_response, status=400)
+    except MonitorValidationError as e:
+        error_response = {
+            "status": "error",
+            "message": "Monitor didn't pass check",
+            "error": e.get_error_message(include_monitor_name=False),
+        }
+        return web.json_response(error_response, status=400)
     except Exception as e:
-        error_response = {"status": "error", "error": str(e)}
+        error_response = {
+            "status": "error",
+            "message": "Unexpected error",
+            "error": str(e),
+        }
         _logger.error(traceback.format_exc().strip())
         return web.json_response(error_response, status=400)
 
@@ -268,13 +313,14 @@ async def monitor_register(request: Request) -> Response:
     except MonitorValidationError as e:
         error_response = {
             "status": "error",
-            "message": "Module didn't pass check",
+            "message": "Monitor didn't pass check",
             "error": e.get_error_message(),
         }
         return web.json_response(error_response, status=400)
     except Exception as e:
         error_response = {
             "status": "error",
+            "message": "Unexpected error",
             "error": str(e),
         }
         _logger.error(traceback.format_exc().strip())

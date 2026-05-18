@@ -1,3 +1,4 @@
+import json
 from unittest.mock import AsyncMock
 
 import aiohttp
@@ -230,7 +231,8 @@ async def test_monitor_disable_error(mocker):
     monitor_disable_spy.assert_awaited_once_with("error")
     assert response_data == {
         "status": "error",
-        "message": "Something went wrong",
+        "message": "Unexpected error",
+        "error": "Something went wrong",
     }
 
 
@@ -280,7 +282,105 @@ async def test_monitor_enable_error(mocker):
     monitor_enable_spy.assert_awaited_once_with("error")
     assert response_data == {
         "status": "error",
-        "message": "Something went wrong",
+        "message": "Unexpected error",
+        "error": "Something went wrong",
+    }
+
+
+@pytest.mark.parametrize("tasks", [["search"], ["update"], ["search", "update"]])
+async def test_monitor_refresh(mocker, sample_monitor: Monitor, tasks):
+    """The 'monitor refresh' route should force monitor tasks"""
+    monitor_refresh_spy: AsyncMock = mocker.spy(commands, "monitor_refresh")
+
+    url = BASE_URL + f"/{sample_monitor.name}/refresh"
+    async with aiohttp.ClientSession() as session:
+        async with session.post(url, json={"tasks": tasks}) as response:
+            response_data = await response.json()
+
+    monitor_refresh_spy.assert_awaited_once_with(sample_monitor.name, tasks)
+    assert response_data == {
+        "status": "monitor_refresh_queued",
+        "monitor_name": sample_monitor.name,
+        "tasks": tasks,
+    }
+
+
+@pytest.mark.parametrize(
+    "payload, error",
+    [
+        ({"tasks": "search"}, "'tasks' parameter must be a list"),
+        ({"tasks": []}, "'tasks' parameter is required"),
+        ({"tasks": ["delete"]}, "Invalid tasks: ['delete']"),
+    ],
+)
+async def test_monitor_refresh_invalid_tasks(sample_monitor: Monitor, payload, error):
+    """The 'monitor refresh' route should return an error for invalid tasks"""
+    url = BASE_URL + f"/{sample_monitor.name}/refresh"
+    async with aiohttp.ClientSession() as session:
+        async with session.post(url, json=payload) as response:
+            response_data = await response.json()
+
+    assert response.status == 400
+    assert response_data == {
+        "status": "error",
+        "message": "Unexpected error",
+        "error": error,
+    }
+
+
+async def test_monitor_refresh_duplicated_tasks(sample_monitor: Monitor):
+    """The 'monitor refresh' route should accept duplicated tasks"""
+    url = BASE_URL + f"/{sample_monitor.name}/refresh"
+    async with aiohttp.ClientSession() as session:
+        async with session.post(url, json={"tasks": ["search", "search"]}) as response:
+            response_data = await response.json()
+
+    assert response.status == 200
+    assert response_data == {
+        "status": "monitor_refresh_queued",
+        "monitor_name": sample_monitor.name,
+        "tasks": ["search", "search"],
+    }
+
+
+async def test_monitor_refresh_not_found():
+    """The 'monitor refresh' route should return an error if the monitor is not found"""
+    url = BASE_URL + "/not_found/refresh"
+    async with aiohttp.ClientSession() as session:
+        async with session.post(url, json={"tasks": ["search"]}) as response:
+            response_data = await response.json()
+
+    assert response.status == 404
+    assert response_data == {
+        "status": "error",
+        "message": "Monitor 'not_found' not found",
+    }
+
+
+@pytest.mark.parametrize(
+    "queued, running",
+    [
+        (True, False),
+        (False, True),
+        (True, True),
+    ],
+)
+async def test_monitor_refresh_queued_running(sample_monitor: Monitor, queued, running):
+    """The 'monitor refresh' route should return error if monitor is queued or running"""
+    sample_monitor.queued = queued
+    sample_monitor.running = running
+    await sample_monitor.save()
+
+    url = BASE_URL + f"/{sample_monitor.name}/refresh"
+    async with aiohttp.ClientSession() as session:
+        async with session.post(url, json={"tasks": ["search"]}) as response:
+            response_data = await response.json()
+
+    assert response.status == 400
+    assert response_data == {
+        "status": "error",
+        "message": "Unexpected error",
+        "error": f"Monitor '{sample_monitor.name}' already running or queued",
     }
 
 
@@ -357,7 +457,7 @@ async def test_monitor_validate_check_fail():
         async with session.post(url, json=request_payload) as response:
             assert await response.json() == {
                 "status": "error",
-                "message": "Module didn't pass check",
+                "message": "Monitor didn't pass check",
                 "error": "\n".join(
                     [
                         "Monitor has the following errors:",
@@ -390,6 +490,7 @@ async def test_monitor_validate_syntax_error(mocker, monitor_code, expected_erro
         async with session.post(url, json=request_payload) as response:
             assert await response.json() == {
                 "status": "error",
+                "message": "Syntax error in monitor code",
                 "error": expected_error,
             }
 
@@ -413,6 +514,7 @@ async def test_monitor_validate_invalid_monitor_code(mocker, monitor_code, expec
         async with session.post(url, json=request_payload) as response:
             assert await response.json() == {
                 "status": "error",
+                "message": "Unexpected error",
                 "error": expected_error,
             }
 
@@ -599,7 +701,7 @@ async def test_monitor_register_check_fail():
         async with session.post(url, json=request_payload) as response:
             assert await response.json() == {
                 "status": "error",
-                "message": "Module didn't pass check",
+                "message": "Monitor didn't pass check",
                 "error": "\n".join(
                     [
                         "Monitor 'test_monitor_register_check_fail' has the following errors:",
@@ -637,5 +739,6 @@ async def test_monitor_register_invalid_monitor_code(monitor_code, expected_erro
         async with session.post(url, json=request_payload) as response:
             assert await response.json() == {
                 "status": "error",
+                "message": "Unexpected error",
                 "error": expected_error,
             }
