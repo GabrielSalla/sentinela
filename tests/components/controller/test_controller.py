@@ -1,6 +1,6 @@
 import asyncio
 import json
-from datetime import datetime, timedelta, timezone
+from datetime import datetime, timezone
 from unittest.mock import AsyncMock
 
 import pytest
@@ -13,6 +13,7 @@ import utils.app as app
 import utils.time as time_utils
 from configs import configs
 from models import Monitor
+from models.exceptions import MonitorQueueException
 from tests.message_queue.utils import get_queue_items
 from tests.test_utils import assert_message_in_log
 
@@ -112,141 +113,30 @@ async def test_diagnostics(
     assert result == expected_result
 
 
-@pytest.mark.parametrize(
-    "tasks",
-    [
-        [1, 2],
-        [3, 4],
-        ["search", "update"],
-    ],
-)
-async def test_queue_task(clear_queue, sample_monitor, tasks):
-    """'_queue_task' should queue tasks correctly and set the monitor's 'queued' attribute"""
-    assert not sample_monitor.queued
-
-    await controller._queue_task(sample_monitor, tasks)
-
-    queue_items = get_queue_items()
-
-    assert queue_items == [
-        json.dumps(
-            {
-                "type": "process_monitor",
-                "payload": {"monitor_id": sample_monitor.id, "tasks": tasks},
-            }
-        )
-    ]
-    assert sample_monitor.queued
-
-
-async def test_queue_task_error(caplog, monkeypatch, clear_queue, sample_monitor: Monitor):
-    """'_queue_task' should try to queue tasks and if it fails, the monitor's 'queued' attribute
-    should be set back to False"""
-
-    async def send_error(type, payload):
-        raise ValueError("something went wrong")
-
-    monkeypatch.setattr(message_queue, "send_message", send_error)
-
-    assert not sample_monitor.queued
-
-    await controller._queue_task(sample_monitor, ["search"])
-
-    assert_message_in_log(caplog, "ValueError: something went wrong")
-    assert_message_in_log(caplog, "Error while queueing the task, reverting queued state")
-    assert not sample_monitor.queued
-
-
-async def test_process_monitor_first_run(monkeypatch, sample_monitor: Monitor):
-    """'_process_monitor' should check if the monitor triggers search or update tasks and queue them
-    accordingly"""
-    queued_tasks = []
-
-    async def queue_task_mock(monitor, tasks):
-        queued_tasks.append((monitor, tasks))
-
-    monkeypatch.setattr(controller, "_queue_task", queue_task_mock)
-
-    await controller._process_monitor(sample_monitor)
-    assert queued_tasks == [(sample_monitor, ["search", "update"])]
-
-
-async def test_process_monitor_search_not_triggered(monkeypatch, sample_monitor: Monitor):
-    """'_process_monitor' should check if the monitor triggers search or update tasks and only queue
-    the 'update' task if the 'search' task didn't trigger"""
-    queued_tasks = []
-
-    async def queue_task_mock(monitor, tasks):
-        queued_tasks.append((monitor, tasks))
-
-    monkeypatch.setattr(controller, "_queue_task", queue_task_mock)
-
-    # 2024-01-01 12:34:00
-    reference_time = datetime(2024, 1, 1, 12, 34, 0, tzinfo=timezone.utc)
-
-    # Set the monitor's 'search_executed_at' and 'update_executed_at' attributes
-    sample_monitor.search_executed_at = reference_time
-    sample_monitor.update_executed_at = reference_time - timedelta(seconds=120)
-
-    # Mock the current time to be 30 seconds after the reference time
-    monkeypatch.setattr(time_utils, "now", lambda: reference_time + timedelta(seconds=30))
+async def test_process_monitor(monkeypatch, sample_monitor: Monitor):
+    """'_process_monitor' should process the monitor and update the processed timestamp"""
+    processed_at = datetime(2024, 1, 1, 12, 34, 56, tzinfo=timezone.utc)
+    process_mock = AsyncMock()
+    monkeypatch.setattr(sample_monitor, "process", process_mock)
+    monkeypatch.setattr(controller, "now", lambda: processed_at)
 
     await controller._process_monitor(sample_monitor)
 
-    # Only the 'update' task tasks should've been triggered
-    assert queued_tasks == [(sample_monitor, ["update"])]
+    process_mock.assert_awaited_once()
+    assert controller.last_monitor_processed_at == processed_at
 
 
-async def test_process_monitor_update_not_triggered(monkeypatch, sample_monitor: Monitor):
-    """'_process_monitor' should check if the monitor triggers search or update tasks and only queue
-    the 'search' task if the 'update' task didn't trigger"""
-    queued_tasks = []
-
-    async def queue_task_mock(monitor, tasks):
-        queued_tasks.append((monitor, tasks))
-
-    monkeypatch.setattr(controller, "_queue_task", queue_task_mock)
-
-    # 2024-01-01 12:34:00
-    reference_time = datetime(2024, 1, 1, 12, 34, 0, tzinfo=timezone.utc)
-
-    # Set the monitor's 'search_executed_at' and 'update_executed_at' attributes
-    sample_monitor.search_executed_at = reference_time - timedelta(seconds=120)
-    sample_monitor.update_executed_at = reference_time
-
-    # Mock the current time to be 30 seconds after the reference time
-    monkeypatch.setattr(time_utils, "now", lambda: reference_time + timedelta(seconds=30))
+async def test_process_monitor_queue_error(monkeypatch, sample_monitor: Monitor):
+    """'_process_monitor' should handle queue errors and update the processed timestamp"""
+    processed_at = datetime(2024, 1, 1, 12, 34, 56, tzinfo=timezone.utc)
+    process_mock = AsyncMock(side_effect=MonitorQueueException())
+    monkeypatch.setattr(sample_monitor, "process", process_mock)
+    monkeypatch.setattr(controller, "now", lambda: processed_at)
 
     await controller._process_monitor(sample_monitor)
 
-    # Only the 'search' task tasks should've been triggered
-    assert queued_tasks == [(sample_monitor, ["search"])]
-
-
-async def test_process_monitor_none_triggered(monkeypatch, sample_monitor: Monitor):
-    """'_process_monitor' should check if the monitor triggers search or update tasks and queue
-    nothing if both, 'search_cron' and 'update_cron', are None"""
-    queued_tasks = []
-
-    async def queue_task_mock(monitor, tasks):
-        queued_tasks.append((monitor, tasks))
-
-    monkeypatch.setattr(controller, "_queue_task", queue_task_mock)
-
-    # 2024-01-01 12:34:00
-    reference_time = datetime(2024, 1, 1, 12, 34, 0, tzinfo=timezone.utc)
-
-    # Set the monitor's 'search_executed_at' and 'update_executed_at' attributes
-    sample_monitor.search_executed_at = reference_time
-    sample_monitor.update_executed_at = reference_time
-
-    # Mock the current time to be 30 seconds after the reference time
-    monkeypatch.setattr(time_utils, "now", lambda: reference_time + timedelta(seconds=30))
-
-    await controller._process_monitor(sample_monitor)
-
-    # None of the tasks should've been triggered
-    assert queued_tasks == []
+    process_mock.assert_awaited_once()
+    assert controller.last_monitor_processed_at == processed_at
 
 
 async def test_run_task(monkeypatch, sample_monitor: Monitor):
@@ -287,7 +177,7 @@ async def test_create_process_task(caplog, sample_monitor: Monitor):
     await task
 
     assert task is not None
-    assert_message_in_log(caplog, f"Triggered ['search', 'update'] for {sample_monitor}")
+    assert_message_in_log(caplog, "Triggered ['search', 'update']")
 
 
 async def test_create_process_task_monitor_not_registered(caplog, sample_monitor: Monitor):
@@ -319,7 +209,7 @@ async def test_create_process_task_semaphore_wait(caplog, sample_monitor: Monito
     run_task_task = await wait_semaphore_task
     await run_task_task
 
-    assert_message_in_log(caplog, f"Triggered ['search', 'update'] for {sample_monitor}")
+    assert_message_in_log(caplog, "Triggered ['search', 'update']")
 
 
 async def test_run(monkeypatch, clear_queue, clear_database):

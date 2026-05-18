@@ -6,12 +6,14 @@ from typing import TYPE_CHECKING, Any, Callable, Coroutine
 from sqlalchemy import Boolean, DateTime, Integer, String
 from sqlalchemy.orm import Mapped, mapped_column, reconstructor
 
+import message_queue
 import utils.time as time_utils
 from data_models.monitor_options import AlertOptions, IssueOptions, MonitorOptions, ReactionOptions
 from registry import get_monitor_module
 
 from .alert import Alert, AlertStatus
 from .base import Base
+from .exceptions import MonitorQueueException
 from .issue import Issue, IssueStatus
 
 if TYPE_CHECKING:
@@ -155,6 +157,35 @@ class Monitor(Base):
         """Load all the monitor's active issues and alerts"""
         await self.load_active_issues()
         await self.load_active_alerts()
+
+    async def process(self) -> None:
+        """Check if the monitor triggers any task and queue them if there're any"""
+        tasks: list[str] = []
+        if self.is_search_triggered:
+            tasks.append("search")
+        if self.is_update_triggered:
+            tasks.append("update")
+
+        if not tasks:
+            return
+
+        self._logger.info(f"Triggered {tasks}")
+
+        await self.set_queued(True)
+
+        try:
+            await message_queue.send_message(
+                type="process_monitor",
+                payload={
+                    "monitor_id": self.id,
+                    "tasks": tasks,
+                },
+            )
+        except Exception as e:
+            self._logger.error("Error while queueing, reverting queued state", exc_info=True)
+            await self.set_queued(False)
+
+            raise MonitorQueueException() from e
 
     @Base.lock_change
     async def set_search_executed_at(self) -> None:

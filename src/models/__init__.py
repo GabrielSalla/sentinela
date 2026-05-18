@@ -1,3 +1,4 @@
+from . import exceptions
 from .alert import Alert, AlertStatus
 from .base import Base
 from .code_module import CodeModule
@@ -14,6 +15,7 @@ __all__ = [
     "AlertStatus",
     "Base",
     "CodeModule",
+    "exceptions",
     "ExecutionStatus",
     "Issue",
     "IssueStatus",
