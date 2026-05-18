@@ -54,6 +54,21 @@ async def monitor_enable(message_payload: RequestPayload) -> None:
     await monitor.set_enabled(True)
 
 
+async def monitor_refresh(message_payload: RequestPayload) -> None:
+    """Refresh monitor tasks"""
+    monitor_id = message_payload.params["target_id"]
+    monitor = await Monitor.get_by_id(monitor_id)
+    if monitor is None:
+        _logger.warning(f"Monitor '{monitor_id}' not found")
+        return
+    await registry.wait_monitor_loaded(monitor.id)
+    tasks = message_payload.params["tasks"]
+    if "search" in tasks:
+        await monitor.set_force_search()
+    if "update" in tasks:
+        await monitor.set_force_update()
+
+
 async def alert_acknowledge(message_payload: RequestPayload) -> None:
     """Acknowledge an alert"""
     alert_id = message_payload.params["target_id"]
@@ -101,6 +116,7 @@ async def issue_drop(message_payload: RequestPayload) -> None:
 actions = {
     "monitor_disable": monitor_disable,
     "monitor_enable": monitor_enable,
+    "monitor_refresh": monitor_refresh,
     "alert_acknowledge": alert_acknowledge,
     "alert_lock": alert_lock,
     "alert_solve": alert_solve,

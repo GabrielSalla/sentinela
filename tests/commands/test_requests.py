@@ -121,6 +121,57 @@ async def test_monitor_enable_not_found():
         await requests.monitor_enable("not_found")
 
 
+@pytest.mark.parametrize(
+    "tasks",
+    [
+        ["search"],
+        ["update"],
+        ["search", "update"],
+    ],
+)
+async def test_monitor_refresh(clear_queue, sample_monitor: Monitor, tasks):
+    """'monitor_refresh' should queue a 'monitor_refresh' action request"""
+    await requests.monitor_refresh(sample_monitor.name, tasks)
+
+    queue_items = get_queue_items()
+    assert queue_items == [
+        json.dumps(
+            {
+                "type": "request",
+                "payload": {
+                    "action": "monitor_refresh",
+                    "params": {"target_id": sample_monitor.id, "tasks": tasks},
+                },
+            }
+        )
+    ]
+
+
+async def test_monitor_refresh_not_found():
+    """'monitor_refresh' should raise a 'MonitorNotFoundError' exception if monitor is not found"""
+    with pytest.raises(MonitorNotFoundError, match="Monitor 'not_found' not found"):
+        await requests.monitor_refresh("not_found", ["search"])
+
+
+@pytest.mark.parametrize(
+    "queued, running",
+    [
+        (True, False),
+        (False, True),
+        (True, True),
+    ],
+)
+async def test_monitor_refresh_queued_running(sample_monitor: Monitor, queued, running):
+    """'monitor_refresh' should raise error when monitor is queued or running"""
+    sample_monitor.queued = queued
+    sample_monitor.running = running
+    await sample_monitor.save()
+
+    expected_message = f"Monitor '{sample_monitor.name}' already running or queued"
+    with pytest.raises(ValueError, match=expected_message):
+        await requests.monitor_refresh(sample_monitor.name, ["search"])
+
+
 async def test_alert_acknowledge(clear_queue, sample_monitor: Monitor):
     """'alert_acknowledge' should queue an 'alert_acknowledge' action request"""
     alert = await Alert.create(monitor_id=sample_monitor.id)

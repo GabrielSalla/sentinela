@@ -67,6 +67,47 @@ async def test_monitor_enable_monitor_not_found(caplog, mocker):
     assert_message_in_log(caplog, "Monitor '999999999' not found")
 
 
+@pytest.mark.parametrize(
+    "tasks, expected_force_search, expected_force_update",
+    [
+        (["search"], True, False),
+        (["update"], False, True),
+        (["search", "update"], True, True),
+    ],
+)
+async def test_monitor_refresh(
+    mocker, sample_monitor: Monitor, tasks, expected_force_search, expected_force_update
+):
+    """'monitor_refresh' should set requested force flags for monitor"""
+    wait_monitor_loaded_spy: AsyncMock = mocker.spy(registry, "wait_monitor_loaded")
+
+    await request_handler.monitor_refresh(
+        RequestPayload(
+            action="monitor_refresh", params={"target_id": sample_monitor.id, "tasks": tasks}
+        )
+    )
+
+    await sample_monitor.refresh()
+
+    assert sample_monitor.force_search is expected_force_search
+    assert sample_monitor.force_update is expected_force_update
+    wait_monitor_loaded_spy.assert_awaited_once_with(sample_monitor.id)
+
+
+async def test_monitor_refresh_monitor_not_found(caplog, mocker):
+    """'monitor_refresh' should just return when monitor with provided id doesn't exists"""
+    set_force_search_spy: AsyncMock = mocker.spy(Monitor, "set_force_search")
+
+    await request_handler.monitor_refresh(
+        RequestPayload(
+            action="monitor_refresh", params={"target_id": 999999999, "tasks": ["search"]}
+        )
+    )
+
+    set_force_search_spy.assert_not_called()
+    assert_message_in_log(caplog, "Monitor '999999999' not found")
+
+
 async def test_alert_acknowledge(mocker, sample_monitor: Monitor):
     """'alert_acknowledge' should acknowledge the provided alert"""
     wait_monitor_loaded_spy: AsyncMock = mocker.spy(registry, "wait_monitor_loaded")
@@ -202,6 +243,7 @@ async def test_get_action():
     """'get_action' should return the action function by its name"""
     assert request_handler.get_action("monitor_disable") == request_handler.monitor_disable
     assert request_handler.get_action("monitor_enable") == request_handler.monitor_enable
+    assert request_handler.get_action("monitor_refresh") == request_handler.monitor_refresh
     assert request_handler.get_action("alert_acknowledge") == request_handler.alert_acknowledge
     assert request_handler.get_action("alert_lock") == request_handler.alert_lock
     assert request_handler.get_action("alert_solve") == request_handler.alert_solve
@@ -241,6 +283,7 @@ async def test_get_action_unknown_plugin(caplog, monkeypatch):
     [
         "monitor_disable",
         "monitor_enable",
+        "monitor_refresh",
         "alert_acknowledge",
         "alert_lock",
         "alert_solve",

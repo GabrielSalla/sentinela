@@ -7,6 +7,7 @@ from .requests import (
     monitor_code_validate,
     monitor_disable,
     monitor_enable,
+    monitor_refresh,
     monitor_register,
 )
 
@@ -18,6 +19,7 @@ __all__ = [
     "monitor_code_validate",
     "monitor_disable",
     "monitor_enable",
+    "monitor_refresh",
     "monitor_register",
     "AlertNotFoundError",
     "IssueNotFoundError",
