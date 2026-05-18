@@ -60,43 +60,40 @@ async def test_post_create():
 
 
 @pytest.mark.parametrize(
-    "enabled, queued, running, last_execution, expected_result",
+    "enabled, queued, running, expected_result",
     [
-        # Should not trigger if disabled
-        (False, False, False, datetime(2024, 1, 1, 12, 33, 0, tzinfo=timezone.utc), False),
-        (False, True, False, datetime(2024, 1, 1, 12, 33, 0, tzinfo=timezone.utc), False),
-        (False, False, True, datetime(2024, 1, 1, 12, 33, 0, tzinfo=timezone.utc), False),
-        (False, True, True, datetime(2024, 1, 1, 12, 33, 0, tzinfo=timezone.utc), False),
-        # Should not trigger if running or queued
-        (True, True, False, datetime(2024, 1, 1, 12, 33, 0, tzinfo=timezone.utc), False),
-        (True, False, True, datetime(2024, 1, 1, 12, 33, 0, tzinfo=timezone.utc), False),
-        # Should not trigger if disabled
-        (False, False, False, None, False),
-        (False, True, False, None, False),
-        (False, False, True, None, False),
-        (False, True, True, None, False),
-        # Should not trigger if running or queued
-        (True, True, False, None, False),
-        (True, False, True, None, False),
-        # Should not trigger if the cron isn't triggered according to the last execution
-        (True, False, False, datetime(2024, 1, 1, 12, 34, 0, tzinfo=timezone.utc), False),
-        # Should trigger if the last execution is None
-        (True, False, False, None, True),
-        # Should trigger if the cron is triggered according to the last execution
-        (True, False, False, datetime(2024, 1, 1, 12, 33, 0, tzinfo=timezone.utc), True),
+        (True, True, True, False),
+        (True, True, False, False),
+        (True, False, True, False),
+        (True, False, False, True),
+        (False, True, True, False),
+        (False, True, False, False),
+        (False, False, True, False),
+        (False, False, False, False),
     ],
 )
-async def test_is_triggered(
-    monkeypatch, sample_monitor: Monitor, enabled, queued, running, last_execution, expected_result
-):
-    """'Monitor._is_triggered' should return if the provided 'cron' and 'last_execution'
-    combination is considered triggered, if the monitor is not in a 'pending' state or disabled"""
-    monkeypatch.setattr(
-        time_utils, "now", lambda: datetime(2024, 1, 1, 12, 34, 56, tzinfo=timezone.utc)
-    )
+async def test_can_trigger(sample_monitor: Monitor, enabled, queued, running, expected_result):
+    """'Monitor._can_trigger' should return if monitor can trigger tasks"""
     sample_monitor.enabled = enabled
     sample_monitor.queued = queued
     sample_monitor.running = running
+
+    assert sample_monitor._can_trigger() is expected_result
+
+
+@pytest.mark.parametrize(
+    "last_execution, expected_result",
+    [
+        (datetime(2024, 1, 1, 12, 34, 0, tzinfo=timezone.utc), False),
+        (None, True),
+        (datetime(2024, 1, 1, 12, 33, 0, tzinfo=timezone.utc), True),
+    ],
+)
+async def test_is_triggered(monkeypatch, sample_monitor: Monitor, last_execution, expected_result):
+    """'Monitor._is_triggered' should return if cron/last_execution is considered triggered"""
+    monkeypatch.setattr(
+        time_utils, "now", lambda: datetime(2024, 1, 1, 12, 34, 56, tzinfo=timezone.utc)
+    )
 
     result = sample_monitor._is_triggered("* * * * *", last_execution)
 
@@ -130,6 +127,36 @@ async def test_is_search_triggered(
     assert result == expected_result
 
 
+async def test_is_search_triggered_forced(sample_monitor: Monitor):
+    """'Monitor.is_search_triggered' should return true when 'force_search' is true"""
+    sample_monitor.code.monitor_options.search_cron = None
+    sample_monitor.force_search = True
+
+    assert sample_monitor.is_search_triggered is True
+
+
+@pytest.mark.parametrize(
+    "enabled, queued, running",
+    [
+        (False, False, False),
+        (True, True, False),
+        (True, False, True),
+        (True, True, True),
+    ],
+)
+async def test_is_search_triggered_forced_queued_running(
+    sample_monitor: Monitor, enabled, queued, running
+):
+    """'Monitor.is_search_triggered' should not trigger forced search when monitor is queued or
+    running"""
+    sample_monitor.enabled = enabled
+    sample_monitor.queued = queued
+    sample_monitor.running = running
+    sample_monitor.force_search = True
+
+    assert sample_monitor.is_search_triggered is False
+
+
 @pytest.mark.parametrize(
     "update_cron, update_executed_at, expected_result",
     [
@@ -155,6 +182,36 @@ async def test_is_update_triggered(
     result = sample_monitor.is_update_triggered
 
     assert result == expected_result
+
+
+async def test_is_update_triggered_forced(sample_monitor: Monitor):
+    """'Monitor.is_update_triggered' should return true when 'force_update' is true"""
+    sample_monitor.code.monitor_options.update_cron = None
+    sample_monitor.force_update = True
+
+    assert sample_monitor.is_update_triggered is True
+
+
+@pytest.mark.parametrize(
+    "enabled, queued, running",
+    [
+        (False, False, False),
+        (True, True, False),
+        (True, False, True),
+        (True, True, True),
+    ],
+)
+async def test_is_update_triggered_forced_queued_running(
+    sample_monitor: Monitor, enabled, queued, running
+):
+    """'Monitor.is_update_triggered' should not trigger forced update when monitor is queued or
+    running"""
+    sample_monitor.enabled = enabled
+    sample_monitor.queued = queued
+    sample_monitor.running = running
+    sample_monitor.force_update = True
+
+    assert sample_monitor.is_update_triggered is False
 
 
 async def test_code(sample_monitor: Monitor):
@@ -358,14 +415,27 @@ async def test_process_queue_tasks(
     assert sample_monitor.queued
 
 
+async def test_process_monitor_clears_force_flags(clear_queue, sample_monitor: Monitor):
+    """'Monitor.process' should clear force flags when called"""
+    await sample_monitor.set_force_search()
+    await sample_monitor.set_force_update()
+
+    await sample_monitor.process()
+
+    assert sample_monitor.force_search is False
+    assert sample_monitor.force_update is False
+
+
 async def test_process_queue_task_error(caplog, monkeypatch, sample_monitor: Monitor):
-    """'Monitor.process' should try to queue tasks and if it fails, the monitor's 'queued' attribute
-    should be set back to False"""
+    """'Monitor.process' should try to queue tasks and if it fails the monitor's 'queued' attribute
+    should be set back to False. Force flags should also be cleared"""
 
     async def send_error(type, payload):
         raise ValueError("something went wrong")
 
     monkeypatch.setattr(message_queue, "send_message", send_error)
+    await sample_monitor.set_force_search()
+    await sample_monitor.set_force_update()
 
     assert not sample_monitor.queued
 
@@ -375,6 +445,8 @@ async def test_process_queue_task_error(caplog, monkeypatch, sample_monitor: Mon
     assert_message_in_log(caplog, "ValueError: something went wrong")
     assert_message_in_log(caplog, "Error while queueing, reverting queued state")
     assert not sample_monitor.queued
+    assert sample_monitor.force_search is False
+    assert sample_monitor.force_update is False
 
 
 async def test_process_monitor_search_not_triggered(monkeypatch, sample_monitor: Monitor):
@@ -529,6 +601,54 @@ async def test_set_running(sample_monitor: Monitor):
     await sample_monitor.set_running(False)
     assert sample_monitor.running is False
     assert sample_monitor.running_at == running_at_2
+
+
+@pytest.mark.parametrize(
+    "queued, running, expected_result",
+    [
+        (False, False, True),
+        (True, False, False),
+        (False, True, False),
+        (True, True, False),
+    ],
+)
+async def test_set_force_search(sample_monitor: Monitor, queued, running, expected_result):
+    """'Monitor.set_force_search' should only set force flag when monitor is not queued or
+    running"""
+    sample_monitor.queued = queued
+    sample_monitor.running = running
+    assert sample_monitor.force_search is False
+    await sample_monitor.set_force_search()
+    assert sample_monitor.force_search is expected_result
+
+
+@pytest.mark.parametrize(
+    "queued, running, expected_result",
+    [
+        (False, False, True),
+        (True, False, False),
+        (False, True, False),
+        (True, True, False),
+    ],
+)
+async def test_set_force_update(sample_monitor: Monitor, queued, running, expected_result):
+    """'Monitor.set_force_update' should only set force flag when monitor is not queued or
+    running"""
+    sample_monitor.queued = queued
+    sample_monitor.running = running
+    assert sample_monitor.force_update is False
+    await sample_monitor.set_force_update()
+    assert sample_monitor.force_update is expected_result
+
+
+async def test_clear_force_flags(sample_monitor: Monitor):
+    """'Monitor.clear_force_flags' should clear the monitor force flags"""
+    sample_monitor.force_search = True
+    sample_monitor.force_update = True
+    await sample_monitor.clear_force_flags()
+
+    assert sample_monitor.force_search is False
+    assert sample_monitor.force_update is False
 
 
 async def test_add_issues_single(sample_monitor: Monitor):

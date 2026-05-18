@@ -28,6 +28,8 @@ class Monitor(Base):
     enabled: Mapped[bool] = mapped_column(Boolean(), insert_default=True)
     queued: Mapped[bool] = mapped_column(Boolean(), insert_default=False)
     running: Mapped[bool] = mapped_column(Boolean(), insert_default=False)
+    force_search: Mapped[bool] = mapped_column(Boolean(), insert_default=False)
+    force_update: Mapped[bool] = mapped_column(Boolean(), insert_default=False)
     queued_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=True)
     running_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=True)
     search_executed_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=True)
@@ -63,11 +65,12 @@ class Monitor(Base):
         """Property to be compatible with all other models"""
         return self.id
 
+    def _can_trigger(self) -> bool:
+        """Return whether monitor can trigger tasks (enabled, not queued, not running)"""
+        return self.enabled and not self.queued and not self.running
+
     def _is_triggered(self, cron: str, last_execution: datetime | None) -> bool:
-        """Check if the 'cron' and 'last_execution' is considered as triggered, if the monitor is
-        not in a 'pending' state or disabled"""
-        if not self.enabled or self.queued or self.running:
-            return False
+        """Check if the 'cron' and 'last_execution' is considered as triggered"""
         if last_execution is None:
             return True
         if time_utils.is_triggered(cron, last_execution):
@@ -77,6 +80,10 @@ class Monitor(Base):
     @property
     def is_search_triggered(self) -> bool:
         """Return if the search is triggered for the monitor"""
+        if not self._can_trigger():
+            return False
+        if self.force_search:
+            return True
         if self.options.search_cron is None:
             return False
         return self._is_triggered(self.options.search_cron, self.search_executed_at)
@@ -84,6 +91,10 @@ class Monitor(Base):
     @property
     def is_update_triggered(self) -> bool:
         """Return if the update is triggered for the monitor"""
+        if not self._can_trigger():
+            return False
+        if self.force_update:
+            return True
         if self.options.update_cron is None:
             return False
         return self._is_triggered(self.options.update_cron, self.update_executed_at)
@@ -186,6 +197,10 @@ class Monitor(Base):
             await self.set_queued(False)
 
             raise MonitorQueueException() from e
+        finally:
+            # The force flags should be cleared even if the queueing fails
+            if self.force_search or self.force_update:
+                await self.clear_force_flags()
 
     @Base.lock_change
     async def set_search_executed_at(self) -> None:
@@ -231,6 +246,29 @@ class Monitor(Base):
         self.running = value
         if value:
             self.running_at = time_utils.now()
+        await self.save()
+
+    @Base.lock_change
+    async def set_force_search(self) -> None:
+        """Set 'force_search' to True only when monitor is not queued or running"""
+        if self.queued or self.running:
+            return
+        self.force_search = True
+        await self.save()
+
+    @Base.lock_change
+    async def set_force_update(self) -> None:
+        """Set 'force_update' to True only when monitor is not queued or running"""
+        if self.queued or self.running:
+            return
+        self.force_update = True
+        await self.save()
+
+    @Base.lock_change
+    async def clear_force_flags(self) -> None:
+        """Clear force flags"""
+        self.force_search = False
+        self.force_update = False
         await self.save()
 
     def add_issues(self, issues: Issue | list[Issue]) -> None:
