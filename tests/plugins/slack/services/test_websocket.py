@@ -68,6 +68,26 @@ async def test_app_mention_invalid_action(mocker):
     slack_add_reaction_spy.assert_awaited_once_with(channel="C12345678", ts="1234", reaction="x")
 
 
+async def test_app_mention_monitor_refresh(mocker, sample_monitor):
+    """'app_mention' should refresh monitor tasks and reply in thread"""
+    action_spy: AsyncMock = mocker.spy(commands, "monitor_refresh")
+    slack_add_reaction_spy: AsyncMock = mocker.spy(slack, "add_reaction")
+
+    body = {
+        "event": {
+            "channel": "C12345678",
+            "ts": "1234",
+            "text": f"refresh {sample_monitor.name}",
+        }
+    }
+    await websocket.app_mention(body)
+
+    action_spy.assert_awaited_once_with(sample_monitor.name, ["search", "update"])
+    slack_add_reaction_spy.assert_awaited_once_with(
+        channel="C12345678", ts="1234", reaction="ballot_box_with_check"
+    )
+
+
 async def test_app_mention_error(mocker):
     """'app_mention' should react to the message with an 'x' and send the error message if an
     exception is raised"""
