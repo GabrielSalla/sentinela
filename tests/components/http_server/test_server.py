@@ -1,12 +1,14 @@
 import aiohttp
 import pytest
 import pytest_asyncio
+from aiohttp import web
 from prometheus_client import parser
 
 import components.controller.controller as controller
 import components.executor.executor as executor
 import components.http_server as http_server
 from configs import configs
+from tests.test_utils import assert_message_in_log, assert_message_not_in_log
 
 pytestmark = pytest.mark.asyncio(loop_scope="session")
 
@@ -196,3 +198,64 @@ async def test_dashboard_route_active(monkeypatch, dashboard_enabled):
                 assert response.status == 200
             else:
                 assert response.status == 404
+
+
+async def test_log_4xx_requests_middleware(caplog):
+    """4xx requests should be logged"""
+    caplog.clear()
+    await restart_http_server(controller_enabled=False)
+
+    async with aiohttp.ClientSession() as session:
+        async with session.get(BASE_URL + "/monitor/list") as response:
+            assert response.status == 404
+
+    assert_message_in_log(
+        caplog,
+        "HTTP 4xx response: method=GET path=/monitor/list status=404 content=404: Not Found",
+    )
+
+
+async def test_log_4xx_requests_middleware_no_2xx(caplog):
+    """2xx requests should not be logged as 4xx"""
+    caplog.clear()
+    await restart_http_server(controller_enabled=False)
+
+    async with aiohttp.ClientSession() as session:
+        async with session.get(BASE_URL + "/status") as response:
+            assert response.status == 200
+
+    assert_message_not_in_log(caplog, "HTTP 4xx response:")
+
+
+async def test_log_4xx_requests_middleware_http_exception_not_4xx(caplog):
+    """'_log_4xx_requests_middleware' should not log when HTTPException is not 4xx"""
+    caplog.clear()
+
+    async def handler(_: web.Request) -> web.StreamResponse:
+        raise web.HTTPInternalServerError(text="internal error")
+
+    with pytest.raises(web.HTTPInternalServerError):
+        await http_server.server._log_4xx_requests_middleware(
+            request=type("RequestStub", (), {"method": "GET", "path_qs": "/test"})(),
+            handler=handler,
+        )
+
+    assert_message_not_in_log(caplog, "HTTP 4xx response:")
+
+
+async def test_log_4xx_requests_middleware_response_4xx(caplog):
+    """'_log_4xx_requests_middleware' should log when handler returns 4xx response"""
+    caplog.clear()
+
+    async def handler(_: web.Request) -> web.StreamResponse:
+        return web.Response(status=404, text="not found")
+
+    response = await http_server.server._log_4xx_requests_middleware(
+        request=type("RequestStub", (), {"method": "GET", "path_qs": "/test"})(),
+        handler=handler,
+    )
+
+    assert response.status == 404
+    assert_message_in_log(
+        caplog, "HTTP 4xx response: method=GET path=/test status=404 content=not found"
+    )

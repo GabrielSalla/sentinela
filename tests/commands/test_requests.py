@@ -6,7 +6,7 @@ import pytest
 
 import commands.requests as requests
 import components.monitors_loader as monitors_loader
-from models import CodeModule, Monitor
+from models import Alert, CodeModule, Issue, Monitor
 from tests.message_queue.utils import get_queue_items
 
 pytestmark = pytest.mark.asyncio(loop_scope="session")
@@ -100,10 +100,10 @@ async def test_enable_monitor_not_found(mocker):
         await requests.enable_monitor("not_found")
 
 
-@pytest.mark.parametrize("target_id", [1, 12, 345])
-async def test_alert_acknowledge(clear_queue, target_id):
+async def test_alert_acknowledge(clear_queue, sample_monitor: Monitor):
     """'alert_acknowledge' should queue an 'alert_acknowledge' action request"""
-    await requests.alert_acknowledge(target_id)
+    alert = await Alert.create(monitor_id=sample_monitor.id)
+    await requests.alert_acknowledge(alert.id)
 
     queue_items = get_queue_items()
 
@@ -113,17 +113,17 @@ async def test_alert_acknowledge(clear_queue, target_id):
                 "type": "request",
                 "payload": {
                     "action": "alert_acknowledge",
-                    "params": {"target_id": target_id},
+                    "params": {"target_id": alert.id},
                 },
             }
         )
     ]
 
 
-@pytest.mark.parametrize("target_id", [1, 12, 345])
-async def test_alert_lock(clear_queue, target_id):
+async def test_alert_lock(clear_queue, sample_monitor: Monitor):
     """'alert_lock' should queue an 'alert_lock' action request"""
-    await requests.alert_lock(target_id)
+    alert = await Alert.create(monitor_id=sample_monitor.id)
+    await requests.alert_lock(alert.id)
 
     queue_items = get_queue_items()
 
@@ -133,17 +133,17 @@ async def test_alert_lock(clear_queue, target_id):
                 "type": "request",
                 "payload": {
                     "action": "alert_lock",
-                    "params": {"target_id": target_id},
+                    "params": {"target_id": alert.id},
                 },
             }
         )
     ]
 
 
-@pytest.mark.parametrize("target_id", [1, 12, 345])
-async def test_alert_solve(clear_queue, target_id):
+async def test_alert_solve(clear_queue, sample_monitor: Monitor):
     """'alert_solve' should queue an 'alert_solve' action request"""
-    await requests.alert_solve(target_id)
+    alert = await Alert.create(monitor_id=sample_monitor.id)
+    await requests.alert_solve(alert.id)
 
     queue_items = get_queue_items()
 
@@ -153,17 +153,17 @@ async def test_alert_solve(clear_queue, target_id):
                 "type": "request",
                 "payload": {
                     "action": "alert_solve",
-                    "params": {"target_id": target_id},
+                    "params": {"target_id": alert.id},
                 },
             }
         )
     ]
 
 
-@pytest.mark.parametrize("target_id", [1, 12, 345])
-async def test_issue_drop(clear_queue, target_id):
+async def test_issue_drop(clear_queue, sample_monitor: Monitor):
     """'issue_drop' should queue an 'issue_drop' action request"""
-    await requests.issue_drop(target_id)
+    issue = await Issue.create(monitor_id=sample_monitor.id, model_id="1", data={"id": 1})
+    await requests.issue_drop(issue.id)
 
     queue_items = get_queue_items()
 
@@ -173,7 +173,7 @@ async def test_issue_drop(clear_queue, target_id):
                 "type": "request",
                 "payload": {
                     "action": "issue_drop",
-                    "params": {"target_id": target_id},
+                    "params": {"target_id": issue.id},
                 },
             }
         )

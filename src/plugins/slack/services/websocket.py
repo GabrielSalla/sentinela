@@ -22,11 +22,14 @@ async def app_mention(body: dict[Any, Any]) -> None:
     message = body["event"]["text"]
     context = body["event"]
 
+    channel = context["channel"]
+    ts = context["ts"]
+
     action = get_message_request(message, context)
     if action is None:
         await slack.add_reaction(
-            channel=context["channel"],
-            ts=context["ts"],
+            channel=channel,
+            ts=ts,
             reaction="x",
         )
         return
@@ -34,19 +37,24 @@ async def app_mention(body: dict[Any, Any]) -> None:
     try:
         await action
         await slack.add_reaction(
-            channel=context["channel"],
-            ts=context["ts"],
+            channel=channel,
+            ts=ts,
             reaction="ballot_box_with_check",
         )
     except Exception as e:
+        log_message = (
+            f"Error processing message '{message}' from channel '{channel}' ts '{ts}': {str(e)}"
+        )
+        _logger.warning(log_message)
+
         await slack.add_reaction(
-            channel=context["channel"],
-            ts=context["ts"],
+            channel=channel,
+            ts=ts,
             reaction="x",
         )
         await slack.send(
-            channel=context["channel"],
-            thread_ts=context["ts"],
+            channel=channel,
+            thread_ts=ts,
             text=str(e),
         )
 
@@ -59,10 +67,25 @@ async def command(
     await ack()
 
     message = body["actions"][0]["value"]
+    channel = body["channel"]["id"]
+    thread_ts = body["message"]["ts"]
 
     action = get_message_request(message, {})
     if action is not None:
-        await action
+        try:
+            await action
+        except Exception as e:
+            log_message = (
+                f"Error processing message '{message}' from channel '{channel}' "
+                f"thread_ts '{thread_ts}': {str(e)}"
+            )
+            _logger.warning(log_message)
+
+            await slack.send(
+                channel=channel,
+                thread_ts=thread_ts,
+                text=str(e),
+            )
 
 
 async def init(controller_enabled: bool, executor_enabled: bool) -> None:  # pragma: no cover

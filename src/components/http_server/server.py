@@ -1,11 +1,12 @@
 import logging
 import random
+from collections.abc import Awaitable, Callable
 from typing import Any
 
 import prometheus_client
 from aiohttp import web
 from aiohttp.web_request import Request
-from aiohttp.web_response import Response
+from aiohttp.web_response import Response, StreamResponse
 
 import components.controller.controller as controller
 import components.executor.executor as executor
@@ -73,10 +74,39 @@ async def get_metrics(request: Request) -> Response:
     return response
 
 
+@web.middleware
+async def _log_4xx_requests_middleware(
+    request: Request, handler: Callable[[Request], Awaitable[StreamResponse]]
+) -> StreamResponse:
+    """Log HTTP requests that return a 4xx status code"""
+    try:
+        response = await handler(request)
+    except web.HTTPException as error:
+        if 400 <= error.status < 500:
+            _logger.warning(
+                f"HTTP 4xx response: method={request.method} "
+                f"path={request.path_qs} "
+                f"status={error.status} "
+                f"content={error.text}"
+            )
+        raise
+
+    if 400 <= response.status < 500:
+        response_content = response.text if isinstance(response, web.Response) else ""
+        _logger.warning(
+            f"HTTP 4xx response: method={request.method} "
+            f"path={request.path_qs} "
+            f"status={response.status} "
+            f"content={response_content}"
+        )
+
+    return response
+
+
 async def init(controller_enabled: bool = False) -> None:
     global _runner
 
-    app = web.Application()
+    app = web.Application(middlewares=[_log_4xx_requests_middleware])
     set_logger_level(logging.getLogger("aiohttp.web"), configs.http_server.log_level)
     set_logger_level(logging.getLogger("aiohttp.access"), configs.http_server.log_level)
 

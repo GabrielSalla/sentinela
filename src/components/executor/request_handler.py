@@ -37,7 +37,7 @@ async def alert_acknowledge(message_payload: RequestPayload) -> None:
     alert_id = message_payload.params["target_id"]
     alert = await Alert.get_by_id(alert_id)
     if alert is None:
-        _logger.info(f"Alert '{alert_id}' not found")
+        _logger.warning(f"Alert '{alert_id}' not found")
         return
     await registry.wait_monitor_loaded(alert.monitor_id)
     await alert.acknowledge()
@@ -48,7 +48,7 @@ async def alert_lock(message_payload: RequestPayload) -> None:
     alert_id = message_payload.params["target_id"]
     alert = await Alert.get_by_id(alert_id)
     if alert is None:
-        _logger.info(f"Alert '{alert_id}' not found")
+        _logger.warning(f"Alert '{alert_id}' not found")
         return
     await registry.wait_monitor_loaded(alert.monitor_id)
     await alert.lock()
@@ -59,7 +59,7 @@ async def alert_solve(message_payload: RequestPayload) -> None:
     alert_id = message_payload.params["target_id"]
     alert = await Alert.get_by_id(alert_id)
     if alert is None:
-        _logger.info(f"Alert '{alert_id}' not found")
+        _logger.warning(f"Alert '{alert_id}' not found")
         return
     await registry.wait_monitor_loaded(alert.monitor_id)
     await alert.solve_issues()
@@ -70,7 +70,7 @@ async def issue_drop(message_payload: RequestPayload) -> None:
     issue_id = message_payload.params["target_id"]
     issue = await Issue.get_by_id(issue_id)
     if issue is None:
-        _logger.info(f"Issue '{issue_id}' not found")
+        _logger.warning(f"Issue '{issue_id}' not found")
         return
     await registry.wait_monitor_loaded(issue.monitor_id)
     await issue.drop()

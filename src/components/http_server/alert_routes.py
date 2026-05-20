@@ -66,13 +66,10 @@ async def list_alert_active_issues(request: Request) -> Response:
 async def alert_acknowledge(request: Request) -> Response:
     """Route to acknowledge an alert"""
     alert_id = int(request.match_info["alert_id"])
-
-    alert = await Alert.get_by_id(alert_id)
-    if not alert:
-        error_response = {"status": "error", "message": f"alert '{alert_id}' not found"}
-        return web.json_response(error_response, status=404)
-
-    await commands.alert_acknowledge(alert_id)
+    try:
+        await commands.alert_acknowledge(alert_id)
+    except ValueError as error:
+        return web.json_response({"status": "error", "message": str(error)}, status=404)
 
     success_response = {
         "status": "request_queued",
@@ -87,13 +84,10 @@ async def alert_acknowledge(request: Request) -> Response:
 async def alert_lock(request: Request) -> Response:
     """Route to lock an alert"""
     alert_id = int(request.match_info["alert_id"])
-
-    alert = await Alert.get_by_id(alert_id)
-    if not alert:
-        error_response = {"status": "error", "message": f"alert '{alert_id}' not found"}
-        return web.json_response(error_response, status=404)
-
-    await commands.alert_lock(alert_id)
+    try:
+        await commands.alert_lock(alert_id)
+    except ValueError as error:
+        return web.json_response({"status": "error", "message": str(error)}, status=404)
 
     success_response = {
         "status": "request_queued",
@@ -108,13 +102,10 @@ async def alert_lock(request: Request) -> Response:
 async def alert_solve(request: Request) -> Response:
     """Route to solve an alert's issues"""
     alert_id = int(request.match_info["alert_id"])
-
-    alert = await Alert.get_by_id(alert_id)
-    if not alert:
-        error_response = {"status": "error", "message": f"alert '{alert_id}' not found"}
-        return web.json_response(error_response, status=404)
-
-    await commands.alert_solve(alert_id)
+    try:
+        await commands.alert_solve(alert_id)
+    except ValueError as error:
+        return web.json_response({"status": "error", "message": str(error)}, status=404)
 
     success_response = {
         "status": "request_queued",
