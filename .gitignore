@@ -1,10 +1,13 @@
 _monitors
 _monitors_load
+.agents
+.codex
 .coverage
 .mypy_cache
 .pytest_cache
 .ruff_cache
 .vscode
 **/__pycache__
+AGENTS.md
 sentinela_tools
 tmp
