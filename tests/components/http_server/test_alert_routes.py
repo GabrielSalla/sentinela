@@ -129,7 +129,7 @@ async def test_alert_acknowledge_alert_not_found(clear_queue):
     async with aiohttp.ClientSession() as session:
         async with session.post(BASE_URL + "/0/acknowledge") as response:
             assert response.status == 404
-            assert await response.json() == {"status": "error", "message": "alert '0' not found"}
+            assert await response.json() == {"status": "error", "message": "Alert '0' not found"}
 
     queue_items = get_queue_items()
     assert len(queue_items) == 0
@@ -167,7 +167,7 @@ async def test_alert_lock_alert_not_found(clear_queue):
     async with aiohttp.ClientSession() as session:
         async with session.post(BASE_URL + "/0/lock") as response:
             assert response.status == 404
-            assert await response.json() == {"status": "error", "message": "alert '0' not found"}
+            assert await response.json() == {"status": "error", "message": "Alert '0' not found"}
 
     queue_items = get_queue_items()
     assert len(queue_items) == 0
@@ -206,7 +206,7 @@ async def test_alert_solve_alert_not_found(clear_queue):
     async with aiohttp.ClientSession() as session:
         async with session.post(BASE_URL + "/0/solve") as response:
             assert response.status == 404
-            assert await response.json() == {"status": "error", "message": "alert '0' not found"}
+            assert await response.json() == {"status": "error", "message": "Alert '0' not found"}
 
     queue_items = get_queue_items()
     assert len(queue_items) == 0
