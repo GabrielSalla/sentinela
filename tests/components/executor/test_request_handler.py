@@ -16,6 +16,57 @@ from tests.test_utils import assert_message_in_log
 pytestmark = pytest.mark.asyncio(loop_scope="session")
 
 
+async def test_monitor_disable(mocker, sample_monitor: Monitor):
+    """'monitor_disable' should disable the provided monitor"""
+    wait_monitor_loaded_spy: AsyncMock = mocker.spy(registry, "wait_monitor_loaded")
+
+    assert sample_monitor.enabled
+
+    await request_handler.monitor_disable(
+        RequestPayload(action="monitor_disable", params={"target_id": sample_monitor.id})
+    )
+
+    await sample_monitor.refresh()
+
+    assert not sample_monitor.enabled
+    wait_monitor_loaded_spy.assert_awaited_once_with(sample_monitor.id)
+
+
+async def test_monitor_disable_monitor_not_found(caplog, mocker):
+    """'monitor_disable' should just return when monitor with provided id doesn't exists"""
+    await request_handler.monitor_disable(
+        RequestPayload(action="monitor_disable", params={"target_id": 999999999})
+    )
+
+    assert_message_in_log(caplog, "Monitor '999999999' not found")
+
+
+async def test_monitor_enable(mocker, sample_monitor: Monitor):
+    """'monitor_enable' should enable the provided monitor"""
+    wait_monitor_loaded_spy: AsyncMock = mocker.spy(registry, "wait_monitor_loaded")
+
+    await sample_monitor.set_enabled(False)
+    assert not sample_monitor.enabled
+
+    await request_handler.monitor_enable(
+        RequestPayload(action="monitor_enable", params={"target_id": sample_monitor.id})
+    )
+
+    await sample_monitor.refresh()
+
+    assert sample_monitor.enabled
+    wait_monitor_loaded_spy.assert_awaited_once_with(sample_monitor.id)
+
+
+async def test_monitor_enable_monitor_not_found(caplog, mocker):
+    """'monitor_enable' should just return when monitor with provided id doesn't exists"""
+    await request_handler.monitor_enable(
+        RequestPayload(action="monitor_enable", params={"target_id": 999999999})
+    )
+
+    assert_message_in_log(caplog, "Monitor '999999999' not found")
+
+
 async def test_alert_acknowledge(mocker, sample_monitor: Monitor):
     """'alert_acknowledge' should acknowledge the provided alert"""
     wait_monitor_loaded_spy: AsyncMock = mocker.spy(registry, "wait_monitor_loaded")
@@ -149,6 +200,8 @@ async def test_issue_drop_issue_not_found(caplog, mocker):
 
 async def test_get_action():
     """'get_action' should return the action function by its name"""
+    assert request_handler.get_action("monitor_disable") == request_handler.monitor_disable
+    assert request_handler.get_action("monitor_enable") == request_handler.monitor_enable
     assert request_handler.get_action("alert_acknowledge") == request_handler.alert_acknowledge
     assert request_handler.get_action("alert_lock") == request_handler.alert_lock
     assert request_handler.get_action("alert_solve") == request_handler.alert_solve
@@ -185,7 +238,14 @@ async def test_get_action_unknown_plugin(caplog, monkeypatch):
 
 @pytest.mark.parametrize(
     "action_name",
-    ["alert_acknowledge", "alert_lock", "alert_solve", "issue_drop"],
+    [
+        "monitor_disable",
+        "monitor_enable",
+        "alert_acknowledge",
+        "alert_lock",
+        "alert_solve",
+        "issue_drop",
+    ],
 )
 async def test_run_action(monkeypatch, action_name):
     """'run' should executed the requested action"""

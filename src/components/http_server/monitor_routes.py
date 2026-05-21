@@ -117,16 +117,20 @@ async def monitor_disable(request: Request) -> Response:
     monitor_name = request.match_info["monitor_name"]
 
     try:
-        await commands.disable_monitor(monitor_name)
+        monitor_id = await commands.monitor_disable(monitor_name)
+
         success_response = {
-            "status": "monitor_disabled",
-            "monitor_name": monitor_name,
+            "status": "request_queued",
+            "action": "monitor_disable",
+            "target_id": monitor_id,
         }
         return web.json_response(success_response)
+    except ValueError as error:
+        return web.json_response({"status": "error", "message": str(error)}, status=404)
     except Exception as e:
         error_response = {
             "status": "error",
-            "error": str(e),
+            "message": str(e),
         }
         _logger.error(traceback.format_exc().strip())
         return web.json_response(error_response, status=400)
@@ -139,16 +143,20 @@ async def monitor_enable(request: Request) -> Response:
     monitor_name = request.match_info["monitor_name"]
 
     try:
-        await commands.enable_monitor(monitor_name)
+        monitor_id = await commands.monitor_enable(monitor_name)
+
         success_response = {
-            "status": "monitor_enabled",
-            "monitor_name": monitor_name,
+            "status": "request_queued",
+            "action": "monitor_enable",
+            "target_id": monitor_id,
         }
         return web.json_response(success_response)
+    except ValueError as error:
+        return web.json_response({"status": "error", "message": str(error)}, status=404)
     except Exception as e:
         error_response = {
             "status": "error",
-            "error": str(e),
+            "message": str(e),
         }
         _logger.error(traceback.format_exc().strip())
         return web.json_response(error_response, status=400)
@@ -169,6 +177,9 @@ async def monitor_validate(request: Request) -> Response:
 
     try:
         await commands.monitor_code_validate(monitor_code)
+
+        success_response = {"status": "monitor_validated"}
+        return web.json_response(success_response)
     except pydantic.ValidationError as e:
         error_response = {
             "status": "error",
@@ -203,9 +214,6 @@ async def monitor_validate(request: Request) -> Response:
         _logger.error(traceback.format_exc().strip())
         return web.json_response(error_response, status=400)
 
-    success_response = {"status": "monitor_validated"}
-    return web.json_response(success_response)
-
 
 @monitor_routes.post(base_route + "/format_name/{monitor_name}")
 @monitor_routes.post(base_route + "/format_name/{monitor_name}/")
@@ -237,6 +245,12 @@ async def monitor_register(request: Request) -> Response:
 
     try:
         monitor = await commands.monitor_register(monitor_name, monitor_code, additional_files)
+
+        success_response = {
+            "status": "monitor_registered",
+            "monitor_id": monitor.id,
+        }
+        return web.json_response(success_response)
     except pydantic.ValidationError as e:
         error_response = {
             "status": "error",
@@ -265,9 +279,3 @@ async def monitor_register(request: Request) -> Response:
         }
         _logger.error(traceback.format_exc().strip())
         return web.json_response(error_response, status=400)
-
-    success_response = {
-        "status": "monitor_registered",
-        "monitor_id": monitor.id,
-    }
-    return web.json_response(success_response)

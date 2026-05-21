@@ -5,18 +5,18 @@ import commands as commands
 import message_queue as message_queue
 
 
-def disable_monitor(
+def monitor_disable(
     message_match: re.Match[Any], context: dict[str, Any]
 ) -> Coroutine[Any, Any, Any]:
     """Disable a monitor"""
-    return commands.disable_monitor(message_match.group(1))
+    return commands.monitor_disable(message_match.group(1))
 
 
-def enable_monitor(
+def monitor_enable(
     message_match: re.Match[Any], context: dict[str, Any]
 ) -> Coroutine[Any, Any, Any]:
     """Enable a monitor"""
-    return commands.enable_monitor(message_match.group(1))
+    return commands.monitor_enable(message_match.group(1))
 
 
 def alert_acknowledge(
@@ -59,8 +59,8 @@ def resend_notifications(
 
 
 PATTERNS = {
-    r"(?:<@\w+>)? ?disable monitor +(\w+)": disable_monitor,
-    r"(?:<@\w+>)? ?enable monitor +(\w+)": enable_monitor,
+    r"(?:<@\w+>)? ?disable monitor +(\w+)": monitor_disable,
+    r"(?:<@\w+>)? ?enable monitor +(\w+)": monitor_enable,
     r"(?:<@\w+>)? ?ack +(\d+)": alert_acknowledge,
     r"(?:<@\w+>)? ?lock +(\d+)": alert_lock,
     r"(?:<@\w+>)? ?solve +(\d+)": alert_solve,

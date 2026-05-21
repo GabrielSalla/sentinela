@@ -25,18 +25,30 @@ async def monitor_register(
     )
 
 
-async def disable_monitor(monitor_name: str) -> str:
-    """Disable a monitor"""
+async def monitor_disable(monitor_name: str) -> int:
+    """Validate and queue a 'monitor_disable' request"""
     monitor = await validate_monitor_request(monitor_name)
-    await monitor.set_enabled(False)
-    return f"{monitor} disabled"
+    await message_queue.send_message(
+        type="request",
+        payload={
+            "action": "monitor_disable",
+            "params": {"target_id": monitor.id},
+        },
+    )
+    return monitor.id
 
 
-async def enable_monitor(monitor_name: str) -> str:
-    """Enable a monitor"""
+async def monitor_enable(monitor_name: str) -> int:
+    """Validate and queue a 'monitor_enable' request"""
     monitor = await validate_monitor_request(monitor_name)
-    await monitor.set_enabled(True)
-    return f"{monitor} enabled"
+    await message_queue.send_message(
+        type="request",
+        payload={
+            "action": "monitor_enable",
+            "params": {"target_id": monitor.id},
+        },
+    )
+    return monitor.id
 
 
 async def alert_acknowledge(alert_id: int) -> None:
