@@ -12,14 +12,14 @@ from tests.message_queue.utils import get_queue_items
 pytestmark = pytest.mark.asyncio(loop_scope="session")
 
 
-async def test_disable_monitor(mocker):
-    """'disable_monitor' should return the coroutine to disable the monitor"""
-    disable_monitor_spy: MagicMock = mocker.spy(commands, "disable_monitor")
+async def test_monitor_disable(mocker):
+    """'monitor_disable' should return the coroutine to disable the monitor"""
+    disable_monitor_spy: MagicMock = mocker.spy(commands, "monitor_disable")
 
     match = re.match(r"disable monitor +(\w+)", "disable monitor abc")
     assert match is not None
 
-    action = pattern_match.disable_monitor(message_match=match, context={})
+    action = pattern_match.monitor_disable(message_match=match, context={})
 
     assert action is not None
     assert inspect.isawaitable(action)
@@ -29,14 +29,14 @@ async def test_disable_monitor(mocker):
     action.close()
 
 
-async def test_enable_monitor(mocker):
-    """'enable_monitor' should return the coroutine to enable the monitor"""
-    enable_monitor_spy: MagicMock = mocker.spy(commands, "enable_monitor")
+async def test_monitor_enable(mocker):
+    """'monitor_enable' should return the coroutine to enable the monitor"""
+    enable_monitor_spy: MagicMock = mocker.spy(commands, "monitor_enable")
 
     match = re.match(r"enable monitor +(\w+)", "enable monitor abc")
     assert match is not None
 
-    action = pattern_match.enable_monitor(message_match=match, context={})
+    action = pattern_match.monitor_enable(message_match=match, context={})
 
     assert action is not None
     assert inspect.isawaitable(action)
@@ -153,10 +153,10 @@ async def test_resend_notifications(clear_queue, slack_channel):
 @pytest.mark.parametrize(
     "message_command, expected_request",
     [
-        ("disable monitor abc", "disable_monitor"),
-        ("disable monitor   abc", "disable_monitor"),
-        ("enable monitor abc", "enable_monitor"),
-        ("enable monitor   abc", "enable_monitor"),
+        ("disable monitor abc", "monitor_disable"),
+        ("disable monitor   abc", "monitor_disable"),
+        ("enable monitor abc", "monitor_enable"),
+        ("enable monitor   abc", "monitor_enable"),
         ("ack 12345", "alert_acknowledge"),
         ("ack    12345", "alert_acknowledge"),
         ("lock 12345", "alert_lock"),

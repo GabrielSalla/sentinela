@@ -185,10 +185,8 @@ async def test_get_monitor_invalid_code_module(clear_database, sample_monitor: M
 
 
 async def test_monitor_disable(mocker, clear_database, sample_monitor: Monitor):
-    """The 'monitor disable' route should disable a monitor"""
-    monitor_disable_spy: AsyncMock = mocker.spy(commands, "disable_monitor")
-
-    assert sample_monitor.enabled
+    """The 'monitor disable' route should queue monitor disable"""
+    monitor_disable_spy: AsyncMock = mocker.spy(commands, "monitor_disable")
 
     url = BASE_URL + f"/{sample_monitor.name}/disable"
     async with aiohttp.ClientSession() as session:
@@ -197,17 +195,15 @@ async def test_monitor_disable(mocker, clear_database, sample_monitor: Monitor):
 
     monitor_disable_spy.assert_awaited_once_with(sample_monitor.name)
     assert response_data == {
-        "status": "monitor_disabled",
-        "monitor_name": sample_monitor.name,
+        "status": "request_queued",
+        "action": "monitor_disable",
+        "target_id": sample_monitor.id,
     }
-
-    await sample_monitor.refresh()
-    assert not sample_monitor.enabled
 
 
 async def test_monitor_disable_not_found(mocker, clear_database):
     """The 'monitor disable' route should return an error if the monitor is not found"""
-    monitor_disable_spy: AsyncMock = mocker.spy(commands, "disable_monitor")
+    monitor_disable_spy: AsyncMock = mocker.spy(commands, "monitor_disable")
 
     url = BASE_URL + "/not_found/disable"
     async with aiohttp.ClientSession() as session:
@@ -217,13 +213,13 @@ async def test_monitor_disable_not_found(mocker, clear_database):
     monitor_disable_spy.assert_awaited_once_with("not_found")
     assert response_data == {
         "status": "error",
-        "error": "Monitor 'not_found' not found",
+        "message": "Monitor 'not_found' not found",
     }
 
 
 async def test_monitor_disable_error(mocker, clear_database):
     """The 'monitor disable' route should return an error if an exception is raised"""
-    monitor_disable_spy: AsyncMock = mocker.spy(commands, "disable_monitor")
+    monitor_disable_spy: AsyncMock = mocker.spy(commands, "monitor_disable")
     monitor_disable_spy.side_effect = Exception("Something went wrong")
 
     url = BASE_URL + "/error/disable"
@@ -234,16 +230,13 @@ async def test_monitor_disable_error(mocker, clear_database):
     monitor_disable_spy.assert_awaited_once_with("error")
     assert response_data == {
         "status": "error",
-        "error": "Something went wrong",
+        "message": "Something went wrong",
     }
 
 
 async def test_monitor_enable(mocker, clear_database, sample_monitor: Monitor):
-    """The 'monitor enable' route should enable a monitor"""
-    monitor_enable_spy: AsyncMock = mocker.spy(commands, "enable_monitor")
-
-    await sample_monitor.set_enabled(False)
-    assert not sample_monitor.enabled
+    """The 'monitor enable' route should queue monitor enable"""
+    monitor_enable_spy: AsyncMock = mocker.spy(commands, "monitor_enable")
 
     url = BASE_URL + f"/{sample_monitor.name}/enable"
     async with aiohttp.ClientSession() as session:
@@ -252,17 +245,15 @@ async def test_monitor_enable(mocker, clear_database, sample_monitor: Monitor):
 
     monitor_enable_spy.assert_awaited_once_with(sample_monitor.name)
     assert response_data == {
-        "status": "monitor_enabled",
-        "monitor_name": sample_monitor.name,
+        "status": "request_queued",
+        "action": "monitor_enable",
+        "target_id": sample_monitor.id,
     }
-
-    await sample_monitor.refresh()
-    assert sample_monitor.enabled
 
 
 async def test_monitor_enable_not_found(mocker, clear_database):
     """The 'monitor enable' route should return an error if the monitor is not found"""
-    monitor_enable_spy: AsyncMock = mocker.spy(commands, "enable_monitor")
+    monitor_enable_spy: AsyncMock = mocker.spy(commands, "monitor_enable")
 
     url = BASE_URL + "/not_found/enable"
     async with aiohttp.ClientSession() as session:
@@ -272,13 +263,13 @@ async def test_monitor_enable_not_found(mocker, clear_database):
     monitor_enable_spy.assert_awaited_once_with("not_found")
     assert response_data == {
         "status": "error",
-        "error": "Monitor 'not_found' not found",
+        "message": "Monitor 'not_found' not found",
     }
 
 
 async def test_monitor_enable_error(mocker, clear_database):
     """The 'monitor enable' route should return an error if an exception is raised"""
-    monitor_enable_spy: AsyncMock = mocker.spy(commands, "enable_monitor")
+    monitor_enable_spy: AsyncMock = mocker.spy(commands, "monitor_enable")
     monitor_enable_spy.side_effect = Exception("Something went wrong")
 
     url = BASE_URL + "/error/enable"
@@ -289,7 +280,7 @@ async def test_monitor_enable_error(mocker, clear_database):
     monitor_enable_spy.assert_awaited_once_with("error")
     assert response_data == {
         "status": "error",
-        "error": "Something went wrong",
+        "message": "Something went wrong",
     }
 
 

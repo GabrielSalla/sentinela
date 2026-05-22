@@ -10,7 +10,7 @@ import registry as registry
 from base_exception import BaseSentinelaException
 from configs import configs
 from data_models.request_payload import RequestPayload
-from models import Alert, Issue
+from models import Alert, Issue, Monitor
 from plugins.attribute_select import get_plugin_attribute
 
 _logger = logging.getLogger("request_handler")
@@ -30,6 +30,28 @@ prometheus_request_execution_time = prometheus_client.Summary(
     "Time to run the request",
     ["action_name"],
 )
+
+
+async def monitor_disable(message_payload: RequestPayload) -> None:
+    """Disable a monitor"""
+    monitor_id = message_payload.params["target_id"]
+    monitor = await Monitor.get_by_id(monitor_id)
+    if monitor is None:
+        _logger.warning(f"Monitor '{monitor_id}' not found")
+        return
+    await registry.wait_monitor_loaded(monitor.id)
+    await monitor.set_enabled(False)
+
+
+async def monitor_enable(message_payload: RequestPayload) -> None:
+    """Enable a monitor"""
+    monitor_id = message_payload.params["target_id"]
+    monitor = await Monitor.get_by_id(monitor_id)
+    if monitor is None:
+        _logger.warning(f"Monitor '{monitor_id}' not found")
+        return
+    await registry.wait_monitor_loaded(monitor.id)
+    await monitor.set_enabled(True)
 
 
 async def alert_acknowledge(message_payload: RequestPayload) -> None:
@@ -77,6 +99,8 @@ async def issue_drop(message_payload: RequestPayload) -> None:
 
 
 actions = {
+    "monitor_disable": monitor_disable,
+    "monitor_enable": monitor_enable,
     "alert_acknowledge": alert_acknowledge,
     "alert_lock": alert_lock,
     "alert_solve": alert_solve,

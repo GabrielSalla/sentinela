@@ -68,36 +68,54 @@ async def test_monitor_register_additional_files(mocker):
     assert code_module.additional_files == {"file.sql": "SELECT 1;"}
 
 
-async def test_disable_monitor(mocker, sample_monitor: Monitor):
-    """'disable_monitor' should disable the monitor with the provided name"""
-    assert sample_monitor.enabled is True
-    result = await requests.disable_monitor(sample_monitor.name)
-    assert result == f"{sample_monitor} disabled"
-    await sample_monitor.refresh()
-    assert sample_monitor.enabled is False
+async def test_monitor_disable(clear_queue, sample_monitor: Monitor):
+    """'monitor_disable' should queue a 'monitor_disable' action request"""
+    result = await requests.monitor_disable(sample_monitor.name)
+    assert result == sample_monitor.id
+
+    queue_items = get_queue_items()
+    assert queue_items == [
+        json.dumps(
+            {
+                "type": "request",
+                "payload": {
+                    "action": "monitor_disable",
+                    "params": {"target_id": sample_monitor.id},
+                },
+            }
+        )
+    ]
 
 
-async def test_disable_monitor_not_found():
-    """'disable_monitor' should raise a 'ValueError' exception if the monitor is not found"""
+async def test_monitor_disable_not_found():
+    """'monitor_disable' should raise a 'ValueError' exception if the monitor is not found"""
     with pytest.raises(ValueError, match="Monitor 'not_found' not found"):
-        await requests.disable_monitor("not_found")
+        await requests.monitor_disable("not_found")
 
 
-async def test_enable_monitor(mocker, sample_monitor: Monitor):
-    """'disable_monitor' should enable the monitor with the provided name"""
-    await sample_monitor.set_enabled(False)
-    await sample_monitor.refresh()
-    assert sample_monitor.enabled is False
-    result = await requests.enable_monitor(sample_monitor.name)
-    assert result == f"{sample_monitor} enabled"
-    await sample_monitor.refresh()
-    assert sample_monitor.enabled is True
+async def test_monitor_enable(clear_queue, sample_monitor: Monitor):
+    """'monitor_enable' should queue a 'monitor_enable' action request"""
+    result = await requests.monitor_enable(sample_monitor.name)
+    assert result == sample_monitor.id
+
+    queue_items = get_queue_items()
+    assert queue_items == [
+        json.dumps(
+            {
+                "type": "request",
+                "payload": {
+                    "action": "monitor_enable",
+                    "params": {"target_id": sample_monitor.id},
+                },
+            }
+        )
+    ]
 
 
-async def test_enable_monitor_not_found(mocker):
-    """'enable_monitor' should raise a 'ValueError' exception if the monitor is not found"""
+async def test_monitor_enable_not_found():
+    """'monitor_enable' should raise a 'ValueError' exception if the monitor is not found"""
     with pytest.raises(ValueError, match="Monitor 'not_found' not found"):
-        await requests.enable_monitor("not_found")
+        await requests.monitor_enable("not_found")
 
 
 async def test_alert_acknowledge(clear_queue, sample_monitor: Monitor):

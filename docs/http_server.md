@@ -72,11 +72,13 @@ Response example:
 **`POST /monitor/{monitor_name}/disable`**
 
 Disable the monitor with the provided `monitor_name`.
+This request is not executed immediately, it's queued for an Executor to run.
 
 ## Enable monitor
 **`POST /monitor/{monitor_name}/enable`**
 
 Enable the monitor with the provided `monitor_name`.
+This request is not executed immediately, it's queued for an Executor to run.
 
 ## Validate monitor
 **`POST /monitor/validate`**
@@ -126,18 +128,22 @@ Response example:
 **`POST /alert/{alert_id}/acknowledge`**
 
 Acknowledge the alert with the provided `alert_id`.
+This request is not executed immediately, it's queued for an Executor to run.
 
 ## Lock alert
 **`POST /alert/{alert_id}/lock`**
 
 Lock the alert with the provided `alert_id`.
+This request is not executed immediately, it's queued for an Executor to run.
 
 ## Solve alert
 **`POST /alert/{alert_id}/solve`**
 
 Solve the alert with the provided `alert_id`.
+This request is not executed immediately, it's queued for an Executor to run.
 
 ## Drop issue
 **`POST /issue/{issue_id}/drop`**
 
 Drop the issue with the provided `issue_id`.
+This request is not executed immediately, it's queued for an Executor to run.
