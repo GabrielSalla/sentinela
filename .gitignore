@@ -3,6 +3,7 @@ _monitors_load
 .agents
 .codex
 .coverage
+.env
 .mypy_cache
 .pytest_cache
 .ruff_cache
