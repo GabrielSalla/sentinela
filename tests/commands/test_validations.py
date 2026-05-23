@@ -1,6 +1,7 @@
 import pytest
 
 import commands.validations as validations
+from commands.exceptions import AlertNotFoundError, IssueNotFoundError, MonitorNotFoundError
 from models import Alert, Issue, Monitor
 
 pytestmark = pytest.mark.asyncio(loop_scope="session")
@@ -13,8 +14,9 @@ async def test_validate_monitor_request(sample_monitor: Monitor):
 
 
 async def test_validate_monitor_request_not_found():
-    """'validate_monitor_request' should raise a 'ValueError' exception when monitor not found"""
-    with pytest.raises(ValueError, match="Monitor 'not_found' not found"):
+    """'validate_monitor_request' should raise a 'MonitorNotFoundError' exception when monitor not
+    found"""
+    with pytest.raises(MonitorNotFoundError, match="Monitor 'not_found' not found"):
         await validations.validate_monitor_request("not_found")
 
 
@@ -26,8 +28,9 @@ async def test_validate_alert_request(sample_monitor: Monitor):
 
 
 async def test_validate_alert_request_not_found():
-    """'validate_alert_request' should raise a 'ValueError' exception when alert not found"""
-    with pytest.raises(ValueError, match="Alert '999999999' not found"):
+    """'validate_alert_request' should raise a 'AlertNotFoundError' exception when alert not
+    found"""
+    with pytest.raises(AlertNotFoundError, match="Alert '999999999' not found"):
         await validations.validate_alert_request(999999999)
 
 
@@ -39,6 +42,7 @@ async def test_validate_issue_request(sample_monitor: Monitor):
 
 
 async def test_validate_issue_request_not_found():
-    """'validate_issue_request' should raise a 'ValueError' exception when issue not found"""
-    with pytest.raises(ValueError, match="Issue '999999999' not found"):
+    """'validate_issue_request' should raise a 'IssueNotFoundError' exception when issue not
+    found"""
+    with pytest.raises(IssueNotFoundError, match="Issue '999999999' not found"):
         await validations.validate_issue_request(999999999)

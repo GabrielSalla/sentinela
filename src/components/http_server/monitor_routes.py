@@ -125,8 +125,8 @@ async def monitor_disable(request: Request) -> Response:
             "target_id": monitor_id,
         }
         return web.json_response(success_response)
-    except ValueError as error:
-        return web.json_response({"status": "error", "message": str(error)}, status=404)
+    except commands.MonitorNotFoundError as e:
+        return web.json_response({"status": "error", "message": str(e)}, status=404)
     except Exception as e:
         error_response = {
             "status": "error",
@@ -151,8 +151,8 @@ async def monitor_enable(request: Request) -> Response:
             "target_id": monitor_id,
         }
         return web.json_response(success_response)
-    except ValueError as error:
-        return web.json_response({"status": "error", "message": str(error)}, status=404)
+    except commands.MonitorNotFoundError as e:
+        return web.json_response({"status": "error", "message": str(e)}, status=404)
     except Exception as e:
         error_response = {
             "status": "error",

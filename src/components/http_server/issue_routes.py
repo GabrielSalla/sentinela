@@ -15,8 +15,8 @@ async def issue_drop(request: Request) -> Response:
     issue_id = int(request.match_info["issue_id"])
     try:
         await commands.issue_drop(issue_id)
-    except ValueError as error:
-        return web.json_response({"status": "error", "message": str(error)}, status=404)
+    except commands.IssueNotFoundError as e:
+        return web.json_response({"status": "error", "message": str(e)}, status=404)
 
     success_response = {
         "status": "request_queued",
