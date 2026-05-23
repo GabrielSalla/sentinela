@@ -1,3 +1,4 @@
+from .exceptions import AlertNotFoundError, IssueNotFoundError, MonitorNotFoundError
 from .requests import (
     alert_acknowledge,
     alert_lock,
@@ -18,4 +19,7 @@ __all__ = [
     "monitor_disable",
     "monitor_enable",
     "monitor_register",
+    "AlertNotFoundError",
+    "IssueNotFoundError",
+    "MonitorNotFoundError",
 ]
