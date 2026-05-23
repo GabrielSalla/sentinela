@@ -41,6 +41,8 @@ services:
       SLACK_MAIN_MENTION: U07NFGGMB98
     env_file:
       - .env.secrets
+      - path: .env
+        required: false
     volumes:
       - .:/app:Z
       # Paths that won't be synced with the container
