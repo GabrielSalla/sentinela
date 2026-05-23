@@ -68,8 +68,8 @@ async def alert_acknowledge(request: Request) -> Response:
     alert_id = int(request.match_info["alert_id"])
     try:
         await commands.alert_acknowledge(alert_id)
-    except ValueError as error:
-        return web.json_response({"status": "error", "message": str(error)}, status=404)
+    except commands.AlertNotFoundError as e:
+        return web.json_response({"status": "error", "message": str(e)}, status=404)
 
     success_response = {
         "status": "request_queued",
@@ -86,8 +86,8 @@ async def alert_lock(request: Request) -> Response:
     alert_id = int(request.match_info["alert_id"])
     try:
         await commands.alert_lock(alert_id)
-    except ValueError as error:
-        return web.json_response({"status": "error", "message": str(error)}, status=404)
+    except commands.AlertNotFoundError as e:
+        return web.json_response({"status": "error", "message": str(e)}, status=404)
 
     success_response = {
         "status": "request_queued",
@@ -104,8 +104,8 @@ async def alert_solve(request: Request) -> Response:
     alert_id = int(request.match_info["alert_id"])
     try:
         await commands.alert_solve(alert_id)
-    except ValueError as error:
-        return web.json_response({"status": "error", "message": str(error)}, status=404)
+    except commands.AlertNotFoundError as e:
+        return web.json_response({"status": "error", "message": str(e)}, status=404)
 
     success_response = {
         "status": "request_queued",

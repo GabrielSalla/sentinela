@@ -36,6 +36,7 @@ As a Slack app, Sentinela can also respond to direct commands sent in a message.
 Available commands:
 - `disable monitor {monitor_name}`: Disable the specified monitor.
 - `enable monitor {monitor_name}`: Enable the specified monitor.
+- `refresh {monitor_name} [task]`: Refresh the monitor. Without `task`, both `search` and `update` will be executed. With `task`, only `search` or `update` is executed.
 - `ack {alert_id}`: Acknowledge the specified alert.
 - `lock {alert_id}`: Lock the specified alert.
 - `solve {alert_id}`: Solve the specified alert.
@@ -45,6 +46,9 @@ Available commands:
 Examples:
 - `@Sentinela disable monitor some_monitor`
 - `@Sentinela enable monitor some_monitor`
+- `@Sentinela refresh some_monitor`
+- `@Sentinela refresh some_monitor search`
+- `@Sentinela refresh some_monitor update`
 - `@Sentinela ack 1234`
 - `@Sentinela lock 2345`
 - `@Sentinela solve 3456`

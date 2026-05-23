@@ -19,6 +19,14 @@ def monitor_enable(
     return commands.monitor_enable(message_match.group(1))
 
 
+async def monitor_refresh(message_match: re.Match[Any], context: dict[str, Any]) -> None:
+    """Refresh monitor"""
+    monitor_name = message_match.group(1)
+    task = message_match.group(2)
+    tasks = [task] if task is not None else ["search", "update"]
+    await commands.monitor_refresh(monitor_name, tasks)
+
+
 def alert_acknowledge(
     message_match: re.Match[Any], context: dict[str, Any]
 ) -> Coroutine[Any, Any, Any]:
@@ -61,6 +69,7 @@ def resend_notifications(
 PATTERNS = {
     r"(?:<@\w+>)? ?disable monitor +(\w+)": monitor_disable,
     r"(?:<@\w+>)? ?enable monitor +(\w+)": monitor_enable,
+    r"(?:<@\w+>)? ?refresh +(\w+)(?: +(search|update))?": monitor_refresh,
     r"(?:<@\w+>)? ?ack +(\d+)": alert_acknowledge,
     r"(?:<@\w+>)? ?lock +(\d+)": alert_lock,
     r"(?:<@\w+>)? ?solve +(\d+)": alert_solve,
@@ -77,7 +86,6 @@ def get_message_request(message: str, context: dict[str, Any]) -> Coroutine[Any,
         if match is None:
             continue
 
-        # Get the action from 'requests'
         return get_action_function(
             message_match=match,
             context=context,

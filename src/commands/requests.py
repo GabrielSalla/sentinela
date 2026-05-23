@@ -51,6 +51,20 @@ async def monitor_enable(monitor_name: str) -> int:
     return monitor.id
 
 
+async def monitor_refresh(monitor_name: str, tasks: list[str]) -> None:
+    """Validate and queue a 'monitor_refresh' request"""
+    monitor = await validate_monitor_request(monitor_name)
+    if monitor.queued or monitor.running:
+        raise ValueError(f"Monitor '{monitor_name}' already running or queued")
+    await message_queue.send_message(
+        type="request",
+        payload={
+            "action": "monitor_refresh",
+            "params": {"target_id": monitor.id, "tasks": tasks},
+        },
+    )
+
+
 async def alert_acknowledge(alert_id: int) -> None:
     """Validate and queue an 'alert_acknowledge' request"""
     await validate_alert_request(alert_id)

@@ -80,6 +80,30 @@ This request is not executed immediately, it's queued for an Executor to run.
 Enable the monitor with the provided `monitor_name`.
 This request is not executed immediately, it's queued for an Executor to run.
 
+## Refresh monitor
+**`POST /monitor/{monitor_name}/refresh`**
+
+Queue the monitor with the provided `monitor_name` for refresh.
+This request is not executed immediately, it's queued for an Executor to run.
+
+Request body example:
+```json
+{
+    "tasks": ["search", "update"]
+}
+```
+
+The `tasks` field must be a non-empty list containing only `search` and/or `update`.
+
+Response example:
+```json
+{
+    "status": "monitor_refresh_queued",
+    "monitor_name": "monitor_name",
+    "tasks": ["search", "update"]
+}
+```
+
 ## Validate monitor
 **`POST /monitor/validate`**
 

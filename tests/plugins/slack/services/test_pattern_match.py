@@ -1,7 +1,7 @@
 import inspect
 import json
 import re
-from unittest.mock import MagicMock
+from unittest.mock import AsyncMock
 
 import pytest
 
@@ -14,7 +14,7 @@ pytestmark = pytest.mark.asyncio(loop_scope="session")
 
 async def test_monitor_disable(mocker):
     """'monitor_disable' should return the coroutine to disable the monitor"""
-    disable_monitor_spy: MagicMock = mocker.spy(commands, "monitor_disable")
+    disable_monitor_spy: AsyncMock = mocker.spy(commands, "monitor_disable")
 
     match = re.match(r"disable monitor +(\w+)", "disable monitor abc")
     assert match is not None
@@ -31,7 +31,7 @@ async def test_monitor_disable(mocker):
 
 async def test_monitor_enable(mocker):
     """'monitor_enable' should return the coroutine to enable the monitor"""
-    enable_monitor_spy: MagicMock = mocker.spy(commands, "monitor_enable")
+    enable_monitor_spy: AsyncMock = mocker.spy(commands, "monitor_enable")
 
     match = re.match(r"enable monitor +(\w+)", "enable monitor abc")
     assert match is not None
@@ -46,9 +46,32 @@ async def test_monitor_enable(mocker):
     action.close()
 
 
+@pytest.mark.parametrize(
+    "tasks, expected_tasks",
+    [
+        ("search", ["search"]),
+        ("update", ["update"]),
+        ("", ["search", "update"]),
+    ],
+)
+async def test_monitor_refresh(mocker, sample_monitor, tasks, expected_tasks):
+    """'monitor_refresh' should refresh monitor tasks and reply in thread"""
+    monitor_refresh_spy: AsyncMock = mocker.spy(commands, "monitor_refresh")
+
+    message = f"refresh {sample_monitor.name} {tasks}".strip()
+    match = re.match(r"refresh +(\w+)(?: +(search|update))?", message)
+    assert match is not None
+
+    await pattern_match.monitor_refresh(
+        message_match=match, context={"channel": "C1234567890", "ts": "1234"}
+    )
+
+    monitor_refresh_spy.assert_awaited_once_with(sample_monitor.name, expected_tasks)
+
+
 async def test_alert_acknowledge(mocker):
     """'alert_acknowledge' should return the coroutine to acknowledge the alert"""
-    alert_acknowledge_spy: MagicMock = mocker.spy(commands, "alert_acknowledge")
+    alert_acknowledge_spy: AsyncMock = mocker.spy(commands, "alert_acknowledge")
 
     match = re.match(r"ack +(\d+)", "ack 12345")
     assert match is not None
@@ -65,7 +88,7 @@ async def test_alert_acknowledge(mocker):
 
 async def test_alert_lock(mocker):
     """'alert_lock' should return the coroutine to lock the alert"""
-    alert_lock_spy: MagicMock = mocker.spy(commands, "alert_lock")
+    alert_lock_spy: AsyncMock = mocker.spy(commands, "alert_lock")
 
     match = re.match(r"lock +(\d+)", "lock 12345")
     assert match is not None
@@ -82,7 +105,7 @@ async def test_alert_lock(mocker):
 
 async def test_alert_solve(mocker):
     """'alert_solve' should return the coroutine to solve the alert"""
-    alert_solve_spy: MagicMock = mocker.spy(commands, "alert_solve")
+    alert_solve_spy: AsyncMock = mocker.spy(commands, "alert_solve")
 
     match = re.match(r"solve +(\d+)", "solve 12345")
     assert match is not None
@@ -99,7 +122,7 @@ async def test_alert_solve(mocker):
 
 async def test_issue_drop(mocker):
     """'issue_drop' should return the coroutine to drop the issue"""
-    issue_drop_spy: MagicMock = mocker.spy(commands, "issue_drop")
+    issue_drop_spy: AsyncMock = mocker.spy(commands, "issue_drop")
 
     match = re.match(r"drop issue +(\d+)", "drop issue 12345")
     assert match is not None
@@ -172,7 +195,7 @@ async def test_get_message_request_match_external(
 ):
     """'get_message_request' should return the correct request coroutine based on the received
     message, using the external requests"""
-    action_spy: MagicMock = mocker.spy(commands, expected_request)
+    action_spy: AsyncMock = mocker.spy(commands, expected_request)
 
     context = {
         "channel": "C1234567890",
@@ -203,6 +226,9 @@ async def test_get_message_request_match_external(
     "message_command, expected_request",
     [
         ("resend notifications", "resend_notifications"),
+        ("refresh abc", "monitor_refresh"),
+        ("refresh abc search", "monitor_refresh"),
+        ("refresh abc update", "monitor_refresh"),
     ],
 )
 async def test_get_message_request_match_plugin(
@@ -222,7 +248,7 @@ async def test_get_message_request_match_plugin(
     action.close()
 
 
-async def test_get_message_reques_not_match(mocker):
+async def test_get_message_request_not_match(mocker):
     """'get_message_request' should return 'None' if the message didn't match with any pattern"""
     result = pattern_match.get_message_request("test 123", {})
 

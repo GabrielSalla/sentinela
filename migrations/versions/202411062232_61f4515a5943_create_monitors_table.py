@@ -24,6 +24,8 @@ def upgrade() -> None:
         sa.Column("enabled", sa.Boolean(), insert_default=True),
         sa.Column("queued", sa.Boolean(), insert_default=False),
         sa.Column("running", sa.Boolean(), insert_default=False),
+        sa.Column("force_search", sa.Boolean(), insert_default=False),
+        sa.Column("force_update", sa.Boolean(), insert_default=False),
         sa.Column("queued_at", sa.DateTime(timezone=True), nullable=True),
         sa.Column("running_at", sa.DateTime(timezone=True), nullable=True),
         sa.Column("search_executed_at", sa.DateTime(timezone=True), nullable=True),

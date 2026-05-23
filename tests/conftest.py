@@ -78,7 +78,11 @@ async def init_application_database():
     def reset_database(connection):
         alembic_config = alembic.config.Config("alembic.ini")
         alembic_config.attributes["connection"] = connection
-        alembic.command.downgrade(alembic_config, "base")
+        try:
+            alembic.command.downgrade(alembic_config, "base")
+        except Exception:
+            connection.exec_driver_sql("drop table if exists alembic_version")
+            Monitor.metadata.drop_all(connection)
         alembic.command.upgrade(alembic_config, "head")
 
     async with internal_database.engine.begin() as connection:
