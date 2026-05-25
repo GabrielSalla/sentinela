@@ -70,7 +70,8 @@ down-scalable:
 
 # Development utilities
 linter:
-	@container_id="$(DEV_CONTAINER_ID)"
+	@set -e
+	container_id="$(DEV_CONTAINER_ID)"
 	if [ -n "$$container_id" ]; then
 		docker exec -i "$$container_id" ruff check $(ARGS)
 		docker exec -i "$$container_id" ruff format --check --diff $(ARGS)
