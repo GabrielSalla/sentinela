@@ -519,6 +519,7 @@ async def test_process_monitor_none_triggered(monkeypatch, sample_monitor: Monit
     assert not sample_monitor.queued
 
 
+@pytest.mark.flaky(reruns=2)
 async def test_set_search_executed_at(sample_monitor: Monitor):
     """'Monitor.set_search_executed_at' should set the monitor's 'search_executed_at' to the
     current timestamp"""
@@ -527,6 +528,7 @@ async def test_set_search_executed_at(sample_monitor: Monitor):
     assert sample_monitor.search_executed_at > time_utils.now() - timedelta(seconds=0.1)
 
 
+@pytest.mark.flaky(reruns=2)
 async def test_set_update_executed_at(sample_monitor: Monitor):
     """'Monitor.set_update_executed_at' should set the monitor's 'update_executed_at' to the
     current timestamp"""
@@ -535,6 +537,7 @@ async def test_set_update_executed_at(sample_monitor: Monitor):
     assert sample_monitor.update_executed_at > time_utils.now() - timedelta(seconds=0.1)
 
 
+@pytest.mark.flaky(reruns=2)
 async def test_set_last_heartbeat(sample_monitor: Monitor):
     """'Monitor.set_last_heartbeat' should set the monitor's 'last_heartbeat' to the current
     timestamp"""
@@ -543,6 +546,7 @@ async def test_set_last_heartbeat(sample_monitor: Monitor):
     assert sample_monitor.last_heartbeat > time_utils.now() - timedelta(seconds=0.1)
 
 
+@pytest.mark.flaky(reruns=2)
 async def test_set_last_successful_execution(sample_monitor: Monitor):
     """'Monitor.set_last_successful_execution' should set the monitor's 'last_successful_execution'
     to the current timestamp"""

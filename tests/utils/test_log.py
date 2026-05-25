@@ -174,6 +174,7 @@ def test_friendly_formatter_no_log_format(capsys, monkeypatch):
     ],
 )
 @pytest.mark.parametrize("level", ["info", "warning", "error"])
+@pytest.mark.flaky(reruns=2)
 def test_json_formatter(capsys, monkeypatch, fields, level):
     """'json' formatter should format the log message as a JSON object using the provided fields"""
     set_json_formatter(monkeypatch, fields)

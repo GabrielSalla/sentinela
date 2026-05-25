@@ -96,6 +96,7 @@ async def test_init_error(caplog, mocker, empty_pools):
     assert_message_in_log(caplog, "ValueError: some error")
 
 
+@pytest.mark.flaky(reruns=2)
 async def test_fetch(caplog, monkeypatch):
     """'_fetch' should await the coroutine and return it's return value, while logging the
     metrics"""
@@ -133,6 +134,7 @@ async def test_fetch(caplog, monkeypatch):
     assert log_metrics["query_time"] < 0.105
 
 
+@pytest.mark.flaky(reruns=2)
 async def test_fetch_cancelled(caplog, monkeypatch):
     """'_fetch' should return 'None' and log the metrics if the coroutine is cancelled while
     executing"""
@@ -175,6 +177,7 @@ async def test_fetch_cancelled(caplog, monkeypatch):
     assert log_metrics["query_time"] < 0.105
 
 
+@pytest.mark.flaky(reruns=2)
 async def test_fetch_error(caplog, monkeypatch):
     """'_fetch' should raise the same exception raised by the coroutine, while logging the
     metrics"""

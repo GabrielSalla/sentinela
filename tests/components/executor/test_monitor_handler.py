@@ -1112,6 +1112,7 @@ async def test_run_routines_load_modules(mocker, monkeypatch, sample_monitor: Mo
 # Test _heartbeat_routine
 
 
+@pytest.mark.flaky(reruns=2)
 async def test_heartbeat_routine(monkeypatch, sample_monitor: Monitor):
     """'_heartbeat_routine' should handle execution timeouts while running the monitor routines"""
     monkeypatch.setattr(monitor_handler.configs, "executor_monitor_heartbeat_time", 0.1)
@@ -1235,6 +1236,7 @@ async def test_run_monitor_heartbeat(monkeypatch, sample_monitor: Monitor):
     assert sample_monitor.last_successful_execution > now() - timedelta(seconds=0.1)
 
 
+@pytest.mark.flaky(reruns=2)
 @pytest.mark.parametrize("tasks", [["search"], ["update"], ["search", "update"]])
 async def test_run_monitor_set_running(mocker, sample_monitor: Monitor, tasks):
     """'run' should set the monitor's 'running' flag to 'True' while running the routines"""

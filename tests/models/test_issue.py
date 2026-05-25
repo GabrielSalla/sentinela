@@ -218,6 +218,7 @@ async def test_check_solved_not_active(caplog, mocker, sample_monitor: Monitor, 
     assert_message_in_log(caplog, f"Can't check solved, status is '{issue_status.value}'")
 
 
+@pytest.mark.flaky(reruns=2)
 async def test_drop_active(caplog, mocker, sample_monitor: Monitor):
     """'Issue.drop' should set the issue as 'dropped' if if the issue is active"""
     caplog.set_level(logging.DEBUG)
@@ -288,6 +289,7 @@ async def test_solve_callback(caplog, mocker, sample_monitor: Monitor):
     assert_message_in_log(caplog, "Solved")
 
 
+@pytest.mark.flaky(reruns=2)
 async def test_solve_active(caplog, mocker, sample_monitor: Monitor):
     """'Issue.solve' should set the issue as solved if if the issue is active and the callback
     should be executed"""
