@@ -7,6 +7,7 @@ import prometheus_client
 from aiohttp import web
 from aiohttp.web_request import Request
 from aiohttp.web_response import Response, StreamResponse
+from pydantic import ValidationError
 
 import components.controller.controller as controller
 import components.executor.executor as executor
@@ -75,6 +76,33 @@ async def get_metrics(request: Request) -> Response:
 
 
 @web.middleware
+async def _pydantic_validation_middleware(
+    request: Request, handler: Callable[[Request], Awaitable[StreamResponse]]
+) -> StreamResponse:
+    """Convert pydantic validation errors into HTTP 400 responses"""
+    try:
+        return await handler(request)
+    except ValidationError as error:
+        errors = []
+        for field_error in error.errors():
+            message = field_error["msg"]
+            if message.startswith("Value error, "):
+                message = message.replace("Value error, ", "", 1)
+
+            location = ".".join(str(part) for part in field_error["loc"])
+            errors.append(f"{location}: {message}")
+
+        return web.json_response(
+            {
+                "status": "error",
+                "message": "Invalid request data",
+                "errors": errors,
+            },
+            status=400,
+        )
+
+
+@web.middleware
 async def _log_4xx_requests_middleware(
     request: Request, handler: Callable[[Request], Awaitable[StreamResponse]]
 ) -> StreamResponse:
@@ -106,7 +134,9 @@ async def _log_4xx_requests_middleware(
 async def init(controller_enabled: bool = False) -> None:
     global _runner
 
-    app = web.Application(middlewares=[_log_4xx_requests_middleware])
+    app = web.Application(
+        middlewares=[_log_4xx_requests_middleware, _pydantic_validation_middleware]
+    )
     set_logger_level(logging.getLogger("aiohttp.web"), configs.http_server.log_level)
     set_logger_level(logging.getLogger("aiohttp.access"), configs.http_server.log_level)
 
