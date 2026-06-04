@@ -1,12 +1,11 @@
 import logging
 import traceback
 from collections import Counter
-from typing import Any
 
-import pydantic
 from aiohttp import web
 from aiohttp.web_request import Request
 from aiohttp.web_response import Response
+from pydantic import BaseModel, Field, ValidationError, field_validator
 
 import commands
 from components.http_server.format_monitor_name import format_monitor_name
@@ -18,6 +17,35 @@ _logger = logging.getLogger("monitor_routes")
 
 monitor_routes = web.RouteTableDef()
 base_route = "/monitor"
+
+
+class _MonitorIdPathParams(BaseModel):
+    monitor_id: int
+
+
+class _MonitorRefreshPayload(BaseModel):
+    tasks: list[str]
+
+    @field_validator("tasks")
+    @classmethod
+    def _validate_tasks(cls, tasks: list[str]) -> list[str]:
+        if not tasks:
+            raise ValueError("'tasks' parameter is required")
+
+        invalid_tasks = [task for task in tasks if task not in ("search", "update")]
+        if len(invalid_tasks) > 0:
+            raise ValueError(f"Invalid tasks: {invalid_tasks}")
+
+        return tasks
+
+
+class _MonitorValidatePayload(BaseModel):
+    monitor_code: str
+
+
+class _MonitorRegisterPayload(BaseModel):
+    monitor_code: str
+    additional_files: dict[str, str] = Field(default_factory=dict)
 
 
 @monitor_routes.get(base_route + "/list")
@@ -52,7 +80,8 @@ async def list_monitors(request: Request) -> Response:
 @monitor_routes.get(base_route + "/{monitor_id}/alerts/")
 async def list_monitor_active_alerts(request: Request) -> Response:
     """Route to list active alerts for a monitor"""
-    monitor_id = int(request.match_info["monitor_id"])
+    params = _MonitorIdPathParams.model_validate({"monitor_id": request.match_info["monitor_id"]})
+    monitor_id = params.monitor_id
 
     alerts = await Alert.get_all(
         Alert.monitor_id == monitor_id,
@@ -169,20 +198,10 @@ async def monitor_enable(request: Request) -> Response:
 async def monitor_refresh(request: Request) -> Response:
     """Route to refresh a monitor."""
     monitor_name = request.match_info["monitor_name"]
-    request_data = await request.json()
-    tasks = request_data.get("tasks")
+    payload = _MonitorRefreshPayload(**await request.json())
+    tasks = payload.tasks
 
     try:
-        if not isinstance(tasks, list):
-            raise ValueError("'tasks' parameter must be a list")
-
-        if not tasks:
-            raise ValueError("'tasks' parameter is required")
-
-        invalid_tasks = [task for task in tasks if task not in ("search", "update")]
-        if len(invalid_tasks) > 0:
-            raise ValueError(f"Invalid tasks: {invalid_tasks}")
-
         await commands.monitor_refresh(monitor_name, tasks)
         success_response = {
             "status": "monitor_refresh_queued",
@@ -206,21 +225,15 @@ async def monitor_refresh(request: Request) -> Response:
 @monitor_routes.post(base_route + "/validate/")
 async def monitor_validate(request: Request) -> Response:
     """Route to check a monitor without registering it"""
-    request_data = await request.json()
-    monitor_code = request_data.get("monitor_code")
-
-    error_response: dict[str, str | list[Any]]
-
-    if monitor_code is None:
-        error_response = {"status": "error", "message": "'monitor_code' parameter is required"}
-        return web.json_response(error_response, status=400)
+    payload = _MonitorValidatePayload(**await request.json())
+    monitor_code = payload.monitor_code
 
     try:
         await commands.monitor_code_validate(monitor_code)
 
         success_response = {"status": "monitor_validated"}
         return web.json_response(success_response)
-    except pydantic.ValidationError as e:
+    except ValidationError as e:
         error_response = {
             "status": "error",
             "message": "Type validation error",
@@ -276,15 +289,9 @@ async def monitor_register(request: Request) -> Response:
     """Route to register a monitor"""
     monitor_name = request.match_info["monitor_name"]
 
-    request_data = await request.json()
-    monitor_code = request_data.get("monitor_code")
-    additional_files = request_data.get("additional_files", {})
-
-    error_response: dict[str, str | list[Any]]
-
-    if monitor_code is None:
-        error_response = {"status": "error", "message": "'monitor_code' parameter is required"}
-        return web.json_response(error_response, status=400)
+    payload = _MonitorRegisterPayload(**await request.json())
+    monitor_code = payload.monitor_code
+    additional_files = payload.additional_files
 
     monitor_name = format_monitor_name(monitor_name)
 
@@ -296,7 +303,7 @@ async def monitor_register(request: Request) -> Response:
             "monitor_id": monitor.id,
         }
         return web.json_response(success_response)
-    except pydantic.ValidationError as e:
+    except ValidationError as e:
         error_response = {
             "status": "error",
             "message": "Type validation error",

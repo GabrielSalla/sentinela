@@ -133,6 +133,22 @@ async def test_list_monitor_active_alerts(clear_database, alerts_number, sample_
         assert alert.created_at.strftime("%Y-%m-%d %H:%M:%S") == response_alert["created_at"]
 
 
+async def test_list_monitor_active_alerts_invalid_monitor_id():
+    url = BASE_URL + "/invalid/alerts"
+    async with aiohttp.ClientSession() as session:
+        async with session.get(url) as response:
+            response_data = await response.json()
+
+    assert response.status == 400
+    assert response_data == {
+        "status": "error",
+        "message": "Invalid request data",
+        "errors": [
+            "monitor_id: Input should be a valid integer, unable to parse string as an integer"
+        ],
+    }
+
+
 async def test_get_monitor(sample_monitor: Monitor):
     """The 'monitor get' route should return the monitor attributes and code information"""
     code_module = await CodeModule.get(CodeModule.monitor_id == sample_monitor.id)
@@ -307,7 +323,7 @@ async def test_monitor_refresh(mocker, sample_monitor: Monitor, tasks):
 @pytest.mark.parametrize(
     "payload, error",
     [
-        ({"tasks": "search"}, "'tasks' parameter must be a list"),
+        ({"tasks": "search"}, "Input should be a valid list"),
         ({"tasks": []}, "'tasks' parameter is required"),
         ({"tasks": ["delete"]}, "Invalid tasks: ['delete']"),
     ],
@@ -320,11 +336,9 @@ async def test_monitor_refresh_invalid_tasks(sample_monitor: Monitor, payload, e
             response_data = await response.json()
 
     assert response.status == 400
-    assert response_data == {
-        "status": "error",
-        "message": "Unexpected error",
-        "error": error,
-    }
+    assert response_data["status"] == "error"
+    assert response_data["message"] == "Invalid request data"
+    assert response_data["errors"][0].endswith(error)
 
 
 async def test_monitor_refresh_duplicated_tasks(sample_monitor: Monitor):
@@ -408,7 +422,8 @@ async def test_monitor_validate_missing_monitor_code():
         async with session.post(url, json={}) as response:
             assert await response.json() == {
                 "status": "error",
-                "message": "'monitor_code' parameter is required",
+                "message": "Invalid request data",
+                "errors": ["monitor_code: Field required"],
             }
 
 
@@ -650,7 +665,8 @@ async def test_monitor_register_missing_parameter():
         async with session.post(url, json={}) as response:
             assert await response.json() == {
                 "status": "error",
-                "message": "'monitor_code' parameter is required",
+                "message": "Invalid request data",
+                "errors": ["monitor_code: Field required"],
             }
 
 
