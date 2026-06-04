@@ -1,7 +1,6 @@
 _monitors
 _monitors_load
-.agents
-.codex
+.opencode
 .coverage
 .env
 .mypy_cache
@@ -9,6 +8,5 @@ _monitors_load
 .ruff_cache
 .vscode
 **/__pycache__
-AGENTS.md
 sentinela_tools
 tmp
