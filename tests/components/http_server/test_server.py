@@ -3,6 +3,7 @@ import pytest
 import pytest_asyncio
 from aiohttp import web
 from prometheus_client import parser
+from pydantic import BaseModel
 
 import components.controller.controller as controller
 import components.executor.executor as executor
@@ -161,6 +162,30 @@ async def test_metrics():
     for family in parser.text_string_to_metric_families(response_data):
         for sample in family.samples:
             assert list(sample)
+
+
+async def test_pydantic_validation_middleware():
+    """'_pydantic_validation_middleware' should convert validation errors into 400 responses"""
+
+    class Payload(BaseModel):
+        value: str
+        items: list[str]
+
+    async def handler(_: web.Request) -> web.StreamResponse:
+        Payload.model_validate({"items": 1})
+        return web.Response(text="ok")
+
+    response = await http_server.server._pydantic_validation_middleware(
+        request=type("RequestStub", (), {})(),
+        handler=handler,
+    )
+
+    assert isinstance(response, web.Response)
+    assert response.status == 400
+    assert response.text == (
+        '{"status": "error", "message": "Invalid request data", '
+        '"errors": ["value: Field required", "items: Input should be a valid list"]}'
+    )
 
 
 async def test_init_controller_enabled():

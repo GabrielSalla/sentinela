@@ -13,6 +13,7 @@ from utils.time import localize
 pytestmark = pytest.mark.asyncio(loop_scope="session")
 
 BASE_URL = "http://localhost:8000/alert"
+INT_PARSING_ERROR = "Input should be a valid integer, unable to parse string as an integer"
 
 
 @pytest_asyncio.fixture(loop_scope="session", scope="module", autouse=True)
@@ -62,6 +63,17 @@ async def test_get_alert_not_found(sample_monitor: Monitor):
             assert await response.json() == {"status": "error", "message": "alert '0' not found"}
 
 
+async def test_get_alert_invalid_alert_id():
+    async with aiohttp.ClientSession() as session:
+        async with session.get(BASE_URL + "/invalid") as response:
+            assert response.status == 400
+            assert await response.json() == {
+                "status": "error",
+                "message": "Invalid request data",
+                "errors": [f"alert_id: {INT_PARSING_ERROR}"],
+            }
+
+
 @pytest.mark.parametrize("issues_count", range(4))
 async def test_list_alert_active_issues(sample_monitor: Monitor, issues_count):
     alert = await Alert.create(monitor_id=sample_monitor.id)
@@ -94,6 +106,17 @@ async def test_list_alert_active_issues_alert_not_found():
     async with aiohttp.ClientSession() as session:
         async with session.get(BASE_URL + "/0/issues") as response:
             assert await response.json() == []
+
+
+async def test_list_alert_active_issues_invalid_alert_id():
+    async with aiohttp.ClientSession() as session:
+        async with session.get(BASE_URL + "/invalid/issues") as response:
+            assert response.status == 400
+            assert await response.json() == {
+                "status": "error",
+                "message": "Invalid request data",
+                "errors": [f"alert_id: {INT_PARSING_ERROR}"],
+            }
 
 
 async def test_alert_acknowledge(clear_queue, sample_monitor: Monitor):
@@ -130,6 +153,20 @@ async def test_alert_acknowledge_alert_not_found(clear_queue):
         async with session.post(BASE_URL + "/0/acknowledge") as response:
             assert response.status == 404
             assert await response.json() == {"status": "error", "message": "Alert '0' not found"}
+
+    queue_items = get_queue_items()
+    assert len(queue_items) == 0
+
+
+async def test_alert_acknowledge_invalid_alert_id(clear_queue):
+    async with aiohttp.ClientSession() as session:
+        async with session.post(BASE_URL + "/invalid/acknowledge") as response:
+            assert response.status == 400
+            assert await response.json() == {
+                "status": "error",
+                "message": "Invalid request data",
+                "errors": [f"alert_id: {INT_PARSING_ERROR}"],
+            }
 
     queue_items = get_queue_items()
     assert len(queue_items) == 0
@@ -173,6 +210,20 @@ async def test_alert_lock_alert_not_found(clear_queue):
     assert len(queue_items) == 0
 
 
+async def test_alert_lock_invalid_alert_id(clear_queue):
+    async with aiohttp.ClientSession() as session:
+        async with session.post(BASE_URL + "/invalid/lock") as response:
+            assert response.status == 400
+            assert await response.json() == {
+                "status": "error",
+                "message": "Invalid request data",
+                "errors": [f"alert_id: {INT_PARSING_ERROR}"],
+            }
+
+    queue_items = get_queue_items()
+    assert len(queue_items) == 0
+
+
 async def test_alert_solve(clear_queue, sample_monitor: Monitor):
     """The 'alert solve' route should queue an request to solve the provided alert"""
     alert = await Alert.create(monitor_id=sample_monitor.id)
@@ -207,6 +258,20 @@ async def test_alert_solve_alert_not_found(clear_queue):
         async with session.post(BASE_URL + "/0/solve") as response:
             assert response.status == 404
             assert await response.json() == {"status": "error", "message": "Alert '0' not found"}
+
+    queue_items = get_queue_items()
+    assert len(queue_items) == 0
+
+
+async def test_alert_solve_invalid_alert_id(clear_queue):
+    async with aiohttp.ClientSession() as session:
+        async with session.post(BASE_URL + "/invalid/solve") as response:
+            assert response.status == 400
+            assert await response.json() == {
+                "status": "error",
+                "message": "Invalid request data",
+                "errors": [f"alert_id: {INT_PARSING_ERROR}"],
+            }
 
     queue_items = get_queue_items()
     assert len(queue_items) == 0
