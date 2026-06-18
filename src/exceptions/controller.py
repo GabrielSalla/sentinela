@@ -1,4 +1,4 @@
-from base_exception import BaseSentinelaException
+from .base import BaseSentinelaException
 
 
 class MonitorQueueException(BaseSentinelaException):

@@ -9,7 +9,7 @@ import components.task_manager as task_manager
 import message_queue as message_queue
 import registry as registry
 import utils.app as app
-from base_exception import BaseSentinelaException
+from exceptions.base import BaseSentinelaException
 from utils.exception_handling import catch_exceptions
 
 from . import event_handler, monitor_handler, request_handler

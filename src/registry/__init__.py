@@ -1,4 +1,3 @@
-from .exceptions import MonitorNotRegisteredError, MonitorsLoadError
 from .registry import (
     add_monitor,
     get_monitor_module,
@@ -13,8 +12,6 @@ from .registry import (
 )
 
 __all__ = [
-    "MonitorNotRegisteredError",
-    "MonitorsLoadError",
     "add_monitor",
     "get_monitor_module",
     "get_monitors_ids",

@@ -4,8 +4,7 @@ import alembic.script
 from sqlalchemy.engine.base import Connection
 
 import internal_database
-
-from .exceptions import PendingDatabaseUpgrade
+from exceptions.database import PendingDatabaseUpgrade
 
 
 async def check_database() -> None:

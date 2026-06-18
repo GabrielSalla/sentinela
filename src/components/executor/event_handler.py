@@ -8,9 +8,9 @@ import prometheus_client
 from pydantic import ValidationError
 
 import registry as registry
-from base_exception import BaseSentinelaException
 from configs import configs
 from data_models.event_payload import EventPayload
+from exceptions.base import BaseSentinelaException
 from models import Monitor
 
 _logger = logging.getLogger("event_handler")

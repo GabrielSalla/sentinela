@@ -9,9 +9,9 @@ from pydantic import ValidationError
 
 import components.task_manager as task_manager
 import registry as registry
-from base_exception import BaseSentinelaException
 from configs import configs
 from data_models.process_monitor_payload import ProcessMonitorPayload
+from exceptions.base import BaseSentinelaException
 from internal_database import get_session
 from models import Alert, ExecutionStatus, Issue, Monitor, MonitorExecution
 from utils.async_tools import do_concurrently

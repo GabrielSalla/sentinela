@@ -6,7 +6,7 @@ import pytest
 
 import commands.requests as requests
 import components.monitors_loader as monitors_loader
-from commands.exceptions import AlertNotFoundError, IssueNotFoundError, MonitorNotFoundError
+from exceptions.http_server import AlertNotFoundError, IssueNotFoundError, MonitorNotFoundError
 from models import Alert, CodeModule, Issue, Monitor
 from tests.message_queue.utils import get_queue_items
 

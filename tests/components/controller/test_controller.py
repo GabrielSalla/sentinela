@@ -12,8 +12,8 @@ import registry as registry
 import utils.app as app
 import utils.time as time_utils
 from configs import configs
+from exceptions.controller import MonitorQueueException
 from models import Monitor
-from models.exceptions import MonitorQueueException
 from tests.message_queue.utils import get_queue_items
 from tests.test_utils import assert_message_in_log
 

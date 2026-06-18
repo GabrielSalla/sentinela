@@ -4,7 +4,7 @@ from unittest.mock import MagicMock
 
 import pytest
 
-from base_exception import BaseSentinelaException
+from exceptions.base import BaseSentinelaException
 from tests.test_utils import assert_message_in_log, assert_message_not_in_log
 from utils.exception_handling import catch_exceptions, protected_task
 

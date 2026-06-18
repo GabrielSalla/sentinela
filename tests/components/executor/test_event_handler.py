@@ -8,10 +8,10 @@ import pytest
 
 import components.executor.event_handler as event_handler
 import registry.registry as registry
-from base_exception import BaseSentinelaException
 from configs import configs
 from data_models.event_payload import EventPayload
 from data_models.monitor_options import ReactionOptions
+from exceptions.base import BaseSentinelaException
 from models import Monitor
 from tests.test_utils import assert_message_in_log
 

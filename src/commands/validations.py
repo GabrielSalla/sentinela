@@ -1,6 +1,5 @@
+from exceptions.http_server import AlertNotFoundError, IssueNotFoundError, MonitorNotFoundError
 from models import Alert, Issue, Monitor
-
-from .exceptions import AlertNotFoundError, IssueNotFoundError, MonitorNotFoundError
 
 
 async def validate_monitor_request(monitor_name: str) -> Monitor:

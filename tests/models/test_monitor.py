@@ -10,8 +10,8 @@ import databases.databases as databases
 import message_queue
 import utils.time as time_utils
 from data_models.monitor_options import AlertOptions, CountRule, PriorityLevels, ReactionOptions
+from exceptions.controller import MonitorQueueException
 from models import Alert, AlertStatus, Issue, IssueStatus, Monitor
-from models.exceptions import MonitorQueueException
 from registry import registry
 from tests.message_queue.utils import get_queue_items
 from tests.test_utils import assert_message_in_log

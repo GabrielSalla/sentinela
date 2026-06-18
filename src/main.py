@@ -17,7 +17,7 @@ import plugins as plugins
 import registry as registry
 import utils.app as app
 import utils.log as log
-from base_exception import InitializationError
+from exceptions import InitializationError
 from utils.exception_handling import protected_task
 
 _logger = logging.getLogger("main")

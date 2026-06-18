@@ -4,6 +4,7 @@ from aiohttp.web_response import Response
 from pydantic import BaseModel
 
 import commands as commands
+from exceptions.http_server import IssueNotFoundError
 
 issue_routes = web.RouteTableDef()
 base_route = "/issue"
@@ -21,7 +22,7 @@ async def issue_drop(request: Request) -> Response:
     issue_id = params.issue_id
     try:
         await commands.issue_drop(issue_id)
-    except commands.IssueNotFoundError as e:
+    except IssueNotFoundError as e:
         return web.json_response({"status": "error", "message": str(e)}, status=404)
 
     success_response = {

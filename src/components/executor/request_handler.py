@@ -7,9 +7,9 @@ import prometheus_client
 from pydantic import ValidationError
 
 import registry as registry
-from base_exception import BaseSentinelaException
 from configs import configs
 from data_models.request_payload import RequestPayload
+from exceptions.base import BaseSentinelaException
 from models import Alert, Issue, Monitor
 from plugins.attribute_select import get_plugin_attribute
 

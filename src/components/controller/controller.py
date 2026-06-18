@@ -10,8 +10,8 @@ import message_queue as message_queue
 import registry as registry
 import utils.app as app
 from configs import configs
+from exceptions.controller import MonitorQueueException
 from models import Monitor
-from models.exceptions import MonitorQueueException
 from utils.exception_handling import catch_exceptions
 from utils.time import format_datetime_iso, is_triggered, now, time_since, time_until_next_trigger
 

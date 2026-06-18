@@ -3,5 +3,7 @@ class BaseSentinelaException(Exception):
         return self.__class__.__name__ + ": " + str(self.args[0])
 
 
-class InitializationError(Exception):
+class InitializationError(BaseSentinelaException):
+    """Exception raised when application initialization fails"""
+
     pass

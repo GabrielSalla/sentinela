@@ -1,7 +1,7 @@
 import pytest
 
 import commands.validations as validations
-from commands.exceptions import AlertNotFoundError, IssueNotFoundError, MonitorNotFoundError
+from exceptions.http_server import AlertNotFoundError, IssueNotFoundError, MonitorNotFoundError
 from models import Alert, Issue, Monitor
 
 pytestmark = pytest.mark.asyncio(loop_scope="session")

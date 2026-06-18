@@ -12,6 +12,7 @@ import registry as registry
 import utils.app as app
 from configs import configs
 from data_models.monitor_options import ReactionOptions
+from exceptions.monitors_loader import MonitorValidationError
 from models import CodeModule, Monitor
 from utils.async_tools import do_concurrently
 from utils.exception_handling import catch_exceptions
@@ -39,24 +40,6 @@ class MonitorFiles:
     monitor_name: str
     monitor_path: Path
     additional_files: list[AdditionalFile]
-
-
-class MonitorValidationError(Exception):
-    errors_found: list[str]
-
-    def __init__(self, monitor_name: str, errors_found: list[str], *args: object) -> None:
-        super().__init__(*args)
-        self.monitor_name = monitor_name
-        self.errors_found = errors_found
-
-    def get_error_message(self, include_monitor_name: bool = True) -> str:
-        """Get the error message for the module validation errors"""
-        if include_monitor_name:
-            error_message = f"Monitor '{self.monitor_name}' has the following errors:\n  "
-        else:
-            error_message = "Monitor has the following errors:\n  "
-        error_message += "\n  ".join(self.errors_found)
-        return error_message
 
 
 def _file_has_extension(file: str, extensions: list[str]) -> bool:
