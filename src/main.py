@@ -20,6 +20,9 @@ import utils.log as log
 from exceptions import InitializationError
 from utils.exception_handling import protected_task
 
+CONTROLLER = "controller"
+EXECUTOR = "executor"
+
 _logger = logging.getLogger("main")
 
 
@@ -62,15 +65,13 @@ async def finish(controller_enabled: bool, executor_enabled: bool) -> None:
 
 
 async def main() -> None:
-    if len(sys.argv) == 1:
-        operation_modes = ["controller", "executor"]
-    else:
-        operation_modes = sys.argv[1:]
+    """Initialize and create the tasks for Sentinela execution"""
+    operation_modes = sys.argv[1:] or [CONTROLLER, EXECUTOR]
 
     try:
         await init(
-            controller_enabled="controller" in operation_modes,
-            executor_enabled="executor" in operation_modes,
+            controller_enabled=CONTROLLER in operation_modes,
+            executor_enabled=EXECUTOR in operation_modes,
         )
     except InitializationError as e:
         _logger.error("Failed to initialize")
@@ -81,8 +82,8 @@ async def main() -> None:
         return
 
     modes = {
-        "controller": controller.run,
-        "executor": executor.run,
+        CONTROLLER: controller.run,
+        EXECUTOR: executor.run,
     }
 
     for mode in operation_modes:
@@ -93,8 +94,8 @@ async def main() -> None:
     await task_manager.run()
 
     await finish(
-        controller_enabled="controller" in operation_modes,
-        executor_enabled="executor" in operation_modes,
+        controller_enabled=CONTROLLER in operation_modes,
+        executor_enabled=EXECUTOR in operation_modes,
     )
 
 
