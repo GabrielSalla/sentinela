@@ -3,7 +3,7 @@ import logging
 from contextlib import contextmanager
 from typing import Coroutine, Generator
 
-from base_exception import BaseSentinelaException
+from exceptions.base import BaseSentinelaException
 
 
 @contextmanager

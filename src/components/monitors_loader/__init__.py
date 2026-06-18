@@ -1,5 +1,4 @@
 from .monitors_loader import (
-    MonitorValidationError,
     check_monitor,
     init,
     register_monitor,
@@ -7,7 +6,6 @@ from .monitors_loader import (
 )
 
 __all__ = [
-    "MonitorValidationError",
     "check_monitor",
     "init",
     "register_monitor",

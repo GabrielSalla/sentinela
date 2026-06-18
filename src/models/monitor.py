@@ -9,11 +9,11 @@ from sqlalchemy.orm import Mapped, mapped_column, reconstructor
 import message_queue
 import utils.time as time_utils
 from data_models.monitor_options import AlertOptions, IssueOptions, MonitorOptions, ReactionOptions
+from exceptions.controller import MonitorQueueException
 from registry import get_monitor_module
 
 from .alert import Alert, AlertStatus
 from .base import Base
-from .exceptions import MonitorQueueException
 from .issue import Issue, IssueStatus
 
 if TYPE_CHECKING:

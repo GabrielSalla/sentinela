@@ -9,7 +9,8 @@ from pydantic import BaseModel, Field, ValidationError, field_validator
 
 import commands
 from components.http_server.format_monitor_name import format_monitor_name
-from components.monitors_loader import MonitorValidationError
+from exceptions.http_server import MonitorNotFoundError
+from exceptions.monitors_loader import MonitorValidationError
 from models import Alert, AlertStatus, CodeModule, Monitor
 from utils.time import localize
 
@@ -154,7 +155,7 @@ async def monitor_disable(request: Request) -> Response:
             "target_id": monitor_id,
         }
         return web.json_response(success_response)
-    except commands.MonitorNotFoundError as e:
+    except MonitorNotFoundError as e:
         return web.json_response({"status": "error", "message": str(e)}, status=404)
     except Exception as e:
         error_response = {
@@ -181,7 +182,7 @@ async def monitor_enable(request: Request) -> Response:
             "target_id": monitor_id,
         }
         return web.json_response(success_response)
-    except commands.MonitorNotFoundError as e:
+    except MonitorNotFoundError as e:
         return web.json_response({"status": "error", "message": str(e)}, status=404)
     except Exception as e:
         error_response = {
@@ -209,7 +210,7 @@ async def monitor_refresh(request: Request) -> Response:
             "tasks": tasks,
         }
         return web.json_response(success_response)
-    except commands.MonitorNotFoundError as e:
+    except MonitorNotFoundError as e:
         return web.json_response({"status": "error", "message": str(e)}, status=404)
     except Exception as e:
         error_response = {

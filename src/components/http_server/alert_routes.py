@@ -4,6 +4,7 @@ from aiohttp.web_response import Response
 from pydantic import BaseModel
 
 import commands as commands
+from exceptions.http_server import AlertNotFoundError
 from models import Alert, Issue, IssueStatus
 from utils.time import localize
 
@@ -76,7 +77,7 @@ async def alert_acknowledge(request: Request) -> Response:
     alert_id = params.alert_id
     try:
         await commands.alert_acknowledge(alert_id)
-    except commands.AlertNotFoundError as e:
+    except AlertNotFoundError as e:
         return web.json_response({"status": "error", "message": str(e)}, status=404)
 
     success_response = {
@@ -95,7 +96,7 @@ async def alert_lock(request: Request) -> Response:
     alert_id = params.alert_id
     try:
         await commands.alert_lock(alert_id)
-    except commands.AlertNotFoundError as e:
+    except AlertNotFoundError as e:
         return web.json_response({"status": "error", "message": str(e)}, status=404)
 
     success_response = {
@@ -114,7 +115,7 @@ async def alert_solve(request: Request) -> Response:
     alert_id = params.alert_id
     try:
         await commands.alert_solve(alert_id)
-    except commands.AlertNotFoundError as e:
+    except AlertNotFoundError as e:
         return web.json_response({"status": "error", "message": str(e)}, status=404)
 
     success_response = {

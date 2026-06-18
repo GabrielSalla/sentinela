@@ -2,7 +2,8 @@ import alembic.runtime
 import alembic.script
 import pytest
 
-from internal_database import PendingDatabaseUpgrade, check_database
+from exceptions.database import PendingDatabaseUpgrade
+from internal_database import check_database
 
 pytestmark = pytest.mark.asyncio(loop_scope="session")
 

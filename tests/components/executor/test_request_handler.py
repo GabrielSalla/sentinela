@@ -7,9 +7,9 @@ import pytest
 import components.executor.request_handler as request_handler
 import plugins as plugins
 import registry as registry
-from base_exception import BaseSentinelaException
 from configs import configs
 from data_models.request_payload import RequestPayload
+from exceptions.base import BaseSentinelaException
 from models import Alert, AlertStatus, Issue, IssueStatus, Monitor
 from tests.test_utils import assert_message_in_log
 

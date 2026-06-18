@@ -11,7 +11,7 @@ import components.executor.request_handler as request_handler
 import components.executor.runner as runner
 import message_queue as message_queue
 import registry as registry
-from base_exception import BaseSentinelaException
+from exceptions.base import BaseSentinelaException
 from message_queue.internal_queue import InternalMessage
 from tests.test_utils import assert_message_in_log, assert_message_not_in_log
 

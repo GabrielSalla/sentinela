@@ -13,6 +13,7 @@ import utils.app as app
 import utils.time as time_utils
 from configs import configs
 from data_models.monitor_options import ReactionOptions
+from exceptions.monitors_loader import MonitorValidationError
 from models import CodeModule, Monitor
 from registry import registry
 from tests.test_utils import assert_message_in_log, assert_message_not_in_log
@@ -64,7 +65,7 @@ async def test_check_monitor_validation_error(caplog, log_error):
 
     try:
         monitors_loader.check_monitor(monitor_name, monitor_code, log_error=log_error)
-    except monitors_loader.MonitorValidationError as exception:
+    except MonitorValidationError as exception:
         assert exception.monitor_name == monitor_name
         assert (
             "'IssueDataType' must have the 'id' field, as specified by 'issue_options.model_id_key'"
@@ -203,7 +204,7 @@ async def test_register_monitor_monitor_already_exists_error():
         await monitors_loader.register_monitor(
             monitor_name, new_monitor_code, additional_files=new_additional_files
         )
-    except monitors_loader.MonitorValidationError as exception:
+    except MonitorValidationError as exception:
         assert exception.monitor_name == monitor_name
         assert (
             "'IssueDataType' must have the 'id' field, as specified by 'issue_options.model_id_key'"
@@ -238,7 +239,7 @@ async def test_register_monitor_validation_error():
 
     try:
         await monitors_loader.register_monitor(monitor_name, monitor_code)
-    except monitors_loader.MonitorValidationError as exception:
+    except MonitorValidationError as exception:
         assert exception.monitor_name == monitor_name
         assert (
             "'IssueDataType' must have the 'id' field, as specified by 'issue_options.model_id_key'"
@@ -389,7 +390,7 @@ async def test_register_monitors_from_path_validation_error(caplog, monkeypatch,
     register the monitor"""
 
     async def register_monitor_error_mock(monitor_name, monitor_code, additional_files):
-        raise monitors_loader.MonitorValidationError(monitor_name="monitor", errors_found=[])
+        raise MonitorValidationError(monitor_name="monitor", errors_found=[])
 
     monkeypatch.setattr(monitors_loader, "register_monitor", register_monitor_error_mock)
 

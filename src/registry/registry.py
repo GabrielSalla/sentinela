@@ -17,7 +17,7 @@ from typing import TYPE_CHECKING, TypedDict
 
 import prometheus_client
 
-from .exceptions import MonitorNotRegisteredError, MonitorsLoadError
+from exceptions.registry import MonitorNotRegisteredError, MonitorsLoadError
 
 if TYPE_CHECKING:
     from components.monitors_loader.monitor_module_type import MonitorModule
