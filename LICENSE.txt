@@ -1,7 +1,15 @@
+Custom License for Sentinela
+
 Copyright 2024 Gabriel Salla
 
-Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the “Software”), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
+1. Permission.
+Permission is granted to any individual or non-commercial organization to use, copy, modify, merge, and distribute this software and its associated documentation files (the "Software") free of charge, provided that this license text is included in all copies or substantial portions of the Software.
 
-The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+2. Commercial use.
+Any use of the Software by or for a commercial entity, including a company, corporation, business, or any organization using the Software for commercial purposes, requires a separate paid commercial license granted in writing by the copyright holder.
 
-THE SOFTWARE IS PROVIDED “AS IS”, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+3. Restrictions.
+The Software may not be sold, sublicensed, or distributed under a commercial license unless expressly authorized in writing by the copyright holder.
+
+4. Warranty.
+The Software is provided "AS IS", without warranty of any kind, express or implied, including but not limited to the warranties of merchantability, fitness for a particular purpose, and noninfringement. In no event shall the copyright holder be liable for any claim, damages, or other liability arising from the use of the Software.
