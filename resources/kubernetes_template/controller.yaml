@@ -18,7 +18,7 @@ spec:
       - name: sentinela-controller
         image: sentinela-local:latest
         imagePullPolicy: Never
-        command: ["sentinela", "controller"]
+        command: ["sentinela", "run", "controller"]
         ports:
         - containerPort: 8000
         resources:

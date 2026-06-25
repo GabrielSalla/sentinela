@@ -52,4 +52,4 @@ services:
     depends_on:
       - postgres
       - motoserver
-    command: sentinela controller executor
+    command: sentinela run controller executor

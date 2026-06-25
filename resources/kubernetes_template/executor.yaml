@@ -18,7 +18,7 @@ spec:
       - name: sentinela-executor
         image: sentinela-local:latest
         imagePullPolicy: Never
-        command: ["sentinela", "executor"]
+        command: ["sentinela", "run", "executor"]
         ports:
         - containerPort: 8000
         resources:

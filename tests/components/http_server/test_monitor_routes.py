@@ -695,7 +695,7 @@ async def test_monitor_register_dataclass_validation_error():
                 "message": "Type validation error",
                 "error": [
                     {
-                        "loc": ["value"],
+                        "loc": "Data.value",
                         "type": "string_type",
                         "msg": "Input should be a valid string",
                     },

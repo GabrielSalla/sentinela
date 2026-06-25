@@ -310,7 +310,7 @@ async def monitor_register(request: Request) -> Response:
             "message": "Type validation error",
             "error": [
                 {
-                    "loc": list(error["loc"]),
+                    "loc": ".".join([e.title] + [str(e) for e in error["loc"]]),
                     "type": error["type"],
                     "msg": error["msg"],
                 }

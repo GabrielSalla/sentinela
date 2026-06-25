@@ -69,10 +69,14 @@ async def register_monitor(
     monitor_code: str,
     base_path: str | None = None,
     additional_files: dict[str, str] | None = None,
+    log_error: bool = True,
 ) -> Monitor:
     """Register a monitor and its additional files"""
     check_monitor(
-        base_path=base_path, monitor_name=monitor_name, monitor_code=monitor_code, log_error=True
+        base_path=base_path,
+        monitor_name=monitor_name,
+        monitor_code=monitor_code,
+        log_error=log_error,
     )
 
     monitor = await Monitor.get_or_create(name=monitor_name)

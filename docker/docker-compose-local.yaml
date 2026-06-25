@@ -38,4 +38,4 @@ services:
       - .env.secrets
     depends_on:
       - postgres
-    command: sentinela controller executor
+    command: sentinela run controller executor
