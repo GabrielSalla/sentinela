@@ -1,9 +1,15 @@
 # Still missing tests for main.py, so it's been ignored in the .coveragerc file
 
+import argparse
 import asyncio
 import logging
 import sys
+import traceback
+from pathlib import Path
 
+from pydantic import ValidationError
+
+import commands
 import components.controller as controller
 import components.executor as executor
 import components.heartbeat as heartbeat
@@ -17,7 +23,7 @@ import plugins as plugins
 import registry as registry
 import utils.app as app
 import utils.log as log
-from exceptions import InitializationError
+from exceptions import InitializationError, MonitorValidationError
 from utils.exception_handling import protected_task
 
 CONTROLLER = "controller"
@@ -97,6 +103,45 @@ async def main() -> None:
         controller_enabled=CONTROLLER in operation_modes,
         executor_enabled=EXECUTOR in operation_modes,
     )
+
+
+async def register_monitor(args: argparse.Namespace) -> None:
+    """Tries to register a monitor and logs the result"""
+    log.setup()
+
+    monitor_name: str = args.monitor_name
+    monitor_file = Path(args.monitor_file)
+    additional_files = [Path(file_path) for file_path in args.additional_files]
+
+    # Read the files
+    with open(monitor_file, "r") as file:
+        monitor_code = file.read()
+
+    additional_files_content = {}
+    for file_path in additional_files:
+        with open(file_path, "r") as file:
+            additional_files_content[file_path.stem] = file.read()
+
+    # Register the monitor
+    try:
+        await commands.monitor_register(
+            monitor_name, monitor_code, additional_files_content, log_error=False
+        )
+        _logger.info(f"Monitor {monitor_name} registered successfully")
+    except ValidationError as e:
+        _logger.error("Type validation error")
+
+        for error in e.errors():
+            location = ".".join([e.title] + [str(e) for e in error["loc"]])
+            error_message = f"  {location}: {error['msg']}"
+            _logger.error(error_message)
+        sys.exit(1)
+    except MonitorValidationError as e:
+        _logger.error(e.get_error_message(include_monitor_name=False))
+        sys.exit(1)
+    except Exception:
+        _logger.error(traceback.format_exc().strip())
+        sys.exit(1)
 
 
 def start() -> None:
