@@ -20,7 +20,7 @@ For testing purposes, it can be useful to start a container and execute multiple
     ```
 2. When inside the container, the application can be run in development mode.
     ```shell
-    sentinela controller executor
+    sentinela run controller executor
     ```
     or omitting the parameters to run both the controller and executor.
 
@@ -130,11 +130,11 @@ All services must have the environment variables set as specified in the [Config
 Controllers and executors can be run by specifying them as parameters when starting the application:
 1. Run the controller.
     ```shell
-    sentinela controller
+    sentinela run controller
     ```
 2. Run the executor.
     ```shell
-    sentinela executor
+    sentinela run executor
     ```
 
 # Gracefully Stopping Sentinela

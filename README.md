@@ -110,13 +110,14 @@ Sentinela provides a web dashboard, by default at port `8000`, with 2 sections:
     1. [Configuration](/docs/configuration.md)
     2. [Configuration file](/docs/configuration_file.md)
     3. [How to run](/docs/how_to_run.md)
-7. [Monitoring Sentinela](/docs/monitoring_sentinela.md)
-8. [Plugins](/docs/plugins/plugins.md)
+7. [Command line interface](/docs/command_line_interface.md)
+8. [Monitoring Sentinela](/docs/monitoring_sentinela.md)
+9. [Plugins](/docs/plugins/plugins.md)
     1. [AWS](/docs/plugins/aws.md)
     2. [ODBC](/docs/plugins/odbc.md)
     3. [Postgres](/docs/plugins/postgres.md)
     4. [Slack](/docs/plugins/slack.md)
-9. Interacting with Sentinela
+10. Interacting with Sentinela
     1. [HTTP server](/docs/http_server.md)
-10. Special cases
+11. Special cases
     1. [Dropping issues](/docs/dropping_issues.md)

@@ -50,7 +50,7 @@ services:
     depends_on:
       - postgres
       - motoserver
-    command: sentinela controller
+    command: sentinela run controller
 
   sentinela-executor:
     build:
@@ -87,4 +87,4 @@ services:
     depends_on:
       - postgres
       - motoserver
-    command: sentinela executor
+    command: sentinela run executor

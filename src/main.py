@@ -70,9 +70,9 @@ async def finish(controller_enabled: bool, executor_enabled: bool) -> None:
     )
 
 
-async def main() -> None:
+async def run(args: argparse.Namespace) -> None:
     """Initialize and create the tasks for Sentinela execution"""
-    operation_modes = sys.argv[1:] or [CONTROLLER, EXECUTOR]
+    operation_modes = set(args.modes) or {CONTROLLER, EXECUTOR}
 
     try:
         await init(
@@ -142,6 +142,45 @@ async def register_monitor(args: argparse.Namespace) -> None:
     except Exception:
         _logger.error(traceback.format_exc().strip())
         sys.exit(1)
+
+
+def parse_args() -> argparse.Namespace:
+    """Parse and return the execution arguments"""
+    parser = argparse.ArgumentParser(prog="sentinela")
+    operation_parser = parser.add_subparsers(dest="operation", required=True)
+
+    # Run parser
+    run_parser = operation_parser.add_parser(
+        "run", help="Execute Sentinela as a controller, executor or both."
+    )
+    run_parser.set_defaults(func=run)
+    run_parser.add_argument(
+        "modes",
+        nargs="*",
+        choices=[CONTROLLER, EXECUTOR],
+        help=(
+            "List of modes to run. If no modes are provided, both the controller and executor "
+            "will run."
+        ),
+    )
+
+    # Register parser
+    register_parser = operation_parser.add_parser("register", help="Register a monitor")
+    register_parser.set_defaults(func=register_monitor)
+    register_parser.add_argument("monitor_name", help="The monitor name to be registered.")
+    register_parser.add_argument("monitor_file", help="Path to the monitor .py code file.")
+    register_parser.add_argument(
+        "additional_files",
+        nargs="*",
+        help="Optional. List of paths of additional files of the monitor.",
+    )
+
+    return parser.parse_args()
+
+
+async def main() -> None:
+    args = parse_args()
+    await args.func(args)
 
 
 def start() -> None:
