@@ -17,11 +17,11 @@ async def monitor_code_validate(monitor_code: str) -> None:
 
 
 async def monitor_register(
-    monitor_name: str, monitor_code: str, additional_files: dict[str, str]
+    monitor_name: str, monitor_code: str, additional_files: dict[str, str], log_error: bool = True
 ) -> Monitor:
     """Register a monitor"""
     return await monitors_loader.register_monitor(
-        monitor_name, monitor_code, additional_files=additional_files
+        monitor_name, monitor_code, additional_files=additional_files, log_error=log_error
     )
 
 
