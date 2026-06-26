@@ -3,12 +3,21 @@ Once the monitor code has been created, it needs to be registered on Sentinela. 
 
 ![Registering a monitor process](images/monitor_register.png)
 
+> [!CAUTION]
+> Although monitor registration and validation are controlled by Sentinela, it is not possible to completely prevent malicious behavior, as monitors are ultimately allowed to import and execute arbitrary Python code. Therefore, both the Sentinela platform and the monitor development process operate under a trust-based model.
+
 ## Monitor Composition
 A monitor consists of:
 - **Main Code File**: The `.py` file containing the monitor's definition.
 - **Optional Additional Files**: Supporting resources used during the monitor's execution, such as SQL query files or other data files.
 
 ## Registration Process
+The registration process can be done through the CLI or using a HTTP request to Sentinela.
+
+### CLI
+To register a monitor using the CLI, follow the instructions in the [command line interface](command_line_interface.md#register-monitor) documentation.
+
+### HTTP request
 ```
 POST monitors/register/{monitor_name}
 ```
@@ -30,7 +39,7 @@ Example:
 }
 ```
 
-## Responses
+**Responses**
 The response will contain the status of the registration process. The field `status` will be set to `monitor_registered` if the monitor was successfully registered and the monitor id will be in the `monitor_id` field.
 
 Example:
@@ -52,8 +61,7 @@ Example:
 }
 ```
 
-## Monitor register tool
-To simplify the registration process, a Python script is available in the `tools` folder.
+To simplify the registration process through a HTTP request when running Sentinela locally, a Python script, available in the `tools` folder, can be used.
 
 The following example demonstrates how to use the script to register a new monitor:
 
