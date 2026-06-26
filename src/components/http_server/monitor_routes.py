@@ -9,6 +9,7 @@ from pydantic import BaseModel, Field, ValidationError, field_validator
 
 import commands
 from components.http_server.format_monitor_name import format_monitor_name
+from configs import configs
 from exceptions.http_server import MonitorNotFoundError
 from exceptions.monitors_loader import MonitorValidationError
 from models import Alert, AlertStatus, CodeModule, Monitor
@@ -288,6 +289,14 @@ async def format_name(request: Request) -> Response:
 @monitor_routes.post(base_route + "/register/{monitor_name}/")
 async def monitor_register(request: Request) -> Response:
     """Route to register a monitor"""
+    if not configs.http_server.monitor_register_enabled:
+        forbidden_response = {
+            "status": "error",
+            "message": "Monitor registering not enabled",
+            "error": "Monitor registering is not enabled in the configuration",
+        }
+        return web.json_response(forbidden_response, status=403)
+
     monitor_name = request.match_info["monitor_name"]
 
     payload = _MonitorRegisterPayload(**await request.json())

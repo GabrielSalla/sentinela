@@ -41,6 +41,7 @@ data:
       port: 8000
       log_level: error
       dashboard_enabled: true
+      monitor_register_enabled: true
 
     time_zone: America/Sao_Paulo
 

@@ -8,6 +8,7 @@ import commands as commands
 import components.controller.controller as controller
 import components.http_server as http_server
 import databases as databases
+from configs import configs
 from models import Alert, AlertStatus, CodeModule, Monitor
 
 pytestmark = pytest.mark.asyncio(loop_scope="session")
@@ -757,3 +758,20 @@ async def test_monitor_register_invalid_monitor_code(monitor_code, expected_erro
                 "message": "Unexpected error",
                 "error": expected_error,
             }
+
+
+async def test_monitor_register_config_disabled(monkeypatch):
+    """The 'monitor register' route should return a forbidden error if the monitor registration
+    config is not enabled"""
+    monkeypatch.setattr(configs.http_server, "monitor_register_enabled", False)
+    request_payload = {"monitor_code": ""}
+
+    url = BASE_URL + "/register/test_monitor_register_config_disabled"
+    async with aiohttp.ClientSession() as session:
+        async with session.post(url, json=request_payload) as response:
+            assert await response.json() == {
+                "status": "error",
+                "message": "Monitor registering not enabled",
+                "error": "Monitor registering is not enabled in the configuration",
+            }
+            assert response.status == 403
