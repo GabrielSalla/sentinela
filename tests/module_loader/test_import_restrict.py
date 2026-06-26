@@ -114,6 +114,16 @@ def import_function(test_case):
         case 15:
             importlib.import_module("os")
 
+    # Prints just to make the linter happy
+    print(os)
+    print(environ)
+    print(sys)
+    print(components.controller)
+    print(internal_database)
+    print(engine)
+    print(CallbackSession)
+
+
 
 
 @pytest.mark.parametrize(

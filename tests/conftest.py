@@ -119,6 +119,10 @@ def _temp_dir(monkeypatch_session):
     os.makedirs("src/tmp", exist_ok=True)
     monkeypatch_session.setattr(monitors_loader, "MONITORS_LOAD_PATH", "tmp")
     monkeypatch_session.setattr(module_loader.loader, "MODULES_PATH", "tmp")
+    prohibited_imports = module_loader.import_restrict.PROHIBITED_IMPORTS.difference({"tmp"})
+    monkeypatch_session.setattr(
+        module_loader.import_restrict, "PROHIBITED_IMPORTS", prohibited_imports
+    )
     yield "src/tmp"
     shutil.rmtree("src/tmp", ignore_errors=True)
 
