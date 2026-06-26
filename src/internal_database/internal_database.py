@@ -33,6 +33,8 @@ engine = create_async_engine(
     **configs.application_database_settings.__dict__,
 )
 async_session = async_sessionmaker(engine, expire_on_commit=False, class_=CallbackSession)
+# Clear the environment variable
+del os.environ["DATABASE_APPLICATION"]
 
 
 @asynccontextmanager
