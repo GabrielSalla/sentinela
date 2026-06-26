@@ -5,6 +5,11 @@ import plugins.aws.client as aws_client
 pytestmark = pytest.mark.asyncio(loop_scope="session")
 
 
+@pytest.fixture(scope="function", autouse=True)
+def get_aws_config_cache_clear():
+    aws_client._get_aws_config.cache_clear()
+
+
 @pytest.mark.parametrize("name", ["ABC", "DEF"])
 @pytest.mark.parametrize("region", ["us-east-1", "us-east-2"])
 @pytest.mark.parametrize("access_key_id", ["key_id", "other_key"])
