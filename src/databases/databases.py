@@ -31,6 +31,9 @@ async def init() -> None:
         if not env_var_name.startswith("DATABASE_"):
             continue
 
+        # Clear the environment variable
+        del os.environ[env_var_name]
+
         dsn = env_var_value
         pool_type = dsn.split("://")[0]
 
