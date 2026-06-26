@@ -6,6 +6,8 @@ from slack_sdk.errors import SlackApiError
 from slack_sdk.web.async_client import AsyncSlackResponse, AsyncWebClient
 
 client = AsyncWebClient(token=os.environ["SLACK_TOKEN"])
+# Clear the environment variable
+del os.environ["SLACK_TOKEN"]
 
 
 @dataclass

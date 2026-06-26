@@ -113,6 +113,8 @@ async def init(controller_enabled: bool, executor_enabled: bool) -> None:  # pra
     app.action(re.compile(r"sentinela_.*"))(command)
 
     _handler = AsyncSocketModeHandler(app, app_token=os.environ["SLACK_APP_TOKEN"])
+    # Clear the environment variable
+    del os.environ["SLACK_APP_TOKEN"]
 
     _logger.info("Starting Slack websocket")
 
