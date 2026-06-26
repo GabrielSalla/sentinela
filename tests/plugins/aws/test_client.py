@@ -1,3 +1,5 @@
+import re
+
 import pytest
 
 import plugins.aws.client as aws_client
@@ -5,17 +7,29 @@ import plugins.aws.client as aws_client
 pytestmark = pytest.mark.asyncio(loop_scope="session")
 
 
-@pytest.mark.parametrize("name", ["ABC", "DEF"])
+@pytest.fixture(scope="function", autouse=True)
+def get_aws_config_cache_clear(monkeypatch):
+    monkeypatch.setenv("AWS_APPLICATION_REGION", "us-east-1")
+    monkeypatch.setenv("AWS_APPLICATION_ACCESS_KEY_ID", "app_access_key_id")
+    monkeypatch.setenv("AWS_APPLICATION_SECRET_ACCESS_KEY", "app_secret_access_key")
+    monkeypatch.setenv("AWS_APPLICATION_SESSION_TOKEN", "app_session_token")
+
+    aws_client._get_aws_config.cache_clear()
+
+
 @pytest.mark.parametrize("region", ["us-east-1", "us-east-2"])
 @pytest.mark.parametrize("access_key_id", ["key_id", "other_key"])
 @pytest.mark.parametrize("access_key", ["access_key", "pass"])
 @pytest.mark.parametrize("session_token", ["session_token", "token", None])
 @pytest.mark.parametrize("endpoint_url", ["http://localhost:4566", "somewhere.com", None])
 async def test_get_aws_config(
-    monkeypatch, name, region, access_key_id, access_key, session_token, endpoint_url
+    monkeypatch, request, region, access_key_id, access_key, session_token, endpoint_url
 ):
     """'_get_aws_function' should return the AWS credentials from the environment variables,
     validating the required ones"""
+    # Create the environment variable name based on the test parameters
+    name = re.sub("[:/.]+", "", request.node.callspec.id).replace("-", "_").upper()
+
     monkeypatch.setenv(f"AWS_{name}_REGION", region)
     monkeypatch.setenv(f"AWS_{name}_ACCESS_KEY_ID", access_key_id)
     monkeypatch.setenv(f"AWS_{name}_SECRET_ACCESS_KEY", access_key)
@@ -33,9 +47,9 @@ async def test_get_aws_config(
         assert aws_app_config.pop("endpoint_url") == endpoint_url
     assert aws_app_config == {
         "region_name": "us-east-1",
-        "aws_access_key_id": "test",
-        "aws_secret_access_key": "test",
-        "aws_session_token": "test",
+        "aws_access_key_id": "app_access_key_id",
+        "aws_secret_access_key": "app_secret_access_key",
+        "aws_session_token": "app_session_token",
     }
 
     aws_config = aws_client._get_aws_config(name)
@@ -55,10 +69,6 @@ async def test_get_aws_config(
 async def test_get_aws_config_no_region(monkeypatch):
     """'_get_aws_function' should raise a ValueError when the region is not found"""
     monkeypatch.delenv("AWS_APPLICATION_REGION")
-    monkeypatch.setenv("AWS_APPLICATION_ACCESS_KEY_ID", "app_access_key_id")
-    monkeypatch.setenv("AWS_APPLICATION_SECRET_ACCESS_KEY", "app_access_key")
-    monkeypatch.setenv("AWS_APPLICATION_SESSION_TOKEN", "app_session_token")
-    monkeypatch.setenv("AWS_APPLICATION_ENDPOINT_URL", "app_endpoint_url")
 
     expected_message = "AWS region name not found for 'application'"
     with pytest.raises(ValueError, match=expected_message):
@@ -67,11 +77,7 @@ async def test_get_aws_config_no_region(monkeypatch):
 
 async def test_get_aws_config_no_access_key_id(monkeypatch):
     """'_get_aws_function' should raise a ValueError when the access key ID is not found"""
-    monkeypatch.setenv("AWS_APPLICATION_REGION", "app_region")
     monkeypatch.delenv("AWS_APPLICATION_ACCESS_KEY_ID")
-    monkeypatch.setenv("AWS_APPLICATION_SECRET_ACCESS_KEY", "app_access_key")
-    monkeypatch.setenv("AWS_APPLICATION_SESSION_TOKEN", "app_session_token")
-    monkeypatch.setenv("AWS_APPLICATION_ENDPOINT_URL", "app_endpoint_url")
 
     expected_message = "AWS credential access key ID not found for 'application'"
     with pytest.raises(ValueError, match=expected_message):
@@ -80,11 +86,7 @@ async def test_get_aws_config_no_access_key_id(monkeypatch):
 
 async def test_get_aws_config_no_secret_access_key(monkeypatch):
     """'_get_aws_function' should raise a ValueError when the secret access key is not found"""
-    monkeypatch.setenv("AWS_APPLICATION_REGION", "app_region")
-    monkeypatch.setenv("AWS_APPLICATION_ACCESS_KEY_ID", "app_access_key_id")
     monkeypatch.delenv("AWS_APPLICATION_SECRET_ACCESS_KEY")
-    monkeypatch.setenv("AWS_APPLICATION_SESSION_TOKEN", "app_session_token")
-    monkeypatch.setenv("AWS_APPLICATION_ENDPOINT_URL", "app_endpoint_url")
 
     expected_message = "AWS credential secret access key not found for 'application'"
     with pytest.raises(ValueError, match=expected_message):
