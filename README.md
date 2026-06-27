@@ -110,6 +110,7 @@ Sentinela provides a web dashboard, by default at port `8000`, with 2 sections:
     1. [Configuration](/docs/configuration.md)
     2. [Configuration file](/docs/configuration_file.md)
     3. [How to run](/docs/how_to_run.md)
+    4. [Recommendations](/docs/recommendations.md)
 7. [Command line interface](/docs/command_line_interface.md)
 8. [Monitoring Sentinela](/docs/monitoring_sentinela.md)
 9. [Plugins](/docs/plugins/plugins.md)
