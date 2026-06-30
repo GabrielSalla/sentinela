@@ -7,8 +7,6 @@ function dashboardApp() {
         selectedMonitor: null,
         selectedAlert: null,
         selectedIssue: null,
-        includeInternal: true,
-        withAlerts: false,
         editorMonitors: {},
         monitorsLoading: false,
         alertsLoading: false,
@@ -22,6 +20,16 @@ function dashboardApp() {
         showAddFilePopover: false,
         newFileName: '',
         sentinela_configs: {},
+
+        settings: {
+            overviewFilterIncludeInternalMonitors: true,
+            overviewFilterWithAlerts: false,
+            notificationIntervalSeconds: 60,
+            browserNotificationsEnabled: true,
+        },
+        showSettingsModal: false,
+        settingsHandler: null,
+
         desktopNotificationsSupported: false,
         desktopNotificationsPermission: 'default',
         desktopNotificationsHandler: null,
@@ -76,7 +84,7 @@ function dashboardApp() {
 
         init() {
             window.dashboardAppInstance = this;
-            this.restoreFilters();
+            this.initializeSettings();
             this.restoreColumnWidths();
             this.restoreActiveTab();
             this.initializeDesktopNotifications();
@@ -85,6 +93,11 @@ function dashboardApp() {
             this.loadConfigs();
             this.loadMonitorsForEditor();
             this.$nextTick(() => this.initializeResizeHandles());
+        },
+
+        initializeSettings() {
+            this.settingsHandler = createDashboardSettingsHandler(this);
+            this.settingsHandler.restoreSettings();
         },
 
         initializeDesktopNotifications() {
@@ -130,18 +143,39 @@ function dashboardApp() {
             this.startAutoRefresh();
         },
 
-        restoreFilters() {
-            const includeInternal = localStorage.getItem('monitor-filter-include-internal');
-            const withAlerts = localStorage.getItem('monitor-filter-with-alerts');
-            if (includeInternal !== null)
-                this.includeInternal = includeInternal === 'true';
-            if (withAlerts !== null)
-                this.withAlerts = withAlerts === 'true';
+        restoreSettings() {
+            if (!this.settingsHandler) {
+                this.initializeSettings();
+            }
+            return this.settingsHandler.restoreSettings();
         },
 
-        saveFilters() {
-            localStorage.setItem('monitor-filter-include-internal', this.includeInternal);
-            localStorage.setItem('monitor-filter-with-alerts', this.withAlerts);
+        saveSettings() {
+            if (!this.settingsHandler) {
+                this.initializeSettings();
+            }
+            return this.settingsHandler.saveSettings();
+        },
+
+        openSettingsModal() {
+            if (!this.settingsHandler) {
+                this.initializeSettings();
+            }
+            return this.settingsHandler.openSettingsModal();
+        },
+
+        closeSettingsModal() {
+            if (!this.settingsHandler) {
+                this.initializeSettings();
+            }
+            return this.settingsHandler.closeSettingsModal();
+        },
+
+        saveSettingsAndClose() {
+            if (!this.settingsHandler) {
+                this.initializeSettings();
+            }
+            return this.settingsHandler.saveSettingsAndClose();
         },
 
         restoreColumnWidths() {
@@ -208,7 +242,7 @@ function dashboardApp() {
         },
 
         onFilterChange() {
-            this.saveFilters();
+            this.saveSettings();
             this.loadActiveMonitors();
         },
 
@@ -258,9 +292,9 @@ function dashboardApp() {
                 showLoading,
                 (monitors) => {
                     let filtered = monitors.filter(m => m.enabled);
-                    if (!this.includeInternal)
+                    if (!this.settings.overviewFilterIncludeInternalMonitors)
                         filtered = filtered.filter(m => !m.name.startsWith('internal.'));
-                    if (this.withAlerts)
+                    if (this.settings.overviewFilterWithAlerts)
                         filtered = filtered.filter(m => m.active_alerts > 0);
                     const regular = filtered.filter(m => !m.name.startsWith('internal.')).sort((a, b) => a.name.localeCompare(b.name));
                     const internal = filtered.filter(m => m.name.startsWith('internal.')).sort((a, b) => a.name.localeCompare(b.name));
