@@ -38,6 +38,7 @@ async def test_list_monitors(clear_database, sample_monitor: Monitor):
             "name": sample_monitor.name,
             "enabled": sample_monitor.enabled,
             "active_alerts": 0,
+            "not_acknowledged_alerts": 0,
         },
     ]
 
@@ -72,6 +73,7 @@ async def test_list_monitors_with_alerts(clear_database, sample_monitor: Monitor
             "name": sample_monitor.name,
             "enabled": sample_monitor.enabled,
             "active_alerts": active_alerts,
+            "not_acknowledged_alerts": active_alerts,
         },
     ]
 
@@ -98,6 +100,7 @@ async def test_list_monitors_not_enabled(clear_database, sample_monitor: Monitor
             "name": sample_monitor.name,
             "enabled": sample_monitor.enabled,
             "active_alerts": 0,
+            "not_acknowledged_alerts": 0,
         },
     ]
 
