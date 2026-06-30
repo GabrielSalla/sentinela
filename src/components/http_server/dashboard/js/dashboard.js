@@ -282,7 +282,7 @@ function dashboardApp() {
             event?.stopPropagation();
             const success = await this.performAlertAction(alert, 'acknowledge', 'Alert acknowledged successfully');
             if (success) {
-                alert.acknowledged = true;
+                alert.is_priority_acknowledged = true;
                 this.startAutoRefresh();
             }
         },
@@ -332,6 +332,16 @@ function dashboardApp() {
                 5: { text: 'Informational', class: 'badge-priority-low' }
             };
             return priorities[priority] || priorities[5];
+        },
+
+        isAlertAcknowledged(alert) {
+            if (!alert) return false;
+            return alert.is_priority_acknowledged === true;
+        },
+
+        isAlertLocked(alert) {
+            if (!alert) return false;
+            return alert.locked === true;
         },
 
         getStatusBadgeClass(isActive) {
