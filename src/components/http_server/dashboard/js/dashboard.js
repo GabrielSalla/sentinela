@@ -283,6 +283,7 @@ function dashboardApp() {
             const success = await this.performAlertAction(alert, 'acknowledge', 'Alert acknowledged successfully');
             if (success) {
                 alert.acknowledged = true;
+                alert.can_acknowledge = false;
                 this.startAutoRefresh();
             }
         },
@@ -292,6 +293,7 @@ function dashboardApp() {
             const success = await this.performAlertAction(alert, 'lock', 'Alert locked successfully');
             if (success) {
                 alert.locked = true;
+                alert.can_lock = false;
                 this.startAutoRefresh();
             }
         },
@@ -332,6 +334,24 @@ function dashboardApp() {
                 5: { text: 'Informational', class: 'badge-priority-low' }
             };
             return priorities[priority] || priorities[5];
+        },
+
+        isAlertAcknowledged(alert) {
+            if (!alert) return false;
+            return alert.is_priority_acknowledged;
+        },
+
+        getAlertAcknowledgedStatus(alert) {
+            return this.isAlertAcknowledged(alert) ? 'Acknowledged' : 'Not acknowledged';
+        },
+
+        isAlertLocked(alert) {
+            if (!alert) return false;
+            return alert.can_lock === false || alert.locked === true;
+        },
+
+        getAlertLockedStatus(alert) {
+            return this.isAlertLocked(alert) ? 'Locked' : 'Unlocked';
         },
 
         getStatusBadgeClass(isActive) {

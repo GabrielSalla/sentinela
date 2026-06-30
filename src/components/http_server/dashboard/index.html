@@ -80,19 +80,19 @@
                                               :class="getPriorityBadge(alert.priority).class"
                                               x-text="getPriorityBadge(alert.priority).text"></span>
                                         <span class="list-item-badge"
-                                              :class="getStatusBadgeClass(alert.acknowledged)"
-                                              x-text="'Acknowledged'"></span>
+                                              :class="getStatusBadgeClass(isAlertAcknowledged(alert))"
+                                              x-text="getAlertAcknowledgedStatus(alert)"></span>
                                         <span class="list-item-badge"
-                                              :class="getStatusBadgeClass(alert.locked)"
-                                              x-text="'Locked'"></span>
+                                              :class="getStatusBadgeClass(isAlertLocked(alert))"
+                                              x-text="getAlertLockedStatus(alert)"></span>
                                     </div>
                                     <div class="list-item-info" x-text="`Triggered: ${alert.created_at}`"></div>
                                     <div class="alert-actions" x-show="selectedAlert?.id === alert.id">
                                         <button class="alert-action-btn"
-                                                :disabled="alert.acknowledged"
+                                                :disabled="isAlertAcknowledged(alert)"
                                                 @click="acknowledgeAlert(alert, $event)">Ack</button>
                                         <button class="alert-action-btn"
-                                                :disabled="alert.locked"
+                                                :disabled="isAlertLocked(alert)"
                                                 @click="lockAlert(alert, $event)">Lock</button>
                                         <button x-show="alert.can_solve === true"
                                                 class="alert-action-btn"

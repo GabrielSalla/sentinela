@@ -32,6 +32,7 @@ async def get_alert(request: Request) -> Response:
         "id": alert.id,
         "status": alert.status.value,
         "acknowledged": alert.acknowledged,
+        "is_priority_acknowledged": alert.is_priority_acknowledged,
         "locked": alert.locked,
         "priority": alert.priority,
         "acknowledge_priority": alert.acknowledge_priority,
