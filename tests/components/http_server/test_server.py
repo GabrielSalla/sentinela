@@ -1,3 +1,5 @@
+from dataclasses import is_dataclass
+
 import aiohttp
 import pytest
 import pytest_asyncio
@@ -151,6 +153,25 @@ async def test_status_executor_degraded(monkeypatch):
         "status": ["a", "bc", "def"],
         "issues": ["1", "23", "456"],
     }
+
+
+async def test_configs():
+    """The 'configs' route should return application configs in JSON format recursively"""
+    async with aiohttp.ClientSession() as session:
+        async with session.get(BASE_URL + "/configs") as response:
+            response_data = await response.json()
+
+    assert is_dataclass(configs.http_server)
+    assert response_data["configs"]["load_example_monitors"] is True
+    assert response_data["configs"]["example_monitors_path"] == "example_monitors"
+    assert response_data["configs"]["internal_monitors_path"] == "internal_monitors"
+    expected_http_server_config = {
+        "port": 8000,
+        "log_level": "error",
+        "dashboard_enabled": True,
+        "monitor_register_enabled": True,
+    }
+    assert response_data["configs"]["http_server"] == expected_http_server_config
 
 
 async def test_metrics():

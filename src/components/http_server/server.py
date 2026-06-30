@@ -1,3 +1,4 @@
+import dataclasses
 import logging
 import random
 from collections.abc import Awaitable, Callable
@@ -63,6 +64,17 @@ async def get_status(request: Request) -> Response:
     if response["status"] == "ok":
         response["_message"] = (random.choice(STATUS_MESSAGES),)
 
+    return web.json_response(response)
+
+
+@base_routes.get("/configs")
+@base_routes.get("/configs/")
+async def get_configs(request: Request) -> Response:
+    """Return the application configs"""
+    response = {
+        "status": "ok",
+        "configs": dataclasses.asdict(configs),
+    }
     return web.json_response(response)
 
 
