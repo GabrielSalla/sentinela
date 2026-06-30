@@ -46,9 +46,14 @@
                                      :class="{ 'selected': selectedMonitor?.id === monitor.id }"
                                      @click="selectMonitor(monitor)">
                                     <div class="list-item-name" x-text="monitor.name"></div>
-                                    <span x-show="monitor.active_alerts > 0"
-                                          class="badge badge-alert"
-                                          x-text="monitor.active_alerts"></span>
+                                    <div class="monitor-badges">
+                                        <span x-show="monitor.not_acknowledged_alerts > 0"
+                                              class="badge badge-unacknowledged"
+                                              x-text="monitor.not_acknowledged_alerts"></span>
+                                        <span x-show="monitor.active_alerts > 0"
+                                              class="badge badge-alert"
+                                              x-text="monitor.active_alerts"></span>
+                                    </div>
                                 </div>
                             </template>
                         </div>

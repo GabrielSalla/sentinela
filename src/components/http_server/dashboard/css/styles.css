@@ -254,8 +254,24 @@ body {
     color: #8b949e;
 }
 
+.monitor-badges {
+    display: flex;
+    gap: 6px;
+    margin-left: auto;
+    align-items: center;
+}
+
 .badge-alert {
     background-color: #da3633;
+    color: #fff;
+    padding: 2px 8px;
+    border-radius: 12px;
+    font-size: 11px;
+    font-weight: 600;
+}
+
+.badge-unacknowledged {
+    background-color: #d29922;
     color: #fff;
     padding: 2px 8px;
     border-radius: 12px;
