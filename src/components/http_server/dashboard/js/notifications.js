@@ -67,7 +67,8 @@ function createDesktopNotificationHandler(app) {
             });
             const hasImmediateAlerts = immediateAlerts.length > 0;
             const now = Date.now();
-            const notificationIntervalMs = 60 * 1000;
+            const intervalFn = app.settingsHandler?.normalizeNotificationInterval?.bind(app.settingsHandler);
+            const notificationIntervalMs = (intervalFn ? intervalFn(app.settings.notificationIntervalSeconds) : app.settings.notificationIntervalSeconds) * 1000;
             const shouldRepeatNotification = this.lastShownAt !== null
                 && (now - this.lastShownAt) >= notificationIntervalMs;
             const shouldNotify = hasImmediateAlerts || shouldRepeatNotification;
