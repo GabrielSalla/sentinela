@@ -174,10 +174,11 @@
                     </div>
 
                     <div id="monitor-actions" x-show="currentMonitor && !currentMonitor.isNew" class="monitor-actions">
-                        <span class="pending-change-message" x-show="monitorHasPendingChanges">Changes will be applied on save</span>
+                        <span class="pending-change-message" x-show="monitorHasPendingChanges && sentinela_configs?.http_server?.monitor_register_enabled">Changes will be applied on save</span>
+                        <span class="pending-change-message" x-show="!sentinela_configs?.http_server?.monitor_register_enabled">Monitor registration disabled on server configuration</span>
                         <div class="button-group">
                             <button class="btn btn-secondary" @click="validateMonitor()">Validate</button>
-                            <button class="btn" @click="saveMonitor()" :disabled="!monitorHasPendingChanges">Save</button>
+                            <button class="btn" @click="saveMonitor()" :disabled="!monitorHasPendingChanges || !sentinela_configs?.http_server?.monitor_register_enabled">Save</button>
                         </div>
                     </div>
                 </div>

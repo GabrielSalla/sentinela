@@ -21,6 +21,7 @@ function dashboardApp() {
         monitorHasPendingChanges: false,
         showAddFilePopover: false,
         newFileName: '',
+        sentinela_configs: {},
 
         switchTab(tabId) {
             this.activeTab = tabId;
@@ -57,6 +58,19 @@ function dashboardApp() {
             this.monitorHasPendingChanges = true;
         },
 
+        async loadConfigs() {
+            try {
+                const response = await fetch(`${window.location.origin}/configs`);
+                const data = await response.json();
+                if (data.configs) {
+                    this.sentinela_configs = data.configs;
+                }
+            } catch (error) {
+                console.error('Error loading configs:', error);
+                this.sentinela_configs = {};
+            }
+        },
+
         init() {
             window.dashboardAppInstance = this;
             this.restoreFilters();
@@ -64,6 +78,7 @@ function dashboardApp() {
             this.restoreActiveTab();
             this.showSection(this.currentSection);
             initializeCodeEditor();
+            this.loadConfigs();
             this.loadMonitorsForEditor();
             this.$nextTick(() => this.initializeResizeHandles());
         },
