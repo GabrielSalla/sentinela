@@ -22,6 +22,9 @@ function dashboardApp() {
         showAddFilePopover: false,
         newFileName: '',
         sentinela_configs: {},
+        desktopNotificationsSupported: false,
+        desktopNotificationsPermission: 'default',
+        desktopNotificationsHandler: null,
 
         switchTab(tabId) {
             this.activeTab = tabId;
@@ -76,11 +79,37 @@ function dashboardApp() {
             this.restoreFilters();
             this.restoreColumnWidths();
             this.restoreActiveTab();
+            this.initializeDesktopNotifications();
             this.showSection(this.currentSection);
             initializeCodeEditor();
             this.loadConfigs();
             this.loadMonitorsForEditor();
             this.$nextTick(() => this.initializeResizeHandles());
+        },
+
+        initializeDesktopNotifications() {
+            this.desktopNotificationsHandler = createDesktopNotificationHandler(this);
+            this.desktopNotificationsHandler.initialize();
+            this.desktopNotificationsSupported = this.desktopNotificationsHandler.supported;
+            this.desktopNotificationsPermission = this.desktopNotificationsHandler.permission;
+        },
+
+        async requestDesktopNotificationsPermission() {
+            if (!this.desktopNotificationsHandler) {
+                this.desktopNotificationsPermission = Notification.permission;
+                return;
+            }
+
+            await this.desktopNotificationsHandler.requestPermission();
+            this.desktopNotificationsPermission = this.desktopNotificationsHandler.permission;
+        },
+
+        async notifyForUnacknowledgedAlerts() {
+            if (!this.desktopNotificationsHandler) {
+                return;
+            }
+
+            await this.desktopNotificationsHandler.notifyForUnacknowledgedAlerts();
         },
 
         restoreActiveTab() {
@@ -309,12 +338,13 @@ function dashboardApp() {
 
         startAutoRefresh() {
             this.stopAutoRefresh();
-            this.refreshInterval = setInterval(() => {
-                this.loadActiveMonitors(false);
+            this.refreshInterval = setInterval(async () => {
+                await this.loadActiveMonitors(false);
                 if (this.selectedMonitor)
-                    this.loadAlertsForMonitor(this.selectedMonitor.id, false);
+                    await this.loadAlertsForMonitor(this.selectedMonitor.id, false);
                 if (this.selectedAlert)
-                    this.loadIssuesForAlert(this.selectedAlert.id, false);
+                    await this.loadIssuesForAlert(this.selectedAlert.id, false);
+                await this.notifyForUnacknowledgedAlerts();
             }, 5000);
         },
 
