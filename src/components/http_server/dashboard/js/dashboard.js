@@ -296,8 +296,8 @@ function dashboardApp() {
                         filtered = filtered.filter(m => !m.name.startsWith('internal.'));
                     if (this.settings.overviewFilterWithAlerts)
                         filtered = filtered.filter(m => m.active_alerts > 0);
-                    const regular = filtered.filter(m => !m.name.startsWith('internal.')).sort((a, b) => a.name.localeCompare(b.name));
-                    const internal = filtered.filter(m => m.name.startsWith('internal.')).sort((a, b) => a.name.localeCompare(b.name));
+                    const regular = filtered.filter(m => !m.name.startsWith('internal.'));
+                    const internal = filtered.filter(m => m.name.startsWith('internal.'));
                     return [...regular, ...internal];
                 }
             );
@@ -423,7 +423,7 @@ function dashboardApp() {
         },
 
         get monitorsList() {
-            return Object.values(this.editorMonitors);
+            return Object.values(this.editorMonitors).sort((a, b) => a.name.localeCompare(b.name));
         },
 
         async onMonitorSelect(event) {
