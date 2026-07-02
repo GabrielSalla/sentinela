@@ -46,6 +46,7 @@ async def test_get_alert(sample_monitor: Monitor):
                     "id": alert.id,
                     "status": alert.status.value,
                     "acknowledged": alert.acknowledged,
+                    "is_priority_acknowledged": False,
                     "locked": alert.locked,
                     "priority": alert.priority,
                     "acknowledge_priority": alert.acknowledge_priority,

@@ -55,23 +55,25 @@ class _MonitorRegisterPayload(BaseModel):
 async def list_monitors(request: Request) -> Response:
     """Route to list all monitors"""
     monitors = await Monitor.get_all()
-    enabled_monitors = (monitor for monitor in monitors if monitor.enabled)
+    enabled_monitors = [monitor for monitor in monitors if monitor.enabled]
 
-    active_alerts = await Alert.get_raw(
-        columns=[Alert.monitor_id],
-        column_filters=[
-            Alert.status == AlertStatus.active,
-            Alert.monitor_id.in_(monitor.id for monitor in enabled_monitors),
-        ],
+    active_alerts = await Alert.get_all(
+        Alert.status == AlertStatus.active,
+        Alert.monitor_id.in_(monitor.id for monitor in enabled_monitors),
     )
-    alerts_counter = Counter(alert.monitor_id for alert in active_alerts)
+
+    active_alerts_counter = Counter(alert.monitor_id for alert in active_alerts)
+    not_acknowledged_counter = Counter(
+        alert.monitor_id for alert in active_alerts if not alert.is_priority_acknowledged
+    )
 
     response = [
         {
             "id": monitor.id,
             "name": monitor.name,
             "enabled": monitor.enabled,
-            "active_alerts": alerts_counter.get(monitor.id, 0),
+            "active_alerts": active_alerts_counter.get(monitor.id, 0),
+            "not_acknowledged_alerts": not_acknowledged_counter.get(monitor.id, 0),
         }
         for monitor in monitors
     ]
@@ -96,6 +98,7 @@ async def list_monitor_active_alerts(request: Request) -> Response:
             "id": alert.id,
             "status": alert.status.value,
             "acknowledged": alert.acknowledged,
+            "is_priority_acknowledged": alert.is_priority_acknowledged,
             "locked": alert.locked,
             "priority": alert.priority,
             "acknowledge_priority": alert.acknowledge_priority,

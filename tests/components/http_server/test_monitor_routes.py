@@ -38,6 +38,7 @@ async def test_list_monitors(clear_database, sample_monitor: Monitor):
             "name": sample_monitor.name,
             "enabled": sample_monitor.enabled,
             "active_alerts": 0,
+            "not_acknowledged_alerts": 0,
         },
     ]
 
@@ -72,6 +73,7 @@ async def test_list_monitors_with_alerts(clear_database, sample_monitor: Monitor
             "name": sample_monitor.name,
             "enabled": sample_monitor.enabled,
             "active_alerts": active_alerts,
+            "not_acknowledged_alerts": active_alerts,
         },
     ]
 
@@ -98,6 +100,7 @@ async def test_list_monitors_not_enabled(clear_database, sample_monitor: Monitor
             "name": sample_monitor.name,
             "enabled": sample_monitor.enabled,
             "active_alerts": 0,
+            "not_acknowledged_alerts": 0,
         },
     ]
 
@@ -125,6 +128,7 @@ async def test_list_monitor_active_alerts(clear_database, alerts_number, sample_
         assert alert.id == response_alert["id"]
         assert alert.status == response_alert["status"]
         assert alert.acknowledged == response_alert["acknowledged"]
+        assert alert.is_priority_acknowledged == response_alert["is_priority_acknowledged"]
         assert alert.locked == response_alert["locked"]
         assert alert.priority == response_alert["priority"]
         assert alert.acknowledge_priority == response_alert["acknowledge_priority"]

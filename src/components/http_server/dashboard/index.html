@@ -10,12 +10,17 @@
 
     <link rel="stylesheet" href="/dashboard/css/styles.css">
     <script src="/dashboard/js/preload.js"></script>
+    <script src="/dashboard/js/notifications.js"></script>
+    <script src="/dashboard/js/settings.js"></script>
 </head>
 <body x-data="dashboardApp()">
     <nav class="top-bar">
-        <h1>Sentinela</h1>
-        <button class="nav-btn" :class="{ 'active': currentSection === 'overview' }" @click="showSection('overview')">Overview</button>
-        <button class="nav-btn" :class="{ 'active': currentSection === 'editor' }" @click="showSection('editor')">Editor</button>
+        <div class="top-bar-left">
+            <h1>Sentinela</h1>
+            <button class="nav-btn" :class="{ 'active': currentSection === 'overview' }" @click="showSection('overview')">Overview</button>
+            <button class="nav-btn" :class="{ 'active': currentSection === 'editor' }" @click="showSection('editor')">Editor</button>
+        </div>
+        <button class="settings-btn" @click="openSettingsModal()" title="Open settings">⚙</button>
     </nav>
 
     <div id="overview-section" class="section-content" x-show="currentSection === 'overview'">
@@ -24,11 +29,11 @@
                 <h2>Active Monitors</h2>
                 <div class="monitor-filters">
                     <label class="filter-checkbox">
-                        <input type="checkbox" x-model="includeInternal" @change="onFilterChange()">
+                        <input type="checkbox" x-model="settings.overviewFilterIncludeInternalMonitors" @change="onFilterChange()">
                         <span>Include internal monitors</span>
                     </label>
                     <label class="filter-checkbox">
-                        <input type="checkbox" x-model="withAlerts" @change="onFilterChange()">
+                        <input type="checkbox" x-model="settings.overviewFilterWithAlerts" @change="onFilterChange()">
                         <span>Monitors with active alerts</span>
                     </label>
                 </div>
@@ -46,9 +51,14 @@
                                      :class="{ 'selected': selectedMonitor?.id === monitor.id }"
                                      @click="selectMonitor(monitor)">
                                     <div class="list-item-name" x-text="monitor.name"></div>
-                                    <span x-show="monitor.active_alerts > 0"
-                                          class="badge badge-alert"
-                                          x-text="monitor.active_alerts"></span>
+                                    <div class="monitor-badges">
+                                        <span x-show="monitor.not_acknowledged_alerts > 0"
+                                              class="badge badge-unacknowledged"
+                                              x-text="monitor.not_acknowledged_alerts"></span>
+                                        <span x-show="monitor.active_alerts > 0"
+                                              class="badge badge-alert"
+                                              x-text="monitor.active_alerts"></span>
+                                    </div>
                                 </div>
                             </template>
                         </div>
@@ -80,19 +90,19 @@
                                               :class="getPriorityBadge(alert.priority).class"
                                               x-text="getPriorityBadge(alert.priority).text"></span>
                                         <span class="list-item-badge"
-                                              :class="getStatusBadgeClass(alert.acknowledged)"
+                                              :class="getStatusBadgeClass(isAlertAcknowledged(alert))"
                                               x-text="'Acknowledged'"></span>
                                         <span class="list-item-badge"
-                                              :class="getStatusBadgeClass(alert.locked)"
+                                              :class="getStatusBadgeClass(isAlertLocked(alert))"
                                               x-text="'Locked'"></span>
                                     </div>
                                     <div class="list-item-info" x-text="`Triggered: ${alert.created_at}`"></div>
                                     <div class="alert-actions" x-show="selectedAlert?.id === alert.id">
                                         <button class="alert-action-btn"
-                                                :disabled="alert.acknowledged"
+                                                :disabled="isAlertAcknowledged(alert)"
                                                 @click="acknowledgeAlert(alert, $event)">Ack</button>
                                         <button class="alert-action-btn"
-                                                :disabled="alert.locked"
+                                                :disabled="isAlertLocked(alert)"
                                                 @click="lockAlert(alert, $event)">Lock</button>
                                         <button x-show="alert.can_solve === true"
                                                 class="alert-action-btn"
@@ -221,6 +231,42 @@
                         </div>
                     </div>
                 </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="settings-modal-overlay" x-show="showSettingsModal" x-cloak @click.self="closeSettingsModal()">
+        <div class="settings-modal" role="dialog" aria-modal="true" aria-labelledby="settings-modal-title">
+            <div class="settings-modal-header">
+                <h2 id="settings-modal-title">Settings</h2>
+                <button class="settings-modal-close" @click="closeSettingsModal()" aria-label="Close settings">×</button>
+            </div>
+            <div class="settings-modal-body">
+                <div class="settings-row">
+                    <div class="settings-row-label">
+                        <label for="browser-notifications-enabled">Browser notifications enabled</label>
+                    </div>
+                    <div class="settings-row-control">
+                        <label class="settings-checkbox">
+                            <input id="browser-notifications-enabled" type="checkbox" x-model="settings.browserNotificationsEnabled">
+                            <span>Enabled</span>
+                        </label>
+                    </div>
+                    <p class="settings-help">Enable or disable browser desktop notifications for unacknowledged alerts. Default: enabled.</p>
+                </div>
+                <div class="settings-row">
+                    <div class="settings-row-label">
+                        <label for="notification-interval">Notification interval (seconds)</label>
+                    </div>
+                    <div class="settings-row-control">
+                        <input id="notification-interval" class="settings-input" type="number" min="1" step="1" x-model="settings.notificationIntervalSeconds">
+                    </div>
+                    <p class="settings-help">How often repeated desktop notifications should be shown for unacknowledged alerts. Default: 60 seconds.</p>
+                </div>
+            </div>
+            <div class="settings-modal-footer">
+                <button class="btn btn-secondary" @click="closeSettingsModal()">Cancel</button>
+                <button class="btn" @click="saveSettingsAndClose()">Save</button>
             </div>
         </div>
     </div>

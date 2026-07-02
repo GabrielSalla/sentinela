@@ -7,8 +7,6 @@ function dashboardApp() {
         selectedMonitor: null,
         selectedAlert: null,
         selectedIssue: null,
-        includeInternal: true,
-        withAlerts: false,
         editorMonitors: {},
         monitorsLoading: false,
         alertsLoading: false,
@@ -22,6 +20,19 @@ function dashboardApp() {
         showAddFilePopover: false,
         newFileName: '',
         sentinela_configs: {},
+
+        settings: {
+            overviewFilterIncludeInternalMonitors: true,
+            overviewFilterWithAlerts: false,
+            notificationIntervalSeconds: 60,
+            browserNotificationsEnabled: true,
+        },
+        showSettingsModal: false,
+        settingsHandler: null,
+
+        desktopNotificationsSupported: false,
+        desktopNotificationsPermission: 'default',
+        desktopNotificationsHandler: null,
 
         switchTab(tabId) {
             this.activeTab = tabId;
@@ -73,14 +84,45 @@ function dashboardApp() {
 
         init() {
             window.dashboardAppInstance = this;
-            this.restoreFilters();
+            this.initializeSettings();
             this.restoreColumnWidths();
             this.restoreActiveTab();
+            this.initializeDesktopNotifications();
             this.showSection(this.currentSection);
             initializeCodeEditor();
             this.loadConfigs();
             this.loadMonitorsForEditor();
             this.$nextTick(() => this.initializeResizeHandles());
+        },
+
+        initializeSettings() {
+            this.settingsHandler = createDashboardSettingsHandler(this);
+            this.settingsHandler.restoreSettings();
+        },
+
+        initializeDesktopNotifications() {
+            this.desktopNotificationsHandler = createDesktopNotificationHandler(this);
+            this.desktopNotificationsHandler.initialize();
+            this.desktopNotificationsSupported = this.desktopNotificationsHandler.supported;
+            this.desktopNotificationsPermission = this.desktopNotificationsHandler.permission;
+        },
+
+        async requestDesktopNotificationsPermission() {
+            if (!this.desktopNotificationsHandler) {
+                this.desktopNotificationsPermission = Notification.permission;
+                return;
+            }
+
+            await this.desktopNotificationsHandler.requestPermission();
+            this.desktopNotificationsPermission = this.desktopNotificationsHandler.permission;
+        },
+
+        async notifyForUnacknowledgedAlerts() {
+            if (!this.desktopNotificationsHandler) {
+                return;
+            }
+
+            await this.desktopNotificationsHandler.notifyForUnacknowledgedAlerts();
         },
 
         restoreActiveTab() {
@@ -101,18 +143,39 @@ function dashboardApp() {
             this.startAutoRefresh();
         },
 
-        restoreFilters() {
-            const includeInternal = localStorage.getItem('monitor-filter-include-internal');
-            const withAlerts = localStorage.getItem('monitor-filter-with-alerts');
-            if (includeInternal !== null)
-                this.includeInternal = includeInternal === 'true';
-            if (withAlerts !== null)
-                this.withAlerts = withAlerts === 'true';
+        restoreSettings() {
+            if (!this.settingsHandler) {
+                this.initializeSettings();
+            }
+            return this.settingsHandler.restoreSettings();
         },
 
-        saveFilters() {
-            localStorage.setItem('monitor-filter-include-internal', this.includeInternal);
-            localStorage.setItem('monitor-filter-with-alerts', this.withAlerts);
+        saveSettings() {
+            if (!this.settingsHandler) {
+                this.initializeSettings();
+            }
+            return this.settingsHandler.saveSettings();
+        },
+
+        openSettingsModal() {
+            if (!this.settingsHandler) {
+                this.initializeSettings();
+            }
+            return this.settingsHandler.openSettingsModal();
+        },
+
+        closeSettingsModal() {
+            if (!this.settingsHandler) {
+                this.initializeSettings();
+            }
+            return this.settingsHandler.closeSettingsModal();
+        },
+
+        saveSettingsAndClose() {
+            if (!this.settingsHandler) {
+                this.initializeSettings();
+            }
+            return this.settingsHandler.saveSettingsAndClose();
         },
 
         restoreColumnWidths() {
@@ -179,7 +242,7 @@ function dashboardApp() {
         },
 
         onFilterChange() {
-            this.saveFilters();
+            this.saveSettings();
             this.loadActiveMonitors();
         },
 
@@ -229,12 +292,12 @@ function dashboardApp() {
                 showLoading,
                 (monitors) => {
                     let filtered = monitors.filter(m => m.enabled);
-                    if (!this.includeInternal)
+                    if (!this.settings.overviewFilterIncludeInternalMonitors)
                         filtered = filtered.filter(m => !m.name.startsWith('internal.'));
-                    if (this.withAlerts)
+                    if (this.settings.overviewFilterWithAlerts)
                         filtered = filtered.filter(m => m.active_alerts > 0);
-                    const regular = filtered.filter(m => !m.name.startsWith('internal.')).sort((a, b) => a.name.localeCompare(b.name));
-                    const internal = filtered.filter(m => m.name.startsWith('internal.')).sort((a, b) => a.name.localeCompare(b.name));
+                    const regular = filtered.filter(m => !m.name.startsWith('internal.'));
+                    const internal = filtered.filter(m => m.name.startsWith('internal.'));
                     return [...regular, ...internal];
                 }
             );
@@ -282,7 +345,7 @@ function dashboardApp() {
             event?.stopPropagation();
             const success = await this.performAlertAction(alert, 'acknowledge', 'Alert acknowledged successfully');
             if (success) {
-                alert.acknowledged = true;
+                alert.is_priority_acknowledged = true;
                 this.startAutoRefresh();
             }
         },
@@ -307,12 +370,13 @@ function dashboardApp() {
 
         startAutoRefresh() {
             this.stopAutoRefresh();
-            this.refreshInterval = setInterval(() => {
-                this.loadActiveMonitors(false);
+            this.refreshInterval = setInterval(async () => {
+                await this.loadActiveMonitors(false);
                 if (this.selectedMonitor)
-                    this.loadAlertsForMonitor(this.selectedMonitor.id, false);
+                    await this.loadAlertsForMonitor(this.selectedMonitor.id, false);
                 if (this.selectedAlert)
-                    this.loadIssuesForAlert(this.selectedAlert.id, false);
+                    await this.loadIssuesForAlert(this.selectedAlert.id, false);
+                await this.notifyForUnacknowledgedAlerts();
             }, 5000);
         },
 
@@ -334,6 +398,16 @@ function dashboardApp() {
             return priorities[priority] || priorities[5];
         },
 
+        isAlertAcknowledged(alert) {
+            if (!alert) return false;
+            return alert.is_priority_acknowledged === true;
+        },
+
+        isAlertLocked(alert) {
+            if (!alert) return false;
+            return alert.locked === true;
+        },
+
         getStatusBadgeClass(isActive) {
             return isActive ? 'badge-status-active' : 'badge-status-inactive';
         },
@@ -349,7 +423,7 @@ function dashboardApp() {
         },
 
         get monitorsList() {
-            return Object.values(this.editorMonitors);
+            return Object.values(this.editorMonitors).sort((a, b) => a.name.localeCompare(b.name));
         },
 
         async onMonitorSelect(event) {
