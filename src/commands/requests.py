@@ -21,7 +21,11 @@ async def monitor_register(
 ) -> Monitor:
     """Register a monitor"""
     return await monitors_loader.register_monitor(
-        monitor_name, monitor_code, additional_files=additional_files, log_error=log_error
+        monitor_name,
+        monitor_code,
+        additional_files=additional_files,
+        internal=False,
+        log_error=log_error,
     )
 
 

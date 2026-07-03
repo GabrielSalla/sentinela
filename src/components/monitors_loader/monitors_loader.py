@@ -48,7 +48,11 @@ def _file_has_extension(file: str, extensions: list[str]) -> bool:
 
 
 def check_monitor(
-    monitor_name: str, monitor_code: str, base_path: str | None = None, log_error: bool = False
+    monitor_name: str,
+    monitor_code: str,
+    base_path: str | None = None,
+    internal: bool = False,
+    log_error: bool = False,
 ) -> None:
     """Check if a monitor module is valid without registering it"""
     module_path, module = module_loader.load_module_from_string(
@@ -69,6 +73,7 @@ async def register_monitor(
     monitor_code: str,
     base_path: str | None = None,
     additional_files: dict[str, str] | None = None,
+    internal: bool = False,
     log_error: bool = True,
 ) -> Monitor:
     """Register a monitor and its additional files"""
@@ -76,6 +81,7 @@ async def register_monitor(
         base_path=base_path,
         monitor_name=monitor_name,
         monitor_code=monitor_code,
+        internal=internal,
         log_error=log_error,
     )
 
@@ -146,6 +152,7 @@ async def _register_monitors_from_path(
                     monitor_name=monitor_name,
                     monitor_code=monitor_code,
                     additional_files=additional_files,
+                    internal=internal,
                 )
             except MonitorValidationError:
                 _logger.error(f"Monitor {monitor_name!r} not registered")

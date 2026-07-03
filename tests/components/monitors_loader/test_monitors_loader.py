@@ -389,7 +389,7 @@ async def test_register_monitors_from_path_validation_error(caplog, monkeypatch,
     """'_register_monitors_from_path' should log the errors if a monitor was not loaded and not
     register the monitor"""
 
-    async def register_monitor_error_mock(monitor_name, monitor_code, additional_files):
+    async def register_monitor_error_mock(monitor_name, monitor_code, internal, additional_files):
         raise MonitorValidationError(monitor_name="monitor", errors_found=[])
 
     monkeypatch.setattr(monitors_loader, "register_monitor", register_monitor_error_mock)
@@ -412,7 +412,7 @@ async def test_register_monitors_from_path_error(caplog, monkeypatch, clear_data
     """'_register_monitors_from_path' should log the errors if a monitor was not loaded and not
     register the monitor"""
 
-    async def register_monitor_error_mock(monitor_name, monitor_code, additional_files):
+    async def register_monitor_error_mock(monitor_name, monitor_code, internal, additional_files):
         raise ValueError("Some error")
 
     monkeypatch.setattr(monitors_loader, "register_monitor", register_monitor_error_mock)
