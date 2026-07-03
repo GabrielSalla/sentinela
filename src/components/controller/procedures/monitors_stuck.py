@@ -27,7 +27,7 @@ async def monitors_stuck(time_tolerance: int) -> None:
         monitor = await Monitor.get_by_id(monitor_info["id"])
 
         if monitor is None:
-            _logger.error(f"Monitor with id '{monitor_info['id']}' not found")
+            _logger.error(f"Monitor with id {monitor_info['id']!r} not found")
             continue
 
         await monitor.set_queued(False)

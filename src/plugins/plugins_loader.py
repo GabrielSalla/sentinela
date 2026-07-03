@@ -38,6 +38,6 @@ def load_plugins(path: str | None = None) -> dict[str, ModuleType]:
             plugin = importlib.import_module(f"{plugins_import_path}.{plugin_name}")
             plugins[plugin_name] = plugin
         except Exception:
-            _logger.error(f"Error loading plugin '{plugin_name}'", exc_info=True)
+            _logger.error(f"Error loading plugin {plugin_name!r}", exc_info=True)
 
     return plugins

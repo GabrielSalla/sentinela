@@ -11,7 +11,7 @@ def get_plugin_attribute(attribute_path: str) -> Any:
 
     plugin = plugins.loaded_plugins.get(plugin_name)
     if plugin is None:
-        raise ValueError(f"Plugin '{plugin_name}' not loaded")
+        raise ValueError(f"Plugin {plugin_name!r} not loaded")
 
     target_path_parts = []
     target: Any = plugin
@@ -22,6 +22,6 @@ def get_plugin_attribute(attribute_path: str) -> Any:
 
         if target is None:
             target_path = ".".join(target_path_parts)
-            raise ValueError(f"Plugin '{plugin_name}' has no attribute '{target_path}'")
+            raise ValueError(f"Plugin {plugin_name!r} has no attribute {target_path!r}")
 
     return target

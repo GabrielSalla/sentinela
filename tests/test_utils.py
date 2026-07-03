@@ -14,7 +14,7 @@ def assert_message_in_log(caplog, pattern: str, count: int = 1, regex: bool = Fa
             if pattern in record.message or (record.exc_text and pattern in record.exc_text):
                 found += 1
     if found != count:
-        assert False, f"Expected {count} log messages '{pattern}', found {found}"
+        assert False, f"Expected {count} log messages {pattern!r}, found {found}"
 
 
 def assert_message_not_in_log(caplog, pattern: str, regex: bool = False):

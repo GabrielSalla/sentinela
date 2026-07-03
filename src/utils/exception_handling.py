@@ -34,4 +34,4 @@ async def protected_task(logger: logging.Logger, task: Coroutine[None, None, Non
     try:
         await task
     except Exception:
-        logger.error(f"Exception with task '{task}'", exc_info=True)
+        logger.error(f"Exception with task {task!r}", exc_info=True)

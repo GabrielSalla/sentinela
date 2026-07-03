@@ -73,7 +73,7 @@ async def wait_monitor_loaded(monitor_id: int) -> None:
 
     if not is_monitor_registered(monitor_id):
         prometheus_monitor_not_registered_count.inc()
-        raise MonitorNotRegisteredError(f"Monitor '{monitor_id}' not registered")
+        raise MonitorNotRegisteredError(f"Monitor {monitor_id!r} not registered")
 
 
 def get_monitors_ids() -> list[int]:

@@ -43,7 +43,7 @@ async def app_mention(body: dict[Any, Any]) -> None:
         )
     except Exception as e:
         log_message = (
-            f"Error processing message '{message}' from channel '{channel}' ts '{ts}': {str(e)}"
+            f"Error processing message {message!r} from channel {channel!r} ts {ts}: {str(e)}"
         )
         _logger.warning(log_message)
 
@@ -76,8 +76,8 @@ async def command(
             await action
         except Exception as e:
             log_message = (
-                f"Error processing message '{message}' from channel '{channel}' "
-                f"thread_ts '{thread_ts}': {str(e)}"
+                f"Error processing message {message!r} from channel {channel!r} "
+                f"thread_ts {thread_ts}: {str(e)}"
             )
             _logger.warning(log_message)
 

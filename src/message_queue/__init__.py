@@ -23,16 +23,16 @@ async def init() -> None:
         try:
             queue_class: type[Queue] = queue_module.Queue
         except AttributeError:
-            raise ValueError(f"'Queue' class not found for '{queue_type}'")
+            raise ValueError(f"'Queue' class not found for {queue_type!r}")
 
         if not isinstance(queue_class, Queue):
             raise ValueError(
-                f"'Queue' class in '{queue_type}' does not implement the Queue protocol"
+                f"'Queue' class in {queue_type!r} does not implement the Queue protocol"
             )
 
         queue = queue_class(config=configs.application_queue)
     else:
-        raise ValueError(f"Invalid queue type '{queue_type}'")
+        raise ValueError(f"Invalid queue type {queue_type!r}")
 
     await queue.init()
 

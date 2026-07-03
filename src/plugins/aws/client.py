@@ -18,19 +18,19 @@ def _get_aws_config(credential_name: str, region_name: str | None = None) -> dic
     if region_name is None:
         region_name = os.environ.get(REGION.format(credential_name=credential_name.upper()))
     if region_name is None:
-        raise ValueError(f"AWS region name not found for '{credential_name}'")
+        raise ValueError(f"AWS region name not found for {credential_name!r}")
 
     access_key_id = os.environ.get(
         ACCESS_KEY_ID_PATTERN.format(credential_name=credential_name.upper())
     )
     if access_key_id is None:
-        raise ValueError(f"AWS credential access key ID not found for '{credential_name}'")
+        raise ValueError(f"AWS credential access key ID not found for {credential_name!r}")
 
     secret_access_key = os.environ.get(
         SECRET_ACCESS_KEY_PATTERN.format(credential_name=credential_name.upper())
     )
     if secret_access_key is None:
-        raise ValueError(f"AWS credential secret access key not found for '{credential_name}'")
+        raise ValueError(f"AWS credential secret access key not found for {credential_name!r}")
 
     aws_config = {
         "region_name": region_name,

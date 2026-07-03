@@ -148,7 +148,7 @@ async def _register_monitors_from_path(
                     additional_files=additional_files,
                 )
             except MonitorValidationError:
-                _logger.error(f"Monitor '{monitor_name}' not registered")
+                _logger.error(f"Monitor {monitor_name!r} not registered")
 
 
 async def _register_monitors() -> None:
@@ -187,7 +187,7 @@ def _configure_monitor(
 async def _disable_monitor(monitor: Monitor) -> None:
     """Disable a monitor"""
     await monitor.set_enabled(False)
-    _logger.warning(f"Monitor '{monitor}' has no code module, it will be disabled")
+    _logger.warning(f"Monitor {monitor} has no code module, it will be disabled")
 
 
 async def _disable_monitors_without_code_modules() -> None:

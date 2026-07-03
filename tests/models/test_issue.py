@@ -96,7 +96,7 @@ async def test_link_to_alert_callback(caplog, mocker, sample_monitor: Monitor):
     await issue._link_to_alert_callback()
 
     issue_create_event_spy.assert_called_once_with("issue_linked")
-    assert_message_in_log(caplog, f"Linked to alert '{alert.id}'")
+    assert_message_in_log(caplog, f"Linked to alert {alert.id}")
 
 
 async def test_link_to_alert_active(mocker, sample_monitor: Monitor):
@@ -143,7 +143,7 @@ async def test_link_to_alert_not_active(caplog, mocker, sample_monitor: Monitor,
     assert len(issues) == 1
     assert issues[0].alert_id is None
 
-    assert_message_in_log(caplog, f"Can't link to alert, status is '{issue_status.value}'")
+    assert_message_in_log(caplog, f"Can't link to alert, status is {issue_status.value!r}")
     callback_spy.assert_not_called()
 
 
@@ -215,7 +215,7 @@ async def test_check_solved_not_active(caplog, mocker, sample_monitor: Monitor, 
     assert issues[0].status == issue_status
 
     issue_solve_spy.assert_not_called()
-    assert_message_in_log(caplog, f"Can't check solved, status is '{issue_status.value}'")
+    assert_message_in_log(caplog, f"Can't check solved, status is {issue_status.value!r}")
 
 
 @pytest.mark.flaky(reruns=2)
@@ -267,7 +267,7 @@ async def test_drop_not_active(caplog, mocker, sample_monitor: Monitor, issue_st
     assert issues[0].dropped_at is None
 
     issue_create_event_spy.assert_not_called()
-    assert_message_in_log(caplog, f"Can't drop, status is '{issue_status.value}'")
+    assert_message_in_log(caplog, f"Can't drop, status is {issue_status.value!r}")
     assert_message_not_in_log(caplog, "Dropped")
 
 
@@ -337,7 +337,7 @@ async def test_solve_not_active(caplog, mocker, sample_monitor: Monitor, issue_s
     assert issues[0].solved_at is None
 
     callback_spy.assert_not_called()
-    assert_message_in_log(caplog, f"Can't solve, status is '{issue_status.value}'")
+    assert_message_in_log(caplog, f"Can't solve, status is {issue_status.value!r}")
 
 
 async def test_update_data_callback_solved(caplog, mocker, monkeypatch, sample_monitor: Monitor):
@@ -425,4 +425,4 @@ async def test_update_data_not_active(caplog, mocker, sample_monitor: Monitor, i
     assert issues[0].data == {"id": 1}
 
     callback_spy.assert_not_called()
-    assert_message_in_log(caplog, f"Can't update, status is '{issue_status.value}'")
+    assert_message_in_log(caplog, f"Can't update, status is {issue_status.value!r}")

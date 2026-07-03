@@ -124,7 +124,7 @@ def test_load_module_from_file(caplog):
     loaded_module_name = loader.make_module_name(module_path)
     assert sys.modules[loaded_module_name] is module
 
-    assert_message_in_log(caplog, f"Monitor '{module_name}' loaded")
+    assert_message_in_log(caplog, f"Monitor {module_name!r} loaded")
 
 
 @pytest.mark.parametrize(
@@ -146,7 +146,7 @@ def test_load_module_from_file_reload_sleep(caplog, n1, n2):
     module = loader.load_module_from_file(module_path)
 
     assert module.get_value() == n1
-    assert_message_in_log(caplog, f"Monitor '{module_name}' loaded")
+    assert_message_in_log(caplog, f"Monitor {module_name!r} loaded")
 
     # Sleep until next second
     time.sleep(1 - time.time() % 1 + 0.01)
@@ -156,7 +156,7 @@ def test_load_module_from_file_reload_sleep(caplog, n1, n2):
     module = loader.load_module_from_file(module_path)
 
     assert module.get_value() == n2
-    assert_message_in_log(caplog, f"Monitor '{module_name}' loaded", count=2)
+    assert_message_in_log(caplog, f"Monitor {module_name!r} loaded", count=2)
 
 
 @pytest.mark.flaky(reruns=1)
@@ -171,7 +171,7 @@ def test_load_module_from_file_reload_no_time_change(caplog):
     module = loader.load_module_from_file(module_path)
 
     assert module.get_value() == 10
-    assert_message_in_log(caplog, f"Monitor '{module_name}' loaded")
+    assert_message_in_log(caplog, f"Monitor {module_name!r} loaded")
 
     time.sleep(0.1)
 
@@ -181,7 +181,7 @@ def test_load_module_from_file_reload_no_time_change(caplog):
 
     # The value didn't change, even though the module code changed
     assert module.get_value() == 10
-    assert_message_in_log(caplog, f"Monitor '{module_name}' loaded", count=2)
+    assert_message_in_log(caplog, f"Monitor {module_name!r} loaded", count=2)
 
 
 def test_load_module_from_file_reload_replace_variables():
@@ -225,7 +225,7 @@ def test_load_module_from_file_long_load_time(caplog):
 
     assert_message_in_log(
         caplog,
-        rf"Monitor '{module_name}' took [\d.]+ seconds to load",
+        rf"Monitor {module_name!r} took [\d.]+ seconds to load",
         regex=True,
     )
 

@@ -55,7 +55,7 @@ async def monitor_refresh(monitor_name: str, tasks: list[str]) -> None:
     """Validate and queue a 'monitor_refresh' request"""
     monitor = await validate_monitor_request(monitor_name)
     if monitor.queued or monitor.running:
-        raise ValueError(f"Monitor '{monitor_name}' already running or queued")
+        raise ValueError(f"Monitor {monitor_name!r} already running or queued")
     await message_queue.send_message(
         type="request",
         payload={

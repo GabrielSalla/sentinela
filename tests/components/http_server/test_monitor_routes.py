@@ -398,7 +398,7 @@ async def test_monitor_refresh_queued_running(sample_monitor: Monitor, queued, r
     assert response_data == {
         "status": "error",
         "message": "Unexpected error",
-        "error": f"Monitor '{sample_monitor.name}' already running or queued",
+        "error": f"Monitor {sample_monitor.name!r} already running or queued",
     }
 
 

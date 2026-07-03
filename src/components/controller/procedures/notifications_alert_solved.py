@@ -26,7 +26,7 @@ async def notifications_alert_solved() -> None:
     for notification_info in result:
         notification = await Notification.get_by_id(notification_info["id"])
         if notification is None:
-            _logger.error(f"Notification with id '{notification_info['id']}' not found")
+            _logger.error(f"Notification with id {notification_info['id']!r} not found")
             continue
 
         await notification.close()

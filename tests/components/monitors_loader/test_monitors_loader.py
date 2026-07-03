@@ -569,7 +569,7 @@ async def test_disable_monitor(caplog, sample_monitor: Monitor):
     await sample_monitor.refresh()
     assert not sample_monitor.enabled
     assert_message_in_log(
-        caplog, f"Monitor '{sample_monitor}' has no code module, it will be disabled"
+        caplog, f"Monitor {sample_monitor} has no code module, it will be disabled"
     )
 
 

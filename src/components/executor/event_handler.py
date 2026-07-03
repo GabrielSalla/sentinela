@@ -38,7 +38,7 @@ async def run(message: dict[Any, Any]) -> None:
     try:
         event_payload = EventPayload(**message["payload"])
     except KeyError:
-        _logger.error(f"Message '{json.dumps(message)}' missing 'payload' field")
+        _logger.error(f"Message {json.dumps(message)!r} missing 'payload' field")
         return
     except ValidationError as e:
         _logger.error(f"Invalid payload: {e}")
@@ -72,7 +72,7 @@ async def run(message: dict[Any, Any]) -> None:
         except AttributeError:
             reaction_name = str(reaction)
 
-        _logger.info(f"Executing reaction '{reaction_name}' for {monitor}, event '{event_name}'")
+        _logger.info(f"Executing reaction {reaction_name!r} for {monitor}, event {event_name!r}")
 
         reaction_execution_time = prometheus_reaction_execution_time.labels(**prometheus_labels)
         try:
@@ -81,15 +81,15 @@ async def run(message: dict[Any, Any]) -> None:
         except asyncio.TimeoutError:
             prometheus_reaction_timeout_count.labels(**prometheus_labels).inc()
             _logger.error(
-                f"Timed out executing reaction '{reaction_name}' with payload "
-                f"'{json.dumps(event_payload.to_dict())}'"
+                f"Timed out executing reaction {reaction_name!r} with payload "
+                f"{json.dumps(event_payload.to_dict())!r}"
             )
         except BaseSentinelaException as e:
             raise e
         except Exception:
             prometheus_reaction_error_count.labels(**prometheus_labels).inc()
             _logger.error(
-                f"Error executing reaction '{reaction_name}' with payload "
-                f"'{json.dumps(event_payload.to_dict())}'",
+                f"Error executing reaction {reaction_name!r} with payload "
+                f"{json.dumps(event_payload.to_dict())!r}",
                 exc_info=True,
             )
