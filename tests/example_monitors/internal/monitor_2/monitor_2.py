@@ -1,11 +1,7 @@
 import random
 from typing import TypedDict
 
-# Importing "configs" for testing purposes
-from configs import configs
 from monitor_utils import IssueOptions, MonitorOptions
-
-configs.application_queue
 
 
 class IssueDataType(TypedDict):

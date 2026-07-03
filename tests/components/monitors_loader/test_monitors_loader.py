@@ -50,6 +50,70 @@ async def test_check_monitor(caplog):
     assert_message_not_in_log(caplog, "has the following errors")
 
 
+async def test_check_monitor_nested_import(caplog, mocker):
+    """'check_monitor' function should raise a 'MonitorValidationError' if the monitor module has
+    any function with nested imports"""
+    load_module_from_string_spy = mocker.spy(
+        monitors_loader.module_loader, "load_module_from_string"
+    )
+
+    monitor_name = "test_check_monitor_nested_import"
+
+    with open("tests/example_monitors/others/monitor_1/monitor_1.py", "r") as file:
+        monitor_code = file.read()
+
+    # Add errors that should be caught by the validation
+    monitor_code += "\ndef imp(): import sys"
+
+    try:
+        monitors_loader.check_monitor(monitor_name, monitor_code)
+    except MonitorValidationError as exception:
+        assert exception.monitor_name == monitor_name
+        assert "Nested import found inside function 'imp'" in exception.errors_found
+
+    assert_message_in_log(caplog, "Nested import found inside function 'imp'")
+    load_module_from_string_spy.assert_not_called()
+
+
+async def test_check_monitor_prohibited_import(caplog, mocker):
+    """'check_monitor' function should raise a 'MonitorValidationError' if the monitor module
+    imports any prohibited modules"""
+    load_module_from_string_spy = mocker.spy(
+        monitors_loader.module_loader, "load_module_from_string"
+    )
+
+    monitor_name = "test_check_monitor_nested_import"
+
+    with open("tests/example_monitors/others/monitor_1/monitor_1.py", "r") as file:
+        monitor_code = file.read()
+
+    # Add errors that should be caught by the validation
+    monitor_code = "import sys\n\n" + monitor_code
+
+    try:
+        monitors_loader.check_monitor(monitor_name, monitor_code)
+    except MonitorValidationError as exception:
+        assert exception.monitor_name == monitor_name
+        assert "Prohibited import 'sys'" in exception.errors_found
+
+    assert_message_in_log(caplog, "Prohibited import 'sys'")
+    load_module_from_string_spy.assert_not_called()
+
+
+async def test_check_monitor_import_validation_internal():
+    """'check_monitor' function should not raise a 'MonitorValidationError' if the monitor is
+    'internal' and has nested imports or imports prohibited modules"""
+    monitor_name = "test_check_monitor_nested_import"
+
+    with open("tests/example_monitors/others/monitor_1/monitor_1.py", "r") as file:
+        monitor_code = file.read()
+
+    # Add errors that should be caught by the validation
+    monitor_code = "import sys\n\n" + monitor_code + "\ndef imp(): import sys"
+
+    monitors_loader.check_monitor(monitor_name, monitor_code, internal=True)
+
+
 @pytest.mark.parametrize("log_error", [False, True])
 async def test_check_monitor_validation_error(caplog, log_error):
     """'check_monitor' function should raise a 'MonitorValidationError' if the monitor module
