@@ -4,7 +4,6 @@ Slack Notification Monitor
 This monitor demonstrates how to configure Slack notifications.
 """
 
-import os
 import random
 import time
 from typing import TypedDict
@@ -69,9 +68,9 @@ def is_solved(issue_data: IssueDataType) -> bool:
 # Slack notifications for this monitor
 notification_options = [
     SlackNotification(
-        channel=os.environ.get("SLACK_MAIN_CHANNEL", ""),
+        channel=SlackNotification.get_main_channel(),
         title="Slack Notification Monitor",
         issues_fields=["id", "severity"],
-        mention=os.environ.get("SLACK_MAIN_MENTION"),
+        mention=SlackNotification.get_main_mention(),
     )
 ]

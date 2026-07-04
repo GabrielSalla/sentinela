@@ -10,7 +10,13 @@ ways to circumvent them.
 """
 
 import ast
+import builtins
+import importlib
+import sys
+from contextlib import contextmanager
 from pathlib import Path
+from types import ModuleType
+from typing import Callable, Generator, ParamSpec
 
 from exceptions.module_loader import NestedImport, ProhibitedImport
 
@@ -54,3 +60,57 @@ def scan_imports(module_tree: ast.Module) -> None:
             module = node.module.split(".")[0]
             if module in PROHIBITED_IMPORTS:
                 raise ProhibitedImport(node.module)
+
+
+P = ParamSpec("P")
+
+
+def _wrap(original_function: Callable[P, ModuleType], base_path: Path) -> Callable[P, ModuleType]:
+    """Wraps the import function in a validation logic that tries to prevent importing prohibited
+    modules. The restriction is only made at the module root level, ignoring imports done by deeper
+    modules"""
+
+    def _import_wrapper(*args: P.args, **kwargs: P.kwargs) -> ModuleType:
+        """Checks if the module can be imported, raising 'ProhibitedImport' when the monitor is
+        prohibited"""
+        # Check the first 3 frames for the module 'base_path'. Only the imports being done by the
+        # files in the current path will be validated
+        for stack_level in range(1, 4):
+            stack_frame = sys._getframe(stack_level)
+
+            if Path(stack_frame.f_code.co_filename).is_relative_to(base_path.absolute()):
+                # Extract the module name: 'os.path' -> 'os'
+                param_import = kwargs.get("name", args[0])
+
+                if param_import is None:
+                    raise ValueError(f"Error importing module {str(param_import)!r}")
+
+                module_name_import = str(param_import).split(".")[0]
+
+                if module_name_import in PROHIBITED_IMPORTS:
+                    raise ProhibitedImport(module_name_import)
+
+                break
+
+        return original_function(*args, **kwargs)
+
+    return _import_wrapper
+
+
+@contextmanager
+def prohibit_imports(base_path: Path) -> Generator[None, None, None]:
+    """Wrap the import functions into a validator to block unauthorized module access"""
+    # Wrap the 'builtins.__import__' function
+    original_builtins_import = builtins.__import__
+    builtins.__import__ = _wrap(original_builtins_import, base_path)
+
+    # Wrap the 'importlib.import_module' function
+    original_importlib_import_module = importlib.import_module
+    importlib.import_module = _wrap(original_importlib_import_module, base_path)
+
+    try:
+        yield
+    finally:
+        # Revert the changes
+        builtins.__import__ = original_builtins_import
+        importlib.import_module = original_importlib_import_module

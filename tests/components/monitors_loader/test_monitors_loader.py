@@ -65,11 +65,11 @@ async def test_check_monitor_nested_import(caplog, mocker):
     # Add errors that should be caught by the validation
     monitor_code += "\ndef imp(): import sys"
 
-    try:
+    with pytest.raises(MonitorValidationError) as exception_info:
         monitors_loader.check_monitor(monitor_name, monitor_code)
-    except MonitorValidationError as exception:
-        assert exception.monitor_name == monitor_name
-        assert "Nested import found inside function 'imp'" in exception.errors_found
+
+    assert exception_info.value.monitor_name == monitor_name
+    assert "Nested import found inside function 'imp'" in exception_info.value.errors_found
 
     assert_message_in_log(caplog, "Nested import found inside function 'imp'")
     load_module_from_string_spy.assert_not_called()
@@ -82,7 +82,7 @@ async def test_check_monitor_prohibited_import(caplog, mocker):
         monitors_loader.module_loader, "load_module_from_string"
     )
 
-    monitor_name = "test_check_monitor_nested_import"
+    monitor_name = "test_check_monitor_prohibited_import"
 
     with open("tests/example_monitors/others/monitor_1/monitor_1.py", "r") as file:
         monitor_code = file.read()
@@ -90,11 +90,11 @@ async def test_check_monitor_prohibited_import(caplog, mocker):
     # Add errors that should be caught by the validation
     monitor_code = "import sys\n\n" + monitor_code
 
-    try:
+    with pytest.raises(MonitorValidationError) as exception_info:
         monitors_loader.check_monitor(monitor_name, monitor_code)
-    except MonitorValidationError as exception:
-        assert exception.monitor_name == monitor_name
-        assert "Prohibited import 'sys'" in exception.errors_found
+
+    assert exception_info.value.monitor_name == monitor_name
+    assert "Prohibited import 'sys'" in exception_info.value.errors_found
 
     assert_message_in_log(caplog, "Prohibited import 'sys'")
     load_module_from_string_spy.assert_not_called()
@@ -103,13 +103,45 @@ async def test_check_monitor_prohibited_import(caplog, mocker):
 async def test_check_monitor_import_validation_internal():
     """'check_monitor' function should not raise a 'MonitorValidationError' if the monitor is
     'internal' and has nested imports or imports prohibited modules"""
-    monitor_name = "test_check_monitor_nested_import"
+    monitor_name = "test_check_monitor_import_validation_internal"
 
     with open("tests/example_monitors/others/monitor_1/monitor_1.py", "r") as file:
         monitor_code = file.read()
 
     # Add errors that should be caught by the validation
     monitor_code = "import sys\n\n" + monitor_code + "\ndef imp(): import sys"
+
+    monitors_loader.check_monitor(monitor_name, monitor_code, internal=True)
+
+
+async def test_check_monitor_prohibited_import_eval():
+    """'check_monitor' function should raise a 'MonitorValidationError' if the monitor module
+    imports any prohibited modules that were not detected by the scans"""
+    monitor_name = "test_check_monitor_prohibited_import"
+
+    with open("tests/example_monitors/others/monitor_1/monitor_1.py", "r") as file:
+        monitor_code = file.read()
+
+    # Add errors that should be caught by the validation
+    monitor_code = monitor_code + "\n\nsys = eval('__import__(\"sys\")')"
+
+    with pytest.raises(MonitorValidationError) as exception_info:
+        monitors_loader.check_monitor(monitor_name, monitor_code)
+
+    assert exception_info.value.monitor_name == monitor_name
+    assert "Prohibited import 'sys'" in exception_info.value.errors_found
+
+
+async def test_check_monitor_prohibited_import_eval_internal():
+    """'check_monitor' function should not raise a 'MonitorValidationError' if the monitor is
+    'internal' and imports any prohibited modules that were not detected by the scans"""
+    monitor_name = "test_check_monitor_prohibited_import_eval_internal"
+
+    with open("tests/example_monitors/others/monitor_1/monitor_1.py", "r") as file:
+        monitor_code = file.read()
+
+    # Add errors that should be caught by the validation
+    monitor_code = monitor_code + "\n\nsys = eval('__import__(\"sys\")')"
 
     monitors_loader.check_monitor(monitor_name, monitor_code, internal=True)
 
@@ -127,18 +159,18 @@ async def test_check_monitor_validation_error(caplog, log_error):
     monitor_code = monitor_code.replace("id: str", "not_id: str")
     monitor_code = monitor_code.replace("issues_data", "issue_data")
 
-    try:
+    with pytest.raises(MonitorValidationError) as exception_info:
         monitors_loader.check_monitor(monitor_name, monitor_code, log_error=log_error)
-    except MonitorValidationError as exception:
-        assert exception.monitor_name == monitor_name
-        assert (
-            "'IssueDataType' must have the 'id' field, as specified by 'issue_options.model_id_key'"
-            in exception.errors_found
-        )
-        assert (
-            "'update' function must have arguments 'issues_data: list[IssueDataType]'"
-            in exception.errors_found
-        )
+
+    assert exception_info.value.monitor_name == monitor_name
+    assert (
+        "'IssueDataType' must have the 'id' field, as specified by 'issue_options.model_id_key'"
+        in exception_info.value.errors_found
+    )
+    assert (
+        "'update' function must have arguments 'issues_data: list[IssueDataType]'"
+        in exception_info.value.errors_found
+    )
 
     assert monitor_name not in sys.modules
 
@@ -264,20 +296,20 @@ async def test_register_monitor_monitor_already_exists_error():
         "file_2.sql": "SELECT * FROM table_2;",
     }
 
-    try:
+    with pytest.raises(MonitorValidationError) as exception_info:
         await monitors_loader.register_monitor(
             monitor_name, new_monitor_code, additional_files=new_additional_files
         )
-    except MonitorValidationError as exception:
-        assert exception.monitor_name == monitor_name
-        assert (
-            "'IssueDataType' must have the 'id' field, as specified by 'issue_options.model_id_key'"
-            in exception.errors_found
-        )
-        assert (
-            "'update' function must have arguments 'issues_data: list[IssueDataType]'"
-            in exception.errors_found
-        )
+
+    assert exception_info.value.monitor_name == monitor_name
+    assert (
+        "'IssueDataType' must have the 'id' field, as specified by 'issue_options.model_id_key'"
+        in exception_info.value.errors_found
+    )
+    assert (
+        "'update' function must have arguments 'issues_data: list[IssueDataType]'"
+        in exception_info.value.errors_found
+    )
 
     await monitor.refresh()
     assert monitor.search_executed_at == timestamp
@@ -301,18 +333,18 @@ async def test_register_monitor_validation_error():
     monitor_code = monitor_code.replace("id: str", "not_id: str")
     monitor_code = monitor_code.replace("issues_data", "issue_data")
 
-    try:
+    with pytest.raises(MonitorValidationError) as exception_info:
         await monitors_loader.register_monitor(monitor_name, monitor_code)
-    except MonitorValidationError as exception:
-        assert exception.monitor_name == monitor_name
-        assert (
-            "'IssueDataType' must have the 'id' field, as specified by 'issue_options.model_id_key'"
-            in exception.errors_found
-        )
-        assert (
-            "'update' function must have arguments 'issues_data: list[IssueDataType]'"
-            in exception.errors_found
-        )
+
+    assert exception_info.value.monitor_name == monitor_name
+    assert (
+        "'IssueDataType' must have the 'id' field, as specified by 'issue_options.model_id_key'"
+        in exception_info.value.errors_found
+    )
+    assert (
+        "'update' function must have arguments 'issues_data: list[IssueDataType]'"
+        in exception_info.value.errors_found
+    )
 
 
 async def test_get_monitors_files_from_path():
