@@ -83,14 +83,14 @@ def load_module_from_file(module_path: Path) -> ModuleType:
 
     remove_module(module_name)
     module = importlib.import_module(module_name)
-    _logger.info(f"Monitor '{monitor_name}' loaded")
+    _logger.info(f"Monitor {monitor_name!r} loaded")
 
     end_time = time.time()
 
     # Check if the monitor is taking too long to load
     total_time = end_time - start_time
     if total_time > 0.2:
-        _logger.warning(f"Monitor '{monitor_name}' took {total_time} seconds to load")
+        _logger.warning(f"Monitor {monitor_name!r} took {total_time} seconds to load")
 
     return module
 

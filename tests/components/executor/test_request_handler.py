@@ -38,7 +38,7 @@ async def test_monitor_disable_monitor_not_found(caplog, mocker):
         RequestPayload(action="monitor_disable", params={"target_id": 999999999})
     )
 
-    assert_message_in_log(caplog, "Monitor '999999999' not found")
+    assert_message_in_log(caplog, "Monitor 999999999 not found")
 
 
 async def test_monitor_enable(mocker, sample_monitor: Monitor):
@@ -64,7 +64,7 @@ async def test_monitor_enable_monitor_not_found(caplog, mocker):
         RequestPayload(action="monitor_enable", params={"target_id": 999999999})
     )
 
-    assert_message_in_log(caplog, "Monitor '999999999' not found")
+    assert_message_in_log(caplog, "Monitor 999999999 not found")
 
 
 @pytest.mark.parametrize(
@@ -105,7 +105,7 @@ async def test_monitor_refresh_monitor_not_found(caplog, mocker):
     )
 
     set_force_search_spy.assert_not_called()
-    assert_message_in_log(caplog, "Monitor '999999999' not found")
+    assert_message_in_log(caplog, "Monitor 999999999 not found")
 
 
 async def test_alert_acknowledge(mocker, sample_monitor: Monitor):
@@ -138,7 +138,7 @@ async def test_alert_acknowledge_alert_not_found(caplog, mocker):
     )
 
     acknowledge_spy.assert_not_called()
-    assert_message_in_log(caplog, "Alert '999999999' not found")
+    assert_message_in_log(caplog, "Alert 999999999 not found")
 
 
 async def test_alert_lock(mocker, sample_monitor: Monitor):
@@ -171,7 +171,7 @@ async def test_alert_lock_alert_not_found(caplog, mocker):
     )
 
     lock_spy.assert_not_called()
-    assert_message_in_log(caplog, "Alert '999999999' not found")
+    assert_message_in_log(caplog, "Alert 999999999 not found")
 
 
 async def test_alert_solve(mocker, monkeypatch, sample_monitor: Monitor):
@@ -205,7 +205,7 @@ async def test_alert_solve_alert_not_found(caplog, mocker):
     )
 
     solve_spy.assert_not_called()
-    assert_message_in_log(caplog, "Alert '999999999' not found")
+    assert_message_in_log(caplog, "Alert 999999999 not found")
 
 
 async def test_issue_drop(mocker, sample_monitor: Monitor):
@@ -236,7 +236,7 @@ async def test_issue_drop_issue_not_found(caplog, mocker):
     )
 
     drop_spy.assert_not_called()
-    assert_message_in_log(caplog, "Issue '999999999' not found")
+    assert_message_in_log(caplog, "Issue 999999999 not found")
 
 
 async def test_get_action():

@@ -128,7 +128,7 @@ class Alert(Base):
     async def link_issues(self, issues: list[Issue]) -> None:
         """Link issues to the alert"""
         if self.status != AlertStatus.active:
-            self._logger.info(f"Can't link issues, status is '{self.status.value}'")
+            self._logger.info(f"Can't link issues, status is {self.status.value!r}")
             return
 
         if self.locked:
@@ -153,7 +153,7 @@ class Alert(Base):
     async def acknowledge(self, send_event: bool = True) -> None:
         """Acknowledge the alert at the current priority"""
         if self.status != AlertStatus.active:
-            self._logger.info(f"Can't acknowledge, status is '{self.status.value}'")
+            self._logger.info(f"Can't acknowledge, status is {self.status.value!r}")
             return
 
         if self.is_priority_acknowledged:
@@ -172,7 +172,7 @@ class Alert(Base):
     async def dismiss_acknowledge(self) -> None:
         """Dismiss the alert's acknowledgement"""
         if self.status != AlertStatus.active:
-            self._logger.info(f"Can't dismiss acknowledge, status is '{self.status.value}'")
+            self._logger.info(f"Can't dismiss acknowledge, status is {self.status.value!r}")
             return
 
         if not self.acknowledged:
@@ -189,7 +189,7 @@ class Alert(Base):
     async def lock(self) -> None:
         """Lock the alert to prevent linking new issues"""
         if self.status != AlertStatus.active:
-            self._logger.info(f"Can't lock, status is '{self.status.value}'")
+            self._logger.info(f"Can't lock, status is {self.status.value!r}")
             return
 
         if self.locked:
@@ -206,7 +206,7 @@ class Alert(Base):
     async def unlock(self) -> None:
         """Unlock the alert to allow linking new issues"""
         if self.status != AlertStatus.active:
-            self._logger.info(f"Can't unlock, status is '{self.status.value}'")
+            self._logger.info(f"Can't unlock, status is {self.status.value!r}")
             return
 
         if not self.locked:
@@ -223,7 +223,7 @@ class Alert(Base):
         """Update the alert, checking if it's solved and queueing an 'alert_updated' event for the
         monitor's notifications"""
         if self.status != AlertStatus.active:
-            self._logger.info(f"Can't update, status is '{self.status.value}'")
+            self._logger.info(f"Can't update, status is {self.status.value!r}")
             return
 
         issues_count = await Issue.count(
@@ -238,7 +238,7 @@ class Alert(Base):
     async def solve_issues(self) -> None:
         """Solve the alert's active issues if the issues are not 'solvable'"""
         if self.status != AlertStatus.active:
-            self._logger.info(f"Can't solve issues, status is '{self.status.value}'")
+            self._logger.info(f"Can't solve issues, status is {self.status.value!r}")
             return
 
         if self.issue_options.solvable:
@@ -254,7 +254,7 @@ class Alert(Base):
     async def solve(self) -> None:
         """Solve an alert, setting it's 'status' and 'solved_at' attributes"""
         if self.status != AlertStatus.active:
-            self._logger.info(f"Can't solve, status is '{self.status.value}'")
+            self._logger.info(f"Can't solve, status is {self.status.value!r}")
             return
 
         self.status = AlertStatus.solved

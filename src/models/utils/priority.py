@@ -85,4 +85,4 @@ def calculate_priority(
         return _calculate_count_rule(rule, issues)
     if isinstance(rule, ValueRule):
         return _calculate_value_rule(rule, issues)
-    raise ValueError(f"Invalid rule value '{rule}'")
+    raise ValueError(f"Invalid rule value {rule!r}")

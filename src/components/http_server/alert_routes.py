@@ -25,7 +25,7 @@ async def get_alert(request: Request) -> Response:
 
     alert = await Alert.get_by_id(alert_id)
     if not alert:
-        error_response = {"status": "error", "message": f"alert '{alert_id}' not found"}
+        error_response = {"status": "error", "message": f"alert {alert_id!r} not found"}
         return web.json_response(error_response, status=404)
 
     response = {

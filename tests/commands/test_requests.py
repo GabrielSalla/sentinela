@@ -45,7 +45,7 @@ async def test_monitor_register(mocker):
     assert code_module is not None
 
     register_monitor_spy.assert_awaited_once_with(
-        monitor_name, monitor_code, additional_files={}, log_error=True
+        monitor_name, monitor_code, additional_files={}, internal=False, log_error=True
     )
     assert monitor.name == monitor_name
     assert code_module.additional_files == {}
@@ -65,7 +65,11 @@ async def test_monitor_register_additional_files(mocker):
     assert code_module is not None
 
     register_monitor_spy.assert_awaited_once_with(
-        monitor_name, monitor_code, additional_files={"file.sql": "SELECT 1;"}, log_error=True
+        monitor_name,
+        monitor_code,
+        additional_files={"file.sql": "SELECT 1;"},
+        internal=False,
+        log_error=True,
     )
     assert monitor.name == monitor_name
     assert code_module.additional_files == {"file.sql": "SELECT 1;"}
@@ -169,7 +173,7 @@ async def test_monitor_refresh_queued_running(sample_monitor: Monitor, queued, r
     sample_monitor.running = running
     await sample_monitor.save()
 
-    expected_message = f"Monitor '{sample_monitor.name}' already running or queued"
+    expected_message = f"Monitor {sample_monitor.name!r} already running or queued"
     with pytest.raises(ValueError, match=expected_message):
         await requests.monitor_refresh(sample_monitor.name, ["search"])
 
@@ -196,7 +200,7 @@ async def test_alert_acknowledge(clear_queue, sample_monitor: Monitor):
 
 async def test_alert_acknowledge_not_found():
     """'alert_acknowledge' should raise an 'AlertNotFoundError' exception if alert is not found"""
-    with pytest.raises(AlertNotFoundError, match="Alert '999999999' not found"):
+    with pytest.raises(AlertNotFoundError, match="Alert 999999999 not found"):
         await requests.alert_acknowledge(999999999)
 
 
@@ -222,7 +226,7 @@ async def test_alert_lock(clear_queue, sample_monitor: Monitor):
 
 async def test_alert_lock_not_found():
     """'alert_lock' should raise an 'AlertNotFoundError' exception if alert is not found"""
-    with pytest.raises(AlertNotFoundError, match="Alert '999999999' not found"):
+    with pytest.raises(AlertNotFoundError, match="Alert 999999999 not found"):
         await requests.alert_lock(999999999)
 
 
@@ -248,7 +252,7 @@ async def test_alert_solve(clear_queue, sample_monitor: Monitor):
 
 async def test_alert_solve_not_found():
     """'alert_solve' should raise an 'AlertNotFoundError' exception if alert is not found"""
-    with pytest.raises(AlertNotFoundError, match="Alert '999999999' not found"):
+    with pytest.raises(AlertNotFoundError, match="Alert 999999999 not found"):
         await requests.alert_solve(999999999)
 
 
@@ -274,5 +278,5 @@ async def test_issue_drop(clear_queue, sample_monitor: Monitor):
 
 async def test_issue_drop_not_found():
     """'issue_drop' should raise an 'IssueNotFoundError' exception if issue is not found"""
-    with pytest.raises(IssueNotFoundError, match="Issue '999999999' not found"):
+    with pytest.raises(IssueNotFoundError, match="Issue 999999999 not found"):
         await requests.issue_drop(999999999)

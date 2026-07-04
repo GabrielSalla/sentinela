@@ -1637,7 +1637,7 @@ async def test_handle_event_invalid_event_source(monkeypatch, event_source):
         min_priority_to_mention=2,
     )
 
-    with pytest.raises(ValueError, match=f"Invalid event source '{event_source}'"):
+    with pytest.raises(ValueError, match=f"Invalid event source {event_source!r}"):
         await slack_notification.handle_event(
             EventPayload(
                 event_source=event_source,

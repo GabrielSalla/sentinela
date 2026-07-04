@@ -9,7 +9,7 @@ class MonitorValidationError(Exception):
     def get_error_message(self, include_monitor_name: bool = True) -> str:
         """Get the error message for the module validation errors"""
         if include_monitor_name:
-            error_message = f"Monitor '{self.monitor_name}' has the following errors:\n  "
+            error_message = f"Monitor {self.monitor_name!r} has the following errors:\n  "
         else:
             error_message = "Monitor has the following errors:\n  "
         error_message += "\n  ".join(self.errors_found)

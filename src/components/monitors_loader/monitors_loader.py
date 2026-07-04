@@ -1,3 +1,4 @@
+import ast
 import asyncio
 import logging
 import shutil
@@ -12,6 +13,7 @@ import registry as registry
 import utils.app as app
 from configs import configs
 from data_models.monitor_options import ReactionOptions
+from exceptions.module_loader import NestedImport, ProhibitedImport
 from exceptions.monitors_loader import MonitorValidationError
 from models import CodeModule, Monitor
 from utils.async_tools import do_concurrently
@@ -48,9 +50,24 @@ def _file_has_extension(file: str, extensions: list[str]) -> bool:
 
 
 def check_monitor(
-    monitor_name: str, monitor_code: str, base_path: str | None = None, log_error: bool = False
+    monitor_name: str,
+    monitor_code: str,
+    base_path: str | None = None,
+    internal: bool = False,
+    log_error: bool = False,
 ) -> None:
     """Check if a monitor module is valid without registering it"""
+    if not internal:
+        try:
+            module_tree = ast.parse(monitor_code)
+            module_loader.scan_imports(module_tree)
+            module_loader.scan_nested_imports(module_tree)
+        except (NestedImport, ProhibitedImport) as e:
+            exception = MonitorValidationError(monitor_name=monitor_name, errors_found=[str(e)])
+            # These kind of errors will always be logged
+            _logger.error(exception.get_error_message())
+            raise exception
+
     module_path, module = module_loader.load_module_from_string(
         module_name=monitor_name, module_code=monitor_code, base_path=base_path
     )
@@ -69,6 +86,7 @@ async def register_monitor(
     monitor_code: str,
     base_path: str | None = None,
     additional_files: dict[str, str] | None = None,
+    internal: bool = False,
     log_error: bool = True,
 ) -> Monitor:
     """Register a monitor and its additional files"""
@@ -76,6 +94,7 @@ async def register_monitor(
         base_path=base_path,
         monitor_name=monitor_name,
         monitor_code=monitor_code,
+        internal=internal,
         log_error=log_error,
     )
 
@@ -146,9 +165,10 @@ async def _register_monitors_from_path(
                     monitor_name=monitor_name,
                     monitor_code=monitor_code,
                     additional_files=additional_files,
+                    internal=internal,
                 )
             except MonitorValidationError:
-                _logger.error(f"Monitor '{monitor_name}' not registered")
+                _logger.error(f"Monitor {monitor_name!r} not registered")
 
 
 async def _register_monitors() -> None:
@@ -187,7 +207,7 @@ def _configure_monitor(
 async def _disable_monitor(monitor: Monitor) -> None:
     """Disable a monitor"""
     await monitor.set_enabled(False)
-    _logger.warning(f"Monitor '{monitor}' has no code module, it will be disabled")
+    _logger.warning(f"Monitor {monitor} has no code module, it will be disabled")
 
 
 async def _disable_monitors_without_code_modules() -> None:

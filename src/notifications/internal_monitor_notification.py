@@ -20,7 +20,7 @@ def internal_monitor_notification(name: str, issues_fields: list[str]) -> list[B
     params = internal_monitors_notification.params
 
     if not isinstance(notification_class, BaseNotification):
-        raise TypeError(f"Attribute '{notification_class_path}' is not a valid notification")
+        raise TypeError(f"Attribute {notification_class_path!r} is not a valid notification")
 
     try:
         return [notification_class.create(name=name, issues_fields=issues_fields, params=params)]

@@ -93,7 +93,7 @@ async def test_monitors_stuck_monitor_not_found(caplog, monkeypatch):
 
     await monitors_stuck.monitors_stuck(time_tolerance=300)
 
-    assert_message_in_log(caplog, "Monitor with id '99999999' not found")
+    assert_message_in_log(caplog, "Monitor with id 99999999 not found")
 
 
 async def test_monitors_stuck_monitor_not_found_2_results(
@@ -109,5 +109,5 @@ async def test_monitors_stuck_monitor_not_found_2_results(
 
     await monitors_stuck.monitors_stuck(time_tolerance=300)
 
-    assert_message_in_log(caplog, "Monitor with id '99999999' not found")
+    assert_message_in_log(caplog, "Monitor with id 99999999 not found")
     assert_message_in_log(caplog, f"{sample_monitor} was stuck and now it's fixed")

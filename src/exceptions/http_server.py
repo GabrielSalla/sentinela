@@ -11,7 +11,7 @@ class MonitorNotFoundError(BaseSentinelaException):
         super().__init__(monitor_name)
 
     def __str__(self) -> str:
-        return f"Monitor '{self._monitor_name}' not found"
+        return f"Monitor {self._monitor_name!r} not found"
 
 
 class AlertNotFoundError(BaseSentinelaException):
@@ -24,7 +24,7 @@ class AlertNotFoundError(BaseSentinelaException):
         super().__init__(alert_id)
 
     def __str__(self) -> str:
-        return f"Alert '{self._alert_id}' not found"
+        return f"Alert {self._alert_id} not found"
 
 
 class IssueNotFoundError(BaseSentinelaException):
@@ -37,4 +37,4 @@ class IssueNotFoundError(BaseSentinelaException):
         super().__init__(issue_id)
 
     def __str__(self) -> str:
-        return f"Issue '{self._issue_id}' not found"
+        return f"Issue {self._issue_id} not found"

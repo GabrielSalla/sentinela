@@ -124,7 +124,7 @@ async def test_wait_monitor_loaded_wait_not_registered(monkeypatch):
     registry.monitors_ready.set()
     registry.monitors_pending.clear()
 
-    exception_message = "MonitorNotRegisteredError: Monitor '1' not registered"
+    exception_message = "MonitorNotRegisteredError: Monitor 1 not registered"
     with pytest.raises(registry.MonitorNotRegisteredError, match=exception_message):
         await wait_monitor_loaded_task
     end_time = time.perf_counter()

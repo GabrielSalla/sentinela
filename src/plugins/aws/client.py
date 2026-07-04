@@ -1,6 +1,7 @@
 import logging
 import os
 from contextlib import asynccontextmanager
+from functools import cache
 from typing import AsyncGenerator
 
 from aiobotocore.session import AioBaseClient, get_session
@@ -13,24 +14,30 @@ SESSION_TOKEN_PATTERN = "AWS_{credential_name}_SESSION_TOKEN"
 _logger = logging.getLogger("plugin.aws.client")
 
 
+# Using cache to be able to clear environment variables
+@cache
 def _get_aws_config(credential_name: str, region_name: str | None = None) -> dict[str, str]:
     """Get the AWS credentials from the environment variables"""
     if region_name is None:
         region_name = os.environ.get(REGION.format(credential_name=credential_name.upper()))
     if region_name is None:
-        raise ValueError(f"AWS region name not found for '{credential_name}'")
+        raise ValueError(f"AWS region name not found for {credential_name!r}")
 
-    access_key_id = os.environ.get(
-        ACCESS_KEY_ID_PATTERN.format(credential_name=credential_name.upper())
-    )
+    access_key_id_env = ACCESS_KEY_ID_PATTERN.format(credential_name=credential_name.upper())
+    access_key_id = os.environ.get(access_key_id_env)
     if access_key_id is None:
-        raise ValueError(f"AWS credential access key ID not found for '{credential_name}'")
+        raise ValueError(f"AWS credential access key ID not found for {credential_name!r}")
+    # Clear the environment variable
+    del os.environ[access_key_id_env]
 
-    secret_access_key = os.environ.get(
-        SECRET_ACCESS_KEY_PATTERN.format(credential_name=credential_name.upper())
+    secret_access_key_env = SECRET_ACCESS_KEY_PATTERN.format(
+        credential_name=credential_name.upper()
     )
+    secret_access_key = os.environ.get(secret_access_key_env)
     if secret_access_key is None:
-        raise ValueError(f"AWS credential secret access key not found for '{credential_name}'")
+        raise ValueError(f"AWS credential secret access key not found for {credential_name!r}")
+    # Clear the environment variable
+    del os.environ[secret_access_key_env]
 
     aws_config = {
         "region_name": region_name,
@@ -38,11 +45,12 @@ def _get_aws_config(credential_name: str, region_name: str | None = None) -> dic
         "aws_secret_access_key": secret_access_key,
     }
 
-    session_token = os.environ.get(
-        SESSION_TOKEN_PATTERN.format(credential_name=credential_name.upper())
-    )
+    session_token_env = SESSION_TOKEN_PATTERN.format(credential_name=credential_name.upper())
+    session_token = os.environ.get(session_token_env)
     if session_token is not None:
         aws_config["aws_session_token"] = session_token
+        # Clear the environment variable
+        del os.environ[session_token_env]
 
     endpoint_url = os.environ.get("AWS_ENDPOINT_URL")
     if endpoint_url is not None:

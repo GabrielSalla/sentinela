@@ -30,7 +30,7 @@ async def test_validate_alert_request(sample_monitor: Monitor):
 async def test_validate_alert_request_not_found():
     """'validate_alert_request' should raise a 'AlertNotFoundError' exception when alert not
     found"""
-    with pytest.raises(AlertNotFoundError, match="Alert '999999999' not found"):
+    with pytest.raises(AlertNotFoundError, match="Alert 999999999 not found"):
         await validations.validate_alert_request(999999999)
 
 
@@ -44,5 +44,5 @@ async def test_validate_issue_request(sample_monitor: Monitor):
 async def test_validate_issue_request_not_found():
     """'validate_issue_request' should raise a 'IssueNotFoundError' exception when issue not
     found"""
-    with pytest.raises(IssueNotFoundError, match="Issue '999999999' not found"):
+    with pytest.raises(IssueNotFoundError, match="Issue 999999999 not found"):
         await validations.validate_issue_request(999999999)

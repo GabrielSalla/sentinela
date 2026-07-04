@@ -398,7 +398,7 @@ async def test_monitor_refresh_queued_running(sample_monitor: Monitor, queued, r
     assert response_data == {
         "status": "error",
         "message": "Unexpected error",
-        "error": f"Monitor '{sample_monitor.name}' already running or queued",
+        "error": f"Monitor {sample_monitor.name!r} already running or queued",
     }
 
 
@@ -740,11 +740,7 @@ async def test_monitor_register_check_fail():
     [
         ("something", "name 'something' is not defined"),
         ("import time;\n\ntime.abc()", "module 'time' has no attribute 'abc'"),
-        (
-            "print('a",
-            "unterminated string literal (detected at line 1) "
-            "(test_monitor_register_invalid_monitor_code.py, line 1)",
-        ),
+        ("print('a", "unterminated string literal (detected at line 1) (<unknown>, line 1)"),
     ],
 )
 async def test_monitor_register_invalid_monitor_code(monitor_code, expected_error):

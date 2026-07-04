@@ -84,6 +84,6 @@ def setup() -> None:
     elif configs.logging.mode == "json":
         stream.setFormatter(JsonFormatter(configs.logging.fields))
     else:
-        raise ValueError(f"Unknown logging mode: '{configs.logging.mode}'")
+        raise ValueError(f"Unknown logging mode: {configs.logging.mode!r}")
 
     logging.basicConfig(level=logging.INFO, handlers=[stream])

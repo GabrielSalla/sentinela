@@ -50,6 +50,70 @@ async def test_check_monitor(caplog):
     assert_message_not_in_log(caplog, "has the following errors")
 
 
+async def test_check_monitor_nested_import(caplog, mocker):
+    """'check_monitor' function should raise a 'MonitorValidationError' if the monitor module has
+    any function with nested imports"""
+    load_module_from_string_spy = mocker.spy(
+        monitors_loader.module_loader, "load_module_from_string"
+    )
+
+    monitor_name = "test_check_monitor_nested_import"
+
+    with open("tests/example_monitors/others/monitor_1/monitor_1.py", "r") as file:
+        monitor_code = file.read()
+
+    # Add errors that should be caught by the validation
+    monitor_code += "\ndef imp(): import sys"
+
+    try:
+        monitors_loader.check_monitor(monitor_name, monitor_code)
+    except MonitorValidationError as exception:
+        assert exception.monitor_name == monitor_name
+        assert "Nested import found inside function 'imp'" in exception.errors_found
+
+    assert_message_in_log(caplog, "Nested import found inside function 'imp'")
+    load_module_from_string_spy.assert_not_called()
+
+
+async def test_check_monitor_prohibited_import(caplog, mocker):
+    """'check_monitor' function should raise a 'MonitorValidationError' if the monitor module
+    imports any prohibited modules"""
+    load_module_from_string_spy = mocker.spy(
+        monitors_loader.module_loader, "load_module_from_string"
+    )
+
+    monitor_name = "test_check_monitor_nested_import"
+
+    with open("tests/example_monitors/others/monitor_1/monitor_1.py", "r") as file:
+        monitor_code = file.read()
+
+    # Add errors that should be caught by the validation
+    monitor_code = "import sys\n\n" + monitor_code
+
+    try:
+        monitors_loader.check_monitor(monitor_name, monitor_code)
+    except MonitorValidationError as exception:
+        assert exception.monitor_name == monitor_name
+        assert "Prohibited import 'sys'" in exception.errors_found
+
+    assert_message_in_log(caplog, "Prohibited import 'sys'")
+    load_module_from_string_spy.assert_not_called()
+
+
+async def test_check_monitor_import_validation_internal():
+    """'check_monitor' function should not raise a 'MonitorValidationError' if the monitor is
+    'internal' and has nested imports or imports prohibited modules"""
+    monitor_name = "test_check_monitor_nested_import"
+
+    with open("tests/example_monitors/others/monitor_1/monitor_1.py", "r") as file:
+        monitor_code = file.read()
+
+    # Add errors that should be caught by the validation
+    monitor_code = "import sys\n\n" + monitor_code + "\ndef imp(): import sys"
+
+    monitors_loader.check_monitor(monitor_name, monitor_code, internal=True)
+
+
 @pytest.mark.parametrize("log_error", [False, True])
 async def test_check_monitor_validation_error(caplog, log_error):
     """'check_monitor' function should raise a 'MonitorValidationError' if the monitor module
@@ -389,7 +453,7 @@ async def test_register_monitors_from_path_validation_error(caplog, monkeypatch,
     """'_register_monitors_from_path' should log the errors if a monitor was not loaded and not
     register the monitor"""
 
-    async def register_monitor_error_mock(monitor_name, monitor_code, additional_files):
+    async def register_monitor_error_mock(monitor_name, monitor_code, internal, additional_files):
         raise MonitorValidationError(monitor_name="monitor", errors_found=[])
 
     monkeypatch.setattr(monitors_loader, "register_monitor", register_monitor_error_mock)
@@ -412,7 +476,7 @@ async def test_register_monitors_from_path_error(caplog, monkeypatch, clear_data
     """'_register_monitors_from_path' should log the errors if a monitor was not loaded and not
     register the monitor"""
 
-    async def register_monitor_error_mock(monitor_name, monitor_code, additional_files):
+    async def register_monitor_error_mock(monitor_name, monitor_code, internal, additional_files):
         raise ValueError("Some error")
 
     monkeypatch.setattr(monitors_loader, "register_monitor", register_monitor_error_mock)
@@ -569,7 +633,7 @@ async def test_disable_monitor(caplog, sample_monitor: Monitor):
     await sample_monitor.refresh()
     assert not sample_monitor.enabled
     assert_message_in_log(
-        caplog, f"Monitor '{sample_monitor}' has no code module, it will be disabled"
+        caplog, f"Monitor {sample_monitor} has no code module, it will be disabled"
     )
 
 

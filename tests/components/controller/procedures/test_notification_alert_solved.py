@@ -85,7 +85,7 @@ async def test_notifications_alert_solved_monitor_not_found(caplog, monkeypatch)
 
     await notifications_alert_solved.notifications_alert_solved()
 
-    assert_message_in_log(caplog, "Notification with id '99999999' not found")
+    assert_message_in_log(caplog, "Notification with id 99999999 not found")
 
 
 async def test_notifications_alert_solved_monitor_not_found_2_results(
@@ -106,5 +106,5 @@ async def test_notifications_alert_solved_monitor_not_found_2_results(
 
     await notifications_alert_solved.notifications_alert_solved()
 
-    assert_message_in_log(caplog, "Notification with id '99999999' not found")
+    assert_message_in_log(caplog, "Notification with id 99999999 not found")
     assert_message_in_log(caplog, f"{notification} closed")

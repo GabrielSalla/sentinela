@@ -51,6 +51,6 @@ def test_get_plugin_attribute_attribute_not_found(monkeypatch, attribute_path, e
 
     monkeypatch.setattr("plugins.loaded_plugins", {"my_plugin": MockPlugin}, raising=False)
 
-    expected_error = f"Plugin 'my_plugin' has no attribute '{expected_error_path}'"
+    expected_error = f"Plugin 'my_plugin' has no attribute {expected_error_path!r}"
     with pytest.raises(ValueError, match=expected_error):
         get_plugin_attribute(attribute_path)

@@ -54,7 +54,7 @@ class Runner:
 
         if not handler:
             self._logger.warning(
-                f"Didn't find a handler for message '{json.dumps(self.message.content)}'"
+                f"Didn't find a handler for message {json.dumps(self.message.content)!r}"
             )
 
         return handler
@@ -66,7 +66,7 @@ class Runner:
         """Process the message with the provided handler, protecting from possible exceptions.
         During the message processing, another task will be spawned to change it's visibility in
         the queue, preventing other messages from processing it too"""
-        self._logger.info(f"Got message '{json.dumps(self.message.content)}'")
+        self._logger.info(f"Got message {json.dumps(self.message.content)!r}")
         message_type = self.message.content["type"]
 
         prometheus_message_processing_count.labels(message_type=message_type).inc()
@@ -92,7 +92,7 @@ class Runner:
             prometheus_message_error_count.labels(message_type=message_type).inc()
 
             self._logger.error("Error processing message", exc_info=True)
-            self._logger.error(f"Message: '{json.dumps(self.message.content)}'")
+            self._logger.error(f"Message: {json.dumps(self.message.content)!r}")
             self._logger.info("Exception caught successfully, going on")
         finally:
             prometheus_message_processing_count.labels(message_type=message_type).dec()

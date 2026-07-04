@@ -127,7 +127,7 @@ def test_friendly_formatter(capsys, monkeypatch, log_format, level):
     set_friendly_formatter(monkeypatch, log_format)
 
     logger = logging.getLogger("test_friendly_formatter")
-    message = f"message for '{level}' level"
+    message = f"message for {level!r} level"
     getattr(logger, level)(message)
 
     captured_message = capsys.readouterr().err.strip()
@@ -180,7 +180,7 @@ def test_json_formatter(capsys, monkeypatch, fields, level):
     set_json_formatter(monkeypatch, fields)
 
     logger = logging.getLogger("test_json_formatter")
-    message = f"message for '{level}' level"
+    message = f"message for {level!r} level"
     getattr(logger, level)(message)
 
     captured_message = capsys.readouterr().err.strip()

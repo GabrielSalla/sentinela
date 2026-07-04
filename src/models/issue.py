@@ -70,13 +70,13 @@ class Issue(Base):
     async def _link_to_alert_callback(self) -> None:
         """Callback of the 'link_to_alert' method that queues the event"""
         await self._create_event("issue_linked")
-        self._logger.debug(f"Linked to alert '{self.alert_id}'")
+        self._logger.debug(f"Linked to alert {self.alert_id}")
 
     @Base.lock_change
     async def link_to_alert(self, alert: Alert, session: CallbackSession | None = None) -> None:
         """Link the issue to an alert if the issue's status is 'active'"""
         if self.status != IssueStatus.active:
-            self._logger.info(f"Can't link to alert, status is '{self.status.value}'")
+            self._logger.info(f"Can't link to alert, status is {self.status.value!r}")
             return
 
         self.alert_id = alert.id
@@ -86,7 +86,7 @@ class Issue(Base):
         """Check if the issue is solved if the issue's status is 'active' and solve it if
         positive"""
         if self.status != IssueStatus.active:
-            self._logger.info(f"Can't check solved, status is '{self.status.value}'")
+            self._logger.info(f"Can't check solved, status is {self.status.value!r}")
             return
 
         if self.is_solved:
@@ -96,7 +96,7 @@ class Issue(Base):
     async def drop(self) -> None:
         """Set the issue as dropped if the issue's status is 'active'"""
         if self.status != IssueStatus.active:
-            self._logger.info(f"Can't drop, status is '{self.status.value}'")
+            self._logger.info(f"Can't drop, status is {self.status.value!r}")
             return
 
         self.status = IssueStatus.dropped
@@ -115,7 +115,7 @@ class Issue(Base):
     async def solve(self, session: CallbackSession | None = None) -> None:
         """Set the issue as solved if the issue's status is 'active'"""
         if self.status != IssueStatus.active:
-            self._logger.info(f"Can't solve, status is '{self.status.value}'")
+            self._logger.info(f"Can't solve, status is {self.status.value!r}")
             return
 
         self.status = IssueStatus.solved
@@ -130,7 +130,7 @@ class Issue(Base):
             await self._create_event("issue_updated_solved")
         else:
             await self._create_event("issue_updated_not_solved")
-        self._logger.debug(f"Data updated to '{json.dumps(self.data)}'")
+        self._logger.debug(f"Data updated to {json.dumps(self.data)!r}")
 
     @Base.lock_change
     async def update_data(
@@ -138,7 +138,7 @@ class Issue(Base):
     ) -> None:
         """Update the issue's data if the issue's status is 'active'"""
         if self.status != IssueStatus.active:
-            self._logger.info(f"Can't update, status is '{self.status.value}'")
+            self._logger.info(f"Can't update, status is {self.status.value!r}")
             return
 
         self.data = new_data

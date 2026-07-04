@@ -17,7 +17,7 @@ _tasks: dict[asyncio.Task[Any] | None, list[asyncio.Task[Any]]] = {}
 def _on_parent_done(parent_task: asyncio.Task[Any], task: asyncio.Task[Any]) -> None:
     """Callback when parent task is done to cancel child task if it's still running"""
     if not task.done():
-        _logger.error(f"Cancelling task '{task.get_name()}' as parent task is done")
+        _logger.error(f"Cancelling task {task.get_name()!r} as parent task is done")
         task.cancel()
 
 
@@ -65,7 +65,7 @@ async def wait_for_tasks(
     if len(pending) > 0:
         if cancel:
             for task in pending:
-                _logger.info(f"Task '{task.get_name()}' timed out")
+                _logger.info(f"Task {task.get_name()!r} timed out")
                 task.cancel()
         return False
 

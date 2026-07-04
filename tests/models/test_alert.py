@@ -373,7 +373,7 @@ async def test_link_issues_not_active(caplog, mocker, sample_monitor: Monitor, a
     linked_issues = await Issue.get_all(Issue.alert_id == alert.id)
     assert len(linked_issues) == 0
 
-    assert_message_in_log(caplog, f"Can't link issues, status is '{alert_status.value}'")
+    assert_message_in_log(caplog, f"Can't link issues, status is {alert_status.value!r}")
     alert_create_event_spy.assert_not_called()
     assert_message_not_in_log(caplog, "Issues linked")
 
@@ -556,7 +556,7 @@ async def test_acknowledge_not_active(caplog, mocker, sample_monitor: Monitor, a
     assert not loaded_alert.acknowledged
     assert loaded_alert.acknowledge_priority is None
 
-    assert_message_in_log(caplog, f"Can't acknowledge, status is '{alert_status.value}'")
+    assert_message_in_log(caplog, f"Can't acknowledge, status is {alert_status.value!r}")
     alert_create_event_spy.assert_not_called()
     assert_message_not_in_log(caplog, "Acknowledged")
 
@@ -682,7 +682,7 @@ async def test_dismiss_acknowledge_not_active(
     assert loaded_alert is not None
     assert loaded_alert.acknowledged
 
-    assert_message_in_log(caplog, f"Can't dismiss acknowledge, status is '{alert_status.value}'")
+    assert_message_in_log(caplog, f"Can't dismiss acknowledge, status is {alert_status.value!r}")
     alert_create_event_spy.assert_not_called()
     assert_message_not_in_log(caplog, "Acknowledgement dismissed")
 
@@ -748,7 +748,7 @@ async def test_lock_not_active(caplog, mocker, sample_monitor: Monitor, alert_st
     assert loaded_alert is not None
     assert not loaded_alert.locked
 
-    assert_message_in_log(caplog, f"Can't lock, status is '{alert_status.value}'")
+    assert_message_in_log(caplog, f"Can't lock, status is {alert_status.value!r}")
     alert_create_event_spy.assert_not_called()
     assert_message_not_in_log(caplog, "Locked")
 
@@ -810,7 +810,7 @@ async def test_unlock_not_active(caplog, mocker, sample_monitor: Monitor, alert_
     assert loaded_alert is not None
     assert loaded_alert.locked
 
-    assert_message_in_log(caplog, f"Can't unlock, status is '{alert_status.value}'")
+    assert_message_in_log(caplog, f"Can't unlock, status is {alert_status.value!r}")
     alert_create_event_spy.assert_not_called()
     assert_message_not_in_log(caplog, "Unlocked")
 
@@ -872,7 +872,7 @@ async def test_update_not_active(caplog, mocker, sample_monitor: Monitor, alert_
     assert loaded_alert is not None
     assert loaded_alert.status == AlertStatus.solved
 
-    assert_message_in_log(caplog, f"Can't update, status is '{alert_status.value}'")
+    assert_message_in_log(caplog, f"Can't update, status is {alert_status.value!r}")
     alert_solve_spy.assert_not_called()
     alert_create_event_spy.assert_not_called()
 
@@ -959,7 +959,7 @@ async def test_solve_issues_not_active(caplog, mocker, sample_monitor: Monitor, 
     assert loaded_alert is not None
     assert loaded_alert.status == alert_status
 
-    assert_message_in_log(caplog, f"Can't solve issues, status is '{alert_status.value}'")
+    assert_message_in_log(caplog, f"Can't solve issues, status is {alert_status.value!r}")
     alert_acknowledge_spy.assert_not_called()
     alert_update_spy.assert_not_called()
 

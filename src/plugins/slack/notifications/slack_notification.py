@@ -305,7 +305,7 @@ async def send_notification(
     else:
         _logger.error(
             f"Error sending slack message for {monitor} alert {notification.alert_id}: "
-            f"'{json.dumps(response.data)}'"
+            f"{json.dumps(response.data)!r}"
         )
 
 
@@ -324,7 +324,7 @@ async def update_notification(
         if response["error"] in RESEND_ERRORS:
             _logger.warning(
                 f"Unable to update message for {monitor} alert {notification.alert_id} "
-                f"with error '{response['error']}', resending"
+                f"with error {response['error']!r}, resending"
             )
 
             # If sending a new notification message, clear the mention message so it'll be sent
@@ -340,7 +340,7 @@ async def update_notification(
         else:
             _logger.error(
                 f"Error updating slack message for {monitor} alert {notification.alert_id}: "
-                f"'{json.dumps(response.data)}'"
+                f"{json.dumps(response.data)!r}"
             )
 
 
@@ -383,7 +383,7 @@ async def _send_mention(
     else:
         _logger.error(
             f"Error sending notification mention for {monitor} alert {notification.alert_id}: "
-            f"'{json.dumps(response.data)}'"
+            f"{json.dumps(response.data)!r}"
         )
 
 
@@ -506,7 +506,7 @@ async def _handle_slack_notification(
 async def handle_event(event: EventPayload, notification_options: SlackNotification) -> None:
     """Handle the Slack notification for an alert"""
     if event.event_source != "alert":
-        raise ValueError(f"Invalid event source '{event.event_source}'")
+        raise ValueError(f"Invalid event source {event.event_source!r}")
 
     await _handle_slack_notification(event.event_source_id, notification_options)
 

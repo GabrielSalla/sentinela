@@ -22,6 +22,7 @@ import message_queue as message_queue
 import plugins as plugins
 import registry as registry
 import utils.app as app
+import utils.environment_variables as environment_variables
 import utils.log as log
 from exceptions import InitializationError, MonitorValidationError
 from utils.exception_handling import protected_task
@@ -57,6 +58,9 @@ async def init(controller_enabled: bool, executor_enabled: bool) -> None:
     # The following modules depend on the plugins being loaded
     await databases.init()
     await message_queue.init()
+
+    # Clean the environment variables (plugins should clean their environment variables)
+    environment_variables.clean()
 
 
 async def finish(controller_enabled: bool, executor_enabled: bool) -> None:

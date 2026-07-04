@@ -1285,7 +1285,7 @@ async def test_run_monitor_timeout(caplog, mocker, monkeypatch, sample_monitor: 
     assert total_time > 0.5 - 0.001
     assert total_time < 0.5 + 0.03
 
-    assert_message_in_log(caplog, f"Execution for monitor '{sample_monitor}' timed out")
+    assert_message_in_log(caplog, f"Execution for monitor {sample_monitor} timed out")
 
     assert set_running_spy.await_count == 2
     assert set_running_spy.await_args_list[0].args[0].id == sample_monitor.id
@@ -1357,7 +1357,7 @@ async def test_run_monitor_error(caplog, mocker, monkeypatch, sample_monitor: Mo
 
     await monitor_handler.run({"payload": {"monitor_id": sample_monitor.id, "tasks": tasks}})
 
-    assert_message_in_log(caplog, f"Error in execution for monitor '{sample_monitor}'")
+    assert_message_in_log(caplog, f"Error in execution for monitor {sample_monitor}")
     assert_message_in_log(caplog, "ValueError: Something is not right")
     assert_message_in_log(caplog, "Exception caught successfully, going on")
 

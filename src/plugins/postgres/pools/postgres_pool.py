@@ -76,6 +76,6 @@ class PostgresPool:
 
     async def close(self) -> None:
         """Close all the connections from the pool"""
-        _logger.info(f"Closing pool '{self.name}'")
+        _logger.info(f"Closing pool {self.name!r}")
         await self._pool.close()
-        _logger.info(f"Pool '{self.name}' closed")
+        _logger.info(f"Pool {self.name!r} closed")

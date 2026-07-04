@@ -41,7 +41,7 @@ async def init() -> None:
             pool_class = get_plugin_pool(pool_type)
 
         if pool_class is None:
-            _logger.warning(f"Invalid DSN for database pool '{env_var_name}'")
+            _logger.warning(f"Invalid DSN for database pool {env_var_name!r}")
             continue
 
         _pool_cache[pool_type] = pool_class
@@ -56,7 +56,7 @@ async def init() -> None:
             _pools[database_name] = pool
         except Exception:
             _logger.error(
-                f"Error initializing pool for database '{env_var_name}', skipping", exc_info=True
+                f"Error initializing pool for database {env_var_name!r}, skipping", exc_info=True
             )
 
 
@@ -101,7 +101,7 @@ async def query(
 
     pool = _pools.get(name)
     if pool is None:
-        raise ValueError(f"Database '{name}' not loaded in environment variables")
+        raise ValueError(f"Database {name!r} not loaded in environment variables")
 
     # Identify the engine pool and create the fetch coroutine that will be awaited
     fetch_task = pool.fetch(

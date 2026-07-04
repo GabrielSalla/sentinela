@@ -100,7 +100,7 @@ async def _search_routine(monitor: Monitor) -> None:
     if not isinstance(found_issues_data, list):
         _logger.warning(
             f"Invalid return of 'search' function for {monitor}. Should be a 'list', "
-            f"got: '{str(found_issues_data)}'"
+            f"got: {str(found_issues_data)!r}"
         )
         return
 
@@ -123,7 +123,7 @@ async def _search_routine(monitor: Monitor) -> None:
         # Checking if the model id key is in the dictionary
         if model_id_key not in issue_data:
             _logger.warning(
-                f"Invalid issue data from 'search', model id key '{model_id_key}' not found in "
+                f"Invalid issue data from 'search', model id key {model_id_key!r} not found in "
                 f"issue data for {monitor}: '{str(issue_data)}'"
             )
             continue
@@ -135,7 +135,7 @@ async def _search_routine(monitor: Monitor) -> None:
 
         # Check if it's a duplicate in the found issues
         if model_id in new_issues_data:
-            _logger.warning(f"Found duplicate model id '{model_id}'. Skipping this one")
+            _logger.warning(f"Found duplicate model id {model_id!r}. Skipping this one")
             continue
 
         # Check it's uniqueness
@@ -195,7 +195,7 @@ async def _update_routine(monitor: Monitor) -> None:
     if not isinstance(issues_updates_data, list):
         _logger.warning(
             f"Invalid return of 'update' function for {monitor}. Should be a 'list', "
-            f"got: '{str(issues_updates_data)}'"
+            f"got: {str(issues_updates_data)!r}"
         )
         return
 
@@ -217,7 +217,7 @@ async def _update_routine(monitor: Monitor) -> None:
         # Checking if the model id key is in the dictionary
         if model_id_key not in issue_data:
             _logger.warning(
-                f"Invalid issue data from 'update', model id key '{model_id_key}' not found in "
+                f"Invalid issue data from 'update', model id key {model_id_key!r} not found in "
                 f"issue data for {monitor}: '{str(issue_data)}'"
             )
             continue
@@ -226,7 +226,7 @@ async def _update_routine(monitor: Monitor) -> None:
 
         # Check if it's a duplicate in the issues update tasks
         if model_id in issues_update_tasks_info:
-            _logger.warning(f"Found duplicate model id '{model_id}'. Skipping this one")
+            _logger.warning(f"Found duplicate model id {model_id!r}. Skipping this one")
             continue
 
         try:
@@ -234,7 +234,7 @@ async def _update_routine(monitor: Monitor) -> None:
             issues_update_tasks_info[model_id] = (active_issue, issue_data)
         except KeyError:
             _logger.warning(
-                f"Issue with model id '{model_id}' not found in active issues. "
+                f"Issue with model id {model_id!r} not found in active issues. "
                 "Maybe it changed in the update process"
             )
             continue
@@ -336,7 +336,7 @@ async def run(message: dict[Any, Any]) -> None:
     try:
         message_payload = ProcessMonitorPayload(**message["payload"])
     except KeyError:
-        _logger.error(f"Message '{json.dumps(message)}' missing 'payload' field")
+        _logger.error(f"Message {json.dumps(message)!r} missing 'payload' field")
         return
     except ValidationError as e:
         _logger.error(f"Invalid payload: {e}")
@@ -388,7 +388,7 @@ async def run(message: dict[Any, Any]) -> None:
         monitor_timeout_count = prometheus_monitor_timeout_count.labels(**prometheus_labels)
         monitor_timeout_count.inc()
 
-        _logger.warning(f"Execution for monitor '{monitor}' timed out")
+        _logger.warning(f"Execution for monitor {monitor} timed out")
     except BaseSentinelaException as e:
         monitor_execution["status"] = ExecutionStatus.failed
         monitor_execution["error_type"] = str(e)
@@ -401,7 +401,7 @@ async def run(message: dict[Any, Any]) -> None:
         monitor_error_count = prometheus_monitor_error_count.labels(**prometheus_labels)
         monitor_error_count.inc()
 
-        _logger.error(f"Error in execution for monitor '{monitor}'", exc_info=True)
+        _logger.error(f"Error in execution for monitor {monitor}", exc_info=True)
         _logger.info("Exception caught successfully, going on")
     finally:
         monitor_execution["finished_at"] = now()

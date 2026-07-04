@@ -37,7 +37,7 @@ async def monitor_disable(message_payload: RequestPayload) -> None:
     monitor_id = message_payload.params["target_id"]
     monitor = await Monitor.get_by_id(monitor_id)
     if monitor is None:
-        _logger.warning(f"Monitor '{monitor_id}' not found")
+        _logger.warning(f"Monitor {monitor_id!r} not found")
         return
     await registry.wait_monitor_loaded(monitor.id)
     await monitor.set_enabled(False)
@@ -48,7 +48,7 @@ async def monitor_enable(message_payload: RequestPayload) -> None:
     monitor_id = message_payload.params["target_id"]
     monitor = await Monitor.get_by_id(monitor_id)
     if monitor is None:
-        _logger.warning(f"Monitor '{monitor_id}' not found")
+        _logger.warning(f"Monitor {monitor_id!r} not found")
         return
     await registry.wait_monitor_loaded(monitor.id)
     await monitor.set_enabled(True)
@@ -59,7 +59,7 @@ async def monitor_refresh(message_payload: RequestPayload) -> None:
     monitor_id = message_payload.params["target_id"]
     monitor = await Monitor.get_by_id(monitor_id)
     if monitor is None:
-        _logger.warning(f"Monitor '{monitor_id}' not found")
+        _logger.warning(f"Monitor {monitor_id!r} not found")
         return
     await registry.wait_monitor_loaded(monitor.id)
     tasks = message_payload.params["tasks"]
@@ -74,7 +74,7 @@ async def alert_acknowledge(message_payload: RequestPayload) -> None:
     alert_id = message_payload.params["target_id"]
     alert = await Alert.get_by_id(alert_id)
     if alert is None:
-        _logger.warning(f"Alert '{alert_id}' not found")
+        _logger.warning(f"Alert {alert_id!r} not found")
         return
     await registry.wait_monitor_loaded(alert.monitor_id)
     await alert.acknowledge()
@@ -85,7 +85,7 @@ async def alert_lock(message_payload: RequestPayload) -> None:
     alert_id = message_payload.params["target_id"]
     alert = await Alert.get_by_id(alert_id)
     if alert is None:
-        _logger.warning(f"Alert '{alert_id}' not found")
+        _logger.warning(f"Alert {alert_id!r} not found")
         return
     await registry.wait_monitor_loaded(alert.monitor_id)
     await alert.lock()
@@ -96,7 +96,7 @@ async def alert_solve(message_payload: RequestPayload) -> None:
     alert_id = message_payload.params["target_id"]
     alert = await Alert.get_by_id(alert_id)
     if alert is None:
-        _logger.warning(f"Alert '{alert_id}' not found")
+        _logger.warning(f"Alert {alert_id!r} not found")
         return
     await registry.wait_monitor_loaded(alert.monitor_id)
     await alert.solve_issues()
@@ -107,7 +107,7 @@ async def issue_drop(message_payload: RequestPayload) -> None:
     issue_id = message_payload.params["target_id"]
     issue = await Issue.get_by_id(issue_id)
     if issue is None:
-        _logger.warning(f"Issue '{issue_id}' not found")
+        _logger.warning(f"Issue {issue_id!r} not found")
         return
     await registry.wait_monitor_loaded(issue.monitor_id)
     await issue.drop()
@@ -143,7 +143,7 @@ async def run(message: dict[Any, Any]) -> None:
     try:
         message_payload = RequestPayload(**message["payload"])
     except KeyError:
-        _logger.error(f"Message '{json.dumps(message)}' missing 'payload' field")
+        _logger.error(f"Message {json.dumps(message)!r} missing 'payload' field")
         return
     except ValidationError as e:
         _logger.error(f"Invalid payload: {e}")
@@ -155,7 +155,7 @@ async def run(message: dict[Any, Any]) -> None:
 
     if action is None:
         _logger.warning(
-            f"Got request with unknown action '{json.dumps(message_payload.to_dict())}'"
+            f"Got request with unknown action {json.dumps(message_payload.to_dict())!r}"
         )
         return
 
@@ -164,11 +164,11 @@ async def run(message: dict[Any, Any]) -> None:
             await asyncio.wait_for(action(message_payload), configs.executor_request_timeout)
     except asyncio.TimeoutError:
         prometheus_request_timeout_count.labels(action_name=action_name).inc()
-        _logger.error(f"Timed out executing request '{json.dumps(message_payload.to_dict())}'")
+        _logger.error(f"Timed out executing request {json.dumps(message_payload.to_dict())!r}")
     except BaseSentinelaException as e:
         raise e
     except Exception:
         prometheus_request_error_count.labels(action_name=action_name).inc()
         _logger.error(
-            f"Error executing request '{json.dumps(message_payload.to_dict())}'", exc_info=True
+            f"Error executing request {json.dumps(message_payload.to_dict())!r}", exc_info=True
         )
