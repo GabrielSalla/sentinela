@@ -45,6 +45,36 @@ def test_init_modules_path_already_exists(mocker, temp_dir):
 
 
 @pytest.mark.parametrize(
+    "base_path, expected_result",
+    [
+        (None, "src/tmp"),
+        ("abcd", "src/abcd"),
+        ("efg", "src/efg"),
+        ("hijk", "src/hijk"),
+        ("lmnop", "src/lmnop"),
+    ],
+)
+def test_make_base_module_path(base_path, expected_result):
+    """'make_base_module_path' should return the module path relative to the 'src' folder. If the
+    base path is 'None', the 'MODULES_PATH' variable will be used. 'MODULES_PATH' is set to 'tmp' in
+    the conftest"""
+    assert loader.make_base_module_path(base_path) == Path(expected_result)
+
+
+@pytest.mark.parametrize(
+    "module_name, expected_result",
+    [
+        ("aa", "aa"),
+        ("b.b", "b_b"),
+        (".c.c.", "c_c"),
+        ("..d..d..", "d_d"),
+    ],
+)
+def test_get_module_name(module_name, expected_result):
+    assert loader.get_module_name(module_name) == expected_result
+
+
+@pytest.mark.parametrize(
     "module_name, module_code, additional_files",
     [
         ("test_create_module_files_1", "import sys", None),

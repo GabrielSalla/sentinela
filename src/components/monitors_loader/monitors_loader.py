@@ -24,8 +24,6 @@ from .monitor_module_type import MonitorModule
 
 _logger = logging.getLogger("monitor_loader")
 
-RELATIVE_PATH = "src"
-MONITORS_PATH = "_monitors"
 MONITORS_LOAD_PATH = "_monitors_load"
 EARLY_LOAD_TIME = 5
 COOL_DOWN_TIME = 2
@@ -329,8 +327,8 @@ async def run() -> None:
                 await app.sleep(COOL_DOWN_TIME - time_since_last_load)
 
     _logger.info("Removing temporary monitors paths")
-    shutil.rmtree(Path(RELATIVE_PATH) / MONITORS_LOAD_PATH, ignore_errors=True)
-    shutil.rmtree(Path(RELATIVE_PATH) / MONITORS_PATH, ignore_errors=True)
+    shutil.rmtree(module_loader.RELATIVE_PATH / MONITORS_LOAD_PATH, ignore_errors=True)
+    shutil.rmtree(module_loader.RELATIVE_PATH / module_loader.MODULES_PATH, ignore_errors=True)
 
 
 async def init(controller_enabled: bool) -> None:
