@@ -70,6 +70,14 @@ class SlackNotification:
     issue_show_limit: int = 10
 
     @classmethod
+    def get_main_channel(cls: type["SlackNotification"]) -> str:
+        return os.environ.get("SLACK_MAIN_CHANNEL", "")
+
+    @classmethod
+    def get_main_mention(cls: type["SlackNotification"]) -> str:
+        return os.environ.get("SLACK_MAIN_MENTION", "")
+
+    @classmethod
     def create(
         cls: type["SlackNotification"],
         name: str,

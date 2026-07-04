@@ -26,6 +26,36 @@ from .. import slack_mock
 pytestmark = pytest.mark.asyncio(loop_scope="session")
 
 
+@pytest.mark.parametrize("value", ["abc", "def"])
+async def test_slacknotification_get_main_channel(monkeypatch, value):
+    """'SlackNotification.get_main_channel' should return the correct value for the environment
+    variable 'SLACK_MAIN_CHANNEL'"""
+    monkeypatch.setenv("SLACK_MAIN_CHANNEL", value)
+    assert slack_notification.SlackNotification.get_main_channel() == value
+
+
+async def test_slacknotification_get_main_channel_none(monkeypatch):
+    """'SlackNotification.get_main_channel' should return an empty string when the environment
+    variable 'SLACK_MAIN_CHANNEL' doesn't exists"""
+    monkeypatch.delenv("SLACK_MAIN_CHANNEL")
+    assert slack_notification.SlackNotification.get_main_channel() == ""
+
+
+@pytest.mark.parametrize("value", ["abc", "def"])
+async def test_slacknotification_get_main_mention(monkeypatch, value):
+    """'SlackNotification.get_main_mention' should return the correct value for the environment
+    variable 'SLACK_MAIN_MENTION'"""
+    monkeypatch.setenv("SLACK_MAIN_MENTION", value)
+    assert slack_notification.SlackNotification.get_main_mention() == value
+
+
+async def test_slacknotification_get_main_mention_none(monkeypatch):
+    """'SlackNotification.get_main_mention' should return an empty string when the environment
+    variable 'SLACK_MAIN_MENTION' doesn't exists"""
+    monkeypatch.delenv("SLACK_MAIN_MENTION")
+    assert slack_notification.SlackNotification.get_main_mention() == ""
+
+
 @pytest.mark.parametrize(
     "channel, mention, name, issues_fields, params",
     [
