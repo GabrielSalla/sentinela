@@ -58,17 +58,27 @@ def check_monitor(
     if not internal:
         try:
             module_tree = ast.parse(monitor_code)
+            # Scan for imports and nested imports in the code
             module_loader.scan_imports(module_tree)
             module_loader.scan_nested_imports(module_tree)
+
+            # Monitors the imports being performed during the monitor loading
+            base_module_path = module_loader.make_base_module_path(base_path)
+            module_name = module_loader.get_module_name(monitor_name)
+            monitor_path = base_module_path / module_name
+            with module_loader.prohibit_imports(monitor_path):
+                module_path, module = module_loader.load_module_from_string(
+                    module_name=monitor_name, module_code=monitor_code, base_path=base_path
+                )
         except (NestedImport, ProhibitedImport) as e:
             exception = MonitorValidationError(monitor_name=monitor_name, errors_found=[str(e)])
             # These kind of errors will always be logged
             _logger.error(exception.get_error_message())
             raise exception
-
-    module_path, module = module_loader.load_module_from_string(
-        module_name=monitor_name, module_code=monitor_code, base_path=base_path
-    )
+    else:
+        module_path, module = module_loader.load_module_from_string(
+            module_name=monitor_name, module_code=monitor_code, base_path=base_path
+        )
 
     errors = module_loader.check_module(module=module)
     module_loader.remove_module(module_name=module_loader.make_module_name(module_path))
