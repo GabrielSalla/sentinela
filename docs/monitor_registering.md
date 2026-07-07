@@ -6,6 +6,8 @@ Once the monitor code has been created, it needs to be registered on Sentinela. 
 > [!CAUTION]
 > Although monitor registration and validation are controlled by Sentinela, it is not possible to completely prevent malicious behavior, as monitors are ultimately allowed to import and execute arbitrary Python code. Sentinela does apply some safeguards during validation, such as blocking nested imports and certain prohibited imports, but these checks are intended as error-prevention measures rather than a complete security boundary. Therefore, both the Sentinela platform and the monitor development process operate under a trust-based model.
 
+The registration process goes through a monitor code validation. This process is explained at [monitor validating](monitor_validating.md) documentation.
+
 ## Monitor Composition
 A monitor consists of:
 - **Main Code File**: The `.py` file containing the monitor's definition.

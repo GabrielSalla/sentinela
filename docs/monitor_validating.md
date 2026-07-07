@@ -11,6 +11,12 @@ During validation, Sentinela also checks the monitor code for restricted import 
 > Although monitor registration and validation are controlled by Sentinela, it is not possible to completely prevent malicious behavior, as monitors are ultimately allowed to import and execute arbitrary Python code. Sentinela does apply some safeguards during validation, such as blocking nested imports and certain prohibited imports, but these checks are intended as error-prevention measures rather than a complete security boundary. Therefore, both the Sentinela platform and the monitor development process operate under a trust-based model.
 
 ## Validation Process
+The validation process can be done through the CLI or using a HTTP request to Sentinela.
+
+### CLI
+To validate a monitor using the CLI, follow the instructions in the [command line interface](command_line_interface.md#validate-monitor) documentation.
+
+### HTTP request
 ```
 POST monitors/validate/
 ```

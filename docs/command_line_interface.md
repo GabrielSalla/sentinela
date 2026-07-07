@@ -3,6 +3,7 @@ Execute Sentinela commands through a CLI.
 
 Operations:
 - `run`: Execute Sentinela as a controller, executor or both.
+- `validate`: Validate a monitor.
 - `register`: Register a monitor.
 
 All commands have instructions when executed with `-h` or `--help`.
@@ -27,6 +28,22 @@ sentinela run executor  # Start Sentinela with only the executor
 sentinela run controller executor  # Start Sentinela with both the controller and executor
 sentinela run  # Start Sentinela with both the controller and executor
 ```
+
+## Validate monitor
+Validate a monitor without using the API.
+
+```bash
+sentinela validate monitor_file
+```
+
+Arguments:
+- `monitor_file`: Path to the monitor .py code file.
+
+Example:
+```bash
+sentinela validate monitors/my_monitor/my_monitor.py
+```
+
 
 ## Register monitor
 Register a monitor without using the API. This is the only way to register a monitor when the HTTP route to register a monitor is disabled.
