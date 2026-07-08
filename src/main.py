@@ -109,8 +109,38 @@ async def run(args: argparse.Namespace) -> None:
     )
 
 
+async def validate_monitor(args: argparse.Namespace) -> None:
+    """Validate a monitor and log the result"""
+    log.setup()
+
+    monitor_file = Path(args.monitor_file)
+
+    # Read the file
+    with open(monitor_file, "r") as file:
+        monitor_code = file.read()
+
+    # Validate the monitor
+    try:
+        await commands.monitor_code_validate(monitor_code, log_error=False)
+        _logger.info("Monitor validated successfully")
+    except ValidationError as e:
+        _logger.error("Type validation error")
+
+        for error in e.errors():
+            location = ".".join([e.title] + [str(e) for e in error["loc"]])
+            error_message = f"  {location}: {error['msg']}"
+            _logger.error(error_message)
+        sys.exit(1)
+    except MonitorValidationError as e:
+        _logger.error(e.get_error_message(include_monitor_name=False))
+        sys.exit(1)
+    except Exception:
+        _logger.error(traceback.format_exc().strip())
+        sys.exit(1)
+
+
 async def register_monitor(args: argparse.Namespace) -> None:
-    """Tries to register a monitor and logs the result"""
+    """Tries to register a monitor and log the result"""
     log.setup()
 
     monitor_name: str = args.monitor_name
@@ -167,6 +197,11 @@ def parse_args() -> argparse.Namespace:
             "will run."
         ),
     )
+
+    # Validate parser
+    validate_parser = operation_parser.add_parser("validate", help="Validate a monitor")
+    validate_parser.set_defaults(func=validate_monitor)
+    validate_parser.add_argument("monitor_file", help="Path to the monitor .py code file.")
 
     # Register parser
     register_parser = operation_parser.add_parser("register", help="Register a monitor")

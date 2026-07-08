@@ -52,7 +52,7 @@ def check_monitor(
     monitor_code: str,
     base_path: str | None = None,
     internal: bool = False,
-    log_error: bool = False,
+    log_error: bool = True,
 ) -> None:
     """Check if a monitor module is valid without registering it"""
     if not internal:
@@ -72,8 +72,8 @@ def check_monitor(
                 )
         except (NestedImport, ProhibitedImport) as e:
             exception = MonitorValidationError(monitor_name=monitor_name, errors_found=[str(e)])
-            # These kind of errors will always be logged
-            _logger.error(exception.get_error_message())
+            if log_error:
+                _logger.error(exception.get_error_message())
             raise exception
     else:
         module_path, module = module_loader.load_module_from_string(

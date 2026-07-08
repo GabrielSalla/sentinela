@@ -50,7 +50,8 @@ async def test_check_monitor(caplog):
     assert_message_not_in_log(caplog, "has the following errors")
 
 
-async def test_check_monitor_nested_import(caplog, mocker):
+@pytest.mark.parametrize("log_error", [False, True])
+async def test_check_monitor_nested_import(caplog, mocker, log_error):
     """'check_monitor' function should raise a 'MonitorValidationError' if the monitor module has
     any function with nested imports"""
     load_module_from_string_spy = mocker.spy(
@@ -66,12 +67,15 @@ async def test_check_monitor_nested_import(caplog, mocker):
     monitor_code += "\ndef imp(): import sys"
 
     with pytest.raises(MonitorValidationError) as exception_info:
-        monitors_loader.check_monitor(monitor_name, monitor_code)
+        monitors_loader.check_monitor(monitor_name, monitor_code, log_error=log_error)
 
     assert exception_info.value.monitor_name == monitor_name
     assert "Nested import found inside function 'imp'" in exception_info.value.errors_found
 
-    assert_message_in_log(caplog, "Nested import found inside function 'imp'")
+    if log_error:
+        assert_message_in_log(caplog, "Nested import found inside function 'imp'")
+    else:
+        assert_message_not_in_log(caplog, "Nested import found inside function 'imp'")
     load_module_from_string_spy.assert_not_called()
 
 
