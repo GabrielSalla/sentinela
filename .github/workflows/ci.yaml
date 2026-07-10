@@ -22,16 +22,17 @@ jobs:
       - name: Check if only version changed
         id: check
         run: |
-          if [ "${{ github.event_name }}" == "pull_request" ]; then
-            BASE_SHA=${{ github.event.pull_request.base.sha }}
-            HEAD_SHA=${{ github.sha }}
-          else
-            BASE_SHA=$(git rev-parse HEAD~1)
-            HEAD_SHA=$(git rev-parse HEAD)
+          if [ "${{ github.event_name }}" != "pull_request" ]; then
+            echo "skip=false" >> $GITHUB_OUTPUT
+            echo "Non-PR event detected; version-only skip is disabled."
+            exit 0
           fi
-          CHANGED_FILES=$(git diff --name-only $BASE_SHA $HEAD_SHA)
+
+          BASE_SHA=${{ github.event.pull_request.base.sha }}
+          HEAD_SHA=${{ github.sha }}
+          CHANGED_FILES=$(git diff --name-only "$BASE_SHA" "$HEAD_SHA")
           if [ "$CHANGED_FILES" == "pyproject.toml" ]; then
-            DIFF=$(git diff $BASE_SHA $HEAD_SHA -- pyproject.toml)
+            DIFF=$(git diff "$BASE_SHA" "$HEAD_SHA" -- pyproject.toml)
             # Check if diff changes version line
             if echo "$DIFF" | grep -q "^+version = " && echo "$DIFF" | grep -q "^-version = "; then
               echo "Only version change detected"
