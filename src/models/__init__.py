@@ -1,6 +1,7 @@
 from .alert import Alert, AlertStatus
 from .base import Base
 from .code_module import CodeModule
+from .event import Event
 from .issue import Issue, IssueStatus
 from .monitor import Monitor
 from .monitor_executions import ExecutionStatus, MonitorExecution
@@ -14,6 +15,7 @@ __all__ = [
     "AlertStatus",
     "Base",
     "CodeModule",
+    "Event",
     "ExecutionStatus",
     "Issue",
     "IssueStatus",
