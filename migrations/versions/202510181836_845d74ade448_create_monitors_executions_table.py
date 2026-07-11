@@ -1,4 +1,4 @@
-"""create_monitor_executions_table
+"""create monitor executions table
 
 Revision ID: 845d74ade448
 Revises: ce56a57ff560

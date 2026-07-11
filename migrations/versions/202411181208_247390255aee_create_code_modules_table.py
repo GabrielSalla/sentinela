@@ -8,6 +8,7 @@ Create Date: 2024-11-18 12:08:24.441692
 from typing import Sequence, Union
 
 import sqlalchemy as sa
+import sqlalchemy.dialects.postgresql as postgresql
 from alembic import op
 
 revision: str = "247390255aee"
@@ -22,7 +23,7 @@ def upgrade() -> None:
         sa.Column("id", sa.Integer(), primary_key=True),
         sa.Column("monitor_id", sa.Integer(), unique=True),
         sa.Column("code", sa.String(), nullable=True),
-        sa.Column("additional_files", sa.JSON, nullable=True),
+        sa.Column("additional_files", postgresql.JSONB, nullable=True),
         sa.Column("registered_at", sa.DateTime(timezone=True), nullable=True),
 
         sa.ForeignKeyConstraint(("monitor_id",), ["Monitors.id"]),

@@ -16,7 +16,7 @@ class CodeModule(Base):
     monitor_id: Mapped[int] = mapped_column(ForeignKey("Monitors.id"))
     code: Mapped[str] = mapped_column(String(), nullable=True)
     additional_files: Mapped[dict[str, str]] = mapped_column(
-        MutableDict.as_mutable(postgresql.JSON),  # type: ignore[arg-type]
+        MutableDict.as_mutable(postgresql.JSONB),  # type: ignore[arg-type]
         nullable=True,
     )
     registered_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=True)

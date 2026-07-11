@@ -38,7 +38,7 @@ class Issue(Base):
         Enum(IssueStatus, native_enum=False), insert_default=IssueStatus.active
     )
     data: Mapped[dict[Any, Any]] = mapped_column(
-        MutableDict.as_mutable(postgresql.JSON)  # type: ignore[arg-type]
+        MutableDict.as_mutable(postgresql.JSONB)  # type: ignore[arg-type]
     )
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), insert_default=now)
     solved_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=True)
