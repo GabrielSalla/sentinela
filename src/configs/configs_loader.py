@@ -40,7 +40,7 @@ class HttpServerConfig:
 
 @dataclass
 class ControllerProcedureConfig:
-    schedule: str
+    schedule: str | None
     params: dict[str, str | int | float | bool | None] | None = None
 
 

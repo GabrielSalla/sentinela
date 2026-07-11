@@ -40,9 +40,13 @@ async def _execute_procedure(
 
 
 async def run_procedures() -> None:
-    """Check and run all procedures that are triggered"""
+    """Check and run all triggered procedures"""
     for procedure_name, procedure in procedures.items():
         procedure_settings = configs.controller_procedures[procedure_name]
+
+        # Skip disabled procedures
+        if procedure_settings.schedule is None:
+            continue
 
         last_execution = last_executions.get(procedure_name)
         procedure_triggered = _check_procedure_triggered(

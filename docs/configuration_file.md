@@ -81,6 +81,8 @@ application_queue:
   - `notifications_alert_solved`: Map. Settings for the procedure to identify and fix active notifications linked to alerts that have already been solved.
     - `schedule`: String using Cron format. Schedule to execute the `notifications_alert_solved` procedure.
 
+To disable a procedure from executing you can set its schedule to `null`.
+
 ## Executor Settings
 - `executor_concurrency`: Integer. Number of tasks that can be executed at the same time by each Executor.
 - `executor_sleep`: Integer. Time, in seconds, the Executor will sleep when there are no tasks in the queue before trying again.
