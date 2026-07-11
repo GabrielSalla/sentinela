@@ -5,6 +5,7 @@ from datetime import timedelta
 from unittest.mock import AsyncMock, MagicMock
 
 import pytest
+from sqlalchemy import select
 
 import message_queue as message_queue
 import utils.time as time_utils
@@ -13,7 +14,7 @@ from data_models.event_payload import EventPayload
 from data_models.monitor_options import ReactionOptions
 from databases.databases import execute_application
 from internal_database import get_session
-from models import Alert, Issue, IssueStatus, Monitor
+from models import Alert, Event, Issue, IssueStatus, Monitor
 from registry import registry
 from tests.test_utils import assert_message_in_log
 
@@ -142,6 +143,58 @@ async def test_build_event_payload(sample_monitor: Monitor):
 
 
 @pytest.mark.parametrize(
+    "save_events_mode, monitor_save_events, expected_event_created",
+    [
+        ("all", False, True),
+        ("all", True, True),
+        ("monitor", False, False),
+        ("monitor", True, True),
+        ("off", False, False),
+        ("off", True, False),
+    ],
+)
+async def test_save_event(
+    monkeypatch,
+    sample_monitor: Monitor,
+    save_events_mode,
+    monitor_save_events,
+    expected_event_created,
+):
+    """'Base._save_event' should create an event only when the save config allows it"""
+    monkeypatch.setattr(configs, "save_events_mode", save_events_mode)
+
+    monitor_module = registry._monitors[sample_monitor.id]["module"]
+    monkeypatch.setattr(monitor_module.monitor_options, "save_events", monitor_save_events)
+
+    event_payload = {
+        "event_name": "issue_created",
+        "event_source_monitor_id": sample_monitor.id,
+        "event_source": "issue",
+        "event_source_id": 1,
+        "event_data": {"id": 1},
+        "extra_payload": {"test": 123},
+    }
+
+    await sample_monitor._save_event(event_payload)
+
+    statement = select(Event).where(Event.monitor_id == sample_monitor.id)
+    async with get_session() as session:
+        events = (await session.execute(statement)).scalars().all()
+
+    if expected_event_created:
+        assert len(events) == 1
+        event = events[0]
+        assert event.name == event_payload["event_name"]
+        assert event.monitor_id == event_payload["event_source_monitor_id"]
+        assert event.source == event_payload["event_source"]
+        assert event.source_id == event_payload["event_source_id"]
+        assert event.data == event_payload["event_data"]
+        assert event.extra_payload == event_payload["extra_payload"]
+    else:
+        assert len(events) == 0
+
+
+@pytest.mark.parametrize(
     "event_name, extra_payload",
     [
         ("alert_created", None),
@@ -152,7 +205,8 @@ async def test_build_event_payload(sample_monitor: Monitor):
 async def test_create_event_queued(
     caplog, mocker, monkeypatch, sample_monitor: Monitor, event_name, extra_payload
 ):
-    """'Base._create_event' should check if the event should be queued and queue them when true"""
+    """'Base._create_event' should check if the event should be queued and queue them when true.
+    The event should also be saved to the database"""
     monkeypatch.setattr(configs, "log_all_events", True)
 
     monitor_code = registry._monitors[sample_monitor.id]["module"]
@@ -179,6 +233,19 @@ async def test_create_event_queued(
     assert_message_in_log(caplog, f'"event_source_monitor_id": {sample_monitor.id}')
     assert_message_in_log(caplog, f'"event_name": "{event_name}"')
 
+    statement = select(Event).where(Event.monitor_id == sample_monitor.id)
+    async with get_session() as session:
+        events = (await session.execute(statement)).scalars().all()
+
+    assert len(events) == 1
+    event = events[0]
+    assert event.name == event_name
+    assert event.monitor_id == sample_monitor.id
+    assert event.source == "monitor"
+    assert event.source_id == sample_monitor.id
+    assert event.data == sample_monitor._build_event_payload(event_name, {})["event_data"]
+    assert event.extra_payload == extra_payload
+
 
 @pytest.mark.parametrize(
     "event_name, extra_payload",
@@ -190,9 +257,8 @@ async def test_create_event_queued(
 )
 async def test_create_event_not_queued(mocker, sample_monitor: Monitor, event_name, extra_payload):
     """'Base._create_event' should check if the event should be queued and not queue them when
-    false"""
+    false. The event should also be saved to the database"""
     build_event_payload_spy: MagicMock = mocker.spy(sample_monitor, "_build_event_payload")
-    build_event_payload_spy.return_value = {"some_event": "some_data"}
     should_queue_event_spy: MagicMock = mocker.spy(sample_monitor, "_should_queue_event")
     queue_send_message_spy: MagicMock = mocker.spy(message_queue, "send_message")
 
@@ -201,6 +267,19 @@ async def test_create_event_not_queued(mocker, sample_monitor: Monitor, event_na
     build_event_payload_spy.assert_called_once_with(event_name, extra_payload)
     should_queue_event_spy.assert_called_once_with(event_name)
     queue_send_message_spy.assert_not_called()
+
+    statement = select(Event).where(Event.monitor_id == sample_monitor.id)
+    async with get_session() as session:
+        events = (await session.execute(statement)).scalars().all()
+
+    assert len(events) == 1
+    event = events[0]
+    assert event.name == event_name
+    assert event.monitor_id == sample_monitor.id
+    assert event.source == "monitor"
+    assert event.source_id == sample_monitor.id
+    assert event.data == sample_monitor._build_event_payload(event_name, {})["event_data"]
+    assert event.extra_payload == extra_payload
 
 
 @pytest.mark.parametrize(
@@ -215,7 +294,7 @@ async def test_create_event_not_queued_logged(
     caplog, mocker, monkeypatch, sample_monitor: Monitor, event_name, extra_payload
 ):
     """'Base._create_event' should lof the event when the 'log_all_events' setting is enabled, even
-    if the event was not queued"""
+    if the event was not queued. The event should also be saved to the database"""
     monkeypatch.setattr(configs, "log_all_events", True)
 
     build_event_payload_spy: MagicMock = mocker.spy(sample_monitor, "_build_event_payload")
@@ -231,6 +310,19 @@ async def test_create_event_not_queued_logged(
 
     assert_message_in_log(caplog, f'"event_source_monitor_id": {sample_monitor.id}')
     assert_message_in_log(caplog, f'"event_name": "{event_name}"')
+
+    statement = select(Event).where(Event.monitor_id == sample_monitor.id)
+    async with get_session() as session:
+        events = (await session.execute(statement)).scalars().all()
+
+    assert len(events) == 1
+    event = events[0]
+    assert event.name == event_name
+    assert event.monitor_id == sample_monitor.id
+    assert event.source == "monitor"
+    assert event.source_id == sample_monitor.id
+    assert event.data == sample_monitor._build_event_payload(event_name, {})["event_data"]
+    assert event.extra_payload == extra_payload
 
 
 async def test_logger(sample_monitor: Monitor):
