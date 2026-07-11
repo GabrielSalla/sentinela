@@ -51,6 +51,10 @@ data:
     controller_process_schedule: "* * * * *"
     controller_concurrency: 5
     controller_procedures:
+      clean_old_events:
+        schedule: "0 0 * * *"
+        params:
+          age_days: 365
       monitors_stuck:
         schedule: "*/5 * * * *"
         params:

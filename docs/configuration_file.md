@@ -74,6 +74,10 @@ application_queue:
 - `controller_process_schedule`: String using Cron format. Schedule to check if monitors need to be processed.
 - `controller_concurrency`: Integer. Number of monitors that can be processed at the same time by the Controller.
 - `controller_procedures`: Map. Procedures to be executed by the Controller and their settings.
+  - `clean_old_events`: Map. Settings for the procedure to clean old events from the application database.
+    - `schedule`: String using Cron format. Schedule to execute the `clean_old_events` procedure.
+    - `params`: Map. Configuration parameters for the `clean_old_events` procedure.
+      - `age_days`: Integer. Event's older than the provided age, in days, will be deleted from the database.
   - `monitors_stuck`: Map. Settings for the procedure to fix monitors stuck in "queued" or "running" status.
     - `schedule`: String using Cron format. Schedule to execute the `monitors_stuck` procedure.
     - `params`: Map. Configuration parameters for the `monitors_stuck` procedure.
