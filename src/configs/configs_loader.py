@@ -55,6 +55,8 @@ class Configs:
 
     monitors_load_schedule: str
 
+    save_events_mode: Literal["all", "monitor", "off"]
+
     application_database_settings: ApplicationDatabaseConfig
 
     application_queue: dict[str, Any]

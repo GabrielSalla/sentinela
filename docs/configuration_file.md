@@ -13,6 +13,7 @@ This document provides an overview of the configuration parameters available in 
   - `notification_class`: String. Class to be used for the notification. Example: `plugin.my_plugin.notifications.SomeNotificationClass`.
   - `params`: Map. The desired parameters for the notification. Each notification class will have its own set of parameters. Check the documentation for each notification class to learn more about the available parameters.
 - `monitors_load_schedule`: String using Cron format. Schedule to reload monitors from the database.
+- `save_events_mode`: String. Controls whether events are saved to the application database: `all` saves all events, `monitor` lets each monitor decide whether to save its events (defaults to disabled), and `off` disables event storage globally, regardless of monitor settings. Can be `all`, `monitor` or `off`.
 
 ## Logging
 - `logging`: Map. Settings for logging.

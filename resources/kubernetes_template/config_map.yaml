@@ -20,6 +20,7 @@ data:
         min_priority_to_send: low
         min_priority_to_mention: moderate
     monitors_load_schedule: "*/5 * * * *"
+    save_events_mode: all
 
     logging:
       mode: friendly
