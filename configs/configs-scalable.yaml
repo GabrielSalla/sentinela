@@ -14,6 +14,7 @@ internal_monitors_notification:
     min_priority_to_send: low
     min_priority_to_mention: moderate
 monitors_load_schedule: "*/5 * * * *"
+save_events_mode: all
 
 logging:
   mode: friendly
@@ -43,6 +44,10 @@ heartbeat_time: 2
 controller_process_schedule: "* * * * *"
 controller_concurrency: 5
 controller_procedures:
+  clean_old_events:
+    schedule: "0 0 * * *"
+    params:
+      age_days: 365
   monitors_stuck:
     schedule: "*/5 * * * *"
     params:

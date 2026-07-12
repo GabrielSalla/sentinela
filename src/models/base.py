@@ -16,6 +16,8 @@ from internal_database import CallbackSession, get_session
 from registry import get_monitor_module
 from utils.async_tools import do_concurrently
 
+from .event import Event
+
 
 def format_value(value: Any) -> Any:
     if isinstance(value, datetime):
@@ -88,6 +90,22 @@ class Base(AsyncAttrs, DeclarativeBase):
             "extra_payload": extra_payload,
         }
 
+    async def _save_event(self, event_payload: dict[str, Any]) -> None:
+        monitor_module = get_monitor_module(self.monitor_id)  # type: ignore[attr-defined]
+        save_conditions = (
+            configs.save_events_mode == "all",
+            configs.save_events_mode == "monitor" and monitor_module.monitor_options.save_events,
+        )
+        if any(save_conditions):
+            await Event.create(
+                name=event_payload["event_name"],
+                monitor_id=event_payload["event_source_monitor_id"],
+                source=event_payload["event_source"],
+                source_id=event_payload["event_source_id"],
+                data=event_payload["event_data"],
+                extra_payload=event_payload["extra_payload"],
+            )
+
     async def _create_event(
         self, event_name: str, extra_payload: dict[str, Any] | None = None
     ) -> None:
@@ -99,6 +117,7 @@ class Base(AsyncAttrs, DeclarativeBase):
             await message_queue.send_message(type="event", payload=event_payload)
         elif configs.log_all_events:
             self._logger.info(json.dumps(event_payload))
+        await self._save_event(event_payload)
 
     @property
     def _logger(self) -> logging.Logger:

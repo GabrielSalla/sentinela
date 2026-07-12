@@ -9,6 +9,7 @@ import enum
 from typing import Sequence, Union
 
 import sqlalchemy as sa
+import sqlalchemy.dialects.postgresql as postgresql
 from alembic import op
 
 revision: str = "c628330bb96e"
@@ -29,10 +30,11 @@ def upgrade() -> None:
         sa.Column("alert_id", sa.Integer(), nullable=True),
         sa.Column("target", sa.String(255)),
         sa.Column("status", sa.Enum(NotificationStatus, native_enum=False)),
-        sa.Column("data", sa.JSON, nullable=True),
+        sa.Column("data", postgresql.JSONB, nullable=True),
         sa.Column("created_at", sa.DateTime(timezone=True)),
         sa.Column("closed_at", sa.DateTime(timezone=True), nullable=True),
 
+        sa.ForeignKeyConstraint(("monitor_id",), ["Monitors.id"]),
         sa.UniqueConstraint("alert_id", "target", name="Notifications_alert_id_target_key")
     )
     op.create_index(

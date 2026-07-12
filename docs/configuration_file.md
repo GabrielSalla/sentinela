@@ -13,6 +13,7 @@ This document provides an overview of the configuration parameters available in 
   - `notification_class`: String. Class to be used for the notification. Example: `plugin.my_plugin.notifications.SomeNotificationClass`.
   - `params`: Map. The desired parameters for the notification. Each notification class will have its own set of parameters. Check the documentation for each notification class to learn more about the available parameters.
 - `monitors_load_schedule`: String using Cron format. Schedule to reload monitors from the database.
+- `save_events_mode`: String. Controls whether events are saved to the application database: `all` saves all events, `monitor` lets each monitor decide whether to save its events (defaults to disabled), and `off` disables event storage globally, regardless of monitor settings. Can be `all`, `monitor` or `off`.
 
 ## Logging
 - `logging`: Map. Settings for logging.
@@ -73,12 +74,18 @@ application_queue:
 - `controller_process_schedule`: String using Cron format. Schedule to check if monitors need to be processed.
 - `controller_concurrency`: Integer. Number of monitors that can be processed at the same time by the Controller.
 - `controller_procedures`: Map. Procedures to be executed by the Controller and their settings.
+  - `clean_old_events`: Map. Settings for the procedure to clean old events from the application database.
+    - `schedule`: String using Cron format. Schedule to execute the `clean_old_events` procedure.
+    - `params`: Map. Configuration parameters for the `clean_old_events` procedure.
+      - `age_days`: Integer. Event's older than the provided age, in days, will be deleted from the database.
   - `monitors_stuck`: Map. Settings for the procedure to fix monitors stuck in "queued" or "running" status.
     - `schedule`: String using Cron format. Schedule to execute the `monitors_stuck` procedure.
     - `params`: Map. Configuration parameters for the `monitors_stuck` procedure.
       - `time_tolerance`: Integer. Time tolerance in seconds for a monitor to be considered as stuck. This parameter is directly impacted by the `executor_monitor_heartbeat_time` setting and the recommended value is 2 times the heartbeat time.
   - `notifications_alert_solved`: Map. Settings for the procedure to identify and fix active notifications linked to alerts that have already been solved.
     - `schedule`: String using Cron format. Schedule to execute the `notifications_alert_solved` procedure.
+
+To disable a procedure from executing you can set its schedule to `null`.
 
 ## Executor Settings
 - `executor_concurrency`: Integer. Number of tasks that can be executed at the same time by each Executor.

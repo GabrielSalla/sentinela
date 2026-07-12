@@ -90,6 +90,66 @@ async def test_run_procedures(monkeypatch):
     assert run_procedures.last_executions["other_procedure"] > now() - timedelta(seconds=1)
 
 
+async def test_run_procedures_schedule_none(monkeypatch):
+    """'run_procedure' should skip the procedure if the schedule is 'None'"""
+    procedure1_mock = AsyncMock()
+    procedure2_mock = AsyncMock()
+    monkeypatch.setattr(
+        run_procedures,
+        "procedures",
+        {"some_procedure": procedure1_mock, "other_procedure": procedure2_mock},
+    )
+    monkeypatch.setattr(run_procedures, "last_executions", {})
+    monkeypatch.setattr(
+        configs,
+        "controller_procedures",
+        {
+            "some_procedure": ControllerProcedureConfig(schedule="* * * * *"),
+            "other_procedure": ControllerProcedureConfig(schedule=None),
+        },
+    )
+
+    await run_procedures.run_procedures()
+
+    procedure1_mock.assert_awaited_once()
+    procedure2_mock.assert_not_called()
+
+    assert isinstance(run_procedures.last_executions["some_procedure"], datetime)
+    assert "other_procedure" not in run_procedures.last_executions
+
+    assert run_procedures.last_executions["some_procedure"] > now() - timedelta(seconds=1)
+
+
+async def test_run_procedures_not_triggered(monkeypatch):
+    """'run_procedure' should skip the procedure if it's not triggered"""
+    procedure1_mock = AsyncMock()
+    procedure2_mock = AsyncMock()
+    monkeypatch.setattr(
+        run_procedures,
+        "procedures",
+        {"some_procedure": procedure1_mock, "other_procedure": procedure2_mock},
+    )
+    monkeypatch.setattr(run_procedures, "last_executions", {"some_procedure": now()})
+    monkeypatch.setattr(
+        configs,
+        "controller_procedures",
+        {
+            "some_procedure": ControllerProcedureConfig(schedule="0 0 1 1 0"),
+            "other_procedure": ControllerProcedureConfig(schedule=None),
+        },
+    )
+
+    await run_procedures.run_procedures()
+
+    procedure1_mock.assert_not_called()
+    procedure2_mock.assert_not_called()
+
+    assert isinstance(run_procedures.last_executions["some_procedure"], datetime)
+    assert "other_procedure" not in run_procedures.last_executions
+
+    assert run_procedures.last_executions["some_procedure"] < now()
+
+
 async def test_run_procedures_error(caplog, monkeypatch):
     """'run_procedures' should run all procedures that are triggered even if they have errors"""
     procedure1_mock = AsyncMock(side_effect=Exception("Some error"))

@@ -40,7 +40,7 @@ class HttpServerConfig:
 
 @dataclass
 class ControllerProcedureConfig:
-    schedule: str
+    schedule: str | None
     params: dict[str, str | int | float | bool | None] | None = None
 
 
@@ -54,6 +54,8 @@ class Configs:
     internal_monitors_notification: InternalMonitorsNotificationConfig
 
     monitors_load_schedule: str
+
+    save_events_mode: Literal["all", "monitor", "off"]
 
     application_database_settings: ApplicationDatabaseConfig
 

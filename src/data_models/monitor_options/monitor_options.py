@@ -17,12 +17,15 @@ class MonitorOptions:
     **search** routine. Defaults to the `max_issues_creation` value in `configs.yaml`.
     - `execution_timeout`: Sets a timeout for both search and update routines. Defaults to
     `executor_monitor_timeout` in `configs.yaml`.
+    - `save_events`: Controls whether events for the monitor are saved to the application database.
+    Defaults to `False`.
     """
 
     search_cron: str | None = None
     update_cron: str | None = None
     max_issues_creation: int = configs.max_issues_creation
     execution_timeout: int = configs.executor_monitor_timeout
+    save_events: bool = False
 
 
 @dataclass
