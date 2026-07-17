@@ -42,12 +42,53 @@ Response example:
     {
         "id": 123,
         "name": "monitor_name",
-        "enabled": true
+        "enabled": true,
+        "active_alerts": 3,
+        "not_acknowledged_alerts": 1
     },
     {
         "id": 124,
         "name": "another_monitor",
-        "enabled": false
+        "enabled": false,
+        "active_alerts": 0,
+        "not_acknowledged_alerts": 0
+    }
+]
+```
+
+## List monitors active alerts
+**`GET /monitor/{monitor_id}/alerts`**
+
+Returns a list of all active alerts for the provided monitor id.
+
+Response example:
+```json
+[
+    {
+        "id": 12,
+        "status": "active",
+        "acknowledged": false,
+        "is_priority_acknowledged": false,
+        "locked": false,
+        "priority": 2,
+        "acknowledge_priority": null,
+        "can_acknowledge": true,
+        "can_lock": true,
+        "can_solve": false,
+        "created_at": "2025-01-01 12:34:56",  # Already localized from UTC
+    },
+    {
+        "id": 34,
+        "status": "active",
+        "acknowledged": true,
+        "is_priority_acknowledged": true,
+        "locked": true,
+        "priority": 2,
+        "acknowledge_priority": 2,
+        "can_acknowledge": false,
+        "can_lock": false,
+        "can_solve": false,
+        "created_at": "2025-01-01 23:45:55",  # Already localized from UTC
     }
 ]
 ```
@@ -151,6 +192,53 @@ Response example:
     "status": "monitor_registered",
     "monitor_id": 123
 }
+```
+
+## Get alert
+**`GET /alert/{alert_id}`**
+
+Returns the details for the alert with the provided `alert_id`.
+
+Response example:
+```json
+{
+    "id": 12,
+    "status": "active",
+    "acknowledged": false,
+    "is_priority_acknowledged": false,
+    "locked": false,
+    "priority": 2,
+    "acknowledge_priority": null,
+    "can_acknowledge": true,
+    "can_lock": true,
+    "can_solve": false,
+    "created_at": "2025-01-01 12:34:56"  # Already localized from UTC
+}
+```
+
+## List alert active issues
+**`GET /alert/{alert_id}/issues`**
+
+Returns a list of all active issues for the provided `alert_id`.
+
+Response example:
+```json
+[
+    {
+        "id": 123,
+        "status": "active",
+        "model_id": 456,
+        "data": {...},
+        "created_at": "2025-01-01 12:34:56"  # Already localized from UTC
+    },
+    {
+        "id": 124,
+        "status": "active",
+        "model_id": 567,
+        "data": {...},
+        "created_at": "2025-01-01 13:34:45"  # Already localized from UTC
+    }
+]
 ```
 
 ## Acknowledge alert
