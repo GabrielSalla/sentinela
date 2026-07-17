@@ -6,6 +6,7 @@ from pytz import timezone
 
 from configs import configs
 from utils.time import (
+    format_datetime,
     format_datetime_iso,
     is_triggered,
     localize,
@@ -84,6 +85,35 @@ def test_localize(monkeypatch, dt, tz, expected_dt):
 def test_format_datetime_iso(timestamp, expected_result):
     """'format_datetime_iso' should return a string with the timestamp in ISO format"""
     result = format_datetime_iso(timestamp)
+    assert result == expected_result
+
+
+@pytest.mark.parametrize(
+    "timestamp, local_timezone, expected_result",
+    [
+        (
+            datetime.datetime(2024, 1, 1, 12, 34, 56, 789000, tzinfo=datetime.timezone.utc),
+            "UTC",
+            "2024-01-01 12:34:56",
+        ),
+        (
+            datetime.datetime(2024, 1, 1, 12, 34, 56, 789000, tzinfo=datetime.timezone.utc),
+            "America/Sao_Paulo",
+            "2024-01-01 09:34:56",
+        ),
+        (
+            timezone("America/Sao_Paulo").localize(datetime.datetime(2024, 1, 1, 12, 34, 56)),
+            "UTC",
+            "2024-01-01 15:34:56",
+        ),
+        (None, "UTC", None),
+    ],
+)
+def test_format_datetime(monkeypatch, timestamp, local_timezone, expected_result):
+    """'format_datetime' should return a localized string 'YYYY-MM-DD HH:MM:SS'"""
+    monkeypatch.setattr(configs, "time_zone", local_timezone)
+
+    result = format_datetime(timestamp)
     assert result == expected_result
 
 

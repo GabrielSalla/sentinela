@@ -6,7 +6,7 @@ from pydantic import BaseModel
 import commands as commands
 from exceptions.http_server import AlertNotFoundError
 from models import Alert, Issue, IssueStatus
-from utils.time import localize
+from utils.time import format_datetime
 
 alert_routes = web.RouteTableDef()
 base_route = "/alert"
@@ -39,7 +39,7 @@ async def get_alert(request: Request) -> Response:
         "can_acknowledge": alert.can_acknowledge,
         "can_lock": alert.can_lock,
         "can_solve": alert.can_solve,
-        "created_at": localize(alert.created_at).strftime("%Y-%m-%d %H:%M:%S"),
+        "created_at": format_datetime(alert.created_at),
     }
     return web.json_response(response)
 
@@ -63,7 +63,7 @@ async def list_alert_active_issues(request: Request) -> Response:
             "status": issue.status.value,
             "model_id": issue.model_id,
             "data": issue.data,
-            "created_at": localize(issue.created_at).strftime("%Y-%m-%d %H:%M:%S"),
+            "created_at": format_datetime(issue.created_at),
         }
         for issue in issues
     ]

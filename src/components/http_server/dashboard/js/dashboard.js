@@ -5,10 +5,12 @@ function dashboardApp() {
         alerts: [],
         issues: [],
         selectedMonitor: null,
+        selectedMonitorDetails: null,
         selectedAlert: null,
         selectedIssue: null,
         editorMonitors: {},
         monitorsLoading: false,
+        monitorDetailsLoading: false,
         alertsLoading: false,
         issuesLoading: false,
         refreshInterval: null,
@@ -296,8 +298,8 @@ function dashboardApp() {
                         filtered = filtered.filter(m => !m.name.startsWith('internal.'));
                     if (this.settings.overviewFilterWithAlerts)
                         filtered = filtered.filter(m => m.active_alerts > 0);
-                    const regular = filtered.filter(m => !m.name.startsWith('internal.'));
-                    const internal = filtered.filter(m => m.name.startsWith('internal.'));
+                    const regular = filtered.filter(m => !m.name.startsWith('internal.')).sort((a, b) => a.name.localeCompare(b.name));
+                    const internal = filtered.filter(m => m.name.startsWith('internal.')).sort((a, b) => a.name.localeCompare(b.name));
                     return [...regular, ...internal];
                 }
             );
@@ -307,16 +309,45 @@ function dashboardApp() {
             await this.loadData(`/monitor/${monitorId}/alerts`, 'alerts', 'alertsLoading', showLoading);
         },
 
+        async loadMonitorDetails(monitorName, showLoading = true) {
+            if (!monitorName) {
+                this.selectedMonitorDetails = null;
+                return;
+            }
+
+            if (showLoading) {
+                this.monitorDetailsLoading = true;
+            }
+
+            try {
+                const data = await this.fetchData(`/monitor/${encodeURIComponent(monitorName)}`);
+                if (this.selectedMonitor?.name === monitorName) {
+                    this.selectedMonitorDetails = data;
+                }
+            } catch (error) {
+                console.error('Error loading monitor details:', error);
+                if (this.selectedMonitor?.name === monitorName) {
+                    this.selectedMonitorDetails = null;
+                }
+            } finally {
+                if (showLoading) {
+                    this.monitorDetailsLoading = false;
+                }
+            }
+        },
+
         async loadIssuesForAlert(alertId, showLoading = true) {
             await this.loadData(`/alert/${alertId}/issues`, 'issues', 'issuesLoading', showLoading);
         },
 
         selectMonitor(monitor) {
             this.selectedMonitor = monitor;
+            this.selectedMonitorDetails = null;
             this.selectedAlert = null;
             this.selectedIssue = null;
             this.issues = [];
             this.loadAlertsForMonitor(monitor.id);
+            this.loadMonitorDetails(monitor.name);
         },
 
         selectAlert(alert) {
@@ -372,8 +403,10 @@ function dashboardApp() {
             this.stopAutoRefresh();
             this.refreshInterval = setInterval(async () => {
                 await this.loadActiveMonitors(false);
-                if (this.selectedMonitor)
+                if (this.selectedMonitor) {
                     await this.loadAlertsForMonitor(this.selectedMonitor.id, false);
+                    await this.loadMonitorDetails(this.selectedMonitor.name, false);
+                }
                 if (this.selectedAlert)
                     await this.loadIssuesForAlert(this.selectedAlert.id, false);
                 await this.notifyForUnacknowledgedAlerts();
@@ -396,6 +429,20 @@ function dashboardApp() {
                 5: { text: 'Informational', class: 'badge-priority-low' }
             };
             return priorities[priority] || priorities[5];
+        },
+
+        getMonitorStatusClass(monitor) {
+            if (!monitor) return 'monitor-status-badge waiting';
+            if (monitor.running) return 'monitor-status-badge running';
+            if (monitor.queued) return 'monitor-status-badge queued';
+            return 'monitor-status-badge waiting';
+        },
+
+        getMonitorStatusTitle(monitor) {
+            if (!monitor) return 'Waiting schedule';
+            if (monitor.running) return 'Running';
+            if (monitor.queued) return 'Queued';
+            return 'Waiting schedule';
         },
 
         isAlertAcknowledged(alert) {

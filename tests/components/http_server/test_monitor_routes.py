@@ -1,3 +1,4 @@
+from datetime import datetime
 from unittest.mock import AsyncMock
 
 import aiohttp
@@ -159,6 +160,11 @@ async def test_get_monitor(sample_monitor: Monitor):
     code_module = await CodeModule.get(CodeModule.monitor_id == sample_monitor.id)
     assert code_module is not None
 
+    sample_monitor.search_executed_at = datetime(2025, 1, 1, 12, 34, 56, 789)
+    sample_monitor.update_executed_at = datetime(2025, 11, 12, 13, 14, 15, 123)
+    sample_monitor.last_heartbeat = datetime(2025, 1, 2, 3, 4, 5, 999)
+    await sample_monitor.save()
+
     code_module.code = 'print("Sample code")'
     code_module.additional_files = {"file.sql": "SELECT 1;"}
     await code_module.save()
@@ -172,6 +178,11 @@ async def test_get_monitor(sample_monitor: Monitor):
         "id": sample_monitor.id,
         "name": sample_monitor.name,
         "enabled": sample_monitor.enabled,
+        "queued": False,
+        "running": False,
+        "search_executed_at": "2025-01-01 09:34:56",  # Converting from UTC
+        "update_executed_at": "2025-11-12 10:14:15",  # Converting from UTC
+        "last_heartbeat": "2025-01-02 00:04:05",  # Converting from UTC
         "code": 'print("Sample code")',
         "additional_files": {"file.sql": "SELECT 1;"},
     }

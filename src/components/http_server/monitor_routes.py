@@ -13,7 +13,7 @@ from configs import configs
 from exceptions.http_server import MonitorNotFoundError
 from exceptions.monitors_loader import MonitorValidationError
 from models import Alert, AlertStatus, CodeModule, Monitor
-from utils.time import localize
+from utils.time import format_datetime
 
 _logger = logging.getLogger("monitor_routes")
 
@@ -105,7 +105,7 @@ async def list_monitor_active_alerts(request: Request) -> Response:
             "can_acknowledge": alert.can_acknowledge,
             "can_lock": alert.can_lock,
             "can_solve": alert.can_solve,
-            "created_at": localize(alert.created_at).strftime("%Y-%m-%d %H:%M:%S"),
+            "created_at": format_datetime(alert.created_at),
         }
         for alert in alerts
     ]
@@ -138,6 +138,11 @@ async def get_monitor(request: Request) -> Response:
         "id": monitor.id,
         "name": monitor.name,
         "enabled": monitor.enabled,
+        "queued": monitor.queued,
+        "running": monitor.running,
+        "search_executed_at": format_datetime(monitor.search_executed_at),
+        "update_executed_at": format_datetime(monitor.update_executed_at),
+        "last_heartbeat": format_datetime(monitor.last_heartbeat),
         "code": code_module.code,
         "additional_files": code_module.additional_files,
     }

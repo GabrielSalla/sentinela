@@ -50,14 +50,35 @@
                                 <div class="list-item monitor-item"
                                      :class="{ 'selected': selectedMonitor?.id === monitor.id }"
                                      @click="selectMonitor(monitor)">
-                                    <div class="list-item-name" x-text="monitor.name"></div>
-                                    <div class="monitor-badges">
-                                        <span x-show="monitor.not_acknowledged_alerts > 0"
-                                              class="badge badge-unacknowledged"
-                                              x-text="monitor.not_acknowledged_alerts"></span>
-                                        <span x-show="monitor.active_alerts > 0"
-                                              class="badge badge-alert"
-                                              x-text="monitor.active_alerts"></span>
+                                    <div class="monitor-item-header">
+                                        <div class="list-item-name" x-text="monitor.name"></div>
+                                        <div class="monitor-badges">
+                                            <span x-show="monitor.not_acknowledged_alerts > 0"
+                                                  class="badge badge-unacknowledged"
+                                                  x-text="monitor.not_acknowledged_alerts"></span>
+                                            <span x-show="monitor.active_alerts > 0"
+                                                  class="badge badge-alert"
+                                                  x-text="monitor.active_alerts"></span>
+                                        </div>
+                                    </div>
+                                    <div class="monitor-details" x-show="selectedMonitor?.id === monitor.id">
+                                        <div class="monitor-details-loading" x-show="monitorDetailsLoading && selectedMonitor?.id === monitor.id">
+                                            Loading monitor details...
+                                        </div>
+                                        <div class="list-item-info" x-show="!monitorDetailsLoading && selectedMonitor && selectedMonitorDetails && selectedMonitorDetails.name === selectedMonitor.name">
+                                            <span class="detail-label">Status:</span>
+                                            <span class="monitor-status-badge"
+                                                  :class="getMonitorStatusClass(selectedMonitorDetails)"
+                                                  x-text="getMonitorStatusTitle(selectedMonitorDetails)"></span>
+                                        </div>
+                                        <div class="list-item-info" x-show="!monitorDetailsLoading && selectedMonitor && selectedMonitorDetails && selectedMonitorDetails.name === selectedMonitor.name">
+                                            <span class="detail-label">Last search:</span>
+                                            <span class="detail-value" x-text="selectedMonitorDetails?.search_executed_at || '—'"></span>
+                                        </div>
+                                        <div class="list-item-info" x-show="!monitorDetailsLoading && selectedMonitor && selectedMonitorDetails && selectedMonitorDetails.name === selectedMonitor.name">
+                                            <span class="detail-label">Last update:</span>
+                                            <span class="detail-value" x-text="selectedMonitorDetails?.update_executed_at || '—'"></span>
+                                        </div>
                                     </div>
                                 </div>
                             </template>
@@ -96,7 +117,10 @@
                                               :class="getStatusBadgeClass(isAlertLocked(alert))"
                                               x-text="'Locked'"></span>
                                     </div>
-                                    <div class="list-item-info" x-text="`Triggered: ${alert.created_at}`"></div>
+                                    <div class="list-item-info">
+                                        <span class="detail-label">Triggered:</span>
+                                        <span class="detail-value" x-text="alert.created_at"></span>
+                                    </div>
                                     <div class="alert-actions" x-show="selectedAlert?.id === alert.id">
                                         <button class="alert-action-btn"
                                                 :disabled="isAlertAcknowledged(alert)"
@@ -132,7 +156,10 @@
                             <template x-for="issue in issues" :key="issue.id">
                                 <div class="list-item issue-item" @click="toggleIssue(issue)">
                                     <div class="list-item-name" x-text="`#${issue.id} - ${issue.model_id}`"></div>
-                                    <div class="list-item-info" x-text="`Created: ${issue.created_at}`"></div>
+                                    <div class="list-item-info">
+                                        <span class="detail-label">Created:</span>
+                                        <span class="detail-value" x-text="issue.created_at"></span>
+                                    </div>
                                     <div class="issue-metadata" x-show="selectedIssue?.id === issue.id">
                                         <pre class="json-highlight" x-html="syntaxHighlightJSON(issue.data || {})"></pre>
                                     </div>

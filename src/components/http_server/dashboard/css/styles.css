@@ -198,9 +198,62 @@ body {
 
 .list-item.monitor-item {
     display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 10px;
+}
+
+.monitor-item-header {
+    display: flex;
     align-items: center;
     justify-content: space-between;
     gap: 10px;
+}
+
+.monitor-details {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    padding-top: 8px;
+    border-top: 1px solid #30363d;
+}
+
+.detail-label {
+    color: #8b949e;
+    font-weight: 600;
+}
+
+.detail-value {
+    color: #8b949e;
+}
+
+.monitor-details-loading {
+    color: #8b949e;
+    font-size: 12px;
+}
+
+.monitor-status-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 2px 8px;
+    border-radius: 12px;
+    font-size: 11px;
+    font-weight: 600;
+    color: #fff;
+    flex-shrink: 0;
+}
+
+.monitor-status-badge.running {
+    background-color: #2ea043;
+}
+
+.monitor-status-badge.queued {
+    background-color: #d29922;
+}
+
+.monitor-status-badge.waiting {
+    background-color: #6e7681;
 }
 
 .list-item:hover {
