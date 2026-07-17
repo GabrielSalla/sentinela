@@ -18,7 +18,13 @@ def localize(dt: datetime.datetime) -> datetime.datetime:
 
 
 def format_datetime_iso(timestamp: datetime.datetime | None) -> str | None:
+    """Return a string representing the date in ISO 8601 format 'YYYY-MM-DDTHH:MM:SS.sss'"""
     return timestamp.isoformat(timespec="milliseconds") if timestamp is not None else None
+
+
+def format_datetime(timestamp: datetime.datetime | None) -> str | None:
+    """Return a string representing the date in ISO 8601 format 'YYYY-MM-DD HH:MM:SS'"""
+    return localize(timestamp).strftime("%Y-%m-%d %H:%M:%S") if timestamp is not None else None
 
 
 def is_triggered(
