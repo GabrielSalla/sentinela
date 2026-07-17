@@ -110,7 +110,8 @@ Response example:
     "update_executed_at": "2025-11-12 10:14:15",  # Already localized from UTC
     "last_heartbeat": "2025-01-02 00:04:05",  # Already localized from UTC
     "code": "...",
-    "additional_files": {"file_name.txt": "..."}
+    "additional_files": {"file_name.txt": "..."},
+    "documentation": "# Monitor documentation"
 }
 ```
 

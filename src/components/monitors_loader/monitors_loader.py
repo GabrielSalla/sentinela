@@ -131,12 +131,18 @@ def _get_monitors_files_from_path(
 
             additional_files = []
             for file_name in files:
+                include_file = False
+
                 if file_name == monitor_file:
                     continue
-                if not _file_has_extension(file_name, additional_file_extensions):
-                    continue
+                if _file_has_extension(file_name, additional_file_extensions):
+                    include_file = True
+                # Always include the monitors documentations as an additional file
+                if file_name == "README.md":
+                    include_file = True
 
-                additional_files.append(AdditionalFile(name=file_name, path=root / file_name))
+                if include_file:
+                    additional_files.append(AdditionalFile(name=file_name, path=root / file_name))
 
             # Yield the monitor files
             monitor_files = MonitorFiles(

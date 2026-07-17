@@ -111,4 +111,29 @@ async def test_register(sample_monitor: Monitor):
 
     assert code_module.code == "def get_value(): return 20"
     assert code_module.additional_files == {"file1.py": "content1", "file2.py": "content2"}
+    assert code_module.documentation is None
+    assert code_module.registered_at > now() - timedelta(seconds=1)
+
+
+async def test_register_documentation(sample_monitor: Monitor):
+    """'CodeModule.register' should extract the monitor documentation from the 'README.md' file in
+    the additional files"""
+    code_module = await CodeModule.get(CodeModule.monitor_id == sample_monitor.id)
+
+    assert code_module is not None
+
+    await code_module.register(
+        code="def get_value(): return 20",
+        additional_files={
+            "file1.py": "content1",
+            "file2.py": "content2",
+            "README.md": "monitor docs",
+        },
+    )
+
+    await code_module.refresh()
+
+    assert code_module.code == "def get_value(): return 20"
+    assert code_module.additional_files == {"file1.py": "content1", "file2.py": "content2"}
+    assert code_module.documentation == "monitor docs"
     assert code_module.registered_at > now() - timedelta(seconds=1)

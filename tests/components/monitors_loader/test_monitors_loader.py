@@ -361,17 +361,32 @@ async def test_get_monitors_files_from_path():
         monitors_loader.MonitorFiles(
             monitor_name="monitor_1",
             monitor_path=Path("tests/example_monitors/others/monitor_1/monitor_1.py"),
-            additional_files=[],
+            additional_files=[
+                monitors_loader.AdditionalFile(
+                    name="README.md",
+                    path=Path("tests/example_monitors/others/monitor_1/README.md"),
+                ),
+            ],
         ),
         monitors_loader.MonitorFiles(
             monitor_name="monitor_2",
             monitor_path=Path("tests/example_monitors/internal/monitor_2/monitor_2.py"),
-            additional_files=[],
+            additional_files=[
+                monitors_loader.AdditionalFile(
+                    name="README.md",
+                    path=Path("tests/example_monitors/internal/monitor_2/README.md"),
+                ),
+            ],
         ),
         monitors_loader.MonitorFiles(
             monitor_name="monitor_3",
             monitor_path=Path("tests/example_monitors/internal/monitor_3/monitor_3.py"),
-            additional_files=[],
+            additional_files=[
+                monitors_loader.AdditionalFile(
+                    name="README.md",
+                    path=Path("tests/example_monitors/internal/monitor_3/README.md"),
+                ),
+            ],
         ),
     ]
 
@@ -395,12 +410,21 @@ async def test_get_monitors_files_from_path_with_additional_files():
         monitors_loader.MonitorFiles(
             monitor_name="monitor_2",
             monitor_path=Path("tests/example_monitors/internal/monitor_2/monitor_2.py"),
-            additional_files=[],
+            additional_files=[
+                monitors_loader.AdditionalFile(
+                    name="README.md",
+                    path=Path("tests/example_monitors/internal/monitor_2/README.md"),
+                ),
+            ],
         ),
         monitors_loader.MonitorFiles(
             monitor_name="monitor_3",
             monitor_path=Path("tests/example_monitors/internal/monitor_3/monitor_3.py"),
             additional_files=[
+                monitors_loader.AdditionalFile(
+                    name="README.md",
+                    path=Path("tests/example_monitors/internal/monitor_3/README.md"),
+                ),
                 monitors_loader.AdditionalFile(
                     name="other_file.sql",
                     path=Path("tests/example_monitors/internal/monitor_3/other_file.sql"),

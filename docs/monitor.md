@@ -35,10 +35,13 @@ To ensure proper organization and avoid conflicts between monitors, it's recomme
 2. Create a new folder named after the monitor (e.g., `my_monitor`). This folder will have all files related to the monitor, including its code and any additional resources.
 3. Place the monitor's main file inside its corresponding folder.
 
+To provide documentation for the monitor, add a `README.md` file in the monitor's directory. This file will be extracted and stored separately as the monitor's documentation, accessible through the HTTP API and displayed in the dashboard.
+
 ```
 monitors/
 └── my_monitor/
-    └── my_monitor.py
+    ├── my_monitor.py
+    └── README.md
 ```
 
 # Importing the dependencies

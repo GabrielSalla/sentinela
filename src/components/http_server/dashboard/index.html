@@ -170,6 +170,15 @@
                 </div>
             </div>
         </div>
+        <div class="resize-handle-h" data-resize="doc-section" x-show="selectedMonitor && selectedMonitorDetails?.documentation && !docCollapsed"></div>
+        <div class="doc-section" :class="{ 'collapsed': docCollapsed || !(selectedMonitor && selectedMonitorDetails?.documentation) }"
+             x-init="docCollapsed = localStorage.getItem('doc-collapsed') === 'true'; if(!docCollapsed) $el.style.height = localStorage.getItem('doc-section-height') || ''">
+            <div class="doc-section-header" @click="if(selectedMonitor && selectedMonitorDetails?.documentation) { docCollapsed = !docCollapsed; localStorage.setItem('doc-collapsed', docCollapsed) }">
+                <h3>Documentation</h3>
+                <span class="doc-section-subtitle" x-show="selectedMonitorDetails?.name" x-text="selectedMonitorDetails?.name"></span>
+            </div>
+            <div class="doc-section-body" x-show="!docCollapsed && selectedMonitor && selectedMonitorDetails?.documentation" x-html="renderMarkdown(selectedMonitorDetails?.documentation)"></div>
+        </div>
     </div>
 
     <div id="editor-section" class="section-content" x-show="currentSection === 'editor'">
@@ -310,6 +319,8 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/mode/sql/sql.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/mode/xml/xml.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/mode/yaml/yaml.min.js"></script>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/marked/9.1.6/marked.min.js"></script>
 
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
 
