@@ -63,6 +63,11 @@ Response example:
     "id": 123,
     "name": "monitor_name",
     "enabled": true,
+    "queued": false,
+    "running": false,
+    "search_executed_at": "2025-01-01 09:34:56",  # Already localized from UTC
+    "update_executed_at": "2025-11-12 10:14:15",  # Already localized from UTC
+    "last_heartbeat": "2025-01-02 00:04:05",  # Already localized from UTC
     "code": "...",
     "additional_files": {"file_name.txt": "..."}
 }

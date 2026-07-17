@@ -138,6 +138,11 @@ async def get_monitor(request: Request) -> Response:
         "id": monitor.id,
         "name": monitor.name,
         "enabled": monitor.enabled,
+        "queued": monitor.queued,
+        "running": monitor.running,
+        "search_executed_at": format_datetime(monitor.search_executed_at),
+        "update_executed_at": format_datetime(monitor.update_executed_at),
+        "last_heartbeat": format_datetime(monitor.last_heartbeat),
         "code": code_module.code,
         "additional_files": code_module.additional_files,
     }
