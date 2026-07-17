@@ -31,6 +31,7 @@ function dashboardApp() {
         },
         showSettingsModal: false,
         settingsHandler: null,
+        docCollapsed: false,
 
         desktopNotificationsSupported: false,
         desktopNotificationsPermission: 'default',
@@ -173,6 +174,14 @@ function dashboardApp() {
             return this.settingsHandler.closeSettingsModal();
         },
 
+        renderMarkdown(text) {
+            if (!text) return '';
+            if (typeof marked !== 'undefined' && marked.parse) {
+                return marked.parse(text);
+            }
+            return `<pre style="white-space:pre-wrap;color:#f0f6fc">${text}</pre>`;
+        },
+
         saveSettingsAndClose() {
             if (!this.settingsHandler) {
                 this.initializeSettings();
@@ -199,15 +208,12 @@ function dashboardApp() {
         },
 
         initializeResizeHandles() {
-            const handles = document.querySelectorAll('.resize-handle');
-            if (!handles.length) return;
-
-            const getMaxWidth = (columnId) => {
-                return (columnId === 'monitors-column' || columnId === 'alerts-column') ? 600 : Infinity;
-            };
-
-            handles.forEach(handle => {
+            document.querySelectorAll('.resize-handle').forEach(handle => {
                 let startX, startWidth, column;
+
+                const getMaxWidth = (columnId) => {
+                    return (columnId === 'monitors-column' || columnId === 'alerts-column') ? 600 : Infinity;
+                };
 
                 const onMouseMove = (e) => {
                     if (!column) return;
@@ -232,6 +238,44 @@ function dashboardApp() {
 
                     startX = e.clientX;
                     startWidth = column.offsetWidth;
+                    handle.classList.add('dragging');
+
+                    document.addEventListener('mousemove', onMouseMove);
+                    document.addEventListener('mouseup', onMouseUp);
+
+                    e.preventDefault();
+                    e.stopPropagation();
+                });
+            });
+
+            document.querySelectorAll('.resize-handle-h').forEach(handle => {
+                let startY, startHeight, target;
+
+                const onMouseMove = (e) => {
+                    if (!target) return;
+                    const newHeight = Math.max(60, startHeight + (startY - e.clientY));
+                    target.style.height = `${newHeight}px`;
+                    e.preventDefault();
+                };
+
+                const onMouseUp = () => {
+                    if (target) {
+                        const key = `doc-section-height`;
+                        localStorage.setItem(key, target.style.height);
+                    }
+                    handle.classList.remove('dragging');
+                    document.removeEventListener('mousemove', onMouseMove);
+                    document.removeEventListener('mouseup', onMouseUp);
+                    target = null;
+                };
+
+                handle.addEventListener('mousedown', (e) => {
+                    const selector = handle.dataset.resize;
+                    target = selector ? document.querySelector(`.${selector}`) : null;
+                    if (!target) return;
+
+                    startY = e.clientY;
+                    startHeight = target.offsetHeight;
                     handle.classList.add('dragging');
 
                     document.addEventListener('mousemove', onMouseMove);
