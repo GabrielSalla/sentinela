@@ -145,6 +145,7 @@ async def get_monitor(request: Request) -> Response:
         "last_heartbeat": format_datetime(monitor.last_heartbeat),
         "code": code_module.code,
         "additional_files": code_module.additional_files,
+        "documentation": code_module.documentation,
     }
     return web.json_response(success_response)
 

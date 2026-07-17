@@ -167,6 +167,7 @@ async def test_get_monitor(sample_monitor: Monitor):
 
     code_module.code = 'print("Sample code")'
     code_module.additional_files = {"file.sql": "SELECT 1;"}
+    code_module.documentation = "monitor documentation"
     await code_module.save()
 
     url = BASE_URL + f"/{sample_monitor.name}"
@@ -185,6 +186,7 @@ async def test_get_monitor(sample_monitor: Monitor):
         "last_heartbeat": "2025-01-02 00:04:05",  # Converting from UTC
         "code": 'print("Sample code")',
         "additional_files": {"file.sql": "SELECT 1;"},
+        "documentation": "monitor documentation",
     }
 
 
@@ -194,6 +196,7 @@ async def test_get_monitor_invalid_monitor():
     async with aiohttp.ClientSession() as session:
         async with session.get(url) as response:
             response_data = await response.json()
+            assert response.status == 404
 
     assert response_data == {
         "status": "monitor_not_found",
@@ -210,6 +213,11 @@ async def test_get_monitor_invalid_code_module(sample_monitor: Monitor):
     async with aiohttp.ClientSession() as session:
         async with session.get(url) as response:
             response_data = await response.json()
+            assert response.status == 404
+
+    assert response_data == {
+        "status": "monitor_code_not_found",
+    }
 
     assert response_data == {
         "status": "monitor_code_not_found",
