@@ -12,6 +12,7 @@ The registration process goes through a monitor code validation. This process is
 A monitor consists of:
 - **Main Code File**: The `.py` file containing the monitor's definition.
 - **Optional Additional Files**: Supporting resources used during the monitor's execution, such as SQL query files or other data files.
+- **Optional Documentation File**: A `README.md` file providing documentation for the monitor. This file is extracted separately from other additional files and stored as the monitor's documentation. It is not included in the `additional_files` object.
 
 ## Registration Process
 The registration process can be done through the CLI or using a HTTP request to Sentinela.
@@ -29,14 +30,15 @@ Parameters:
 
 The payload should include the following fields:
 - `monitor_code`: The content of the monitor’s main `.py` file content.
-- `additional_files`: Optional field with an object where the keys are the names of additional files, and the values are their content.
+- `additional_files`: Optional field with an object where the keys are the names of additional files, and the values are their content. If a file named `README.md` is included, it will be extracted and stored as the monitor's documentation, not as an additional file.
 
 Example:
 ```json
 {
     "monitor_code": "...",
     "additional_files": {
-        "search_query.sql": "select * from users where id = $1;"
+        "search_query.sql": "select * from users where id = $1;",
+        "README.md": "# My Monitor Documentation"
     }
 }
 ```
