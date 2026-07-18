@@ -5,7 +5,7 @@ import pytest
 import pytest_asyncio
 from aiohttp import web
 from prometheus_client import parser
-from pydantic import BaseModel
+from pydantic import BaseModel, field_validator
 
 import components.controller.controller as controller
 import components.executor.executor as executor
@@ -209,6 +209,33 @@ async def test_pydantic_validation_middleware():
     )
 
 
+async def test_pydantic_validation_middleware_value_error():
+    """'_pydantic_validation_middleware' should strip 'Value error, ' prefix from error messages"""
+
+    class Payload(BaseModel):
+        value: str
+
+        @field_validator("value")
+        @classmethod
+        def _validate_value(cls, v: str) -> str:
+            raise ValueError("invalid value")
+
+    async def handler(_: web.Request) -> web.StreamResponse:
+        Payload.model_validate({"value": "test"})
+        return web.Response(text="ok")
+
+    response = await http_server.server._pydantic_validation_middleware(
+        request=type("RequestStub", (), {})(),
+        handler=handler,
+    )
+
+    assert isinstance(response, web.Response)
+    assert response.status == 400
+    assert response.text == (
+        '{"status": "error", "message": "Invalid request data", "errors": ["value: invalid value"]}'
+    )
+
+
 async def test_init_controller_enabled():
     """'init' should include the alerts, issues and monitor routes and the dashboard if the
     controller is enabled"""
@@ -246,7 +273,7 @@ async def test_dashboard_route_active(monkeypatch, dashboard_enabled):
                 assert response.status == 404
 
 
-async def test_log_4xx_requests_middleware(caplog):
+async def test_requests_middleware(caplog):
     """4xx requests should be logged"""
     caplog.clear()
     await restart_http_server(controller_enabled=False)
@@ -261,8 +288,8 @@ async def test_log_4xx_requests_middleware(caplog):
     )
 
 
-async def test_log_4xx_requests_middleware_no_2xx(caplog):
-    """2xx requests should not be logged as 4xx"""
+async def test_requests_middleware_no_2xx(caplog):
+    """2xx requests should not be logged as error"""
     caplog.clear()
     await restart_http_server(controller_enabled=False)
 
@@ -273,35 +300,58 @@ async def test_log_4xx_requests_middleware_no_2xx(caplog):
     assert_message_not_in_log(caplog, "HTTP 4xx response:")
 
 
-async def test_log_4xx_requests_middleware_http_exception_not_4xx(caplog):
-    """'_log_4xx_requests_middleware' should not log when HTTPException is not 4xx"""
+async def test_requests_middleware_http_exception_not_4xx_5xx(caplog):
+    """'_requests_middleware' should not log when HTTPException is not 4xx or 5xx"""
+    caplog.clear()
+
+    async def handler(_: web.Request) -> web.StreamResponse:
+        raise web.HTTPFound("/redirect")
+
+    with pytest.raises(web.HTTPFound):
+        await http_server.server._requests_middleware(
+            request=type("RequestStub", (), {"method": "GET", "path_qs": "/test"})(),
+            handler=handler,
+        )
+
+    assert_message_not_in_log(caplog, "HTTP 4xx response:")
+    assert_message_not_in_log(caplog, "HTTP 5xx response:")
+
+
+async def test_requests_middleware_http_exception_5xx(caplog):
+    """'_requests_middleware' should log 5xx when HTTPException is 5xx"""
     caplog.clear()
 
     async def handler(_: web.Request) -> web.StreamResponse:
         raise web.HTTPInternalServerError(text="internal error")
 
     with pytest.raises(web.HTTPInternalServerError):
-        await http_server.server._log_4xx_requests_middleware(
+        await http_server.server._requests_middleware(
             request=type("RequestStub", (), {"method": "GET", "path_qs": "/test"})(),
             handler=handler,
         )
 
-    assert_message_not_in_log(caplog, "HTTP 4xx response:")
+    assert_message_in_log(
+        caplog,
+        "HTTP 5xx response: method=GET path=/test status=500 content=internal error",
+    )
 
 
-async def test_log_4xx_requests_middleware_response_4xx(caplog):
-    """'_log_4xx_requests_middleware' should log when handler returns 4xx response"""
+@pytest.mark.parametrize("status", [401, 403, 404, 500])
+async def test_requests_middleware_response_4xx_5xx(caplog, status):
+    """'_requests_middleware' should log when handler returns 4xx or 5xx response"""
     caplog.clear()
 
     async def handler(_: web.Request) -> web.StreamResponse:
-        return web.Response(status=404, text="not found")
+        return web.Response(status=status, text="some error")
 
-    response = await http_server.server._log_4xx_requests_middleware(
+    response = await http_server.server._requests_middleware(
         request=type("RequestStub", (), {"method": "GET", "path_qs": "/test"})(),
         handler=handler,
     )
 
-    assert response.status == 404
+    assert response.status == status
+    error_code = int(status / 100)
     assert_message_in_log(
-        caplog, "HTTP 4xx response: method=GET path=/test status=404 content=not found"
+        caplog,
+        f"HTTP {error_code}xx response: method=GET path=/test status={status} content=some error",
     )
