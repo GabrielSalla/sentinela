@@ -65,6 +65,47 @@ async def test_get_section_block_none():
 
 
 @pytest.mark.parametrize(
+    "input_text, expected",
+    [
+        ("**bold**", "*bold*"),
+        ("__bold__", "*bold*"),
+        ("*italic*", "_italic_"),
+        ("~~strike~~", "~strike~"),
+        ("[link](url)", "<url|link>"),
+        ("**bold** and *italic*", "*bold* and _italic_"),
+        ("__bold__ and ~~strike~~", "*bold* and ~strike~"),
+        ("[text](http://example.com)", "<http://example.com|text>"),
+        ("plain text", "plain text"),
+    ],
+)
+async def test_format_markdown(input_text, expected):
+    """'_format_markdown' should convert standard markdown to Slack mrkdwn"""
+    result = slack._format_markdown(input_text)
+    assert result == expected
+
+
+@pytest.mark.parametrize(
+    "input_text, expected",
+    [
+        ("# Heading", "*Heading*"),
+        ("## Subheading", "*Subheading*"),
+        ("content", "content"),
+        ("", None),
+    ],
+)
+async def test_get_document_block(input_text, expected):
+    """'get_document_block' should build a section block with formatted text"""
+    result = slack.get_document_block(input_text)
+    if expected is None:
+        assert result is None
+    else:
+        assert result is not None
+        assert result["type"] == "section"
+        assert result["text"]["type"] == "mrkdwn"
+        assert result["text"]["text"] == expected
+
+
+@pytest.mark.parametrize(
     "buttons",
     [
         [slack.MessageButton(text="text", action_id="action_id", value="value")],
