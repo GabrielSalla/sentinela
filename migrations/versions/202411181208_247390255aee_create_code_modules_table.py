@@ -24,7 +24,6 @@ def upgrade() -> None:
         sa.Column("monitor_id", sa.Integer(), unique=True),
         sa.Column("code", sa.String(), nullable=True),
         sa.Column("additional_files", postgresql.JSONB, nullable=True),
-        sa.Column("documentation", sa.String(), nullable=True),
         sa.Column("registered_at", sa.DateTime(timezone=True), nullable=True),
 
         sa.ForeignKeyConstraint(("monitor_id",), ["Monitors.id"]),

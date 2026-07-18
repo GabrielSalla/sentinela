@@ -97,7 +97,8 @@ async def register_monitor(
     internal: bool = False,
     log_error: bool = True,
 ) -> Monitor:
-    """Register a monitor and its additional files"""
+    """Register a monitor and its additional files. If additional files contains a file named
+    'README.md', it'll be considered as the monitor documentation"""
     check_monitor(
         base_path=base_path,
         monitor_name=monitor_name,
@@ -107,6 +108,11 @@ async def register_monitor(
     )
 
     monitor = await Monitor.get_or_create(name=monitor_name)
+
+    if additional_files is not None and "README.md" in additional_files:
+        monitor.documentation = additional_files.pop("README.md")
+        await monitor.save()
+
     code_module = await CodeModule.get_or_create(monitor_id=monitor.id)
     await code_module.register(code=monitor_code, additional_files=additional_files or {})
 
