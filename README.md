@@ -99,26 +99,27 @@ Sentinela provides a web dashboard, by default at port `8000`, with 2 sections:
 ![dashboard monitor editor](/docs/images/dashboard_editor.png)
 
 # Documentation
-1. [Overview](/docs/overview.md)
-2. [Building a Monitor](/docs/monitor.md)
+1. [When to use Sentinela](/docs/when_to_use_sentinela.md)
+2. [Overview](/docs/overview.md)
+3. [Building a Monitor](/docs/monitor.md)
     1. [Monitor lifecycle](/docs/monitor_lifecycle.md)
     2. [Example Monitors](/docs/example_monitors.md)
-3. [Querying data from databases](/docs/querying.md)
-4. [Validating a monitor](/docs/monitor_validating.md)
-5. [Registering a monitor](/docs/monitor_registering.md)
-6. Deployment
+4. [Querying data from databases](/docs/querying.md)
+5. [Validating a monitor](/docs/monitor_validating.md)
+6. [Registering a monitor](/docs/monitor_registering.md)
+7. Deployment
     1. [Configuration](/docs/configuration.md)
     2. [Configuration file](/docs/configuration_file.md)
     3. [How to run](/docs/how_to_run.md)
     4. [Recommendations](/docs/recommendations.md)
-7. [Command line interface](/docs/command_line_interface.md)
-8. [Monitoring Sentinela](/docs/monitoring_sentinela.md)
-9. [Plugins](/docs/plugins/plugins.md)
+8. [Command line interface](/docs/command_line_interface.md)
+9. [Monitoring Sentinela](/docs/monitoring_sentinela.md)
+10. [Plugins](/docs/plugins/plugins.md)
     1. [AWS](/docs/plugins/aws.md)
     2. [ODBC](/docs/plugins/odbc.md)
     3. [Postgres](/docs/plugins/postgres.md)
     4. [Slack](/docs/plugins/slack.md)
-10. Interacting with Sentinela
+11. Interacting with Sentinela
     1. [HTTP server](/docs/http_server.md)
-11. Special cases
+12. Special cases
     1. [Dropping issues](/docs/dropping_issues.md)
