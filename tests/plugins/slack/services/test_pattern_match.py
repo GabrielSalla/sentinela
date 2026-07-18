@@ -7,6 +7,8 @@ import pytest
 
 import commands as commands
 import plugins.slack.services.pattern_match as pattern_match
+import plugins.slack.slack as slack
+from models import Monitor
 from tests.message_queue.utils import get_queue_items
 
 pytestmark = pytest.mark.asyncio(loop_scope="session")
@@ -212,6 +214,63 @@ async def test_get_message_request_match_external(
 
 
 @pytest.mark.parametrize(
+    "context",
+    [
+        {"channel": "C1234567890", "thread_ts": "1234"},
+        {"channel": "C1234567890", "ts": "1234"},
+    ],
+)
+async def test_monitor_documentation(mocker, sample_monitor: Monitor, context):
+    """'monitor_documentation' should send the monitor documentation as a thread reply"""
+    sample_monitor.documentation = "monitor documentation"
+    await sample_monitor.save()
+
+    slack_send_spy: AsyncMock = mocker.spy(slack, "send")
+
+    match = re.match(r"docs +(\w+)", f"docs {sample_monitor.name}")
+    assert match is not None
+
+    await pattern_match.monitor_documentation(message_match=match, context=context)
+
+    slack_send_spy.assert_awaited_once()
+    call = slack_send_spy.await_args
+    assert call is not None
+    assert call.kwargs["channel"] == "C1234567890"
+    assert call.kwargs["thread_ts"] == "1234"
+    assert call.kwargs["blocks"] is not None
+
+
+async def test_monitor_documentation_monitor_not_found(mocker):
+    """'monitor_documentation' should just return if the monitor was not found"""
+    slack_send_spy: AsyncMock = mocker.spy(slack, "send")
+
+    match = re.match(r"docs +(\w+)", "docs nonexistent_monitor")
+    assert match is not None
+
+    await pattern_match.monitor_documentation(
+        message_match=match, context={"channel": "C1234567890", "thread_ts": "1234"}
+    )
+
+    slack_send_spy.assert_not_called()
+
+
+async def test_monitor_documentation_no_documentation(mocker, sample_monitor: Monitor):
+    """'monitor_documentation' should send 'No documentation available' if monitor has none"""
+    slack_send_spy: AsyncMock = mocker.spy(slack, "send")
+
+    match = re.match(r"docs +(\w+)", f"docs {sample_monitor.name}")
+    assert match is not None
+
+    await pattern_match.monitor_documentation(
+        message_match=match, context={"channel": "C1234567890", "thread_ts": "1234"}
+    )
+
+    slack_send_spy.assert_awaited_once_with(
+        channel="C1234567890", thread_ts="1234", text="No documentation available"
+    )
+
+
+@pytest.mark.parametrize(
     "message_user_group",
     [
         "<@aaa>",
@@ -229,6 +288,7 @@ async def test_get_message_request_match_external(
         ("refresh abc", "monitor_refresh"),
         ("refresh abc search", "monitor_refresh"),
         ("refresh abc update", "monitor_refresh"),
+        ("docs monitor_name", "monitor_documentation"),
     ],
 )
 async def test_get_message_request_match_plugin(
