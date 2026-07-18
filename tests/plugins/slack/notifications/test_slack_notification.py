@@ -494,6 +494,27 @@ async def test_build_notification_buttons(
         assert button.value == f"solve {alert.id}"
         index += 1
 
+    # Assert there're no more buttons in the list
+    assert index == len(result)
+
+
+async def test_build_notification_buttons_with_documentation(monkeypatch, sample_monitor: Monitor):
+    """'_build_notification_buttons' should add a "Docs" button to the notification when the monitor
+    has documentation"""
+    monkeypatch.setenv("SLACK_WEBSOCKET_ENABLED", "true")
+    sample_monitor.documentation = "monitor documentation"
+    await sample_monitor.save()
+
+    alert = await Alert.create(monitor_id=sample_monitor.id)
+
+    result = await slack_notification._build_notification_buttons(sample_monitor, alert, None)
+
+    # Docs
+    docs_button = result[-1]
+    assert docs_button.text == "Docs"
+    assert docs_button.action_id == f"sentinela_docs_{sample_monitor.name}"
+    assert docs_button.value == f"docs {sample_monitor.name}"
+
 
 async def test_build_notification_buttons_solved(monkeypatch, sample_monitor: Monitor):
     """'_build_notification_buttons' should return an empty list if the alert is solved"""
