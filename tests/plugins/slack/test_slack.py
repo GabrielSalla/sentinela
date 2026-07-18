@@ -154,6 +154,13 @@ async def test_build_attachments(kwargs, expected_result):
             "attachments": [{}],
             "thread_ts": "123456.789",
         },
+        {
+            "channel": "other_channel",
+            "text": "more text",
+            "attachments": [{}],
+            "thread_ts": "123123.0",
+            "blocks": [{"type": "section", "text": {"type": "mrkdwn", "text": "text"}}],
+        },
     ],
 )
 async def test_send(mocker, kwargs):
@@ -169,6 +176,8 @@ async def test_send(mocker, kwargs):
         call_args["attachments"] = None
     if "thread_ts" not in call_args:
         call_args["thread_ts"] = None
+    if "blocks" not in call_args:
+        call_args["blocks"] = None
 
     chat_postmessage_spy.assert_called_once_with(**call_args)
 

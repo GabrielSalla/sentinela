@@ -100,6 +100,7 @@ async def send(
     text: str | None = None,
     attachments: list[dict[Any, Any]] | None = None,
     thread_ts: str | None = None,
+    blocks: list[dict[Any, Any]] | None = None,
 ) -> AsyncSlackResponse:
     """Send a message to a Slack channel with the provided parameters"""
     try:
@@ -108,6 +109,7 @@ async def send(
             thread_ts=thread_ts,
             text=text,
             attachments=attachments,
+            blocks=blocks,
         )
     except SlackApiError as e:
         return cast(AsyncSlackResponse, e.response)
