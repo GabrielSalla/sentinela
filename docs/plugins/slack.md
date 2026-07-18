@@ -27,6 +27,7 @@ Possible buttons:
 - **Ack**: Acknowledge the alert. Visible if the alert has not yet been acknowledged at the priority level.
 - **Lock**: Lock the alert. Visible if the alert is not already locked.
 - **Solve**: Solves the alert. Visible only if the monitor’s issue settings is set as **not solvable**.
+- **Docs**: Sends the monitor documentation as a thread reply. Visible if the monitor has documentation.
 
 ![Slack message with buttons](/docs/images/slack_notification_message_with_buttons.png)
 
@@ -41,6 +42,7 @@ Available commands:
 - `lock {alert_id}`: Lock the specified alert.
 - `solve {alert_id}`: Solve the specified alert.
 - `drop issue {issue_id}`: Drop the specified issue.
+- `docs {monitor_name}`: Send the monitor's documentation as a thread reply.
 - `resend notifications`: Delete and resend all active notifications for the current channel. Sometimes a Slack channel can have a lot of messages and a notification might get lost in the past. This command will resend the notification message so it'll be among the latest messages.
 
 Examples:
@@ -53,6 +55,7 @@ Examples:
 - `@Sentinela lock 2345`
 - `@Sentinela solve 3456`
 - `@Sentinela drop issue 1212`
+- `@Sentinela docs some_monitor`
 - `@Sentinela resend notifications`
 
 > [!WARNING]

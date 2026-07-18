@@ -65,6 +65,47 @@ async def test_get_section_block_none():
 
 
 @pytest.mark.parametrize(
+    "input_text, expected",
+    [
+        ("**bold**", "*bold*"),
+        ("__bold__", "*bold*"),
+        ("*italic*", "_italic_"),
+        ("~~strike~~", "~strike~"),
+        ("[link](url)", "<url|link>"),
+        ("**bold** and *italic*", "*bold* and _italic_"),
+        ("__bold__ and ~~strike~~", "*bold* and ~strike~"),
+        ("[text](http://example.com)", "<http://example.com|text>"),
+        ("plain text", "plain text"),
+    ],
+)
+async def test_format_markdown(input_text, expected):
+    """'_format_markdown' should convert standard markdown to Slack mrkdwn"""
+    result = slack._format_markdown(input_text)
+    assert result == expected
+
+
+@pytest.mark.parametrize(
+    "input_text, expected",
+    [
+        ("# Heading", "*Heading*"),
+        ("## Subheading", "*Subheading*"),
+        ("content", "content"),
+        ("", None),
+    ],
+)
+async def test_get_document_block(input_text, expected):
+    """'get_document_block' should build a section block with formatted text"""
+    result = slack.get_document_block(input_text)
+    if expected is None:
+        assert result is None
+    else:
+        assert result is not None
+        assert result["type"] == "section"
+        assert result["text"]["type"] == "mrkdwn"
+        assert result["text"]["text"] == expected
+
+
+@pytest.mark.parametrize(
     "buttons",
     [
         [slack.MessageButton(text="text", action_id="action_id", value="value")],
@@ -154,6 +195,13 @@ async def test_build_attachments(kwargs, expected_result):
             "attachments": [{}],
             "thread_ts": "123456.789",
         },
+        {
+            "channel": "other_channel",
+            "text": "more text",
+            "attachments": [{}],
+            "thread_ts": "123123.0",
+            "blocks": [{"type": "section", "text": {"type": "mrkdwn", "text": "text"}}],
+        },
     ],
 )
 async def test_send(mocker, kwargs):
@@ -169,6 +217,8 @@ async def test_send(mocker, kwargs):
         call_args["attachments"] = None
     if "thread_ts" not in call_args:
         call_args["thread_ts"] = None
+    if "blocks" not in call_args:
+        call_args["blocks"] = None
 
     chat_postmessage_spy.assert_called_once_with(**call_args)
 

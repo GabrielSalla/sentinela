@@ -1,4 +1,5 @@
 import os
+import re
 from typing import Any, cast
 
 from pydantic.dataclasses import dataclass
@@ -60,6 +61,33 @@ def get_section_block(text: str | None) -> dict[str, Any] | None:
     }
 
 
+def _format_markdown(text: str) -> str:
+    """Convert standard Markdown formatting to Slack markdown"""
+    # __bold__ or ~~strike~~ to **bold** or ~strike~ (normalize to asterisk/tilde)
+    text = text.replace("__", "**").replace("~~", "~")
+    # [text](url) → <url|text> (Slack link format)
+    text = re.sub(r"\[([^\]]+)\]\(([^)]+)\)", r"<\2|\1>", text)
+    # *italic* to _italic_  then  **bold** to *bold*  (italic first avoids double-* conflict)
+    return re.sub(r"(?<!\*)\*(?!\*)(.+?)(?<!\*)\*(?!\*)", r"_\1_", text).replace("**", "*")
+
+
+def get_document_block(text: str) -> dict[str, Any] | None:
+    """Build a 'section' block with the text formatted to Slack markdown"""
+    if not text:
+        return None
+
+    lines = text.split("\n")
+    formatted_lines = []
+    for line in lines:
+        if line.startswith("#"):
+            heading_text = line.lstrip("#").strip()
+            formatted_lines.append(f"*{heading_text}*")
+        else:
+            formatted_lines.append(_format_markdown(line))
+
+    return get_section_block("\n".join(formatted_lines))
+
+
 def get_actions_block(*buttons: MessageButton) -> dict[str, Any] | None:
     """Build a 'actions' block with buttons"""
     if len(buttons) == 0:
@@ -100,6 +128,7 @@ async def send(
     text: str | None = None,
     attachments: list[dict[Any, Any]] | None = None,
     thread_ts: str | None = None,
+    blocks: list[dict[Any, Any]] | None = None,
 ) -> AsyncSlackResponse:
     """Send a message to a Slack channel with the provided parameters"""
     try:
@@ -108,6 +137,7 @@ async def send(
             thread_ts=thread_ts,
             text=text,
             attachments=attachments,
+            blocks=blocks,
         )
     except SlackApiError as e:
         return cast(AsyncSlackResponse, e.response)

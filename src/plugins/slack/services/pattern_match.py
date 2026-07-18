@@ -3,6 +3,9 @@ from typing import Any, Coroutine
 
 import commands as commands
 import message_queue as message_queue
+from models import Monitor
+
+from .. import slack
 
 
 def monitor_disable(
@@ -53,6 +56,31 @@ def issue_drop(message_match: re.Match[Any], context: dict[str, Any]) -> Corouti
     return commands.issue_drop(issue_id)
 
 
+async def monitor_documentation(message_match: re.Match[Any], context: dict[str, Any]) -> None:
+    """Send monitor documentation as a thread reply"""
+    monitor_name = message_match.group(1)
+
+    monitor = await Monitor.get(Monitor.name == monitor_name)
+    if monitor is None:
+        return
+
+    channel = context["channel"]
+    # The message may not contain the 'thread_ts' field, so fallback to 'ts'
+    thread_ts = context.get("thread_ts", context.get("ts"))
+
+    if not monitor.documentation:
+        await slack.send(channel=channel, thread_ts=thread_ts, text="No documentation available")
+        return
+
+    doc_block = slack.get_document_block(monitor.documentation)
+    await slack.send(
+        channel=channel,
+        thread_ts=thread_ts,
+        text="**Monitor documentation**",
+        blocks=[doc_block] if doc_block else [],
+    )
+
+
 def resend_notifications(
     message_match: re.Match[Any], context: dict[str, Any]
 ) -> Coroutine[Any, Any, Any]:
@@ -66,22 +94,24 @@ def resend_notifications(
     )
 
 
+MENTION_PATTERN = r"(?:<@\w+>)? "
 PATTERNS = {
-    r"(?:<@\w+>)? ?disable monitor +(\w+)": monitor_disable,
-    r"(?:<@\w+>)? ?enable monitor +(\w+)": monitor_enable,
-    r"(?:<@\w+>)? ?refresh +(\w+)(?: +(search|update))?": monitor_refresh,
-    r"(?:<@\w+>)? ?ack +(\d+)": alert_acknowledge,
-    r"(?:<@\w+>)? ?lock +(\d+)": alert_lock,
-    r"(?:<@\w+>)? ?solve +(\d+)": alert_solve,
-    r"(?:<@\w+>)? ?drop issue +(\d+)": issue_drop,
-    r"(?:<@\w+>)? ?resend notifications": resend_notifications,
+    r"?disable monitor +(\w+)": monitor_disable,
+    r"?enable monitor +(\w+)": monitor_enable,
+    r"?refresh +(\w+)(?: +(search|update))?": monitor_refresh,
+    r"?ack +(\d+)": alert_acknowledge,
+    r"?lock +(\d+)": alert_lock,
+    r"?solve +(\d+)": alert_solve,
+    r"?drop issue +(\d+)": issue_drop,
+    r"?docs +(\w+)": monitor_documentation,
+    r"?resend notifications": resend_notifications,
 }
 
 
 def get_message_request(message: str, context: dict[str, Any]) -> Coroutine[Any, Any, Any] | None:
     """Get a coroutine to be awaited corresponding to the provided request"""
     for pattern, get_action_function in PATTERNS.items():
-        match = re.match(pattern, message)
+        match = re.match(MENTION_PATTERN + pattern, message)
 
         if match is None:
             continue

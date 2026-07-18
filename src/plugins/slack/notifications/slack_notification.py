@@ -251,6 +251,15 @@ async def _build_notification_buttons(
             )
         )
 
+    if monitor.documentation is not None:
+        buttons.append(
+            slack.MessageButton(
+                text="Docs",
+                action_id=f"sentinela_docs_{monitor.name}",
+                value=f"docs {monitor.name}",
+            )
+        )
+
     return buttons
 
 
