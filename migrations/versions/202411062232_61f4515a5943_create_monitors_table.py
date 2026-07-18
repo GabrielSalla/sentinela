@@ -21,6 +21,7 @@ def upgrade() -> None:
         "Monitors",
         sa.Column("id", sa.Integer(), primary_key=True),
         sa.Column("name", sa.String(255), unique=True),
+        sa.Column("documentation", sa.String(), nullable=True),
         sa.Column("enabled", sa.Boolean(), insert_default=True),
         sa.Column("queued", sa.Boolean(), insert_default=False),
         sa.Column("running", sa.Boolean(), insert_default=False),

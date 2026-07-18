@@ -325,6 +325,33 @@ async def test_register_monitor_monitor_already_exists_error():
     assert code_module.registered_at == registered_at
 
 
+async def test_register_monitor_with_documentation():
+    """'register_monitor' function should extract the monitor documentation from the 'README.md'
+    file in the additional files and store it in the monitor model"""
+    monitor_name = "test_register_monitor_with_documentation"
+
+    with open("tests/example_monitors/others/monitor_1/monitor_1.py", "r") as file:
+        monitor_code = file.read()
+
+    monitor = await monitors_loader.register_monitor(
+        monitor_name,
+        monitor_code,
+        additional_files={
+            "file1.py": "content1",
+            "file2.py": "content2",
+            "README.md": "monitor docs",
+        },
+    )
+
+    await monitor.refresh()
+    assert monitor.documentation == "monitor docs"
+
+    code_module = await CodeModule.get(CodeModule.monitor_id == monitor.id)
+    assert code_module is not None
+    assert code_module.additional_files == {"file1.py": "content1", "file2.py": "content2"}
+    assert code_module.code == monitor_code
+
+
 async def test_register_monitor_validation_error():
     """'register_monitor' function should raise a 'MonitorValidationError' if the monitor module
     does not pass the validation"""

@@ -19,7 +19,6 @@ class CodeModule(Base):
         MutableDict.as_mutable(postgresql.JSONB),  # type: ignore[arg-type]
         nullable=True,
     )
-    documentation: Mapped[str] = mapped_column(String(), nullable=True)
     registered_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=True)
 
     # Code modules won't trigger events when they are created
@@ -45,11 +44,7 @@ class CodeModule(Base):
 
     @Base.lock_change
     async def register(self, code: str, additional_files: dict[str, str] | None = None) -> None:
-        """Register a code module with the given code and additional files. If additional files
-        contains a file named 'README.md', it'll be considered as the documentation"""
-        if additional_files is not None and "README.md" in additional_files:
-            self.documentation = additional_files.pop("README.md")
-
+        """Register a code module with the given code and additional files"""
         self.code = code
         self.additional_files = additional_files or {}
         self.registered_at = datetime.now()

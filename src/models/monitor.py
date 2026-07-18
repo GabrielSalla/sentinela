@@ -25,6 +25,7 @@ class Monitor(Base):
 
     id: Mapped[int] = mapped_column(Integer(), primary_key=True)
     name: Mapped[str] = mapped_column(String(255), unique=True, index=True)
+    documentation: Mapped[str] = mapped_column(String(), nullable=True)
     enabled: Mapped[bool] = mapped_column(Boolean(), insert_default=True)
     queued: Mapped[bool] = mapped_column(Boolean(), insert_default=False)
     running: Mapped[bool] = mapped_column(Boolean(), insert_default=False)

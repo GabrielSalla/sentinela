@@ -160,6 +160,7 @@ async def test_get_monitor(sample_monitor: Monitor):
     code_module = await CodeModule.get(CodeModule.monitor_id == sample_monitor.id)
     assert code_module is not None
 
+    sample_monitor.documentation = "monitor documentation"
     sample_monitor.search_executed_at = datetime(2025, 1, 1, 12, 34, 56, 789)
     sample_monitor.update_executed_at = datetime(2025, 11, 12, 13, 14, 15, 123)
     sample_monitor.last_heartbeat = datetime(2025, 1, 2, 3, 4, 5, 999)
@@ -167,7 +168,6 @@ async def test_get_monitor(sample_monitor: Monitor):
 
     code_module.code = 'print("Sample code")'
     code_module.additional_files = {"file.sql": "SELECT 1;"}
-    code_module.documentation = "monitor documentation"
     await code_module.save()
 
     url = BASE_URL + f"/{sample_monitor.name}"
@@ -178,6 +178,7 @@ async def test_get_monitor(sample_monitor: Monitor):
     assert response_data == {
         "id": sample_monitor.id,
         "name": sample_monitor.name,
+        "documentation": "monitor documentation",
         "enabled": sample_monitor.enabled,
         "queued": False,
         "running": False,
@@ -186,7 +187,6 @@ async def test_get_monitor(sample_monitor: Monitor):
         "last_heartbeat": "2025-01-02 00:04:05",  # Converting from UTC
         "code": 'print("Sample code")',
         "additional_files": {"file.sql": "SELECT 1;"},
-        "documentation": "monitor documentation",
     }
 
 
