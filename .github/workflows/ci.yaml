@@ -9,8 +9,8 @@ on:
       - main
 
 jobs:
-  check-version-change:
-    name: Check version change
+  check-skip:
+    name: Check changes skip
     runs-on: ubuntu-latest
     outputs:
       skip: ${{ steps.check.outputs.skip }}
@@ -19,21 +19,30 @@ jobs:
         uses: actions/checkout@v6
         with:
           fetch-depth: 0
-      - name: Check if only version changed
+      - name: Check changes skip
         id: check
         run: |
           if [ "${{ github.event_name }}" != "pull_request" ]; then
             echo "skip=false" >> $GITHUB_OUTPUT
-            echo "Non-PR event detected; version-only skip is disabled."
+            echo "Non-PR event detected; skip is disabled."
             exit 0
           fi
 
+          IGNORED_PATTERNS="configs/ docs/ example_monitors/ resources/ .gitignore FUNDING.yml LICENSE.txt *.md"
           BASE_SHA=${{ github.event.pull_request.base.sha }}
           HEAD_SHA=${{ github.sha }}
           CHANGED_FILES=$(git diff --name-only "$BASE_SHA" "$HEAD_SHA")
-          if [ "$CHANGED_FILES" == "pyproject.toml" ]; then
+          for PATTERN in $IGNORED_PATTERNS; do
+            CHANGED_FILES=$(echo "$CHANGED_FILES" | grep -v "^$PATTERN" || true)
+          done
+          if [ -z "$CHANGED_FILES" ]; then
+            echo "Only ignored changes detected"
+            echo "skip=true" >> $GITHUB_OUTPUT
+            exit 0
+          fi
+
+          if [ "$(echo "$CHANGED_FILES" | wc -l)" -eq 1 ] && [ "$CHANGED_FILES" = "pyproject.toml" ]; then
             DIFF=$(git diff "$BASE_SHA" "$HEAD_SHA" -- pyproject.toml)
-            # Check if diff changes version line
             if echo "$DIFF" | grep -q "^+version = " && echo "$DIFF" | grep -q "^-version = "; then
               echo "Only version change detected"
               echo "skip=true" >> $GITHUB_OUTPUT
@@ -42,15 +51,15 @@ jobs:
               echo "Non-version change detected"
             fi
           else
-            echo "Non-version change detected"
             echo "skip=false" >> $GITHUB_OUTPUT
+            echo "Non-skip change detected"
           fi
 
   build-image:
     name: Build image
     runs-on: ubuntu-latest
-    needs: check-version-change
-    if: needs.check-version-change.outputs.skip != 'true'
+    needs: check-skip
+    if: needs.check-skip.outputs.skip != 'true'
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v6
@@ -68,7 +77,7 @@ jobs:
     name: Run linter
     runs-on: ubuntu-latest
     needs: build-image
-    if: needs.check-version-change.outputs.skip != 'true'
+    if: needs.check-skip.outputs.skip != 'true'
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v6
@@ -86,7 +95,7 @@ jobs:
     name: Run mypy
     runs-on: ubuntu-latest
     needs: build-image
-    if: needs.check-version-change.outputs.skip != 'true'
+    if: needs.check-skip.outputs.skip != 'true'
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v6
@@ -104,7 +113,7 @@ jobs:
     name: Run tests
     runs-on: ubuntu-latest
     needs: build-image
-    if: needs.check-version-change.outputs.skip != 'true'
+    if: needs.check-skip.outputs.skip != 'true'
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v6
@@ -137,7 +146,7 @@ jobs:
     name: merge-gate
     runs-on: ubuntu-latest
     needs:
-      - check-version-change
+      - check-skip
       - run-linter
       - run-mypy
       - run-tests
@@ -145,8 +154,8 @@ jobs:
     steps:
       - name: Check merge eligibility
         run: |
-          if [ "${{ needs.check-version-change.outputs.skip }}" = "true" ]; then
-            echo "Version-only change detected; merge-gate job passes."
+          if [ "${{ needs.check-skip.outputs.skip }}" = "true" ]; then
+            echo "Only skip changes detected; merge-gate job passes."
             exit 0
           fi
           if [ "${{ needs.run-linter.result }}" != "success" ] && [ "${{ needs.run-linter.result }}" != "skipped" ]; then
