@@ -22,6 +22,17 @@ from utils.log import set_logger_level
 
 _logger = logging.getLogger("http_server")
 
+prometheus_http_4xx_count = prometheus_client.Counter(
+    "http_server_response_4xx",
+    "Count of HTTP 4xx responses",
+    ["method", "path", "status"],
+)
+prometheus_http_5xx_count = prometheus_client.Counter(
+    "http_server_response_5xx",
+    "Count of HTTP 5xx responses",
+    ["method", "path", "status"],
+)
+
 _runner: web.AppRunner
 
 base_routes = web.RouteTableDef()
@@ -115,10 +126,10 @@ async def _pydantic_validation_middleware(
 
 
 @web.middleware
-async def _log_4xx_requests_middleware(
+async def _requests_middleware(
     request: Request, handler: Callable[[Request], Awaitable[StreamResponse]]
 ) -> StreamResponse:
-    """Log HTTP requests that return a 4xx status code"""
+    """Log HTTP requests that return a 4xx or 5xx status code"""
     try:
         response = await handler(request)
     except web.HTTPException as error:
@@ -129,6 +140,19 @@ async def _log_4xx_requests_middleware(
                 f"status={error.status} "
                 f"content={error.text}"
             )
+            prometheus_http_4xx_count.labels(
+                method=request.method, path=request.path_qs, status=error.status
+            ).inc()
+        elif 500 <= error.status < 600:
+            _logger.error(
+                f"HTTP 5xx response: method={request.method} "
+                f"path={request.path_qs} "
+                f"status={error.status} "
+                f"content={error.text}"
+            )
+            prometheus_http_5xx_count.labels(
+                method=request.method, path=request.path_qs, status=error.status
+            ).inc()
         raise
 
     if 400 <= response.status < 500:
@@ -139,6 +163,20 @@ async def _log_4xx_requests_middleware(
             f"status={response.status} "
             f"content={response_content}"
         )
+        prometheus_http_4xx_count.labels(
+            method=request.method, path=request.path_qs, status=response.status
+        ).inc()
+    elif 500 <= response.status < 600:
+        response_content = response.text if isinstance(response, web.Response) else ""
+        _logger.error(
+            f"HTTP 5xx response: method={request.method} "
+            f"path={request.path_qs} "
+            f"status={response.status} "
+            f"content={response_content}"
+        )
+        prometheus_http_5xx_count.labels(
+            method=request.method, path=request.path_qs, status=response.status
+        ).inc()
 
     return response
 
@@ -146,9 +184,7 @@ async def _log_4xx_requests_middleware(
 async def init(controller_enabled: bool = False) -> None:
     global _runner
 
-    app = web.Application(
-        middlewares=[_log_4xx_requests_middleware, _pydantic_validation_middleware]
-    )
+    app = web.Application(middlewares=[_requests_middleware, _pydantic_validation_middleware])
     set_logger_level(logging.getLogger("aiohttp.web"), configs.http_server.log_level)
     set_logger_level(logging.getLogger("aiohttp.access"), configs.http_server.log_level)
 
