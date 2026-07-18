@@ -70,7 +70,7 @@ async def command(
     channel = body["channel"]["id"]
     thread_ts = body["message"]["ts"]
 
-    action = get_message_request(message, {})
+    action = get_message_request(message, {"channel": channel, "thread_ts": thread_ts})
     if action is not None:
         try:
             await action
