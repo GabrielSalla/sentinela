@@ -452,9 +452,11 @@ async def test_link_issues_linked(caplog, mocker, sample_monitor: Monitor):
     linked_issues_ids = {issue.id for issue in linked_issues}
     assert linked_issues_ids == issues_ids
 
-    alert_create_event_spy.assert_awaited_once_with(
-        "alert_issues_linked", extra_payload={"issues_ids": list(issues_ids)}
-    )
+    alert_create_event_spy.assert_awaited_once()
+    call_args = alert_create_event_spy.await_args
+    assert call_args is not None
+    assert call_args.args == ("alert_issues_linked",)
+    assert set(call_args.kwargs["extra_payload"]["issues_ids"]) == issues_ids
     assert_message_in_log(caplog, "Issues linked")
 
 
