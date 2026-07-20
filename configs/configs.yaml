@@ -76,3 +76,25 @@ databases_pools_configs:
       application_name: sentinela
 
 log_all_events: false
+
+plugins_configs:
+  slack:
+    commands:
+      monitor_disable:
+        enabled: true
+      monitor_enable:
+        enabled: true
+      monitor_refresh:
+        enabled: true
+      alert_acknowledge:
+        enabled: true
+      alert_lock:
+        enabled: true
+      alert_solve:
+        enabled: true
+      issue_drop:
+        enabled: true
+      monitor_documentation:
+        enabled: true
+      resend_notifications:
+        enabled: true

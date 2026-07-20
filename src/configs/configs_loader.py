@@ -89,6 +89,8 @@ class Configs:
 
     log_all_events: bool
 
+    plugins_configs: dict[str, Any]
+
     logging: FriendlyLogConfig | JsonLogConfig = Field(discriminator="mode")
 
 

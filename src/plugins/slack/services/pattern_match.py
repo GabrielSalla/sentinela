@@ -3,6 +3,7 @@ from typing import Any, Coroutine
 
 import commands as commands
 import message_queue as message_queue
+from configs import configs
 from models import Monitor
 
 from .. import slack
@@ -28,6 +29,31 @@ async def monitor_refresh(message_match: re.Match[Any], context: dict[str, Any])
     task = message_match.group(2)
     tasks = [task] if task is not None else ["search", "update"]
     await commands.monitor_refresh(monitor_name, tasks)
+
+
+async def monitor_documentation(message_match: re.Match[Any], context: dict[str, Any]) -> None:
+    """Send monitor documentation as a thread reply"""
+    monitor_name = message_match.group(1)
+
+    monitor = await Monitor.get(Monitor.name == monitor_name)
+    if monitor is None:
+        return
+
+    channel = context["channel"]
+    # The message may not contain the 'thread_ts' field, so fallback to 'ts'
+    thread_ts = context.get("thread_ts", context.get("ts"))
+
+    if not monitor.documentation:
+        await slack.send(channel=channel, thread_ts=thread_ts, text="No documentation available")
+        return
+
+    doc_block = slack.get_document_block(monitor.documentation)
+    await slack.send(
+        channel=channel,
+        thread_ts=thread_ts,
+        text="**Monitor documentation**",
+        blocks=[doc_block] if doc_block else [],
+    )
 
 
 def alert_acknowledge(
@@ -56,31 +82,6 @@ def issue_drop(message_match: re.Match[Any], context: dict[str, Any]) -> Corouti
     return commands.issue_drop(issue_id)
 
 
-async def monitor_documentation(message_match: re.Match[Any], context: dict[str, Any]) -> None:
-    """Send monitor documentation as a thread reply"""
-    monitor_name = message_match.group(1)
-
-    monitor = await Monitor.get(Monitor.name == monitor_name)
-    if monitor is None:
-        return
-
-    channel = context["channel"]
-    # The message may not contain the 'thread_ts' field, so fallback to 'ts'
-    thread_ts = context.get("thread_ts", context.get("ts"))
-
-    if not monitor.documentation:
-        await slack.send(channel=channel, thread_ts=thread_ts, text="No documentation available")
-        return
-
-    doc_block = slack.get_document_block(monitor.documentation)
-    await slack.send(
-        channel=channel,
-        thread_ts=thread_ts,
-        text="**Monitor documentation**",
-        blocks=[doc_block] if doc_block else [],
-    )
-
-
 def resend_notifications(
     message_match: re.Match[Any], context: dict[str, Any]
 ) -> Coroutine[Any, Any, Any]:
@@ -91,6 +92,19 @@ def resend_notifications(
             "action": "plugin.slack.resend_notifications",
             "params": {"slack_channel": context["channel"]},
         },
+    )
+
+
+async def disabled_command_message(message_match: re.Match[Any], context: dict[str, Any]) -> None:
+    """Send a message indicating that the command is disabled"""
+    channel = context["channel"]
+    # The message may not contain the 'thread_ts' field, so fallback to 'ts'
+    thread_ts = context.get("thread_ts", context.get("ts"))
+
+    await slack.send(
+        channel=channel,
+        thread_ts=thread_ts,
+        text=f"Command for the message `{message_match.group(0)}` is disabled",
     )
 
 
@@ -110,15 +124,17 @@ PATTERNS = {
 
 def get_message_request(message: str, context: dict[str, Any]) -> Coroutine[Any, Any, Any] | None:
     """Get a coroutine to be awaited corresponding to the provided request"""
+    commands_configs = configs.plugins_configs.get("slack", {}).get("commands", {})
+
     for pattern, get_action_function in PATTERNS.items():
         match = re.match(MENTION_PATTERN + pattern, message)
 
         if match is None:
             continue
 
-        return get_action_function(
-            message_match=match,
-            context=context,
-        )
+        if not commands_configs.get(get_action_function.__name__, {}).get("enabled", True):
+            return disabled_command_message(message_match=match, context=context)
+
+        return get_action_function(message_match=match, context=context)
 
     return None
