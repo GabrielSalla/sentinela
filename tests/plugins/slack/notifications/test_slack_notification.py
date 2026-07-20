@@ -1638,6 +1638,94 @@ async def test_handle_slack_notification_update_lower_priority(mocker, sample_mo
     update_notification_spy.assert_called_once()
 
 
+@pytest.mark.parametrize(
+    "event_name, extra_payload, expect_to_send",
+    [
+        (None, {"user": "U12345"}, False),
+        ("unknown_event", {"user": "U12345"}, False),
+        ("alert_acknowledged", None, False),
+        ("alert_acknowledged", {"other": "data"}, False),
+        ("alert_acknowledged", {"user": "U12345"}, True),
+    ],
+)
+async def test_send_interaction_reply(mocker, event_name, extra_payload, expect_to_send):
+    """'_send_interaction_reply' should send a thread reply only when event_name is known and
+    user is present"""
+    slack_send_spy: AsyncMock = mocker.spy(slack, "send")
+
+    await slack_notification._send_interaction_reply(
+        channel="channel",
+        thread_ts="11.22",
+        event_name=event_name,
+        extra_payload=extra_payload,
+    )
+
+    if expect_to_send:
+        label = slack_notification._ACTION_LABELS[event_name]
+        slack_send_spy.assert_awaited_once_with(
+            channel="channel",
+            thread_ts="11.22",
+            text=f"Alert {label} by <@{extra_payload['user']}>",
+        )
+    else:
+        slack_send_spy.assert_not_awaited()
+
+
+@pytest.mark.parametrize(
+    "event_name, extra_payload, expect_reply",
+    [
+        ("alert_acknowledged", {"user": "U12345"}, True),
+        ("alert_locked", {"user": "U67890"}, True),
+        ("alert_solved", {"user": "U54321"}, True),
+        ("alert_updated", {"user": "U11111"}, True),
+        ("alert_acknowledged", None, False),
+        ("alert_acknowledged", {"other": "data"}, False),
+        ("alert_unlocked", {"user": "U12345"}, False),
+    ],
+)
+async def test_handle_slack_notification_update_with_interaction_reply(
+    mocker, sample_monitor: Monitor, event_name, extra_payload, expect_reply
+):
+    """'_handle_slack_notification' should call '_send_interaction_reply' with the correct args
+    when there is a notification and an event"""
+    send_interaction_reply_mock: AsyncMock = mocker.spy(
+        slack_notification, "_send_interaction_reply"
+    )
+
+    alert = await Alert.create(
+        monitor_id=sample_monitor.id,
+        priority=2,
+    )
+    await Notification.create(
+        monitor_id=alert.monitor_id,
+        alert_id=alert.id,
+        target="slack",
+        data={"channel": "channel", "ts": "11.22"},
+    )
+    notification_options = slack_notification.SlackNotification(
+        channel="channel",
+        title="title",
+        issues_fields=["col"],
+        min_priority_to_send=3,
+        mention="mention",
+        min_priority_to_mention=2,
+    )
+
+    await slack_notification._handle_slack_notification(
+        alert_id=alert.id,
+        notification_options=notification_options,
+        extra_payload=extra_payload,
+        event_name=event_name,
+    )
+
+    send_interaction_reply_mock.assert_awaited_once_with(
+        channel="channel",
+        thread_ts="11.22",
+        event_name=event_name,
+        extra_payload=extra_payload,
+    )
+
+
 @pytest.mark.parametrize("alert_id", [1, 10, 20, 123])
 async def test_handle_event(monkeypatch, alert_id):
     """'handle_event' should call '_handle_slack_notification' with the alert id and the
@@ -1668,7 +1756,9 @@ async def test_handle_event(monkeypatch, alert_id):
         notification_options,
     )
 
-    handle_slack_notification_mock.assert_awaited_once_with(alert_id, notification_options)
+    handle_slack_notification_mock.assert_awaited_once_with(
+        alert_id, notification_options, extra_payload=None, event_name=""
+    )
 
 
 @pytest.mark.parametrize("event_source", ["monitor", "issue", "other"])

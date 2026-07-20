@@ -1,6 +1,6 @@
 import enum
 from datetime import datetime
-from typing import Sequence
+from typing import Any, Sequence
 
 from sqlalchemy import Boolean, DateTime, Enum, ForeignKey, Integer
 from sqlalchemy.orm import Mapped, mapped_column
@@ -150,7 +150,9 @@ class Alert(Base):
         self._logger.debug(f"Issues linked: {linked_issues_ids}")
 
     @Base.lock_change
-    async def acknowledge(self, send_event: bool = True) -> None:
+    async def acknowledge(
+        self, send_event: bool = True, context: dict[str, Any] | None = None
+    ) -> None:
         """Acknowledge the alert at the current priority"""
         if self.status != AlertStatus.active:
             self._logger.info(f"Can't acknowledge, status is {self.status.value!r}")
@@ -164,7 +166,7 @@ class Alert(Base):
         await self.save()
 
         if send_event:
-            await self._create_event("alert_acknowledged")
+            await self._create_event("alert_acknowledged", extra_payload=context)
 
         self._logger.debug("Acknowledged")
 
@@ -186,7 +188,7 @@ class Alert(Base):
         self._logger.debug("Acknowledgement dismissed")
 
     @Base.lock_change
-    async def lock(self) -> None:
+    async def lock(self, context: dict[str, Any] | None = None) -> None:
         """Lock the alert to prevent linking new issues"""
         if self.status != AlertStatus.active:
             self._logger.info(f"Can't lock, status is {self.status.value!r}")
@@ -198,7 +200,7 @@ class Alert(Base):
         self.locked = True
         await self.save()
 
-        await self._create_event("alert_locked")
+        await self._create_event("alert_locked", extra_payload=context)
 
         self._logger.debug("Locked")
 
@@ -219,7 +221,7 @@ class Alert(Base):
 
         self._logger.debug("Unlocked")
 
-    async def update(self) -> None:
+    async def update(self, context: dict[str, Any] | None = None) -> None:
         """Update the alert, checking if it's solved and queueing an 'alert_updated' event for the
         monitor's notifications"""
         if self.status != AlertStatus.active:
@@ -230,12 +232,12 @@ class Alert(Base):
             Issue.alert_id == self.id, Issue.status == IssueStatus.active
         )
         if issues_count == 0:
-            await self.solve()
+            await self.solve(context=context)
         else:
-            await self._create_event("alert_updated")
+            await self._create_event("alert_updated", extra_payload=context)
             self._logger.debug("Updated")
 
-    async def solve_issues(self) -> None:
+    async def solve_issues(self, context: dict[str, Any] | None = None) -> None:
         """Solve the alert's active issues if the issues are not 'solvable'"""
         if self.status != AlertStatus.active:
             self._logger.info(f"Can't solve issues, status is {self.status.value!r}")
@@ -248,10 +250,10 @@ class Alert(Base):
         await do_concurrently(*[issue.solve() for issue in await self.active_issues])
 
         await self.acknowledge(send_event=False)
-        await self.update()
+        await self.update(context=context)
 
     @Base.lock_change
-    async def solve(self) -> None:
+    async def solve(self, context: dict[str, Any] | None = None) -> None:
         """Solve an alert, setting it's 'status' and 'solved_at' attributes"""
         if self.status != AlertStatus.active:
             self._logger.info(f"Can't solve, status is {self.status.value!r}")
@@ -261,6 +263,6 @@ class Alert(Base):
         self.solved_at = now()
         await self.save()
 
-        await self._create_event("alert_solved")
+        await self._create_event("alert_solved", extra_payload=context)
 
         self._logger.debug("Solved")

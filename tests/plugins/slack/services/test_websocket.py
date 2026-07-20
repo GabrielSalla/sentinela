@@ -35,7 +35,9 @@ async def test_app_mention_alert_actions(mocker, sample_monitor: Monitor, action
     body = {"event": {"channel": "C12345678", "ts": "1234", "text": message}}
     await websocket.app_mention(body)
 
-    action_spy.assert_awaited_once_with(alert.id)
+    action_spy.assert_awaited_once_with(
+        alert.id, context={"channel": "C12345678", "thread_ts": "1234", "user": None}
+    )
     slack_add_reaction_spy.assert_awaited_once_with(
         channel="C12345678", ts="1234", reaction="ballot_box_with_check"
     )
@@ -50,7 +52,9 @@ async def test_app_mention_issue_drop(mocker, sample_monitor: Monitor):
     body = {"event": {"channel": "C12345678", "ts": "1234", "text": f"drop issue {issue.id}"}}
     await websocket.app_mention(body)
 
-    action_spy.assert_awaited_once_with(issue.id)
+    action_spy.assert_awaited_once_with(
+        issue.id, context={"channel": "C12345678", "thread_ts": "1234", "user": None}
+    )
     slack_add_reaction_spy.assert_awaited_once_with(
         channel="C12345678", ts="1234", reaction="ballot_box_with_check"
     )
@@ -100,7 +104,9 @@ async def test_app_mention_error(mocker):
     body = {"event": {"channel": "C12345678", "ts": "1234", "text": "ack 9999999"}}
     await websocket.app_mention(body)
 
-    action_spy.assert_awaited_once_with(9999999)
+    action_spy.assert_awaited_once_with(
+        9999999, context={"channel": "C12345678", "thread_ts": "1234", "user": None}
+    )
     slack_add_reaction_spy.assert_awaited_once_with(channel="C12345678", ts="1234", reaction="x")
     slack_send_spy.assert_awaited_once_with(
         channel="C12345678", thread_ts="1234", text="Test error"
@@ -144,7 +150,9 @@ async def test_command(mocker, sample_monitor: Monitor, action_name):
     await websocket.command(ack_mock, body, None)
 
     ack_mock.assert_awaited_once()
-    action_spy.assert_awaited_once_with(expected_id)
+    action_spy.assert_awaited_once_with(
+        expected_id, context={"channel": "C12345678", "thread_ts": "1234", "user": None}
+    )
 
 
 async def test_command_invalid_action():
@@ -178,7 +186,9 @@ async def test_command_error(mocker):
     await websocket.command(ack_mock, body, None)
 
     ack_mock.assert_awaited_once()
-    action_spy.assert_awaited_once_with(9999999)
+    action_spy.assert_awaited_once_with(
+        9999999, context={"channel": "C12345678", "thread_ts": "1234", "user": None}
+    )
     slack_send_spy.assert_awaited_once_with(
         channel="C12345678",
         thread_ts="1234",

@@ -26,7 +26,7 @@ async def test_monitor_disable(mocker):
     assert action is not None
     assert inspect.isawaitable(action)
 
-    disable_monitor_spy.assert_called_with("abc")
+    disable_monitor_spy.assert_called_with("abc", context={})
 
     action.close()
 
@@ -43,7 +43,7 @@ async def test_monitor_enable(mocker):
     assert action is not None
     assert inspect.isawaitable(action)
 
-    enable_monitor_spy.assert_called_with("abc")
+    enable_monitor_spy.assert_called_with("abc", context={})
 
     action.close()
 
@@ -83,7 +83,7 @@ async def test_alert_acknowledge(mocker):
     assert action is not None
     assert inspect.isawaitable(action)
 
-    alert_acknowledge_spy.assert_called_with(12345)
+    alert_acknowledge_spy.assert_called_with(12345, context={})
 
     action.close()
 
@@ -100,7 +100,7 @@ async def test_alert_lock(mocker):
     assert action is not None
     assert inspect.isawaitable(action)
 
-    alert_lock_spy.assert_called_with(12345)
+    alert_lock_spy.assert_called_with(12345, context={})
 
     action.close()
 
@@ -117,7 +117,7 @@ async def test_alert_solve(mocker):
     assert action is not None
     assert inspect.isawaitable(action)
 
-    alert_solve_spy.assert_called_with(12345)
+    alert_solve_spy.assert_called_with(12345, context={})
 
     action.close()
 
@@ -134,7 +134,7 @@ async def test_issue_drop(mocker):
     assert action is not None
     assert inspect.isawaitable(action)
 
-    issue_drop_spy.assert_called_with(12345)
+    issue_drop_spy.assert_called_with(12345, context={})
 
     action.close()
 

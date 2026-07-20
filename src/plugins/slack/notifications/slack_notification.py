@@ -17,6 +17,14 @@ from .. import slack
 
 _logger = logging.getLogger("plugin.slack.notifications")
 
+_ACTION_LABELS: dict[str, str] = {
+    "alert_acknowledged": "acknowledged",
+    "alert_locked": "locked",
+    "alert_solved": "solved",
+    "alert_updated": "updated",
+    "issue_dropped": "dropped",
+}
+
 RESEND_ERRORS = [
     "message_not_found",
     "cant_update_message",
@@ -458,9 +466,35 @@ async def notification_mention(
     )
 
 
+async def _send_interaction_reply(
+    channel: str,
+    thread_ts: str,
+    event_name: str | None,
+    extra_payload: dict[str, Any] | None,
+) -> None:
+    """Send a thread reply when a user interacts with a notification"""
+    if event_name is None:
+        return
+    if event_name not in _ACTION_LABELS:
+        return
+    if extra_payload is None:
+        return
+    user_id = extra_payload.get("user")
+    if user_id is None:
+        return
+    label = _ACTION_LABELS.get(event_name)
+    await slack.send(
+        channel=channel,
+        thread_ts=thread_ts,
+        text=f"Alert {label} by <@{user_id}>",
+    )
+
+
 async def _handle_slack_notification(
     alert_id: int,
     notification_options: SlackNotification,
+    extra_payload: dict[str, Any] | None = None,
+    event_name: str | None = None,
 ) -> None:
     """Handle the Slack notification for an alert"""
     alert = await Alert.get_by_id(alert_id)
@@ -504,6 +538,12 @@ async def _handle_slack_notification(
             channel=notification_options.channel,
             attachments=attachments,
         )
+        await _send_interaction_reply(
+            channel=notification_options.channel,
+            thread_ts=notification.data["ts"],
+            event_name=event_name,
+            extra_payload=extra_payload,
+        )
     else:
         await send_notification(
             monitor=monitor,
@@ -525,7 +565,12 @@ async def handle_event(event: EventPayload, notification_options: SlackNotificat
     if event.event_source != "alert":
         raise ValueError(f"Invalid event source {event.event_source!r}")
 
-    await _handle_slack_notification(event.event_source_id, notification_options)
+    await _handle_slack_notification(
+        event.event_source_id,
+        notification_options,
+        extra_payload=event.extra_payload,
+        event_name=event.event_name,
+    )
 
 
 async def clear_slack_notification(notification: Notification) -> None:

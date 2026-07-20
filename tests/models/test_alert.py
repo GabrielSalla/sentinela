@@ -607,7 +607,7 @@ async def test_acknowledge_acknowledged(caplog, mocker, sample_monitor: Monitor,
     assert loaded_alert.acknowledged
     assert loaded_alert.acknowledge_priority == priority
 
-    alert_create_event_spy.assert_awaited_once_with("alert_acknowledged")
+    alert_create_event_spy.assert_awaited_once_with("alert_acknowledged", extra_payload=None)
     assert_message_in_log(caplog, "Acknowledged")
 
 
@@ -635,7 +635,7 @@ async def test_acknowledge_already_acknowledged_lower_priority(
     assert loaded_alert.acknowledged
     assert loaded_alert.acknowledge_priority == AlertPriority.high
 
-    alert_create_event_spy.assert_awaited_once_with("alert_acknowledged")
+    alert_create_event_spy.assert_awaited_once_with("alert_acknowledged", extra_payload=None)
     assert_message_in_log(caplog, "Acknowledged")
 
 
@@ -790,7 +790,7 @@ async def test_lock_locked(caplog, mocker, sample_monitor: Monitor):
     assert loaded_alert is not None
     assert loaded_alert.locked
 
-    alert_create_event_spy.assert_awaited_once_with("alert_locked")
+    alert_create_event_spy.assert_awaited_once_with("alert_locked", extra_payload=None)
     assert_message_in_log(caplog, "Locked")
 
 
@@ -907,7 +907,7 @@ async def test_update_solved(caplog, mocker, sample_monitor: Monitor):
     assert loaded_alert.status == AlertStatus.solved
 
     alert_solve_spy.assert_called_once()
-    alert_create_event_spy.assert_awaited_once_with("alert_solved")
+    alert_create_event_spy.assert_awaited_once_with("alert_solved", extra_payload=None)
     assert_message_not_in_log(caplog, "Updated")
 
 
@@ -938,7 +938,7 @@ async def test_update_not_solved(caplog, mocker, sample_monitor: Monitor):
     assert loaded_alert.status == AlertStatus.active
 
     alert_solve_spy.assert_not_called()
-    alert_create_event_spy.assert_awaited_once_with("alert_updated")
+    alert_create_event_spy.assert_awaited_once_with("alert_updated", extra_payload=None)
     assert_message_in_log(caplog, "Updated")
 
 
@@ -1084,5 +1084,5 @@ async def test_solve_solved(caplog, mocker, sample_monitor: Monitor):
     assert loaded_alert.status == AlertStatus.solved
     assert loaded_alert.solved_at > time_utils.now() - timedelta(seconds=1)
 
-    alert_create_event_spy.assert_awaited_once_with("alert_solved")
+    alert_create_event_spy.assert_awaited_once_with("alert_solved", extra_payload=None)
     assert_message_in_log(caplog, "Solved")

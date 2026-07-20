@@ -20,10 +20,11 @@ _handler: AsyncSocketModeHandler | None = None
 
 async def app_mention(body: dict[Any, Any]) -> None:
     message = body["event"]["text"]
-    context = body["event"]
+    channel = body["event"]["channel"]
+    ts = body["event"]["ts"]
+    user_id = body["event"].get("user")
 
-    channel = context["channel"]
-    ts = context["ts"]
+    context: dict[Any, Any] = {"channel": channel, "thread_ts": ts, "user": user_id}
 
     action = get_message_request(message, context)
     if action is None:
@@ -69,8 +70,11 @@ async def command(
     message = body["actions"][0]["value"]
     channel = body["channel"]["id"]
     thread_ts = body["message"]["ts"]
+    user_id = body.get("user", {}).get("id")
 
-    action = get_message_request(message, {"channel": channel, "thread_ts": thread_ts})
+    context: dict[Any, Any] = {"channel": channel, "thread_ts": thread_ts, "user": user_id}
+
+    action = get_message_request(message, context)
     if action is not None:
         try:
             await action

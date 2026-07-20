@@ -40,7 +40,8 @@ async def monitor_disable(message_payload: RequestPayload) -> None:
         _logger.warning(f"Monitor {monitor_id!r} not found")
         return
     await registry.wait_monitor_loaded(monitor.id)
-    await monitor.set_enabled(False)
+    context = message_payload.params.get("context", None)
+    await monitor.set_enabled(False, context=context)
 
 
 async def monitor_enable(message_payload: RequestPayload) -> None:
@@ -51,7 +52,8 @@ async def monitor_enable(message_payload: RequestPayload) -> None:
         _logger.warning(f"Monitor {monitor_id!r} not found")
         return
     await registry.wait_monitor_loaded(monitor.id)
-    await monitor.set_enabled(True)
+    context = message_payload.params.get("context", None)
+    await monitor.set_enabled(True, context=context)
 
 
 async def monitor_refresh(message_payload: RequestPayload) -> None:
@@ -77,7 +79,8 @@ async def alert_acknowledge(message_payload: RequestPayload) -> None:
         _logger.warning(f"Alert {alert_id!r} not found")
         return
     await registry.wait_monitor_loaded(alert.monitor_id)
-    await alert.acknowledge()
+    context = message_payload.params.get("context", None)
+    await alert.acknowledge(context=context)
 
 
 async def alert_lock(message_payload: RequestPayload) -> None:
@@ -88,7 +91,8 @@ async def alert_lock(message_payload: RequestPayload) -> None:
         _logger.warning(f"Alert {alert_id!r} not found")
         return
     await registry.wait_monitor_loaded(alert.monitor_id)
-    await alert.lock()
+    context = message_payload.params.get("context", None)
+    await alert.lock(context=context)
 
 
 async def alert_solve(message_payload: RequestPayload) -> None:
@@ -99,7 +103,8 @@ async def alert_solve(message_payload: RequestPayload) -> None:
         _logger.warning(f"Alert {alert_id!r} not found")
         return
     await registry.wait_monitor_loaded(alert.monitor_id)
-    await alert.solve_issues()
+    context = message_payload.params.get("context", None)
+    await alert.solve_issues(context=context)
 
 
 async def issue_drop(message_payload: RequestPayload) -> None:
@@ -110,7 +115,8 @@ async def issue_drop(message_payload: RequestPayload) -> None:
         _logger.warning(f"Issue {issue_id!r} not found")
         return
     await registry.wait_monitor_loaded(issue.monitor_id)
-    await issue.drop()
+    context = message_payload.params.get("context", None)
+    await issue.drop(context=context)
 
 
 actions = {

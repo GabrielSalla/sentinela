@@ -228,7 +228,7 @@ class Monitor(Base):
         await self.save()
 
     @Base.lock_change
-    async def set_enabled(self, value: bool) -> None:
+    async def set_enabled(self, value: bool, context: dict[str, Any] | None = None) -> None:
         """Set the 'enabled' to the provided value"""
         self.enabled = value
         await self.save()

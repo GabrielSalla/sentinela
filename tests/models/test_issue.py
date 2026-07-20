@@ -240,7 +240,7 @@ async def test_drop_active(caplog, mocker, sample_monitor: Monitor):
     dropped_at_delay = time_utils.time_since(issues[0].dropped_at)
     assert 0 < dropped_at_delay < 0.05
 
-    issue_create_event_spy.assert_called_once_with("issue_dropped")
+    issue_create_event_spy.assert_called_once_with("issue_dropped", extra_payload=None)
     assert_message_in_log(caplog, "Dropped")
 
 

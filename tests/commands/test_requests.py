@@ -123,6 +123,25 @@ async def test_monitor_disable_not_found():
         await requests.monitor_disable("not_found")
 
 
+async def test_monitor_disable_with_context(clear_queue, sample_monitor: Monitor):
+    """'monitor_disable' should include context in params"""
+    result = await requests.monitor_disable(sample_monitor.name, context={"user": "U12345"})
+    assert result == sample_monitor.id
+
+    queue_items = get_queue_items()
+    assert queue_items == [
+        json.dumps(
+            {
+                "type": "request",
+                "payload": {
+                    "action": "monitor_disable",
+                    "params": {"target_id": sample_monitor.id, "context": {"user": "U12345"}},
+                },
+            }
+        )
+    ]
+
+
 async def test_monitor_enable(clear_queue, sample_monitor: Monitor):
     """'monitor_enable' should queue a 'monitor_enable' action request"""
     result = await requests.monitor_enable(sample_monitor.name)
@@ -147,6 +166,25 @@ async def test_monitor_enable_not_found():
     found"""
     with pytest.raises(MonitorNotFoundError, match="Monitor 'not_found' not found"):
         await requests.monitor_enable("not_found")
+
+
+async def test_monitor_enable_with_context(clear_queue, sample_monitor: Monitor):
+    """'monitor_enable' should include context in params"""
+    result = await requests.monitor_enable(sample_monitor.name, context={"user": "U12345"})
+    assert result == sample_monitor.id
+
+    queue_items = get_queue_items()
+    assert queue_items == [
+        json.dumps(
+            {
+                "type": "request",
+                "payload": {
+                    "action": "monitor_enable",
+                    "params": {"target_id": sample_monitor.id, "context": {"user": "U12345"}},
+                },
+            }
+        )
+    ]
 
 
 @pytest.mark.parametrize(

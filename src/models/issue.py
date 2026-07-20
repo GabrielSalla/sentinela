@@ -93,7 +93,7 @@ class Issue(Base):
             await self.solve(session=session)
 
     @Base.lock_change
-    async def drop(self) -> None:
+    async def drop(self, context: dict[str, Any] | None = None) -> None:
         """Set the issue as dropped if the issue's status is 'active'"""
         if self.status != IssueStatus.active:
             self._logger.info(f"Can't drop, status is {self.status.value!r}")
@@ -103,7 +103,7 @@ class Issue(Base):
         self.dropped_at = now()
         await self.save()
 
-        await self._create_event("issue_dropped")
+        await self._create_event("issue_dropped", extra_payload=context)
         self._logger.debug("Dropped")
 
     async def _solve_callback(self) -> None:
