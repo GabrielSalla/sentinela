@@ -228,9 +228,13 @@ class Monitor(Base):
         await self.save()
 
     @Base.lock_change
-    async def set_enabled(self, value: bool) -> None:
+    async def set_enabled(self, value: bool, context: dict[str, Any] | None = None) -> None:
         """Set the 'enabled' to the provided value"""
         self.enabled = value
+        extra_payload: dict[str, Any] = {"enabled": value}
+        if context is not None:
+            extra_payload["context"] = context
+        await self._create_event("monitor_enabled_changed", extra_payload=extra_payload)
         await self.save()
 
     @Base.lock_change

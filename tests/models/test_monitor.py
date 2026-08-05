@@ -555,8 +555,11 @@ async def test_set_last_successful_execution(sample_monitor: Monitor):
     assert sample_monitor.last_successful_execution > time_utils.now() - timedelta(seconds=0.1)
 
 
-async def test_set_enabled(sample_monitor: Monitor):
-    """'Monitor.set_enabled' should set the monitor's 'enabled' to the provided value"""
+async def test_set_enabled(mocker, sample_monitor: Monitor):
+    """'Monitor.set_enabled' should set the monitor's 'enabled' to the provided value and create an
+    event with the context and enabled status"""
+    sample_monitor_create_event_spy: MagicMock = mocker.spy(sample_monitor, "_create_event")
+
     await sample_monitor.set_enabled(True)
     assert sample_monitor.enabled is True
     await sample_monitor.set_enabled(True)
@@ -565,6 +568,27 @@ async def test_set_enabled(sample_monitor: Monitor):
     assert sample_monitor.enabled is False
     await sample_monitor.set_enabled(False)
     assert sample_monitor.enabled is False
+
+    create_event_calls = sample_monitor_create_event_spy.await_args_list
+    assert [(call.args, call.kwargs) for call in create_event_calls] == [
+        (("monitor_enabled_changed",), {"extra_payload": {"enabled": True}}),
+        (("monitor_enabled_changed",), {"extra_payload": {"enabled": True}}),
+        (("monitor_enabled_changed",), {"extra_payload": {"enabled": False}}),
+        (("monitor_enabled_changed",), {"extra_payload": {"enabled": False}}),
+    ]
+
+
+async def test_set_enabled_with_context(mocker, sample_monitor: Monitor):
+    """'Monitor.set_enabled' should include the context in the event extra payload"""
+    context = {"user": "U12345"}
+
+    sample_monitor_create_event_spy: MagicMock = mocker.spy(sample_monitor, "_create_event")
+
+    await sample_monitor.set_enabled(True, context=context)
+
+    sample_monitor_create_event_spy.assert_awaited_once_with(
+        "monitor_enabled_changed", extra_payload={"enabled": True, "context": context}
+    )
 
 
 async def test_set_queued(sample_monitor: Monitor):

@@ -99,6 +99,25 @@ async def test_monitor_register_additional_files(mocker):
 
 async def test_monitor_disable(clear_queue, sample_monitor: Monitor):
     """'monitor_disable' should queue a 'monitor_disable' action request"""
+    result = await requests.monitor_disable(sample_monitor.name, context={"user": "U12345"})
+    assert result == sample_monitor.id
+
+    queue_items = get_queue_items()
+    assert queue_items == [
+        json.dumps(
+            {
+                "type": "request",
+                "payload": {
+                    "action": "monitor_disable",
+                    "params": {"target_id": sample_monitor.id, "context": {"user": "U12345"}},
+                },
+            }
+        )
+    ]
+
+
+async def test_monitor_disable_without_context(clear_queue, sample_monitor: Monitor):
+    """'monitor_disable' should not include context in params when none is provided"""
     result = await requests.monitor_disable(sample_monitor.name)
     assert result == sample_monitor.id
 
@@ -125,6 +144,25 @@ async def test_monitor_disable_not_found():
 
 async def test_monitor_enable(clear_queue, sample_monitor: Monitor):
     """'monitor_enable' should queue a 'monitor_enable' action request"""
+    result = await requests.monitor_enable(sample_monitor.name, context={"user": "U12345"})
+    assert result == sample_monitor.id
+
+    queue_items = get_queue_items()
+    assert queue_items == [
+        json.dumps(
+            {
+                "type": "request",
+                "payload": {
+                    "action": "monitor_enable",
+                    "params": {"target_id": sample_monitor.id, "context": {"user": "U12345"}},
+                },
+            }
+        )
+    ]
+
+
+async def test_monitor_enable_without_context(clear_queue, sample_monitor: Monitor):
+    """'monitor_enable' should not include context in params when none is provided"""
     result = await requests.monitor_enable(sample_monitor.name)
     assert result == sample_monitor.id
 
@@ -203,6 +241,26 @@ async def test_monitor_refresh_queued_running(sample_monitor: Monitor, queued, r
 async def test_alert_acknowledge(clear_queue, sample_monitor: Monitor):
     """'alert_acknowledge' should queue an 'alert_acknowledge' action request"""
     alert = await Alert.create(monitor_id=sample_monitor.id)
+    await requests.alert_acknowledge(alert.id, context={"user": "U12345"})
+
+    queue_items = get_queue_items()
+
+    assert queue_items == [
+        json.dumps(
+            {
+                "type": "request",
+                "payload": {
+                    "action": "alert_acknowledge",
+                    "params": {"target_id": alert.id, "context": {"user": "U12345"}},
+                },
+            }
+        )
+    ]
+
+
+async def test_alert_acknowledge_without_context(clear_queue, sample_monitor: Monitor):
+    """'alert_acknowledge' should not include context in params when none is provided"""
+    alert = await Alert.create(monitor_id=sample_monitor.id)
     await requests.alert_acknowledge(alert.id)
 
     queue_items = get_queue_items()
@@ -228,6 +286,26 @@ async def test_alert_acknowledge_not_found():
 
 async def test_alert_lock(clear_queue, sample_monitor: Monitor):
     """'alert_lock' should queue an 'alert_lock' action request"""
+    alert = await Alert.create(monitor_id=sample_monitor.id)
+    await requests.alert_lock(alert.id, context={"user": "U12345"})
+
+    queue_items = get_queue_items()
+
+    assert queue_items == [
+        json.dumps(
+            {
+                "type": "request",
+                "payload": {
+                    "action": "alert_lock",
+                    "params": {"target_id": alert.id, "context": {"user": "U12345"}},
+                },
+            }
+        )
+    ]
+
+
+async def test_alert_lock_without_context(clear_queue, sample_monitor: Monitor):
+    """'alert_lock' should not include context in params when none is provided"""
     alert = await Alert.create(monitor_id=sample_monitor.id)
     await requests.alert_lock(alert.id)
 
@@ -255,11 +333,31 @@ async def test_alert_lock_not_found():
 async def test_alert_solve(clear_queue, sample_monitor: Monitor):
     """'alert_solve' should queue an 'alert_solve' action request"""
     alert = await Alert.create(monitor_id=sample_monitor.id)
-    await requests.alert_solve(alert.id)
+    await requests.alert_solve(alert.id, context={"user": "U12345"})
 
     queue_items = get_queue_items()
 
     assert queue_items == [
+        json.dumps(
+            {
+                "type": "request",
+                "payload": {
+                    "action": "alert_solve",
+                    "params": {"target_id": alert.id, "context": {"user": "U12345"}},
+                },
+            }
+        )
+    ]
+
+
+async def test_alert_solve_without_context(clear_queue, sample_monitor: Monitor):
+    """'alert_solve' should not include context in params when none is provided"""
+    alert = await Alert.create(monitor_id=sample_monitor.id)
+    await requests.alert_solve(alert.id)
+
+    queue = get_queue_items()
+
+    assert queue == [
         json.dumps(
             {
                 "type": "request",
@@ -281,11 +379,31 @@ async def test_alert_solve_not_found():
 async def test_issue_drop(clear_queue, sample_monitor: Monitor):
     """'issue_drop' should queue an 'issue_drop' action request"""
     issue = await Issue.create(monitor_id=sample_monitor.id, model_id="1", data={"id": 1})
-    await requests.issue_drop(issue.id)
+    await requests.issue_drop(issue.id, context={"user": "U12345"})
 
     queue_items = get_queue_items()
 
     assert queue_items == [
+        json.dumps(
+            {
+                "type": "request",
+                "payload": {
+                    "action": "issue_drop",
+                    "params": {"target_id": issue.id, "context": {"user": "U12345"}},
+                },
+            }
+        )
+    ]
+
+
+async def test_issue_drop_without_context(clear_queue, sample_monitor: Monitor):
+    """'issue_drop' should not include context in params when none is provided"""
+    issue = await Issue.create(monitor_id=sample_monitor.id, model_id="1", data={"id": 1})
+    await requests.issue_drop(issue.id)
+
+    queue = get_queue_items()
+
+    assert queue == [
         json.dumps(
             {
                 "type": "request",

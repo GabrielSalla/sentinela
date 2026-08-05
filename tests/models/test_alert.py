@@ -607,8 +607,22 @@ async def test_acknowledge_acknowledged(caplog, mocker, sample_monitor: Monitor,
     assert loaded_alert.acknowledged
     assert loaded_alert.acknowledge_priority == priority
 
-    alert_create_event_spy.assert_awaited_once_with("alert_acknowledged")
+    alert_create_event_spy.assert_awaited_once_with("alert_acknowledged", extra_payload=None)
     assert_message_in_log(caplog, "Acknowledged")
+
+
+async def test_acknowledge_acknowledged_with_context(mocker, sample_monitor: Monitor):
+    """'Alert.acknowledge' should include the context in the event extra payload"""
+    context = {"user": "U12345"}
+
+    alert = await Alert.create(monitor_id=sample_monitor.id)
+    alert_create_event_spy: AsyncMock = mocker.spy(alert, "_create_event")
+
+    await alert.acknowledge(context=context)
+
+    alert_create_event_spy.assert_awaited_once_with(
+        "alert_acknowledged", extra_payload={"context": context}
+    )
 
 
 async def test_acknowledge_already_acknowledged_lower_priority(
@@ -635,7 +649,7 @@ async def test_acknowledge_already_acknowledged_lower_priority(
     assert loaded_alert.acknowledged
     assert loaded_alert.acknowledge_priority == AlertPriority.high
 
-    alert_create_event_spy.assert_awaited_once_with("alert_acknowledged")
+    alert_create_event_spy.assert_awaited_once_with("alert_acknowledged", extra_payload=None)
     assert_message_in_log(caplog, "Acknowledged")
 
 
@@ -790,8 +804,22 @@ async def test_lock_locked(caplog, mocker, sample_monitor: Monitor):
     assert loaded_alert is not None
     assert loaded_alert.locked
 
-    alert_create_event_spy.assert_awaited_once_with("alert_locked")
+    alert_create_event_spy.assert_awaited_once_with("alert_locked", extra_payload=None)
     assert_message_in_log(caplog, "Locked")
+
+
+async def test_lock_with_context(mocker, sample_monitor: Monitor):
+    """'Alert.lock' should include the context in the event extra payload"""
+    context = {"user": "U12345"}
+
+    alert = await Alert.create(monitor_id=sample_monitor.id)
+    alert_create_event_spy: AsyncMock = mocker.spy(alert, "_create_event")
+
+    await alert.lock(context=context)
+
+    alert_create_event_spy.assert_awaited_once_with(
+        "alert_locked", extra_payload={"context": context}
+    )
 
 
 @pytest.mark.parametrize("alert_status", [AlertStatus.solved])
@@ -907,7 +935,7 @@ async def test_update_solved(caplog, mocker, sample_monitor: Monitor):
     assert loaded_alert.status == AlertStatus.solved
 
     alert_solve_spy.assert_called_once()
-    alert_create_event_spy.assert_awaited_once_with("alert_solved")
+    alert_create_event_spy.assert_awaited_once_with("alert_solved", extra_payload=None)
     assert_message_not_in_log(caplog, "Updated")
 
 
@@ -938,8 +966,28 @@ async def test_update_not_solved(caplog, mocker, sample_monitor: Monitor):
     assert loaded_alert.status == AlertStatus.active
 
     alert_solve_spy.assert_not_called()
-    alert_create_event_spy.assert_awaited_once_with("alert_updated")
+    alert_create_event_spy.assert_awaited_once_with("alert_updated", extra_payload=None)
     assert_message_in_log(caplog, "Updated")
+
+
+async def test_update_not_solved_with_context(mocker, sample_monitor: Monitor):
+    """'Alert.update' should include the context in the event extra payload"""
+    context = {"user": "U12345"}
+
+    alert = await Alert.create(monitor_id=sample_monitor.id)
+    await Issue.create(
+        monitor_id=sample_monitor.id,
+        model_id="1",
+        data={"id": 1},
+        alert_id=alert.id,
+    )
+    alert_create_event_spy: AsyncMock = mocker.spy(alert, "_create_event")
+
+    await alert.update(context=context)
+
+    alert_create_event_spy.assert_awaited_once_with(
+        "alert_updated", extra_payload={"context": context}
+    )
 
 
 @pytest.mark.parametrize("alert_status", [AlertStatus.solved])
@@ -1084,5 +1132,19 @@ async def test_solve_solved(caplog, mocker, sample_monitor: Monitor):
     assert loaded_alert.status == AlertStatus.solved
     assert loaded_alert.solved_at > time_utils.now() - timedelta(seconds=1)
 
-    alert_create_event_spy.assert_awaited_once_with("alert_solved")
+    alert_create_event_spy.assert_awaited_once_with("alert_solved", extra_payload=None)
     assert_message_in_log(caplog, "Solved")
+
+
+async def test_solve_with_context(mocker, sample_monitor: Monitor):
+    """'Alert.solve' should include the context in the event extra payload"""
+    context = {"user": "U12345"}
+
+    alert = await Alert.create(monitor_id=sample_monitor.id)
+    alert_create_event_spy: AsyncMock = mocker.spy(alert, "_create_event")
+
+    await alert.solve(context=context)
+
+    alert_create_event_spy.assert_awaited_once_with(
+        "alert_solved", extra_payload={"context": context}
+    )

@@ -240,8 +240,26 @@ async def test_drop_active(caplog, mocker, sample_monitor: Monitor):
     dropped_at_delay = time_utils.time_since(issues[0].dropped_at)
     assert 0 < dropped_at_delay < 0.05
 
-    issue_create_event_spy.assert_called_once_with("issue_dropped")
+    issue_create_event_spy.assert_called_once_with("issue_dropped", extra_payload=None)
     assert_message_in_log(caplog, "Dropped")
+
+
+async def test_drop_with_context(mocker, sample_monitor: Monitor):
+    """'Issue.drop' should include the context in the event extra payload"""
+    context = {"user": "U12345"}
+
+    issue = await Issue.create(
+        monitor_id=sample_monitor.id,
+        model_id="12345",
+        data={"id": 1},
+    )
+    issue_create_event_spy: MagicMock = mocker.spy(issue, "_create_event")
+
+    await issue.drop(context=context)
+
+    issue_create_event_spy.assert_called_once_with(
+        "issue_dropped", extra_payload={"context": context}
+    )
 
 
 @pytest.mark.parametrize("issue_status", [IssueStatus.dropped, IssueStatus.solved])

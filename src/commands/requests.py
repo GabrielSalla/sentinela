@@ -1,6 +1,7 @@
 import random
 import string
 import time
+from typing import Any
 
 import components.monitors_loader as monitors_loader
 import message_queue as message_queue
@@ -33,27 +34,33 @@ async def monitor_register(
     )
 
 
-async def monitor_disable(monitor_name: str) -> int:
+async def monitor_disable(monitor_name: str, context: dict[str, Any] | None = None) -> int:
     """Validate and queue a 'monitor_disable' request"""
     monitor = await validate_monitor_request(monitor_name)
+    params: dict[str, Any] = {"target_id": monitor.id}
+    if context is not None:
+        params["context"] = context
     await message_queue.send_message(
         type="request",
         payload={
             "action": "monitor_disable",
-            "params": {"target_id": monitor.id},
+            "params": params,
         },
     )
     return monitor.id
 
 
-async def monitor_enable(monitor_name: str) -> int:
+async def monitor_enable(monitor_name: str, context: dict[str, Any] | None = None) -> int:
     """Validate and queue a 'monitor_enable' request"""
     monitor = await validate_monitor_request(monitor_name)
+    params: dict[str, Any] = {"target_id": monitor.id}
+    if context is not None:
+        params["context"] = context
     await message_queue.send_message(
         type="request",
         payload={
             "action": "monitor_enable",
-            "params": {"target_id": monitor.id},
+            "params": params,
         },
     )
     return monitor.id
@@ -73,49 +80,61 @@ async def monitor_refresh(monitor_name: str, tasks: list[str]) -> None:
     )
 
 
-async def alert_acknowledge(alert_id: int) -> None:
+async def alert_acknowledge(alert_id: int, context: dict[str, Any] | None = None) -> None:
     """Validate and queue an 'alert_acknowledge' request"""
     await validate_alert_request(alert_id)
+    params: dict[str, Any] = {"target_id": alert_id}
+    if context is not None:
+        params["context"] = context
     await message_queue.send_message(
         type="request",
         payload={
             "action": "alert_acknowledge",
-            "params": {"target_id": alert_id},
+            "params": params,
         },
     )
 
 
-async def alert_lock(alert_id: int) -> None:
+async def alert_lock(alert_id: int, context: dict[str, Any] | None = None) -> None:
     """Validate and queue an 'alert_lock' request"""
     await validate_alert_request(alert_id)
+    params: dict[str, Any] = {"target_id": alert_id}
+    if context is not None:
+        params["context"] = context
     await message_queue.send_message(
         type="request",
         payload={
             "action": "alert_lock",
-            "params": {"target_id": alert_id},
+            "params": params,
         },
     )
 
 
-async def alert_solve(alert_id: int) -> None:
+async def alert_solve(alert_id: int, context: dict[str, Any] | None = None) -> None:
     """Validate and queue an 'alert_solve' request"""
     await validate_alert_request(alert_id)
+    params: dict[str, Any] = {"target_id": alert_id}
+    if context is not None:
+        params["context"] = context
     await message_queue.send_message(
         type="request",
         payload={
             "action": "alert_solve",
-            "params": {"target_id": alert_id},
+            "params": params,
         },
     )
 
 
-async def issue_drop(issue_id: int) -> None:
+async def issue_drop(issue_id: int, context: dict[str, Any] | None = None) -> None:
     """Validate and queue an 'issue_drop' request"""
     await validate_issue_request(issue_id)
+    params: dict[str, Any] = {"target_id": issue_id}
+    if context is not None:
+        params["context"] = context
     await message_queue.send_message(
         type="request",
         payload={
             "action": "issue_drop",
-            "params": {"target_id": issue_id},
+            "params": params,
         },
     )
