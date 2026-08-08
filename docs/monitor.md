@@ -351,7 +351,8 @@ The available events are:
 - `issue_updated_solved`: Issue data updated and it's considered as solved
 
 **Monitor events**
-- `monitor_enabled_changed`: Monitor was enabled or disabled
+- `monitor_disabled`: Monitor was disabled
+- `monitor_enabled`: Monitor was enabled
 
 **Notification events**
 - `notification_closed`: Notification was closed
