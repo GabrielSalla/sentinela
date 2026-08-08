@@ -12,14 +12,14 @@ def monitor_disable(
     message_match: re.Match[Any], context: dict[str, Any]
 ) -> Coroutine[Any, Any, Any]:
     """Disable a monitor"""
-    return commands.monitor_disable(message_match.group(1))
+    return commands.monitor_disable(message_match.group(1), context=context)
 
 
 def monitor_enable(
     message_match: re.Match[Any], context: dict[str, Any]
 ) -> Coroutine[Any, Any, Any]:
     """Enable a monitor"""
-    return commands.monitor_enable(message_match.group(1))
+    return commands.monitor_enable(message_match.group(1), context=context)
 
 
 async def monitor_refresh(message_match: re.Match[Any], context: dict[str, Any]) -> None:
@@ -35,25 +35,25 @@ def alert_acknowledge(
 ) -> Coroutine[Any, Any, Any]:
     """Get the alert acknowledge action"""
     alert_id = int(message_match.group(1))
-    return commands.alert_acknowledge(alert_id)
+    return commands.alert_acknowledge(alert_id, context=context)
 
 
 def alert_lock(message_match: re.Match[Any], context: dict[str, Any]) -> Coroutine[Any, Any, Any]:
     """Get the alert lock action"""
     alert_id = int(message_match.group(1))
-    return commands.alert_lock(alert_id)
+    return commands.alert_lock(alert_id, context=context)
 
 
 def alert_solve(message_match: re.Match[Any], context: dict[str, Any]) -> Coroutine[Any, Any, Any]:
     """Get the alert solve action"""
     alert_id = int(message_match.group(1))
-    return commands.alert_solve(alert_id)
+    return commands.alert_solve(alert_id, context=context)
 
 
 def issue_drop(message_match: re.Match[Any], context: dict[str, Any]) -> Coroutine[Any, Any, Any]:
     """Get the issue drop action"""
     issue_id = int(message_match.group(1))
-    return commands.issue_drop(issue_id)
+    return commands.issue_drop(issue_id, context=context)
 
 
 async def monitor_documentation(message_match: re.Match[Any], context: dict[str, Any]) -> None:
