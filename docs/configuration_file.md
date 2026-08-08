@@ -3,6 +3,12 @@ This document provides an overview of the configuration parameters available in 
 
 ## Plugins
 - `plugins`: List of strings. Plugins to be used by Sentinela. Check each plugin documentation to learn how to enable them.
+- `plugins_configs`: Map. Configuration settings for each plugin, keyed by plugin name. Check each plugin documentation to learn the available settings. Example:
+  ```yaml
+  plugins_configs:
+    slack:
+      < Slack plugin settings >
+  ```
 
 ## Monitors
 - `load_example_monitors`: Boolean. Flag to enable the example monitors.

@@ -235,21 +235,21 @@ async def test_resend_notifications(clear_queue, slack_channel):
 @pytest.mark.parametrize(
     "message_command, expected_request",
     [
-        ("disable monitor abc", "monitor_disable"),
+        ("ack    12345", "alert_acknowledge"),
+        ("ack 12345", "alert_acknowledge"),
         ("disable monitor   abc", "monitor_disable"),
-        ("enable monitor abc", "monitor_enable"),
+        ("disable monitor abc", "monitor_disable"),
+        ("drop issue    12345", "issue_drop"),
+        ("drop issue 12345", "issue_drop"),
         ("enable monitor   abc", "monitor_enable"),
-        ("refresh abc", "monitor_refresh"),
+        ("enable monitor abc", "monitor_enable"),
+        ("lock    12345", "alert_lock"),
+        ("lock 12345", "alert_lock"),
         ("refresh abc search", "monitor_refresh"),
         ("refresh abc update", "monitor_refresh"),
-        ("ack 12345", "alert_acknowledge"),
-        ("ack    12345", "alert_acknowledge"),
-        ("lock 12345", "alert_lock"),
-        ("lock    12345", "alert_lock"),
-        ("solve 12345", "alert_solve"),
+        ("refresh abc", "monitor_refresh"),
         ("solve    12345", "alert_solve"),
-        ("drop issue 12345", "issue_drop"),
-        ("drop issue    12345", "issue_drop"),
+        ("solve 12345", "alert_solve"),
     ],
 )
 async def test_get_message_request_match_external(
@@ -259,9 +259,7 @@ async def test_get_message_request_match_external(
     message, using the external requests"""
     action_spy: AsyncMock = mocker.spy(commands, expected_request)
 
-    context = {
-        "channel": "C1234567890",
-    }
+    context = {"channel": "C1234567890"}
 
     action = pattern_match.get_message_request(message_user_group + message_command, context)
 
@@ -285,25 +283,30 @@ async def test_get_message_request_match_external(
     ],
 )
 @pytest.mark.parametrize(
-    "message_command, expected_request",
+    "command, message_command, expected_request",
     [
-        ("resend notifications", "resend_notifications"),
-        ("docs monitor_name", "monitor_documentation"),
+        ("resend_notifications", "resend notifications", "resend_notifications"),
+        ("monitor_documentation", "docs monitor_name", "monitor_documentation"),
     ],
 )
 async def test_get_message_request_match_plugin(
-    mocker, message_user_group, message_command, expected_request
+    mocker, monkeypatch, message_user_group, command, message_command, expected_request
 ):
     """'get_message_request' should return the correct request coroutine based on the received
     message, using the plugin requests"""
-    context = {
-        "channel": "C1234567890",
-    }
+    action_spy: AsyncMock = mocker.spy(pattern_match, expected_request)
+    monkeypatch.setitem(
+        pattern_match.PATTERNS, command, (pattern_match.PATTERNS[command][0], action_spy)
+    )
+
+    context = {"channel": "C1234567890"}
 
     action = pattern_match.get_message_request(message_user_group + message_command, context)
 
     assert action is not None
     assert inspect.isawaitable(action)
+
+    action_spy.assert_called()
 
     action.close()
 
@@ -313,3 +316,57 @@ async def test_get_message_request_not_match(mocker):
     result = pattern_match.get_message_request("test 123", {})
 
     assert result is None
+
+
+@pytest.mark.parametrize(
+    "plugins_configs",
+    [
+        {},
+        {"slack": {}},
+        {"slack": {"commands": {}}},
+        {"slack": {"commands": {"alert_acknowledge": {"enabled": False}}}},
+    ],
+)
+async def test_get_message_request_not_configured_command_enabled(
+    mocker, monkeypatch, plugins_configs
+):
+    """'get_message_request' should consider a command as enabled when it's not configured"""
+    monkeypatch.setattr(pattern_match.configs, "plugins_configs", plugins_configs)
+
+    action_spy: AsyncMock = mocker.spy(commands, "monitor_disable")
+
+    # 'disable monitor' command was never configured
+    action = pattern_match.get_message_request("disable monitor abc", {"channel": "C1234567890"})
+
+    assert action is not None
+    assert inspect.isawaitable(action)
+
+    action_spy.assert_called()
+
+    action.close()
+
+
+async def test_get_message_request_disabled_command(mocker, monkeypatch):
+    """'get_message_request' should return the 'disabled_command_message' coroutine if the
+    command is disabled in config"""
+    monkeypatch.setattr(
+        pattern_match.configs,
+        "plugins_configs",
+        {"slack": {"commands": {"monitor_disable": {"enabled": False}}}},
+    )
+
+    slack_send_spy: AsyncMock = mocker.spy(slack, "send")
+
+    context = {"channel": "C1234567890", "ts": "1234"}
+    action = pattern_match.get_message_request("disable monitor abc", context)
+
+    assert action is not None
+    assert inspect.isawaitable(action)
+
+    await action
+
+    slack_send_spy.assert_awaited_once_with(
+        channel="C1234567890",
+        thread_ts="1234",
+        text="Command `monitor_disable` is disabled",
+    )
