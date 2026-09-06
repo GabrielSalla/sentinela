@@ -4,6 +4,10 @@ from aiohttp.web_response import Response
 from pydantic import BaseModel
 
 import commands as commands
+from components.http_server.command_config import (
+    disabled_command_response,
+    is_command_enabled,
+)
 from exceptions.http_server import AlertNotFoundError
 from models import Alert, Issue, IssueStatus
 from utils.time import format_datetime
@@ -74,6 +78,9 @@ async def list_alert_active_issues(request: Request) -> Response:
 @alert_routes.post(base_route + "/{alert_id}/acknowledge/")
 async def alert_acknowledge(request: Request) -> Response:
     """Route to acknowledge an alert"""
+    if not is_command_enabled("alert_acknowledge"):
+        return disabled_command_response("alert_acknowledge")
+
     params = _AlertIdPathParams.model_validate({"alert_id": request.match_info["alert_id"]})
     alert_id = params.alert_id
     try:
@@ -93,6 +100,9 @@ async def alert_acknowledge(request: Request) -> Response:
 @alert_routes.post(base_route + "/{alert_id}/lock/")
 async def alert_lock(request: Request) -> Response:
     """Route to lock an alert"""
+    if not is_command_enabled("alert_lock"):
+        return disabled_command_response("alert_lock")
+
     params = _AlertIdPathParams.model_validate({"alert_id": request.match_info["alert_id"]})
     alert_id = params.alert_id
     try:
@@ -112,6 +122,9 @@ async def alert_lock(request: Request) -> Response:
 @alert_routes.post(base_route + "/{alert_id}/solve/")
 async def alert_solve(request: Request) -> Response:
     """Route to solve an alert's issues"""
+    if not is_command_enabled("alert_solve"):
+        return disabled_command_response("alert_solve")
+
     params = _AlertIdPathParams.model_validate({"alert_id": request.match_info["alert_id"]})
     alert_id = params.alert_id
     try:

@@ -139,80 +139,6 @@ async def test_issue_drop(mocker):
     action.close()
 
 
-@pytest.mark.parametrize("slack_channel", ["C1234567890", "C2345678901", "C3456789012"])
-async def test_resend_notifications(clear_queue, slack_channel):
-    """'resend_notifications' should queue a 'plugin.slack.resend_notifications' action request"""
-    match = re.match(r"resend notifications", "resend notifications")
-    assert match is not None
-
-    await pattern_match.resend_notifications(
-        message_match=match, context={"channel": slack_channel}
-    )
-
-    queue_items = get_queue_items()
-
-    assert queue_items == [
-        json.dumps(
-            {
-                "type": "request",
-                "payload": {
-                    "action": "plugin.slack.resend_notifications",
-                    "params": {"slack_channel": slack_channel},
-                },
-            }
-        )
-    ]
-
-
-@pytest.mark.parametrize(
-    "message_user_group",
-    [
-        "<@aaa>",
-        "<@bbb>",
-        "<@aaa> ",
-        "<@bbb> ",
-        "",
-        " ",
-    ],
-)
-@pytest.mark.parametrize(
-    "message_command, expected_request",
-    [
-        ("disable monitor abc", "monitor_disable"),
-        ("disable monitor   abc", "monitor_disable"),
-        ("enable monitor abc", "monitor_enable"),
-        ("enable monitor   abc", "monitor_enable"),
-        ("ack 12345", "alert_acknowledge"),
-        ("ack    12345", "alert_acknowledge"),
-        ("lock 12345", "alert_lock"),
-        ("lock    12345", "alert_lock"),
-        ("solve 12345", "alert_solve"),
-        ("solve    12345", "alert_solve"),
-        ("drop issue 12345", "issue_drop"),
-        ("drop issue    12345", "issue_drop"),
-    ],
-)
-async def test_get_message_request_match_external(
-    mocker, message_user_group, message_command, expected_request
-):
-    """'get_message_request' should return the correct request coroutine based on the received
-    message, using the external requests"""
-    action_spy: AsyncMock = mocker.spy(commands, expected_request)
-
-    context = {
-        "channel": "C1234567890",
-    }
-
-    action = pattern_match.get_message_request(message_user_group + message_command, context)
-
-    assert action is not None
-    assert inspect.isawaitable(action)
-
-    action_spy.assert_called()
-
-    action.close()
-
-
 @pytest.mark.parametrize(
     "context",
     [
@@ -270,6 +196,31 @@ async def test_monitor_documentation_no_documentation(mocker, sample_monitor: Mo
     )
 
 
+@pytest.mark.parametrize("slack_channel", ["C1234567890", "C2345678901", "C3456789012"])
+async def test_resend_notifications(clear_queue, slack_channel):
+    """'resend_notifications' should queue a 'plugin.slack.resend_notifications' action request"""
+    match = re.match(r"resend notifications", "resend notifications")
+    assert match is not None
+
+    await pattern_match.resend_notifications(
+        message_match=match, context={"channel": slack_channel}
+    )
+
+    queue_items = get_queue_items()
+
+    assert queue_items == [
+        json.dumps(
+            {
+                "type": "request",
+                "payload": {
+                    "action": "plugin.slack.resend_notifications",
+                    "params": {"slack_channel": slack_channel},
+                },
+            }
+        )
+    ]
+
+
 @pytest.mark.parametrize(
     "message_user_group",
     [
@@ -284,26 +235,78 @@ async def test_monitor_documentation_no_documentation(mocker, sample_monitor: Mo
 @pytest.mark.parametrize(
     "message_command, expected_request",
     [
-        ("resend notifications", "resend_notifications"),
-        ("refresh abc", "monitor_refresh"),
+        ("ack    12345", "alert_acknowledge"),
+        ("ack 12345", "alert_acknowledge"),
+        ("disable monitor   abc", "monitor_disable"),
+        ("disable monitor abc", "monitor_disable"),
+        ("drop issue    12345", "issue_drop"),
+        ("drop issue 12345", "issue_drop"),
+        ("enable monitor   abc", "monitor_enable"),
+        ("enable monitor abc", "monitor_enable"),
+        ("lock    12345", "alert_lock"),
+        ("lock 12345", "alert_lock"),
         ("refresh abc search", "monitor_refresh"),
         ("refresh abc update", "monitor_refresh"),
-        ("docs monitor_name", "monitor_documentation"),
+        ("refresh abc", "monitor_refresh"),
+        ("solve    12345", "alert_solve"),
+        ("solve 12345", "alert_solve"),
     ],
 )
-async def test_get_message_request_match_plugin(
+async def test_get_message_request_match_external(
     mocker, message_user_group, message_command, expected_request
 ):
     """'get_message_request' should return the correct request coroutine based on the received
-    message, using the plugin requests"""
-    context = {
-        "channel": "C1234567890",
-    }
+    message, using the external requests"""
+    action_spy: AsyncMock = mocker.spy(commands, expected_request)
+
+    context = {"channel": "C1234567890"}
 
     action = pattern_match.get_message_request(message_user_group + message_command, context)
 
     assert action is not None
     assert inspect.isawaitable(action)
+
+    action_spy.assert_called()
+
+    action.close()
+
+
+@pytest.mark.parametrize(
+    "message_user_group",
+    [
+        "<@aaa>",
+        "<@bbb>",
+        "<@aaa> ",
+        "<@bbb> ",
+        "",
+        " ",
+    ],
+)
+@pytest.mark.parametrize(
+    "command, message_command, expected_request",
+    [
+        ("resend_notifications", "resend notifications", "resend_notifications"),
+        ("monitor_documentation", "docs monitor_name", "monitor_documentation"),
+    ],
+)
+async def test_get_message_request_match_plugin(
+    mocker, monkeypatch, message_user_group, command, message_command, expected_request
+):
+    """'get_message_request' should return the correct request coroutine based on the received
+    message, using the plugin requests"""
+    action_spy: AsyncMock = mocker.spy(pattern_match, expected_request)
+    monkeypatch.setitem(
+        pattern_match.PATTERNS, command, (pattern_match.PATTERNS[command][0], action_spy)
+    )
+
+    context = {"channel": "C1234567890"}
+
+    action = pattern_match.get_message_request(message_user_group + message_command, context)
+
+    assert action is not None
+    assert inspect.isawaitable(action)
+
+    action_spy.assert_called()
 
     action.close()
 
@@ -313,3 +316,57 @@ async def test_get_message_request_not_match(mocker):
     result = pattern_match.get_message_request("test 123", {})
 
     assert result is None
+
+
+@pytest.mark.parametrize(
+    "plugins_configs",
+    [
+        {},
+        {"slack": {}},
+        {"slack": {"commands": {}}},
+        {"slack": {"commands": {"alert_acknowledge": {"enabled": False}}}},
+    ],
+)
+async def test_get_message_request_not_configured_command_enabled(
+    mocker, monkeypatch, plugins_configs
+):
+    """'get_message_request' should consider a command as enabled when it's not configured"""
+    monkeypatch.setattr(pattern_match.configs, "plugins_configs", plugins_configs)
+
+    action_spy: AsyncMock = mocker.spy(commands, "monitor_disable")
+
+    # 'disable monitor' command was never configured
+    action = pattern_match.get_message_request("disable monitor abc", {"channel": "C1234567890"})
+
+    assert action is not None
+    assert inspect.isawaitable(action)
+
+    action_spy.assert_called()
+
+    action.close()
+
+
+async def test_get_message_request_disabled_command(mocker, monkeypatch):
+    """'get_message_request' should return the 'disabled_command_message' coroutine if the
+    command is disabled in config"""
+    monkeypatch.setattr(
+        pattern_match.configs,
+        "plugins_configs",
+        {"slack": {"commands": {"monitor_disable": {"enabled": False}}}},
+    )
+
+    slack_send_spy: AsyncMock = mocker.spy(slack, "send")
+
+    context = {"channel": "C1234567890", "ts": "1234"}
+    action = pattern_match.get_message_request("disable monitor abc", context)
+
+    assert action is not None
+    assert inspect.isawaitable(action)
+
+    await action
+
+    slack_send_spy.assert_awaited_once_with(
+        channel="C1234567890",
+        thread_ts="1234",
+        text="Command `monitor_disable` is disabled",
+    )

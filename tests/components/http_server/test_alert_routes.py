@@ -6,6 +6,7 @@ import pytest_asyncio
 
 import components.controller.controller as controller
 import components.http_server as http_server
+from configs import CommandConfig, configs
 from models import Alert, Issue, Monitor
 from tests.message_queue.utils import get_queue_items
 from utils.time import localize
@@ -273,6 +274,32 @@ async def test_alert_solve_invalid_alert_id(clear_queue):
                 "message": "Invalid request data",
                 "errors": [f"alert_id: {INT_PARSING_ERROR}"],
             }
+
+    queue_items = get_queue_items()
+    assert len(queue_items) == 0
+
+
+@pytest.mark.parametrize(
+    "command, endpoint",
+    [
+        ("alert_acknowledge", "acknowledge"),
+        ("alert_lock", "lock"),
+        ("alert_solve", "solve"),
+    ],
+)
+async def test_alert_command_config_disabled(monkeypatch, clear_queue, command, endpoint):
+    """The alert command routes should return a forbidden error if the command is disabled in
+    the config"""
+    monkeypatch.setattr(configs.http_server, "commands", {command: CommandConfig(enabled=False)})
+
+    async with aiohttp.ClientSession() as session:
+        async with session.post(BASE_URL + f"/0/{endpoint}") as response:
+            assert await response.json() == {
+                "status": "error",
+                "message": f"Command `{command}` is disabled",
+                "error": f"Command `{command}` is disabled in the configuration",
+            }
+            assert response.status == 403
 
     queue_items = get_queue_items()
     assert len(queue_items) == 0

@@ -318,7 +318,7 @@ async def test_run_current_task_error(caplog, monkeypatch):
     assert_message_in_log(caplog, "Could not get the current asyncio task, finishing")
 
 
-async def test_run_monitors_not_ready(caplog, monkeypatch, mocker):
+async def test_run_monitors_not_ready(caplog, monkeypatch):
     """'run' should loop until the monitors are ready, logging warning messages if they are not"""
     monkeypatch.setattr(configs, "load_example_monitors", True)
     monkeypatch.setattr(configs, "internal_monitors_path", "tests/example_monitors/internal")
@@ -337,7 +337,7 @@ async def test_run_monitors_not_ready(caplog, monkeypatch, mocker):
     assert_message_in_log(caplog, "MonitorsLoadError: Waiting for monitors to be ready timed out")
 
 
-async def test_run_monitors_not_registered(caplog, monkeypatch, mocker):
+async def test_run_monitors_not_registered(caplog, monkeypatch):
     """'run' should handle monitors that are not registered"""
     monkeypatch.setattr(configs, "load_example_monitors", True)
     monkeypatch.setattr(configs, "internal_monitors_path", "tests/example_monitors/internal")

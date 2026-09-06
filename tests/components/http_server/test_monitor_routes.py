@@ -9,7 +9,7 @@ import commands as commands
 import components.controller.controller as controller
 import components.http_server as http_server
 import databases as databases
-from configs import configs
+from configs import CommandConfig, configs
 from models import Alert, AlertStatus, CodeModule, Monitor
 
 pytestmark = pytest.mark.asyncio(loop_scope="session")
@@ -275,6 +275,24 @@ async def test_monitor_disable_error(mocker):
     }
 
 
+async def test_monitor_disable_config_disabled(monkeypatch):
+    """The 'monitor disable' route should return a forbidden error if the command is disabled in
+    the config"""
+    monkeypatch.setattr(
+        configs.http_server, "commands", {"monitor_disable": CommandConfig(enabled=False)}
+    )
+
+    url = BASE_URL + "/not_found/disable"
+    async with aiohttp.ClientSession() as session:
+        async with session.post(url) as response:
+            assert await response.json() == {
+                "status": "error",
+                "message": "Command `monitor_disable` is disabled",
+                "error": "Command `monitor_disable` is disabled in the configuration",
+            }
+            assert response.status == 403
+
+
 async def test_monitor_enable(mocker, sample_monitor: Monitor):
     """The 'monitor enable' route should queue monitor enable"""
     monitor_enable_spy: AsyncMock = mocker.spy(commands, "monitor_enable")
@@ -324,6 +342,24 @@ async def test_monitor_enable_error(mocker):
         "message": "Unexpected error",
         "error": "Something went wrong",
     }
+
+
+async def test_monitor_enable_config_disabled(monkeypatch):
+    """The 'monitor enable' route should return a forbidden error if the command is disabled in
+    the config"""
+    monkeypatch.setattr(
+        configs.http_server, "commands", {"monitor_enable": CommandConfig(enabled=False)}
+    )
+
+    url = BASE_URL + "/not_found/enable"
+    async with aiohttp.ClientSession() as session:
+        async with session.post(url) as response:
+            assert await response.json() == {
+                "status": "error",
+                "message": "Command `monitor_enable` is disabled",
+                "error": "Command `monitor_enable` is disabled in the configuration",
+            }
+            assert response.status == 403
 
 
 @pytest.mark.parametrize("tasks", [["search"], ["update"], ["search", "update"]])
@@ -419,6 +455,24 @@ async def test_monitor_refresh_queued_running(sample_monitor: Monitor, queued, r
         "message": "Unexpected error",
         "error": f"Monitor {sample_monitor.name!r} already running or queued",
     }
+
+
+async def test_monitor_refresh_config_disabled(monkeypatch):
+    """The 'monitor refresh' route should return a forbidden error if the command is disabled in
+    the config"""
+    monkeypatch.setattr(
+        configs.http_server, "commands", {"monitor_refresh": CommandConfig(enabled=False)}
+    )
+
+    url = BASE_URL + "/not_found/refresh"
+    async with aiohttp.ClientSession() as session:
+        async with session.post(url, json={"tasks": ["search"]}) as response:
+            assert await response.json() == {
+                "status": "error",
+                "message": "Command `monitor_refresh` is disabled",
+                "error": "Command `monitor_refresh` is disabled in the configuration",
+            }
+            assert response.status == 403
 
 
 async def test_monitor_validate(mocker):
@@ -555,6 +609,24 @@ async def test_monitor_validate_invalid_monitor_code(mocker, monitor_code, expec
                 "message": "Unexpected error",
                 "error": expected_error,
             }
+
+
+async def test_monitor_validate_config_disabled(monkeypatch):
+    """The 'monitor validate' route should return a forbidden error if the command is disabled in
+    the config"""
+    monkeypatch.setattr(
+        configs.http_server, "commands", {"monitor_validate": CommandConfig(enabled=False)}
+    )
+
+    url = BASE_URL + "/validate"
+    async with aiohttp.ClientSession() as session:
+        async with session.post(url, json={"monitor_code": ""}) as response:
+            assert await response.json() == {
+                "status": "error",
+                "message": "Command `monitor_validate` is disabled",
+                "error": "Command `monitor_validate` is disabled in the configuration",
+            }
+            assert response.status == 403
 
 
 @pytest.mark.parametrize(
@@ -782,7 +854,9 @@ async def test_monitor_register_invalid_monitor_code(monitor_code, expected_erro
 async def test_monitor_register_config_disabled(monkeypatch):
     """The 'monitor register' route should return a forbidden error if the monitor registration
     config is not enabled"""
-    monkeypatch.setattr(configs.http_server, "monitor_register_enabled", False)
+    monkeypatch.setattr(
+        configs.http_server, "commands", {"monitor_register": CommandConfig(enabled=False)}
+    )
     request_payload = {"monitor_code": ""}
 
     url = BASE_URL + "/register/test_monitor_register_config_disabled"
@@ -790,7 +864,7 @@ async def test_monitor_register_config_disabled(monkeypatch):
         async with session.post(url, json=request_payload) as response:
             assert await response.json() == {
                 "status": "error",
-                "message": "Monitor registering not enabled",
-                "error": "Monitor registering is not enabled in the configuration",
+                "message": "Command `monitor_register` is disabled",
+                "error": "Command `monitor_register` is disabled in the configuration",
             }
             assert response.status == 403

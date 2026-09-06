@@ -8,8 +8,11 @@ from aiohttp.web_response import Response
 from pydantic import BaseModel, Field, ValidationError, field_validator
 
 import commands
+from components.http_server.command_config import (
+    disabled_command_response,
+    is_command_enabled,
+)
 from components.http_server.format_monitor_name import format_monitor_name
-from configs import configs
 from exceptions.http_server import MonitorNotFoundError
 from exceptions.monitors_loader import MonitorValidationError
 from models import Alert, AlertStatus, CodeModule, Monitor
@@ -154,6 +157,9 @@ async def get_monitor(request: Request) -> Response:
 @monitor_routes.post(base_route + "/{monitor_name}/disable/")
 async def monitor_disable(request: Request) -> Response:
     """Route to disable a monitor"""
+    if not is_command_enabled("monitor_disable"):
+        return disabled_command_response("monitor_disable")
+
     monitor_name = request.match_info["monitor_name"]
 
     try:
@@ -181,6 +187,9 @@ async def monitor_disable(request: Request) -> Response:
 @monitor_routes.post(base_route + "/{monitor_name}/enable/")
 async def monitor_enable(request: Request) -> Response:
     """Route to enable a monitor"""
+    if not is_command_enabled("monitor_enable"):
+        return disabled_command_response("monitor_enable")
+
     monitor_name = request.match_info["monitor_name"]
 
     try:
@@ -208,6 +217,9 @@ async def monitor_enable(request: Request) -> Response:
 @monitor_routes.post(base_route + "/{monitor_name}/refresh/")
 async def monitor_refresh(request: Request) -> Response:
     """Route to refresh a monitor."""
+    if not is_command_enabled("monitor_refresh"):
+        return disabled_command_response("monitor_refresh")
+
     monitor_name = request.match_info["monitor_name"]
     payload = _MonitorRefreshPayload(**await request.json())
     tasks = payload.tasks
@@ -236,6 +248,9 @@ async def monitor_refresh(request: Request) -> Response:
 @monitor_routes.post(base_route + "/validate/")
 async def monitor_validate(request: Request) -> Response:
     """Route to check a monitor without registering it"""
+    if not is_command_enabled("monitor_validate"):
+        return disabled_command_response("monitor_validate")
+
     payload = _MonitorValidatePayload(**await request.json())
     monitor_code = payload.monitor_code
 
@@ -298,13 +313,8 @@ async def format_name(request: Request) -> Response:
 @monitor_routes.post(base_route + "/register/{monitor_name}/")
 async def monitor_register(request: Request) -> Response:
     """Route to register a monitor"""
-    if not configs.http_server.monitor_register_enabled:
-        forbidden_response = {
-            "status": "error",
-            "message": "Monitor registering not enabled",
-            "error": "Monitor registering is not enabled in the configuration",
-        }
-        return web.json_response(forbidden_response, status=403)
+    if not is_command_enabled("monitor_register"):
+        return disabled_command_response("monitor_register")
 
     monitor_name = request.match_info["monitor_name"]
 

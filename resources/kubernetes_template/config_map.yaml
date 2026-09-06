@@ -42,7 +42,25 @@ data:
       port: 8000
       log_level: error
       dashboard_enabled: true
-      monitor_register_enabled: true
+      commands:
+        alert_acknowledge:
+          enabled: true
+        alert_lock:
+          enabled: true
+        alert_solve:
+          enabled: true
+        issue_drop:
+          enabled: true
+        monitor_disable:
+          enabled: true
+        monitor_enable:
+          enabled: true
+        monitor_refresh:
+          enabled: true
+        monitor_register:
+          enabled: true
+        monitor_validate:
+          enabled: true
 
     time_zone: America/Sao_Paulo
 
@@ -86,3 +104,25 @@ data:
           application_name: sentinela
 
     log_all_events: false
+
+    plugins_configs:
+      slack:
+        commands:
+          alert_acknowledge:
+            enabled: true
+          alert_lock:
+            enabled: true
+          alert_solve:
+            enabled: true
+          issue_drop:
+            enabled: true
+          monitor_disable:
+            enabled: true
+          monitor_enable:
+            enabled: true
+          monitor_refresh:
+            enabled: true
+          monitor_documentation:
+            enabled: true
+          resend_notifications:
+            enabled: true

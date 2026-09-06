@@ -17,6 +17,38 @@ The following environment variables are used by the Slack plugin:
 - `SLACK_MAIN_CHANNEL`: The Slack channel where notifications for **internal monitors** and **example monitors** will be sent. If using the provided docker compose implementations, these variables must be configured accordingly. They are located at the `docker/` directory. Example: `C0011223344`.
 - `SLACK_MAIN_MENTION`: The Slack user or group to mention in notifications for **internal monitors** and **example monitors**. If using the provided docker compose implementations, these variables must be configured accordingly. They are located at the `docker/` directory. Example: `U0011223344`.
 
+## Command settings
+The Slack commands can be configured in the `plugins_configs` key of the `configs.yaml` file. This settings are configured per command, allowing commands to be disabled.
+
+```yaml
+plugins_configs:
+  slack:
+    commands:
+      monitor_disable:
+        enabled: true
+      monitor_enable:
+        enabled: true
+      monitor_refresh:
+        enabled: true
+      alert_acknowledge:
+        enabled: true
+      alert_lock:
+        enabled: true
+      alert_solve:
+        enabled: true
+      issue_drop:
+        enabled: true
+      monitor_documentation:
+        enabled: true
+      resend_notifications:
+        enabled: true
+```
+
+Parameters:
+- `enabled`: Boolean. Flag to enable the command. When set to `false`, the message will be answered with a message indicating that the command is disabled. Defaults to `true`.
+
+When a command is not configured, it will be considered as enabled.
+
 ## Slack commands
 Sentinela provides two main ways to interact through Slack:
 1. **Buttons** in notifications sent to a Slack channel.

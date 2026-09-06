@@ -31,11 +31,16 @@ class ApplicationDatabaseConfig:
 
 
 @dataclass
+class CommandConfig:
+    enabled: bool
+
+
+@dataclass
 class HttpServerConfig:
     port: int
     log_level: Literal["default", "warning", "error", "none"] = "default"
     dashboard_enabled: bool = False
-    monitor_register_enabled: bool = False
+    commands: dict[str, CommandConfig] = Field(default_factory=dict)
 
 
 @dataclass
@@ -88,6 +93,8 @@ class Configs:
     databases_pools_configs: dict[str, dict[str, Any]]
 
     log_all_events: bool
+
+    plugins_configs: dict[str, dict[str, Any]]
 
     logging: FriendlyLogConfig | JsonLogConfig = Field(discriminator="mode")
 

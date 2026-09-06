@@ -3,6 +3,12 @@ This document provides an overview of the configuration parameters available in 
 
 ## Plugins
 - `plugins`: List of strings. Plugins to be used by Sentinela. Check each plugin documentation to learn how to enable them.
+- `plugins_configs`: Map. Configuration settings for each plugin, keyed by plugin name. Check each plugin documentation to learn the available settings. Example:
+  ```yaml
+  plugins_configs:
+    slack:
+      < Slack plugin settings >
+  ```
 
 ## Monitors
 - `load_example_monitors`: Boolean. Flag to enable the example monitors.
@@ -62,7 +68,50 @@ application_queue:
   - `port`: Integer. Port for the HTTP server.
   - `log_level`: String. Log level for the HTTP server. Can be `default`, `warning`, `error` or `none`. Defaults to `default`.
   - `dashboard_enabled`: Boolean. Flag to enable the Sentinela dashboard. Defaults to `false`.
-  - `monitor_register_enabled`: Boolean. Flag to enable registering a monitor via HTTP request. Defaults to `false`.
+  - `commands`: Map. Configuration settings for each HTTP command, allowing commands to be disabled. When a command is not configured, it will be considered as enabled.
+    - `alert_acknowledge`: Map. Settings for the alert acknowledge command.
+      - `enabled`: Boolean. Flag to enable the command. Defaults to `true`.
+    - `alert_lock`: Map. Settings for the alert lock command.
+      - `enabled`: Boolean. Flag to enable the command. Defaults to `true`.
+    - `alert_solve`: Map. Settings for the alert solve command.
+      - `enabled`: Boolean. Flag to enable the command. Defaults to `true`.
+    - `issue_drop`: Map. Settings for the issue drop command.
+      - `enabled`: Boolean. Flag to enable the command. Defaults to `true`.
+    - `monitor_disable`: Map. Settings for the monitor disable command.
+      - `enabled`: Boolean. Flag to enable the command. Defaults to `true`.
+    - `monitor_enable`: Map. Settings for the monitor enable command.
+      - `enabled`: Boolean. Flag to enable the command. Defaults to `true`.
+    - `monitor_refresh`: Map. Settings for the monitor refresh command.
+      - `enabled`: Boolean. Flag to enable the command. Defaults to `true`.
+    - `monitor_register`: Map. Settings for the monitor register command.
+      - `enabled`: Boolean. Flag to enable the command. Defaults to `true`.
+    - `monitor_validate`: Map. Settings for the monitor validate command.
+      - `enabled`: Boolean. Flag to enable the command. Defaults to `true`.
+
+  Example:
+  ```yaml
+  http_server:
+    port: 8000
+    commands:
+      alert_acknowledge:
+        enabled: true
+      alert_lock:
+        enabled: true
+      alert_solve:
+        enabled: true
+      issue_drop:
+        enabled: true
+      monitor_disable:
+        enabled: true
+      monitor_enable:
+        enabled: true
+      monitor_refresh:
+        enabled: true
+      monitor_register:
+        enabled: true
+      monitor_validate:
+        enabled: true
+  ```
 
 ## Time Zone
 - `time_zone`: String. Time zone to use for cron scheduling and notification messages.
