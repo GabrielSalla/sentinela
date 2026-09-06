@@ -1,6 +1,8 @@
 # Slack Plugin
 The Slack plugin offers an interface to interact with Sentinela through Slack. It allows users to receive notifications from Sentinela in a Slack channel while also providing useful commands from notification buttons or Slack messages mentioning the Sentinela bot.
 
+![sentinela example](/docs/images/example.gif)
+
 ## Enabling
 To enable the Slack plugin, add `slack` to the `plugins` list in the configuration file.
 
