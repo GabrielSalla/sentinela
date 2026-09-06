@@ -5,6 +5,12 @@ services:
       - 5432:5432
     environment:
       - POSTGRES_PASSWORD=postgres
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER:-postgres} -d $${POSTGRES_DB:-postgres}"]
+      start_period: 5s
+      interval: 2s
+      timeout: 5s
+      retries: 5
 
   sentinela-local:
     build:
@@ -37,5 +43,6 @@ services:
     env_file:
       - .env.secrets
     depends_on:
-      - postgres
+      postgres:
+        condition: service_healthy
     command: sentinela run controller executor

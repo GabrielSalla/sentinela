@@ -1,7 +1,7 @@
 # The documentation for this configuration file can be found at "docs/configuration_file.md"
 plugins:
-  - aws
   - postgres
+  - simple_queue
   - slack
 
 load_example_monitors: true
@@ -24,13 +24,8 @@ application_database_settings:
   pool_size: 10
 
 application_queue:
-  type: plugin.aws.queues.sqs
-  name: app
-  url: http://motoserver:5000/123456789012/app
-  region: us-east-1
-  create_queue: true
-  queue_wait_message_time: 2
-  queue_visibility_time: 15
+  type: plugin.simple_queue.queues.http
+  url: http://simple-queue:5000
 
 http_server:
   port: 8000

@@ -5,17 +5,35 @@ services:
       - 5432:5432
     environment:
       - POSTGRES_PASSWORD=postgres
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER:-postgres} -d $${POSTGRES_DB:-postgres}"]
+      start_period: 5s
+      interval: 2s
+      timeout: 5s
+      retries: 5
 
-  motoserver:
-    image: ghcr.io/getmoto/motoserver:latest
+  simple-queue:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile
+      target: sentinela
+      args:
+        CONFIGS_FILE: configs/configs-scalable.yaml
+    image: sentinela-scalable:latest
+    deploy:
+      resources:
+        limits:
+          cpus: 1
+          memory: 30M
     ports:
       - 5000:5000
     healthcheck:
-      test: curl --fail localhost:5000 || exit 1
-      interval: 1s
+      test: health_check 5000
+      interval: 10s
       timeout: 1s
-      retries: 5
-      start_period: 1s
+      retries: 3
+      start_period: 2s
+    command: python -m simple_queue.simple_queue
 
   sentinela-controller:
     build:
@@ -24,12 +42,12 @@ services:
       target: sentinela
       args:
         CONFIGS_FILE: configs/configs-scalable.yaml
+    image: sentinela-scalable:latest
     deploy:
       resources:
         limits:
           cpus: 1
           memory: 100M
-    image: sentinela-scalable:latest
     ports:
       - 8000:8000
     healthcheck:
@@ -48,8 +66,10 @@ services:
     env_file:
       - .env.secrets
     depends_on:
-      - postgres
-      - motoserver
+      postgres:
+        condition: service_healthy
+      simple-queue:
+        condition: service_healthy
     command: sentinela run controller
 
   sentinela-executor:
@@ -85,6 +105,8 @@ services:
     env_file:
       - .env.secrets
     depends_on:
-      - postgres
-      - motoserver
+      postgres:
+        condition: service_healthy
+      simple-queue:
+        condition: service_healthy
     command: sentinela run executor

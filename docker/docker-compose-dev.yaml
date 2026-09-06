@@ -5,6 +5,12 @@ services:
       - 5432:5432
     environment:
       - POSTGRES_PASSWORD=postgres
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER:-postgres} -d $${POSTGRES_DB:-postgres}"]
+      start_period: 5s
+      interval: 2s
+      timeout: 5s
+      retries: 5
 
   motoserver:
     image: ghcr.io/getmoto/motoserver:latest
@@ -24,12 +30,12 @@ services:
       target: sentinela_dev
       args:
         CONFIGS_FILE: configs/configs.yaml
+    image: sentinela-dev:latest
     deploy:
       resources:
         limits:
           cpus: 4
-          memory: 500M
-    image: sentinela-dev:latest
+          memory: 200M
     ports:
       - 8000:8000
     environment:
@@ -50,6 +56,8 @@ services:
       - /app/src/_monitors_load
       - /app/src/tmp
     depends_on:
-      - postgres
-      - motoserver
+      postgres:
+        condition: service_healthy
+      motoserver:
+        condition: service_healthy
     command: sentinela run controller executor

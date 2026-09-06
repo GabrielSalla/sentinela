@@ -63,7 +63,7 @@ migrate-scalable:
 	@$(DOCKER_COMPOSE_SCALABLE) run --rm --service-ports sentinela-controller alembic upgrade head
 
 run-scalable:
-	@$(DOCKER_COMPOSE_SCALABLE) up sentinela-controller sentinela-executor
+	@$(DOCKER_COMPOSE_SCALABLE) up simple-queue sentinela-controller sentinela-executor
 
 down-scalable:
 	@$(DOCKER_COMPOSE_SCALABLE) down
