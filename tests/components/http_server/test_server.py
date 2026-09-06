@@ -169,7 +169,17 @@ async def test_configs():
         "port": 8000,
         "log_level": "error",
         "dashboard_enabled": True,
-        "monitor_register_enabled": True,
+        "commands": {
+            "alert_acknowledge": {"enabled": True},
+            "alert_lock": {"enabled": True},
+            "alert_solve": {"enabled": True},
+            "issue_drop": {"enabled": True},
+            "monitor_disable": {"enabled": True},
+            "monitor_enable": {"enabled": True},
+            "monitor_refresh": {"enabled": True},
+            "monitor_register": {"enabled": True},
+            "monitor_validate": {"enabled": True},
+        },
     }
     assert response_data["configs"]["http_server"] == expected_http_server_config
 

@@ -6,6 +6,7 @@ import pytest_asyncio
 
 import components.controller.controller as controller
 import components.http_server as http_server
+from configs import CommandConfig, configs
 from models import Issue, Monitor
 from tests.message_queue.utils import get_queue_items
 
@@ -75,6 +76,26 @@ async def test_issue_drop_invalid_issue_id(clear_queue):
                 "message": "Invalid request data",
                 "errors": [f"issue_id: {INT_PARSING_ERROR}"],
             }
+
+    queue_items = get_queue_items()
+    assert len(queue_items) == 0
+
+
+async def test_issue_drop_config_disabled(monkeypatch, clear_queue):
+    """The 'issue drop' route should return a forbidden error if the command is disabled in
+    the config"""
+    monkeypatch.setattr(
+        configs.http_server, "commands", {"issue_drop": CommandConfig(enabled=False)}
+    )
+
+    async with aiohttp.ClientSession() as session:
+        async with session.post(BASE_URL + "/0/drop") as response:
+            assert await response.json() == {
+                "status": "error",
+                "message": "Command `issue_drop` is disabled",
+                "error": "Command `issue_drop` is disabled in the configuration",
+            }
+            assert response.status == 403
 
     queue_items = get_queue_items()
     assert len(queue_items) == 0
