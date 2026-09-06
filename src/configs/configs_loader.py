@@ -31,11 +31,16 @@ class ApplicationDatabaseConfig:
 
 
 @dataclass
+class CommandConfig:
+    enabled: bool
+
+
+@dataclass
 class HttpServerConfig:
     port: int
     log_level: Literal["default", "warning", "error", "none"] = "default"
     dashboard_enabled: bool = False
-    monitor_register_enabled: bool = False
+    commands: dict[str, CommandConfig] = Field(default_factory=dict)
 
 
 @dataclass
