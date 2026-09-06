@@ -186,6 +186,7 @@ Sentinela comes with some built-in plugins that can be used to extend the applic
 - [AWS](aws.md)
 - [ODBC](odbc.md)
 - [Postgres](postgres.md)
+- [Simple Queue](simple_queue.md)
 - [Slack](slack.md)
 
 ## Enabling plugins
@@ -197,5 +198,6 @@ plugins:
   - aws
   - odbc
   - postgres
+  - simple_queue
   - slack
 ```

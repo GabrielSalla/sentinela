@@ -179,7 +179,8 @@ The dashboard provides two main views: an overview of monitors, alerts, and issu
     1. [AWS](docs/plugins/aws.md)
     2. [ODBC](docs/plugins/odbc.md)
     3. [Postgres](docs/plugins/postgres.md)
-    4. [Slack](docs/plugins/slack.md)
+    4. [Simple Queue](docs/plugins/simple_queue.md)
+    5. [Slack](docs/plugins/slack.md)
 11. Interacting with Sentinela
     1. [HTTP server](docs/http_server.md)
 12. Special cases
