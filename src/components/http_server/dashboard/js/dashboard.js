@@ -1,6 +1,11 @@
+function fetchWithAuth(url, options = {}) {
+    return fetch(url, { credentials: "include", ...options });
+}
+
 function dashboardApp() {
+    const savedSection = localStorage.getItem('current-section');
     return {
-        currentSection: 'overview',
+        currentSection: savedSection === 'overview' || savedSection === 'editor' ? savedSection : 'overview',
         monitors: [],
         alerts: [],
         issues: [],
@@ -22,6 +27,9 @@ function dashboardApp() {
         showAddFilePopover: false,
         newFileName: '',
         sentinela_configs: {},
+        currentUser: null,
+        usersList: [],
+        inviteLink: '',
 
         settings: {
             overviewFilterIncludeInternalMonitors: true,
@@ -74,7 +82,7 @@ function dashboardApp() {
 
         async loadConfigs() {
             try {
-                const response = await fetch(`${window.location.origin}/configs`);
+                const response = await fetchWithAuth(`${window.location.origin}/configs`);
                 const data = await response.json();
                 if (data.configs) {
                     this.sentinela_configs = data.configs;
@@ -91,11 +99,104 @@ function dashboardApp() {
             this.restoreColumnWidths();
             this.restoreActiveTab();
             this.initializeDesktopNotifications();
-            this.showSection(this.currentSection);
+            this.ensureAuth().then((authenticated) => {
+                if (!authenticated) return;
+                this.showSection(this.currentSection);
+            });
             initializeCodeEditor();
             this.loadConfigs();
             this.loadMonitorsForEditor();
             this.$nextTick(() => this.initializeResizeHandles());
+        },
+
+        async ensureAuth() {
+            try {
+                const response = await fetchWithAuth(`${window.location.origin}/auth/me`);
+                if (response.status === 401) {
+                    window.location.href = '/dashboard/login.html';
+                    return false;
+                }
+                const data = await response.json();
+                if (data.require_change_password) {
+                    window.location.href = '/dashboard/change-password.html';
+                    return false;
+                }
+                this.currentUser = data;
+                return true;
+            } catch (error) {
+                console.error('Error checking auth:', error);
+                return false;
+            }
+        },
+
+        async logout() {
+            await fetchWithAuth(`${window.location.origin}/auth/logout`, { method: 'POST' });
+            window.location.href = '/dashboard/login.html';
+        },
+
+        async loadUsers() {
+            try {
+                const response = await fetchWithAuth(`${window.location.origin}/auth/users`);
+                if (response.status === 401) {
+                    window.location.href = '/dashboard/login.html';
+                    return;
+                }
+                if (!response.ok) return;
+                this.usersList = await response.json();
+            } catch (error) {
+                console.error('Error loading users:', error);
+            }
+        },
+
+        async createUser() {
+            const username = document.getElementById('new-username').value.trim();
+            const role = document.getElementById('new-role').value;
+            if (!username) {
+                showToast('Username is required', 'error');
+                return;
+            }
+            try {
+                const response = await fetchWithAuth(`${window.location.origin}/auth/users`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ username, role })
+                });
+                const result = await response.json();
+                if (response.ok) {
+                    this.inviteLink = `${window.location.origin}${result.invite_url}`;
+                    showToast('User created, share the invite link');
+                    document.getElementById('new-username').value = '';
+                    await this.loadUsers();
+                } else {
+                    showToast(result.message || 'Failed to create user', 'error');
+                }
+            } catch (error) {
+                console.error('Error creating user:', error);
+                showToast('Connection failed', 'error');
+            }
+        },
+
+        copyInviteLink() {
+            if (this.inviteLink) navigator.clipboard?.writeText(this.inviteLink);
+        },
+
+        async setUserActive(username, active) {
+            const action = active ? 'enable' : 'disable';
+            try {
+                const response = await fetchWithAuth(`${window.location.origin}/auth/users/${encodeURIComponent(username)}/${action}`, {
+                    method: 'POST'
+                });
+                const result = await response.json();
+                if (response.ok) {
+                    showToast(`User ${action}d`);
+                } else {
+                    showToast(result.message || `Failed to ${action} user`, 'error');
+                }
+                await this.loadUsers();
+            } catch (error) {
+                console.error(`Error ${action}ing user:`, error);
+                showToast('Connection failed', 'error');
+            }
         },
 
         initializeSettings() {
@@ -137,8 +238,17 @@ function dashboardApp() {
 
         showSection(sectionName) {
             this.currentSection = sectionName;
-            localStorage.setItem('current-section', sectionName);
-            sectionName === 'overview' ? this.loadOverview() : this.stopAutoRefresh();
+            if (sectionName === 'overview' || sectionName === 'editor') {
+                localStorage.setItem('current-section', sectionName);
+            }
+            if (sectionName === 'overview') {
+                this.loadOverview();
+            } else if (sectionName === 'users') {
+                this.stopAutoRefresh();
+                this.loadUsers();
+            } else {
+                this.stopAutoRefresh();
+            }
         },
 
         async loadOverview() {
@@ -179,7 +289,7 @@ function dashboardApp() {
             if (typeof marked !== 'undefined' && marked.parse) {
                 return marked.parse(text);
             }
-            return `<pre style="white-space:pre-wrap;color:#f0f6fc">${text}</pre>`;
+            return `<pre style="white-space:pre-wrap;color:var(--text)">${text}</pre>`;
         },
 
         saveSettingsAndClose() {
@@ -293,7 +403,11 @@ function dashboardApp() {
         },
 
         async fetchData(url, errorMessage) {
-            const response = await fetch(url);
+            const response = await fetchWithAuth(url);
+            if (response.status === 401) {
+                window.location.href = '/dashboard/login.html';
+                throw new Error('Unauthorized');
+            }
             if (!response.ok)
                 throw new Error(errorMessage || `HTTP ${response.status}`);
             return response.json();
@@ -405,7 +519,7 @@ function dashboardApp() {
         },
 
         async performAlertAction(alert, action, successMessage) {
-            const response = await fetch(`/alert/${alert.id}/${action}`, { method: 'POST' });
+            const response = await fetchWithAuth(`/alert/${alert.id}/${action}`, { method: 'POST' });
 
             if (response.ok) {
                 showToast(successMessage);
@@ -579,7 +693,7 @@ function dashboardApp() {
             }
 
             try {
-                const formatResponse = await fetch(`${window.location.origin}/monitor/format_name/${encodeURIComponent(monitorName)}`, {
+                const formatResponse = await fetchWithAuth(`${window.location.origin}/monitor/format_name/${encodeURIComponent(monitorName)}`, {
                     method: 'POST'
                 });
 
@@ -645,7 +759,7 @@ function dashboardApp() {
             hideValidationErrors();
 
             try {
-                const response = await fetch(`${window.location.origin}/monitor/validate`, {
+                const response = await fetchWithAuth(`${window.location.origin}/monitor/validate`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ monitor_code: code })
@@ -676,7 +790,7 @@ function dashboardApp() {
             hideValidationErrors();
 
             try {
-                const response = await fetch(`${window.location.origin}/monitor/register/${monitorName}`, {
+                const response = await fetchWithAuth(`${window.location.origin}/monitor/register/${monitorName}`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
@@ -690,7 +804,7 @@ function dashboardApp() {
                 if (response.ok) {
                     showToast('Monitor saved successfully!');
                     const endpoint = enabled ? 'enable' : 'disable';
-                    await fetch(`${window.location.origin}/monitor/${monitorName}/${endpoint}`, { method: 'POST' })
+                    await fetchWithAuth(`${window.location.origin}/monitor/${monitorName}/${endpoint}`, { method: 'POST' })
                         .catch(error => console.error(`Error ${endpoint}ing monitor:`, error));
 
                     this.monitorHasPendingChanges = false;

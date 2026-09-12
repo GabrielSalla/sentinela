@@ -19,11 +19,21 @@
             <h1>Sentinela</h1>
             <button class="nav-btn" :class="{ 'active': currentSection === 'overview' }" @click="showSection('overview')">Overview</button>
             <button class="nav-btn" :class="{ 'active': currentSection === 'editor' }" @click="showSection('editor')">Editor</button>
+            <button class="nav-btn" x-show="currentUser?.role === 'admin'" :class="{ 'active': currentSection === 'users' }" @click="showSection('users')">Users</button>
         </div>
-        <button class="settings-btn" @click="openSettingsModal()" title="Open settings">⚙</button>
+        <div class="top-bar-right">
+            <div class="user-menu" x-data="{ open: false }" @click.outside="open = false">
+                <button class="nav-btn" x-show="currentUser" @click="open = !open" x-text="currentUser?.username"></button>
+                <div class="user-menu-dropdown" x-show="open" x-cloak>
+                    <a href="/dashboard/change-password.html">Change password</a>
+                    <button @click="logout()">Logout</button>
+                </div>
+            </div>
+            <button class="settings-btn" @click="openSettingsModal()" title="Open settings">⚙</button>
+        </div>
     </nav>
 
-    <div id="overview-section" class="section-content" x-show="currentSection === 'overview'">
+    <div id="overview-section" class="section-content" x-show="currentSection === 'overview'" x-cloak>
         <div class="overview-container">
             <div class="overview-column" id="monitors-column">
                 <h2>Active Monitors</h2>
@@ -181,7 +191,7 @@
         </div>
     </div>
 
-    <div id="editor-section" class="section-content" x-show="currentSection === 'editor'">
+    <div id="editor-section" class="section-content" x-show="currentSection === 'editor'" x-cloak>
         <div class="container">
             <div class="sidebar">
                 <div id="monitor-section">
@@ -189,7 +199,7 @@
                         <label for="monitor-select">Monitor:</label>
                         <select id="monitor-select" @change="onMonitorSelect($event)">
                             <option value="" disabled selected hidden></option>
-                            <option value="___CREATE_NEW___" style="font-style: italic; color: #58a6ff;">Create new monitor</option>
+                            <option value="___CREATE_NEW___" style="font-style: italic; color: var(--accent);">Create new monitor</option>
                             <template x-for="monitor in monitorsList" :key="monitor.name">
                                 <option :value="monitor.name" x-text="monitor.name" :class="monitor.enabled ? 'monitor-enabled' : 'monitor-disabled'"></option>
                             </template>
@@ -309,6 +319,52 @@
     </div>
 
     <div id="toast" class="toast"></div>
+
+    <div id="users-section" class="section-content" x-show="currentSection === 'users'" x-cloak>
+        <div class="users-container">
+            <h2>Users</h2>
+            <div class="user-card">
+                <h3>Create user</h3>
+                <div class="user-form-row">
+                    <div class="user-form-field">
+                        <label for="new-username">Username</label>
+                        <input type="text" id="new-username" placeholder="username">
+                    </div>
+                    <div class="user-form-field user-form-field-narrow">
+                        <label for="new-role">Role</label>
+                        <select id="new-role">
+                            <option value="user">user</option>
+                            <option value="admin">admin</option>
+                        </select>
+                    </div>
+                    <button class="btn user-form-button" @click="createUser()">Create user</button>
+                </div>
+            </div>
+            <div id="invite-link-output" class="invite-link-output" x-show="inviteLink">
+                <span>Invite link:</span>
+                <code x-text="inviteLink"></code>
+                <button class="btn btn-secondary" @click="copyInviteLink()">Copy</button>
+            </div>
+            <div id="users-list" class="users-list">
+                <template x-for="user in usersList" :key="user.id">
+                    <div class="list-item user-row" :class="{ 'user-disabled': !user.is_active }">
+                        <div class="user-identity">
+                            <span class="list-item-name" x-text="user.username"></span>
+                            <span class="user-badge" :class="user.role === 'admin' ? 'user-badge-admin' : 'user-badge-user'" x-text="user.role"></span>
+                            <span class="user-badge" :class="user.is_active ? 'user-badge-active' : 'user-badge-disabled'" x-text="user.is_active ? 'active' : 'disabled'"></span>
+                        </div>
+                        <span class="user-badge user-badge-password" x-show="!user.has_password">Require password change</span>
+                        <div class="user-row-actions">
+                            <label class="switch" title="Active">
+                                <input type="checkbox" :checked="user.is_active" :disabled="user.username === currentUser?.username" @change="setUserActive(user.username, $event.target.checked)">
+                                <span class="slider"></span>
+                            </label>
+                        </div>
+                    </div>
+                </template>
+            </div>
+        </div>
+    </div>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/codemirror.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/mode/css/css.min.js"></script>
