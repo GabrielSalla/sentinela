@@ -25,7 +25,7 @@ async def setup_http_server():
     await http_server.wait_stop()
 
 
-async def test_issue_drop(admin_cookies, clear_queue, sample_monitor: Monitor):
+async def test_issue_drop(user_cookies, clear_queue, sample_monitor: Monitor):
     """The 'issue drop' route should queue an request to drop the provided issue"""
     issue = await Issue.create(
         monitor_id=sample_monitor.id,
@@ -36,7 +36,7 @@ async def test_issue_drop(admin_cookies, clear_queue, sample_monitor: Monitor):
     queue_items = get_queue_items()
     assert len(queue_items) == 0
 
-    async with aiohttp.ClientSession(cookies=admin_cookies) as session:
+    async with aiohttp.ClientSession(cookies=user_cookies) as session:
         async with session.post(BASE_URL + f"/{issue.id}/drop") as response:
             assert await response.json() == {
                 "status": "request_queued",
@@ -51,7 +51,7 @@ async def test_issue_drop(admin_cookies, clear_queue, sample_monitor: Monitor):
         "type": "request",
         "payload": {
             "action": "issue_drop",
-            "params": {"target_id": issue.id},
+            "params": {"target_id": issue.id, "context": {"user": "plain_user"}},
         },
     }
 

@@ -121,14 +121,14 @@ async def test_list_alert_active_issues_invalid_alert_id(admin_cookies):
             }
 
 
-async def test_alert_acknowledge(admin_cookies, clear_queue, sample_monitor: Monitor):
+async def test_alert_acknowledge(user_cookies, clear_queue, sample_monitor: Monitor):
     """The 'alert acknowledge' route should queue an request to acknowledge the provided alert"""
     alert = await Alert.create(monitor_id=sample_monitor.id)
 
     queue_items = get_queue_items()
     assert len(queue_items) == 0
 
-    async with aiohttp.ClientSession(cookies=admin_cookies) as session:
+    async with aiohttp.ClientSession(cookies=user_cookies) as session:
         async with session.post(BASE_URL + f"/{alert.id}/acknowledge") as response:
             assert await response.json() == {
                 "status": "request_queued",
@@ -143,7 +143,7 @@ async def test_alert_acknowledge(admin_cookies, clear_queue, sample_monitor: Mon
         "type": "request",
         "payload": {
             "action": "alert_acknowledge",
-            "params": {"target_id": alert.id},
+            "params": {"target_id": alert.id, "context": {"user": "plain_user"}},
         },
     }
 
@@ -174,14 +174,14 @@ async def test_alert_acknowledge_invalid_alert_id(admin_cookies, clear_queue):
     assert len(queue_items) == 0
 
 
-async def test_alert_lock(admin_cookies, clear_queue, sample_monitor: Monitor):
+async def test_alert_lock(user_cookies, clear_queue, sample_monitor: Monitor):
     """The 'alert lock' route should queue an request to lock the provided alert"""
     alert = await Alert.create(monitor_id=sample_monitor.id)
 
     queue_items = get_queue_items()
     assert len(queue_items) == 0
 
-    async with aiohttp.ClientSession(cookies=admin_cookies) as session:
+    async with aiohttp.ClientSession(cookies=user_cookies) as session:
         async with session.post(BASE_URL + f"/{alert.id}/lock") as response:
             assert await response.json() == {
                 "status": "request_queued",
@@ -196,7 +196,7 @@ async def test_alert_lock(admin_cookies, clear_queue, sample_monitor: Monitor):
         "type": "request",
         "payload": {
             "action": "alert_lock",
-            "params": {"target_id": alert.id},
+            "params": {"target_id": alert.id, "context": {"user": "plain_user"}},
         },
     }
 
@@ -226,14 +226,14 @@ async def test_alert_lock_invalid_alert_id(admin_cookies, clear_queue):
     assert len(queue_items) == 0
 
 
-async def test_alert_solve(admin_cookies, clear_queue, sample_monitor: Monitor):
+async def test_alert_solve(user_cookies, clear_queue, sample_monitor: Monitor):
     """The 'alert solve' route should queue an request to solve the provided alert"""
     alert = await Alert.create(monitor_id=sample_monitor.id)
 
     queue_items = get_queue_items()
     assert len(queue_items) == 0
 
-    async with aiohttp.ClientSession(cookies=admin_cookies) as session:
+    async with aiohttp.ClientSession(cookies=user_cookies) as session:
         async with session.post(BASE_URL + f"/{alert.id}/solve") as response:
             assert await response.json() == {
                 "status": "request_queued",
@@ -248,7 +248,7 @@ async def test_alert_solve(admin_cookies, clear_queue, sample_monitor: Monitor):
         "type": "request",
         "payload": {
             "action": "alert_solve",
-            "params": {"target_id": alert.id},
+            "params": {"target_id": alert.id, "context": {"user": "plain_user"}},
         },
     }
 

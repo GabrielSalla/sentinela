@@ -8,6 +8,7 @@ from aiohttp.web_response import Response
 from pydantic import BaseModel, Field, ValidationError, field_validator
 
 import commands
+from components.http_server.auth import service
 from components.http_server.command_config import (
     disabled_command_response,
     is_command_enabled,
@@ -163,7 +164,9 @@ async def monitor_disable(request: Request) -> Response:
     monitor_name = request.match_info["monitor_name"]
 
     try:
-        monitor_id = await commands.monitor_disable(monitor_name)
+        monitor_id = await commands.monitor_disable(
+            monitor_name, context={"user": request[service.USER_REQUEST_KEY].username}
+        )
 
         success_response = {
             "status": "request_queued",
@@ -193,7 +196,9 @@ async def monitor_enable(request: Request) -> Response:
     monitor_name = request.match_info["monitor_name"]
 
     try:
-        monitor_id = await commands.monitor_enable(monitor_name)
+        monitor_id = await commands.monitor_enable(
+            monitor_name, context={"user": request[service.USER_REQUEST_KEY].username}
+        )
 
         success_response = {
             "status": "request_queued",
