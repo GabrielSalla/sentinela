@@ -27,6 +27,14 @@ async def test_get_dashboard(admin_cookies):
             assert "<!DOCTYPE html>" in content or "<html" in content
 
 
+async def test_get_dashboard_unauthorized():
+    """The 'dashboard' route should redirect to the login page without a session"""
+    async with aiohttp.ClientSession() as session:
+        async with session.get(BASE_URL, allow_redirects=False) as response:
+            assert response.status == 302
+            assert response.headers["Location"] == "/dashboard/login.html"
+
+
 async def test_get_asset_css(admin_cookies):
     """The dashboard should serve CSS assets correctly"""
     async with aiohttp.ClientSession(cookies=admin_cookies) as session:
@@ -67,14 +75,6 @@ async def test_get_asset_forbidden_path_traversal(admin_cookies, traversal_path,
         async with session.get(BASE_URL + traversal_path) as response:
             assert response.status == 404
             assert await response.text() == expected_body
-
-
-async def test_get_dashboard_unauthorized():
-    """The 'dashboard' route should redirect to the login page without a session"""
-    async with aiohttp.ClientSession() as session:
-        async with session.get(BASE_URL, allow_redirects=False) as response:
-            assert response.status == 302
-            assert response.headers["Location"] == "/dashboard/login.html"
 
 
 async def test_get_login_page_unauthorized():
