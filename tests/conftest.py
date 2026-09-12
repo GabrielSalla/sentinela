@@ -81,8 +81,8 @@ async def init_application_database():
         try:
             alembic.command.downgrade(alembic_config, "base")
         except Exception:
-            connection.exec_driver_sql("drop table if exists alembic_version")
-            Monitor.metadata.drop_all(connection)
+            connection.exec_driver_sql("drop schema public cascade;")
+            connection.exec_driver_sql("create schema public;")
         alembic.command.upgrade(alembic_config, "head")
 
     async with internal_database.engine.begin() as connection:
@@ -97,7 +97,7 @@ async def init_application_database():
 async def clean_database_environment(init_databases):
     """Clean the test database environment after the test session"""
     yield
-    await databases.query_application('truncate "Monitors" cascade;')
+    await databases.query_application('truncate "Monitors", "Users" cascade;')
 
 
 @pytest_asyncio.fixture(loop_scope="session", scope="function")
