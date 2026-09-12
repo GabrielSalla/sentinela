@@ -87,11 +87,19 @@ application_queue:
       - `enabled`: Boolean. Flag to enable the command. Defaults to `true`.
     - `monitor_validate`: Map. Settings for the monitor validate command.
       - `enabled`: Boolean. Flag to enable the command. Defaults to `true`.
+  - `auth`: Map. Settings for dashboard authentication.
+    - `session_expire_hours`: Integer. Session lifetime in hours. Defaults to `24`.
+    - `invite_expire_hours`: Integer. Invite link lifetime in hours. Defaults to `1`.
+    - `cookie_secure`: Boolean. Set the `Secure` flag on the session cookie. Enable it when serving the dashboard over HTTPS, otherwise the cookie can be stolen over plain HTTP. Keep it `false` for plain HTTP deployments (browsers won't send `Secure` cookies over HTTP). Defaults to `false`.
 
   Example:
   ```yaml
   http_server:
     port: 8000
+    auth:
+      session_expire_hours: 24
+      invite_expire_hours: 1
+      cookie_secure: false
     commands:
       alert_acknowledge:
         enabled: true
@@ -112,6 +120,9 @@ application_queue:
       monitor_validate:
         enabled: true
   ```
+
+  > [!WARNING]
+  > On the first startup with an empty users table, a default `admin` user with password `admin` is created. Change the password immediately after the first login.
 
 ## Time Zone
 - `time_zone`: String. Time zone to use for cron scheduling and notification messages.

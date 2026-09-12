@@ -1,6 +1,7 @@
 import dataclasses
 import logging
 import random
+import re
 from collections.abc import Awaitable, Callable
 from typing import Any
 
@@ -14,6 +15,9 @@ import components.controller.controller as controller
 import components.executor.executor as executor
 import registry as registry
 from components.http_server.alert_routes import alert_routes
+from components.http_server.auth import service as auth_service
+from components.http_server.auth.middleware import auth_middleware
+from components.http_server.auth_routes import auth_routes
 from components.http_server.dashboard_routes import dashboard_routes
 from components.http_server.issue_routes import issue_routes
 from components.http_server.monitor_routes import monitor_routes
@@ -34,6 +38,14 @@ prometheus_http_5xx_count = prometheus_client.Counter(
 )
 
 _runner: web.AppRunner
+
+_TOKEN_QUERY_VALUE_PATTERN = re.compile(r"(token=)[^&;]*", re.IGNORECASE)
+
+
+def _redacted_path_qs(request: Request) -> str:
+    """Return path_qs with sensitive query values redacted, to avoid leaking secrets"""
+    return _TOKEN_QUERY_VALUE_PATTERN.sub(r"\1REDACTED", request.path_qs)
+
 
 base_routes = web.RouteTableDef()
 
@@ -136,22 +148,22 @@ async def _requests_middleware(
         if 400 <= error.status < 500:
             _logger.warning(
                 f"HTTP 4xx response: method={request.method} "
-                f"path={request.path_qs} "
+                f"path={_redacted_path_qs(request)} "
                 f"status={error.status} "
                 f"content={error.text}"
             )
             prometheus_http_4xx_count.labels(
-                method=request.method, path=request.path_qs, status=error.status
+                method=request.method, path=_redacted_path_qs(request), status=error.status
             ).inc()
         elif 500 <= error.status < 600:
             _logger.error(
                 f"HTTP 5xx response: method={request.method} "
-                f"path={request.path_qs} "
+                f"path={_redacted_path_qs(request)} "
                 f"status={error.status} "
                 f"content={error.text}"
             )
             prometheus_http_5xx_count.labels(
-                method=request.method, path=request.path_qs, status=error.status
+                method=request.method, path=_redacted_path_qs(request), status=error.status
             ).inc()
         raise
 
@@ -159,23 +171,23 @@ async def _requests_middleware(
         response_content = response.text if isinstance(response, web.Response) else ""
         _logger.warning(
             f"HTTP 4xx response: method={request.method} "
-            f"path={request.path_qs} "
+            f"path={_redacted_path_qs(request)} "
             f"status={response.status} "
             f"content={response_content}"
         )
         prometheus_http_4xx_count.labels(
-            method=request.method, path=request.path_qs, status=response.status
+            method=request.method, path=_redacted_path_qs(request), status=response.status
         ).inc()
     elif 500 <= response.status < 600:
         response_content = response.text if isinstance(response, web.Response) else ""
         _logger.error(
             f"HTTP 5xx response: method={request.method} "
-            f"path={request.path_qs} "
+            f"path={_redacted_path_qs(request)} "
             f"status={response.status} "
             f"content={response_content}"
         )
         prometheus_http_5xx_count.labels(
-            method=request.method, path=request.path_qs, status=response.status
+            method=request.method, path=_redacted_path_qs(request), status=response.status
         ).inc()
 
     return response
@@ -184,7 +196,9 @@ async def _requests_middleware(
 async def init(controller_enabled: bool = False) -> None:
     global _runner
 
-    app = web.Application(middlewares=[_requests_middleware, _pydantic_validation_middleware])
+    app = web.Application(
+        middlewares=[_requests_middleware, _pydantic_validation_middleware, auth_middleware]
+    )
     set_logger_level(logging.getLogger("aiohttp.web"), configs.http_server.log_level)
     set_logger_level(logging.getLogger("aiohttp.access"), configs.http_server.log_level)
 
@@ -192,11 +206,14 @@ async def init(controller_enabled: bool = False) -> None:
 
     # Only the controller can receive action requests and serve the dashboard
     if controller_enabled:
+        app.add_routes(auth_routes)
         app.add_routes(alert_routes)
         app.add_routes(issue_routes)
         app.add_routes(monitor_routes)
         if configs.http_server.dashboard_enabled:
             app.add_routes(dashboard_routes)
+
+        await auth_service.ensure_default_admin()
 
     _runner = web.AppRunner(app)
     await _runner.setup()

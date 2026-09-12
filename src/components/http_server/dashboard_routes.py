@@ -37,11 +37,14 @@ async def get_asset(request: Request) -> Response:
     """Serve dashboard static assets"""
     asset_path = request.match_info["path"]
 
-    path = DASHBOARD_FILES_PATH / asset_path
+    path = (DASHBOARD_FILES_PATH / asset_path).resolve()
+    if not path.is_relative_to(DASHBOARD_FILES_PATH.resolve()):
+        return web.Response(text="Asset not found", status=404)
+
     try:
         with open(path, "r") as file:
             content = file.read()
-    except FileNotFoundError:
+    except (FileNotFoundError, IsADirectoryError):
         return web.Response(text="Asset not found", status=404)
 
     content_type = EXTENSIONS_TYPE.get(path.suffix, "text/plain")

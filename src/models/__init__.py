@@ -6,6 +6,7 @@ from .issue import Issue, IssueStatus
 from .monitor import Monitor
 from .monitor_executions import ExecutionStatus, MonitorExecution
 from .notification import Notification, NotificationStatus
+from .user import User, UserRole
 from .utils.priority import AlertPriority
 from .variable import Variable
 
@@ -23,5 +24,7 @@ __all__ = [
     "MonitorExecution",
     "Notification",
     "NotificationStatus",
+    "User",
+    "UserRole",
     "Variable",
 ]
