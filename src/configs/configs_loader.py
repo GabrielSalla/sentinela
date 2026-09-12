@@ -36,9 +36,17 @@ class CommandConfig:
 
 
 @dataclass
+class AuthConfig:
+    session_expire_hours: int = 24
+    invite_expire_hours: int = 1
+    cookie_secure: bool = False
+
+
+@dataclass
 class HttpServerConfig:
     port: int
     log_level: Literal["default", "warning", "error", "none"] = "default"
+    auth: AuthConfig = Field(default_factory=AuthConfig)
     dashboard_enabled: bool = False
     commands: dict[str, CommandConfig] = Field(default_factory=dict)
 

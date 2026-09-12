@@ -41,6 +41,10 @@ data:
     http_server:
       port: 8000
       log_level: error
+      auth:
+        session_expire_hours: 24
+        invite_expire_hours: 1
+        cookie_secure: false
       dashboard_enabled: true
       commands:
         alert_acknowledge:
