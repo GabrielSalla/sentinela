@@ -1430,6 +1430,52 @@ option.monitor-disabled {
     margin-bottom: 16px;
 }
 
+.drop-issues-container {
+    max-width: 800px;
+    margin: 24px auto;
+    padding: 0 24px;
+}
+
+.drop-issues-container h2 {
+    margin-bottom: 16px;
+}
+
+.drop-issues-help {
+    margin-bottom: 12px;
+    color: var(--text-muted);
+    font-size: 13px;
+}
+
+.drop-issues-input {
+    width: 100%;
+    min-height: 160px;
+    padding: 10px;
+    resize: vertical;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    background-color: var(--bg-raised);
+    color: var(--text);
+    font: inherit;
+}
+
+.drop-issues-list {
+    margin-top: 16px;
+}
+
+.drop-issue-status {
+    text-transform: none;
+}
+
+.drop-issue-success {
+    background-color: var(--success-bg);
+    color: var(--success);
+}
+
+.drop-issue-error {
+    background-color: var(--danger-bg);
+    color: var(--danger-light);
+}
+
 .user-card {
     margin-bottom: 16px;
     padding: 16px;
