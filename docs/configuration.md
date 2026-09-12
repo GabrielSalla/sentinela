@@ -32,3 +32,21 @@ Example:
 ```
 DATABASE_ABC=postgres://postgres:postgres@postgres:5432/postgres
 ```
+
+## `SENTINELA_AUTH_SECRET`
+> [!WARNING]
+> The value in `.env.secrets` is a placeholder example only. Replace it with a unique secret before deploying. Never use the example value in production: anyone with it can forge session and invite tokens.
+
+Secret used to sign the dashboard session and invite tokens (HS256). Use a long random value with at least 32 characters. It is read once on startup: changing it invalidates all existing sessions and invite links, logging out every user.
+
+If unset, an ephemeral secret is generated on startup and a warning is logged. Sessions then invalidate on every restart, so always set this variable in production.
+
+Example:
+```
+SENTINELA_AUTH_SECRET=7f3a9c1e5b2d4f6a8c0e1d3b5a7f9c2e4b6
+```
+
+You can generate one with:
+```
+openssl rand -hex 32
+```

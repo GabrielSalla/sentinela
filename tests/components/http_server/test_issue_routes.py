@@ -25,7 +25,7 @@ async def setup_http_server():
     await http_server.wait_stop()
 
 
-async def test_issue_drop(clear_queue, sample_monitor: Monitor):
+async def test_issue_drop(admin_cookies, clear_queue, sample_monitor: Monitor):
     """The 'issue drop' route should queue an request to drop the provided issue"""
     issue = await Issue.create(
         monitor_id=sample_monitor.id,
@@ -36,7 +36,7 @@ async def test_issue_drop(clear_queue, sample_monitor: Monitor):
     queue_items = get_queue_items()
     assert len(queue_items) == 0
 
-    async with aiohttp.ClientSession() as session:
+    async with aiohttp.ClientSession(cookies=admin_cookies) as session:
         async with session.post(BASE_URL + f"/{issue.id}/drop") as response:
             assert await response.json() == {
                 "status": "request_queued",
@@ -56,9 +56,9 @@ async def test_issue_drop(clear_queue, sample_monitor: Monitor):
     }
 
 
-async def test_issue_drop_issue_not_found(clear_queue):
+async def test_issue_drop_issue_not_found(admin_cookies, clear_queue):
     """The 'issue drop' route should return and 404 error if the provided issue was not found"""
-    async with aiohttp.ClientSession() as session:
+    async with aiohttp.ClientSession(cookies=admin_cookies) as session:
         async with session.post(BASE_URL + "/0/drop") as response:
             assert response.status == 404
             assert await response.json() == {"status": "error", "message": "Issue 0 not found"}
@@ -67,8 +67,8 @@ async def test_issue_drop_issue_not_found(clear_queue):
     assert len(queue_items) == 0
 
 
-async def test_issue_drop_invalid_issue_id(clear_queue):
-    async with aiohttp.ClientSession() as session:
+async def test_issue_drop_invalid_issue_id(admin_cookies, clear_queue):
+    async with aiohttp.ClientSession(cookies=admin_cookies) as session:
         async with session.post(BASE_URL + "/invalid/drop") as response:
             assert response.status == 400
             assert await response.json() == {
@@ -81,14 +81,14 @@ async def test_issue_drop_invalid_issue_id(clear_queue):
     assert len(queue_items) == 0
 
 
-async def test_issue_drop_config_disabled(monkeypatch, clear_queue):
+async def test_issue_drop_config_disabled(monkeypatch, admin_cookies, clear_queue):
     """The 'issue drop' route should return a forbidden error if the command is disabled in
     the config"""
     monkeypatch.setattr(
         configs.http_server, "commands", {"issue_drop": CommandConfig(enabled=False)}
     )
 
-    async with aiohttp.ClientSession() as session:
+    async with aiohttp.ClientSession(cookies=admin_cookies) as session:
         async with session.post(BASE_URL + "/0/drop") as response:
             assert await response.json() == {
                 "status": "error",

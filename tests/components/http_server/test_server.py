@@ -21,7 +21,7 @@ BASE_URL = "http://localhost:8000"
 @pytest_asyncio.fixture(loop_scope="session", scope="module", autouse=True)
 async def setup_http_server():
     """Start the HTTP server"""
-    await http_server.init()
+    await http_server.init(controller_enabled=True)
     yield
     await http_server.wait_stop()
 
@@ -48,12 +48,12 @@ def reset_components(setup_http_server):
         (True, True),
     ],
 )
-async def test_status(controller_running, executor_running):
+async def test_status(admin_cookies, controller_running, executor_running):
     """The 'status' route should return the status of the application and it's components"""
     controller.running = controller_running
     executor.running = executor_running
 
-    async with aiohttp.ClientSession() as session:
+    async with aiohttp.ClientSession(cookies=admin_cookies) as session:
         async with session.get(BASE_URL + "/status") as response:
             response_data = await response.json()
 
@@ -71,7 +71,7 @@ async def test_status(controller_running, executor_running):
         assert "issues" in response_data["components"]["executor"]
 
 
-async def test_status_controller_ok(monkeypatch):
+async def test_status_controller_ok(monkeypatch, admin_cookies):
     """The 'status' route should return the correct information for the controller when it doesn't
     have errors"""
     controller.running = True
@@ -81,7 +81,7 @@ async def test_status_controller_ok(monkeypatch):
 
     monkeypatch.setattr(controller, "diagnostics", diagnostics)
 
-    async with aiohttp.ClientSession() as session:
+    async with aiohttp.ClientSession(cookies=admin_cookies) as session:
         async with session.get(BASE_URL + "/status") as response:
             response_data = await response.json()
 
@@ -92,7 +92,7 @@ async def test_status_controller_ok(monkeypatch):
     }
 
 
-async def test_status_controller_degraded(monkeypatch):
+async def test_status_controller_degraded(monkeypatch, admin_cookies):
     """The 'status' route should return the correct information for the controller when it's
     degraded"""
     controller.running = True
@@ -102,7 +102,7 @@ async def test_status_controller_degraded(monkeypatch):
 
     monkeypatch.setattr(controller, "diagnostics", diagnostics)
 
-    async with aiohttp.ClientSession() as session:
+    async with aiohttp.ClientSession(cookies=admin_cookies) as session:
         async with session.get(BASE_URL + "/status") as response:
             response_data = await response.json()
 
@@ -113,7 +113,7 @@ async def test_status_controller_degraded(monkeypatch):
     }
 
 
-async def test_status_executor_ok(monkeypatch):
+async def test_status_executor_ok(monkeypatch, admin_cookies):
     """The 'status' route should return the correct information for the executor when it doesn't
     have errors"""
     executor.running = True
@@ -123,7 +123,7 @@ async def test_status_executor_ok(monkeypatch):
 
     monkeypatch.setattr(executor, "diagnostics", diagnostics)
 
-    async with aiohttp.ClientSession() as session:
+    async with aiohttp.ClientSession(cookies=admin_cookies) as session:
         async with session.get(BASE_URL + "/status") as response:
             response_data = await response.json()
 
@@ -134,7 +134,7 @@ async def test_status_executor_ok(monkeypatch):
     }
 
 
-async def test_status_executor_degraded(monkeypatch):
+async def test_status_executor_degraded(monkeypatch, admin_cookies):
     """The 'status' route should return the correct information for the executor when it's
     degraded"""
     executor.running = True
@@ -144,7 +144,7 @@ async def test_status_executor_degraded(monkeypatch):
 
     monkeypatch.setattr(executor, "diagnostics", diagnostics)
 
-    async with aiohttp.ClientSession() as session:
+    async with aiohttp.ClientSession(cookies=admin_cookies) as session:
         async with session.get(BASE_URL + "/status") as response:
             response_data = await response.json()
 
@@ -155,9 +155,9 @@ async def test_status_executor_degraded(monkeypatch):
     }
 
 
-async def test_configs():
+async def test_configs(admin_cookies):
     """The 'configs' route should return application configs in JSON format recursively"""
-    async with aiohttp.ClientSession() as session:
+    async with aiohttp.ClientSession(cookies=admin_cookies) as session:
         async with session.get(BASE_URL + "/configs") as response:
             response_data = await response.json()
 
@@ -180,13 +180,18 @@ async def test_configs():
             "monitor_register": {"enabled": True},
             "monitor_validate": {"enabled": True},
         },
+        "auth": {
+            "session_expire_hours": 24,
+            "invite_expire_hours": 1,
+            "cookie_secure": False,
+        },
     }
     assert response_data["configs"]["http_server"] == expected_http_server_config
 
 
-async def test_metrics():
+async def test_metrics(admin_cookies):
     """The 'metrics' route should return metrics from Prometheus"""
-    async with aiohttp.ClientSession() as session:
+    async with aiohttp.ClientSession(cookies=admin_cookies) as session:
         async with session.get(BASE_URL + "/metrics") as response:
             response_data = await response.text()
 
@@ -246,36 +251,36 @@ async def test_pydantic_validation_middleware_value_error():
     )
 
 
-async def test_init_controller_enabled():
+async def test_init_controller_enabled(admin_cookies):
     """'init' should include the alerts, issues and monitor routes and the dashboard if the
     controller is enabled"""
     await restart_http_server(controller_enabled=True)
 
-    async with aiohttp.ClientSession() as session:
+    async with aiohttp.ClientSession(cookies=admin_cookies) as session:
         async with session.get(BASE_URL + "/monitor/list") as response:
             assert response.status == 200
             result = await response.json()
             assert isinstance(result, list)
 
 
-async def test_init_controller_disabled():
+async def test_init_controller_disabled(admin_cookies):
     """'init' should not include the alerts, issues and monitor routes and the dashboard if the
     controller is not enabled"""
     await restart_http_server(controller_enabled=False)
 
-    async with aiohttp.ClientSession() as session:
+    async with aiohttp.ClientSession(cookies=admin_cookies) as session:
         async with session.get(BASE_URL + "/monitor/list") as response:
             assert response.status == 404
             assert await response.text() == "404: Not Found"
 
 
 @pytest.mark.parametrize("dashboard_enabled", [True, False])
-async def test_dashboard_route_active(monkeypatch, dashboard_enabled):
+async def test_dashboard_route_active(monkeypatch, admin_cookies, dashboard_enabled):
     """The 'dashboard' route should be active only if the dashboard is enabled"""
     monkeypatch.setattr(configs.http_server, "dashboard_enabled", dashboard_enabled)
     await restart_http_server(controller_enabled=True)
 
-    async with aiohttp.ClientSession() as session:
+    async with aiohttp.ClientSession(cookies=admin_cookies) as session:
         async with session.get(BASE_URL + "/dashboard") as response:
             if dashboard_enabled:
                 assert response.status == 200
@@ -283,12 +288,31 @@ async def test_dashboard_route_active(monkeypatch, dashboard_enabled):
                 assert response.status == 404
 
 
-async def test_requests_middleware(caplog):
+@pytest.mark.parametrize(
+    ("path_qs", "expected"),
+    [
+        ("/monitor/list", "/monitor/list"),
+        ("/auth/invite/validate?token=abc123", "/auth/invite/validate?token=REDACTED"),
+        (
+            "/auth/invite/validate?TOKEN=abc123&other=1",
+            "/auth/invite/validate?TOKEN=REDACTED&other=1",
+        ),
+        ("/path?other=1&token=", "/path?other=1&token=REDACTED"),
+    ],
+)
+async def test_redacted_path_qs(path_qs, expected):
+    """'_redacted_path_qs' should redact token query values"""
+    request = type("RequestStub", (), {"path_qs": path_qs})()
+
+    assert http_server.server._redacted_path_qs(request) == expected
+
+
+async def test_requests_middleware(admin_cookies, caplog):
     """4xx requests should be logged"""
     caplog.clear()
     await restart_http_server(controller_enabled=False)
 
-    async with aiohttp.ClientSession() as session:
+    async with aiohttp.ClientSession(cookies=admin_cookies) as session:
         async with session.get(BASE_URL + "/monitor/list") as response:
             assert response.status == 404
 
@@ -298,12 +322,12 @@ async def test_requests_middleware(caplog):
     )
 
 
-async def test_requests_middleware_no_2xx(caplog):
+async def test_requests_middleware_no_2xx(admin_cookies, caplog):
     """2xx requests should not be logged as error"""
     caplog.clear()
     await restart_http_server(controller_enabled=False)
 
-    async with aiohttp.ClientSession() as session:
+    async with aiohttp.ClientSession(cookies=admin_cookies) as session:
         async with session.get(BASE_URL + "/status") as response:
             assert response.status == 200
 

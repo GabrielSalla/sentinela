@@ -26,7 +26,7 @@ async def setup_http_server():
     await http_server.wait_stop()
 
 
-async def test_get_alert(sample_monitor: Monitor):
+async def test_get_alert(admin_cookies, sample_monitor: Monitor):
     alerts = await Alert.create_batch(
         [
             Alert(
@@ -41,7 +41,7 @@ async def test_get_alert(sample_monitor: Monitor):
     )
 
     for alert in alerts:
-        async with aiohttp.ClientSession() as session:
+        async with aiohttp.ClientSession(cookies=admin_cookies) as session:
             async with session.get(BASE_URL + f"/{alert.id}") as response:
                 assert await response.json() == {
                     "id": alert.id,
@@ -58,15 +58,15 @@ async def test_get_alert(sample_monitor: Monitor):
                 }
 
 
-async def test_get_alert_not_found(sample_monitor: Monitor):
-    async with aiohttp.ClientSession() as session:
+async def test_get_alert_not_found(admin_cookies, sample_monitor: Monitor):
+    async with aiohttp.ClientSession(cookies=admin_cookies) as session:
         async with session.get(BASE_URL + "/0") as response:
             assert response.status == 404
             assert await response.json() == {"status": "error", "message": "alert 0 not found"}
 
 
-async def test_get_alert_invalid_alert_id():
-    async with aiohttp.ClientSession() as session:
+async def test_get_alert_invalid_alert_id(admin_cookies):
+    async with aiohttp.ClientSession(cookies=admin_cookies) as session:
         async with session.get(BASE_URL + "/invalid") as response:
             assert response.status == 400
             assert await response.json() == {
@@ -77,7 +77,7 @@ async def test_get_alert_invalid_alert_id():
 
 
 @pytest.mark.parametrize("issues_count", range(4))
-async def test_list_alert_active_issues(sample_monitor: Monitor, issues_count):
+async def test_list_alert_active_issues(admin_cookies, sample_monitor: Monitor, issues_count):
     alert = await Alert.create(monitor_id=sample_monitor.id)
 
     issues = await Issue.create_batch(
@@ -90,7 +90,7 @@ async def test_list_alert_active_issues(sample_monitor: Monitor, issues_count):
         ]
     )
 
-    async with aiohttp.ClientSession() as session:
+    async with aiohttp.ClientSession(cookies=admin_cookies) as session:
         async with session.get(BASE_URL + f"/{alert.id}/issues") as response:
             assert await response.json() == [
                 {
@@ -104,14 +104,14 @@ async def test_list_alert_active_issues(sample_monitor: Monitor, issues_count):
             ]
 
 
-async def test_list_alert_active_issues_alert_not_found():
-    async with aiohttp.ClientSession() as session:
+async def test_list_alert_active_issues_alert_not_found(admin_cookies):
+    async with aiohttp.ClientSession(cookies=admin_cookies) as session:
         async with session.get(BASE_URL + "/0/issues") as response:
             assert await response.json() == []
 
 
-async def test_list_alert_active_issues_invalid_alert_id():
-    async with aiohttp.ClientSession() as session:
+async def test_list_alert_active_issues_invalid_alert_id(admin_cookies):
+    async with aiohttp.ClientSession(cookies=admin_cookies) as session:
         async with session.get(BASE_URL + "/invalid/issues") as response:
             assert response.status == 400
             assert await response.json() == {
@@ -121,14 +121,14 @@ async def test_list_alert_active_issues_invalid_alert_id():
             }
 
 
-async def test_alert_acknowledge(clear_queue, sample_monitor: Monitor):
+async def test_alert_acknowledge(admin_cookies, clear_queue, sample_monitor: Monitor):
     """The 'alert acknowledge' route should queue an request to acknowledge the provided alert"""
     alert = await Alert.create(monitor_id=sample_monitor.id)
 
     queue_items = get_queue_items()
     assert len(queue_items) == 0
 
-    async with aiohttp.ClientSession() as session:
+    async with aiohttp.ClientSession(cookies=admin_cookies) as session:
         async with session.post(BASE_URL + f"/{alert.id}/acknowledge") as response:
             assert await response.json() == {
                 "status": "request_queued",
@@ -148,10 +148,10 @@ async def test_alert_acknowledge(clear_queue, sample_monitor: Monitor):
     }
 
 
-async def test_alert_acknowledge_alert_not_found(clear_queue):
+async def test_alert_acknowledge_alert_not_found(admin_cookies, clear_queue):
     """The 'alert acknowledge' route should return and 404 error if the provided alert was not
     found"""
-    async with aiohttp.ClientSession() as session:
+    async with aiohttp.ClientSession(cookies=admin_cookies) as session:
         async with session.post(BASE_URL + "/0/acknowledge") as response:
             assert response.status == 404
             assert await response.json() == {"status": "error", "message": "Alert 0 not found"}
@@ -160,8 +160,8 @@ async def test_alert_acknowledge_alert_not_found(clear_queue):
     assert len(queue_items) == 0
 
 
-async def test_alert_acknowledge_invalid_alert_id(clear_queue):
-    async with aiohttp.ClientSession() as session:
+async def test_alert_acknowledge_invalid_alert_id(admin_cookies, clear_queue):
+    async with aiohttp.ClientSession(cookies=admin_cookies) as session:
         async with session.post(BASE_URL + "/invalid/acknowledge") as response:
             assert response.status == 400
             assert await response.json() == {
@@ -174,14 +174,14 @@ async def test_alert_acknowledge_invalid_alert_id(clear_queue):
     assert len(queue_items) == 0
 
 
-async def test_alert_lock(clear_queue, sample_monitor: Monitor):
+async def test_alert_lock(admin_cookies, clear_queue, sample_monitor: Monitor):
     """The 'alert lock' route should queue an request to lock the provided alert"""
     alert = await Alert.create(monitor_id=sample_monitor.id)
 
     queue_items = get_queue_items()
     assert len(queue_items) == 0
 
-    async with aiohttp.ClientSession() as session:
+    async with aiohttp.ClientSession(cookies=admin_cookies) as session:
         async with session.post(BASE_URL + f"/{alert.id}/lock") as response:
             assert await response.json() == {
                 "status": "request_queued",
@@ -201,9 +201,9 @@ async def test_alert_lock(clear_queue, sample_monitor: Monitor):
     }
 
 
-async def test_alert_lock_alert_not_found(clear_queue):
+async def test_alert_lock_alert_not_found(admin_cookies, clear_queue):
     """The 'alert lock' route should return and 404 error if the provided alert was not found"""
-    async with aiohttp.ClientSession() as session:
+    async with aiohttp.ClientSession(cookies=admin_cookies) as session:
         async with session.post(BASE_URL + "/0/lock") as response:
             assert response.status == 404
             assert await response.json() == {"status": "error", "message": "Alert 0 not found"}
@@ -212,8 +212,8 @@ async def test_alert_lock_alert_not_found(clear_queue):
     assert len(queue_items) == 0
 
 
-async def test_alert_lock_invalid_alert_id(clear_queue):
-    async with aiohttp.ClientSession() as session:
+async def test_alert_lock_invalid_alert_id(admin_cookies, clear_queue):
+    async with aiohttp.ClientSession(cookies=admin_cookies) as session:
         async with session.post(BASE_URL + "/invalid/lock") as response:
             assert response.status == 400
             assert await response.json() == {
@@ -226,14 +226,14 @@ async def test_alert_lock_invalid_alert_id(clear_queue):
     assert len(queue_items) == 0
 
 
-async def test_alert_solve(clear_queue, sample_monitor: Monitor):
+async def test_alert_solve(admin_cookies, clear_queue, sample_monitor: Monitor):
     """The 'alert solve' route should queue an request to solve the provided alert"""
     alert = await Alert.create(monitor_id=sample_monitor.id)
 
     queue_items = get_queue_items()
     assert len(queue_items) == 0
 
-    async with aiohttp.ClientSession() as session:
+    async with aiohttp.ClientSession(cookies=admin_cookies) as session:
         async with session.post(BASE_URL + f"/{alert.id}/solve") as response:
             assert await response.json() == {
                 "status": "request_queued",
@@ -253,10 +253,10 @@ async def test_alert_solve(clear_queue, sample_monitor: Monitor):
     }
 
 
-async def test_alert_solve_alert_not_found(clear_queue):
+async def test_alert_solve_alert_not_found(admin_cookies, clear_queue):
     """The 'alert solve' route should return and 404 error if the provided alert was not
     found"""
-    async with aiohttp.ClientSession() as session:
+    async with aiohttp.ClientSession(cookies=admin_cookies) as session:
         async with session.post(BASE_URL + "/0/solve") as response:
             assert response.status == 404
             assert await response.json() == {"status": "error", "message": "Alert 0 not found"}
@@ -265,8 +265,8 @@ async def test_alert_solve_alert_not_found(clear_queue):
     assert len(queue_items) == 0
 
 
-async def test_alert_solve_invalid_alert_id(clear_queue):
-    async with aiohttp.ClientSession() as session:
+async def test_alert_solve_invalid_alert_id(admin_cookies, clear_queue):
+    async with aiohttp.ClientSession(cookies=admin_cookies) as session:
         async with session.post(BASE_URL + "/invalid/solve") as response:
             assert response.status == 400
             assert await response.json() == {
@@ -287,12 +287,14 @@ async def test_alert_solve_invalid_alert_id(clear_queue):
         ("alert_solve", "solve"),
     ],
 )
-async def test_alert_command_config_disabled(monkeypatch, clear_queue, command, endpoint):
+async def test_alert_command_config_disabled(
+    monkeypatch, admin_cookies, clear_queue, command, endpoint
+):
     """The alert command routes should return a forbidden error if the command is disabled in
     the config"""
     monkeypatch.setattr(configs.http_server, "commands", {command: CommandConfig(enabled=False)})
 
-    async with aiohttp.ClientSession() as session:
+    async with aiohttp.ClientSession(cookies=admin_cookies) as session:
         async with session.post(BASE_URL + f"/0/{endpoint}") as response:
             assert await response.json() == {
                 "status": "error",

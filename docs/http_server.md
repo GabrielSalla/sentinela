@@ -265,3 +265,101 @@ This request is not executed immediately, it's queued for an Executor to run.
 
 Drop the issue with the provided `issue_id`.
 This request is not executed immediately, it's queued for an Executor to run.
+
+# Auth
+All dashboard pages and API routes require a login session, except `/status`, `/metrics` and the auth endpoints below. Unauthenticated API requests return `401 {"status": "unauthorized"}` and unauthenticated dashboard pages redirect to `/dashboard/login.html`.
+
+On the first startup with an empty users table, a default `admin` user with password `admin` is created. Change the password after the first login.
+
+Sessions are signed JWTs sent as an `HttpOnly` cookie named `sentinela_session`. Changing the password revokes all existing sessions. When serving the dashboard over HTTPS, set `http_server.auth.cookie_secure` to `true` so the cookie gets the `Secure` flag and is never sent over plain HTTP.
+
+Tokens are signed with the `SENTINELA_AUTH_SECRET` environment variable (see [Configuration](configuration.md)). If unset, an ephemeral secret is generated on startup and sessions invalidate on restart.
+
+## Login
+**`POST /auth/login`**
+
+Request body example:
+```json
+{
+    "username": "admin",
+    "password": "admin"
+}
+```
+
+## Logout
+**`POST /auth/logout`**
+
+## Current user
+**`GET /auth/me`**
+
+Returns the current user with the `username`, `role` (`admin` or `user`), `require_change_password` and `is_active` fields.
+
+## List users
+**`GET /auth/users`**
+
+Admin only. Returns all users with `id`, `username`, `role`, `has_password`, `require_change_password` and `is_active`.
+
+## Create user
+**`POST /auth/users`**
+
+Admin only. Creates a user without a password and returns a single-use invite link valid for `http_server.auth.invite_expire_hours` (default 1 hour).
+
+Request body example:
+```json
+{
+    "username": "new_user",
+    "role": "user"
+}
+```
+
+Response example:
+```json
+{
+    "status": "user_created",
+    "id": 2,
+    "username": "new_user",
+    "role": "user",
+    "invite_url": "/dashboard/set-password.html?token=..."
+}
+```
+
+## Validate invite
+**`GET /auth/invite/validate?token=...`**
+
+Returns `{"status": "valid"}`, `404 {"status": "invalid_token"}` or `410 {"status": "expired_token"}`.
+
+## Disable user
+**`POST /auth/users/{username}/disable`**
+
+Admin only. Deactivates the user and revokes all their sessions. Disabled users cannot login and their requests return `401 {"status": "unauthorized"}`. Admins cannot disable themselves (`400 {"status": "cannot_disable_self"}`). Unknown users return `404 {"status": "user_not_found"}`.
+
+## Enable user
+**`POST /auth/users/{username}/enable`**
+
+Admin only. Reactivates a disabled user. Unknown users return `404 {"status": "user_not_found"}`.
+
+## Set password
+**`POST /auth/set-password`**
+
+Sets the password with an invite token (single-use) and logs the user in. Passwords must be 12-128 characters with uppercase, lowercase, digit and special character, and must not contain the username.
+
+Request body example:
+```json
+{
+    "token": "...",
+    "password": "NewStrong123!"
+}
+```
+
+## Change password
+**`POST /auth/change-password`**
+
+Changes the current user's password. Also clears the `require_change_password` flag.
+
+Request body example:
+```json
+{
+    "current_password": "admin",
+    "new_password": "NewStrong123!"
+}
+```
