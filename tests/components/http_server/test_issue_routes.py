@@ -25,7 +25,7 @@ async def setup_http_server():
     await http_server.wait_stop()
 
 
-async def test_issue_drop(user_cookies, clear_queue, sample_monitor: Monitor):
+async def test_issue_drop(admin_cookies, clear_queue, sample_monitor: Monitor):
     """The 'issue drop' route should queue an request to drop the provided issue"""
     issue = await Issue.create(
         monitor_id=sample_monitor.id,
@@ -36,7 +36,7 @@ async def test_issue_drop(user_cookies, clear_queue, sample_monitor: Monitor):
     queue_items = get_queue_items()
     assert len(queue_items) == 0
 
-    async with aiohttp.ClientSession(cookies=user_cookies) as session:
+    async with aiohttp.ClientSession(cookies=admin_cookies) as session:
         async with session.post(BASE_URL + f"/{issue.id}/drop") as response:
             assert await response.json() == {
                 "status": "request_queued",
@@ -51,9 +51,19 @@ async def test_issue_drop(user_cookies, clear_queue, sample_monitor: Monitor):
         "type": "request",
         "payload": {
             "action": "issue_drop",
-            "params": {"target_id": issue.id, "context": {"user": "plain_user"}},
+            "params": {"target_id": issue.id, "context": {"user": "admin"}},
         },
     }
+
+
+async def test_issue_drop_forbidden(user_cookies, clear_queue):
+    """The 'issue drop' route should reject non-admin users"""
+    async with aiohttp.ClientSession(cookies=user_cookies) as session:
+        async with session.post(BASE_URL + "/0/drop") as response:
+            assert response.status == 403
+            assert await response.json() == {"status": "forbidden"}
+
+    assert len(get_queue_items()) == 0
 
 
 async def test_issue_drop_issue_not_found(admin_cookies, clear_queue):
