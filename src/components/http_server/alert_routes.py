@@ -4,6 +4,7 @@ from aiohttp.web_response import Response
 from pydantic import BaseModel
 
 import commands as commands
+from components.http_server.auth import service
 from components.http_server.command_config import (
     disabled_command_response,
     is_command_enabled,
@@ -84,7 +85,9 @@ async def alert_acknowledge(request: Request) -> Response:
     params = _AlertIdPathParams.model_validate({"alert_id": request.match_info["alert_id"]})
     alert_id = params.alert_id
     try:
-        await commands.alert_acknowledge(alert_id)
+        await commands.alert_acknowledge(
+            alert_id, context={"user": request[service.USER_REQUEST_KEY].username}
+        )
     except AlertNotFoundError as e:
         return web.json_response({"status": "error", "message": str(e)}, status=404)
 
@@ -106,7 +109,9 @@ async def alert_lock(request: Request) -> Response:
     params = _AlertIdPathParams.model_validate({"alert_id": request.match_info["alert_id"]})
     alert_id = params.alert_id
     try:
-        await commands.alert_lock(alert_id)
+        await commands.alert_lock(
+            alert_id, context={"user": request[service.USER_REQUEST_KEY].username}
+        )
     except AlertNotFoundError as e:
         return web.json_response({"status": "error", "message": str(e)}, status=404)
 
@@ -128,7 +133,9 @@ async def alert_solve(request: Request) -> Response:
     params = _AlertIdPathParams.model_validate({"alert_id": request.match_info["alert_id"]})
     alert_id = params.alert_id
     try:
-        await commands.alert_solve(alert_id)
+        await commands.alert_solve(
+            alert_id, context={"user": request[service.USER_REQUEST_KEY].username}
+        )
     except AlertNotFoundError as e:
         return web.json_response({"status": "error", "message": str(e)}, status=404)
 

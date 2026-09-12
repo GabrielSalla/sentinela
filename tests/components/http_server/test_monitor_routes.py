@@ -228,16 +228,18 @@ async def test_get_monitor_invalid_code_module(admin_cookies, sample_monitor: Mo
     }
 
 
-async def test_monitor_disable(mocker, admin_cookies, sample_monitor: Monitor):
+async def test_monitor_disable(mocker, user_cookies, sample_monitor: Monitor):
     """The 'monitor disable' route should queue monitor disable"""
     monitor_disable_spy: AsyncMock = mocker.spy(commands, "monitor_disable")
 
     url = BASE_URL + f"/{sample_monitor.name}/disable"
-    async with aiohttp.ClientSession(cookies=admin_cookies) as session:
+    async with aiohttp.ClientSession(cookies=user_cookies) as session:
         async with session.post(url) as response:
             response_data = await response.json()
 
-    monitor_disable_spy.assert_awaited_once_with(sample_monitor.name)
+    monitor_disable_spy.assert_awaited_once_with(
+        sample_monitor.name, context={"user": "plain_user"}
+    )
     assert response_data == {
         "status": "request_queued",
         "action": "monitor_disable",
@@ -254,7 +256,7 @@ async def test_monitor_disable_not_found(mocker, admin_cookies):
         async with session.post(url) as response:
             response_data = await response.json()
 
-    monitor_disable_spy.assert_awaited_once_with("not_found")
+    monitor_disable_spy.assert_awaited_once_with("not_found", context={"user": "admin"})
     assert response_data == {
         "status": "error",
         "message": "Monitor 'not_found' not found",
@@ -271,7 +273,7 @@ async def test_monitor_disable_error(mocker, admin_cookies):
         async with session.post(url) as response:
             response_data = await response.json()
 
-    monitor_disable_spy.assert_awaited_once_with("error")
+    monitor_disable_spy.assert_awaited_once_with("error", context={"user": "admin"})
     assert response_data == {
         "status": "error",
         "message": "Unexpected error",
@@ -297,16 +299,16 @@ async def test_monitor_disable_config_disabled(monkeypatch, admin_cookies):
             assert response.status == 403
 
 
-async def test_monitor_enable(mocker, admin_cookies, sample_monitor: Monitor):
+async def test_monitor_enable(mocker, user_cookies, sample_monitor: Monitor):
     """The 'monitor enable' route should queue monitor enable"""
     monitor_enable_spy: AsyncMock = mocker.spy(commands, "monitor_enable")
 
     url = BASE_URL + f"/{sample_monitor.name}/enable"
-    async with aiohttp.ClientSession(cookies=admin_cookies) as session:
+    async with aiohttp.ClientSession(cookies=user_cookies) as session:
         async with session.post(url) as response:
             response_data = await response.json()
 
-    monitor_enable_spy.assert_awaited_once_with(sample_monitor.name)
+    monitor_enable_spy.assert_awaited_once_with(sample_monitor.name, context={"user": "plain_user"})
     assert response_data == {
         "status": "request_queued",
         "action": "monitor_enable",
@@ -323,7 +325,7 @@ async def test_monitor_enable_not_found(mocker, admin_cookies):
         async with session.post(url) as response:
             response_data = await response.json()
 
-    monitor_enable_spy.assert_awaited_once_with("not_found")
+    monitor_enable_spy.assert_awaited_once_with("not_found", context={"user": "admin"})
     assert response_data == {
         "status": "error",
         "message": "Monitor 'not_found' not found",
@@ -340,7 +342,7 @@ async def test_monitor_enable_error(mocker, admin_cookies):
         async with session.post(url) as response:
             response_data = await response.json()
 
-    monitor_enable_spy.assert_awaited_once_with("error")
+    monitor_enable_spy.assert_awaited_once_with("error", context={"user": "admin"})
     assert response_data == {
         "status": "error",
         "message": "Unexpected error",

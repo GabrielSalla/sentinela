@@ -4,6 +4,7 @@ from aiohttp.web_response import Response
 from pydantic import BaseModel
 
 import commands as commands
+from components.http_server.auth import service
 from components.http_server.command_config import (
     disabled_command_response,
     is_command_enabled,
@@ -28,7 +29,9 @@ async def issue_drop(request: Request) -> Response:
     params = _IssueIdPathParams.model_validate({"issue_id": request.match_info["issue_id"]})
     issue_id = params.issue_id
     try:
-        await commands.issue_drop(issue_id)
+        await commands.issue_drop(
+            issue_id, context={"user": request[service.USER_REQUEST_KEY].username}
+        )
     except IssueNotFoundError as e:
         return web.json_response({"status": "error", "message": str(e)}, status=404)
 
