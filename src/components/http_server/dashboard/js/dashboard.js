@@ -29,6 +29,9 @@ function dashboardApp() {
         sentinela_configs: {},
         currentUser: null,
         usersList: [],
+        dropIssueIds: '',
+        dropResults: [],
+        droppingIssues: false,
 
         settings: {
             overviewFilterIncludeInternalMonitors: true,
@@ -218,6 +221,42 @@ function dashboardApp() {
             } catch (error) {
                 console.error(`Error ${action}ing user:`, error);
                 showToast('Connection failed', 'error');
+            }
+        },
+
+        async dropIssues() {
+            const issueIds = [...new Set(this.dropIssueIds.split(/[\s,]+/).filter(Boolean))];
+            if (issueIds.length === 0) {
+                showToast('At least one issue ID is required', 'error');
+                return;
+            }
+            if (!window.confirm(`Drop ${issueIds.length} issue(s)?`)) return;
+
+            this.droppingIssues = true;
+            this.dropResults = [];
+            try {
+                for (const issueId of issueIds) {
+                    if (!/^\d+$/.test(issueId)) {
+                        this.dropResults.push({ id: issueId, success: false, message: 'Invalid issue ID' });
+                        continue;
+                    }
+
+                    const response = await fetchWithAuth(`/issue/${encodeURIComponent(issueId)}/drop`, {
+                        method: 'POST'
+                    });
+                    const result = await response.json();
+                    this.dropResults.push({
+                        id: issueId,
+                        success: response.ok,
+                        message: response.ok ? 'Drop queued' : (result.message || 'Drop failed')
+                    });
+                }
+                this.dropIssueIds = '';
+            } catch (error) {
+                console.error('Error dropping issues:', error);
+                showToast('Connection failed', 'error');
+            } finally {
+                this.droppingIssues = false;
             }
         },
 

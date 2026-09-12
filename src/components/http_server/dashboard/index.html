@@ -19,6 +19,7 @@
             <h1>Sentinela</h1>
             <button class="nav-btn" :class="{ 'active': currentSection === 'overview' }" @click="showSection('overview')">Overview</button>
             <button class="nav-btn" :class="{ 'active': currentSection === 'editor' }" @click="showSection('editor')">Editor</button>
+            <button class="nav-btn" x-show="currentUser?.role === 'admin'" :class="{ 'active': currentSection === 'drop-issues' }" @click="showSection('drop-issues')">Drop Issues</button>
             <button class="nav-btn" x-show="currentUser?.role === 'admin'" :class="{ 'active': currentSection === 'users' }" @click="showSection('users')">Users</button>
         </div>
         <div class="top-bar-right">
@@ -354,6 +355,32 @@
                                 <input type="checkbox" :checked="user.is_active" @change="setUserActive(user.username, $event.target.checked)">
                                 <span class="slider"></span>
                             </label>
+                        </div>
+                    </div>
+                </template>
+            </div>
+        </div>
+    </div>
+
+    <div id="drop-issues-section" class="section-content" x-show="currentSection === 'drop-issues' && currentUser?.role === 'admin'" x-cloak>
+        <div class="drop-issues-container">
+            <h2>Drop Issues</h2>
+            <div class="user-card">
+                <h3>Issue IDs</h3>
+                <p class="drop-issues-help">Enter one issue ID per line, or separate IDs with spaces or commas.</p>
+                <textarea class="drop-issues-input" x-model="dropIssueIds" placeholder="12345&#10;12346"></textarea>
+                <div class="button-group">
+                    <button class="btn" @click="dropIssues()" :disabled="droppingIssues">Drop Issues</button>
+                </div>
+            </div>
+            <div class="users-list drop-issues-list" x-show="dropResults.length > 0">
+                <template x-for="result in dropResults" :key="result.id">
+                    <div class="list-item user-row drop-issue-row">
+                        <div class="user-identity">
+                            <span class="list-item-name" x-text="`#${result.id}`"></span>
+                        </div>
+                        <div class="user-row-actions">
+                            <span class="user-badge drop-issue-status" :class="result.success ? 'drop-issue-success' : 'drop-issue-error'" x-text="result.message"></span>
                         </div>
                     </div>
                 </template>
