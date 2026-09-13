@@ -10,7 +10,7 @@ To enable the AWS plugin, add `aws` to the `plugins` list in the configuration f
 Credentials are selected by a **name**, which indicates which environment variable should be used. The variables that have this setting will have the placeholder `{name}` in their name. The credential name **must be in uppercase letters**.
 
 The following environment variables are used by the AWS plugin:
-- `AWS_ENDPOINT_URL`: Specifies the AWS endpoint to be used for local testing, without the need for a real SQS queue. When using the `motoserver` container as an AWS mock, it should be `http://motoserver:5000`. Do not set this environment variable when using a production SQS queue.
+- `AWS_ENDPOINT_URL`: Specifies the AWS endpoint to be used for local testing, without the need for a real SQS queue. When using the `floci` container as an AWS mock, it should be `http://floci:4566`. Do not set this environment variable when using a production SQS queue.
 - `AWS_{name}_REGION`: Specifies the region to be used with this credential. This environment variable will only be used when one is not specified in the client initialization.
 - `AWS_{name}_ACCESS_KEY_ID`, `AWS_{name}_SECRET_ACCESS_KEY` and `AWS_{name}_SESSION_TOKEN`: Specify the service credentials to access the AWS SQS queue. If the credentials do not include the session token, the `AWS_SESSION_TOKEN` environment variable should not be set.
 
@@ -39,7 +39,7 @@ Suggested configuration for local development or testing:
 application_queue:
   type: plugin.aws.queues.sqs
   name: app
-  url: http://motoserver:5000/123456789012/app
+  url: http://floci:4566/000000000000/app
   region: us-east-1
   queue_wait_message_time: 2
   queue_visibility_time: 15

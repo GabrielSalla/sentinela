@@ -1,0 +1,38 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: floci
+  labels:
+    app: floci
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: floci
+  template:
+    metadata:
+      labels:
+        app: floci
+    spec:
+      containers:
+      - name: floci
+        image: floci/floci:latest-compat
+        ports:
+        - containerPort: 4566
+        env:
+        - name: FLOCI_HOSTNAME
+          value: floci
+
+---
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: floci
+spec:
+  selector:
+    app: floci
+  ports:
+    - protocol: TCP
+      port: 4566
+      targetPort: 4566

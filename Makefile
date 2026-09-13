@@ -20,7 +20,7 @@ build-dev:
 	@$(DOCKER_COMPOSE_DEV) build sentinela-dev
 
 pull-dev:
-	@$(DOCKER_COMPOSE_DEV) pull --quiet postgres motoserver
+	@$(DOCKER_COMPOSE_DEV) pull --quiet postgres floci
 
 migrate-dev:
 	@$(DOCKER_COMPOSE_DEV) run --rm --service-ports sentinela-dev alembic upgrade head

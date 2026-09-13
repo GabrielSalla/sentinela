@@ -32,7 +32,7 @@ data:
     application_queue:
       type: plugin.aws.queues.sqs
       name: app
-      url: http://motoserver:5000/123456789012/app
+      url: http://floci:4566/000000000000/app
       region: us-east-1
       create_queue: true
       queue_wait_message_time: 2

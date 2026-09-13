@@ -6,12 +6,14 @@ services:
     environment:
       - POSTGRES_PASSWORD=postgres
 
-  motoserver:
-    image: ghcr.io/getmoto/motoserver:latest
+  floci:
+    image: floci/floci:latest-compat
     ports:
-      - 5000:5000
+      - 4566:4566
+    environment:
+      FLOCI_HOSTNAME: floci
     healthcheck:
-      test: curl --fail localhost:5000 || exit 1
+      test: curl --fail localhost:4566/_localstack/health || exit 1
       interval: 1s
       timeout: 1s
       retries: 5
@@ -51,5 +53,5 @@ services:
       - /app/src/tmp
     depends_on:
       - postgres
-      - motoserver
+      - floci
     command: sentinela run controller executor
