@@ -24,6 +24,9 @@ from models import CodeModule, Monitor
 from registry import registry
 from tests.message_queue.utils import get_queue_items
 
+FLOCI_HOST = "http://floci:4566"
+FLOCI_QUEUE_URL = f"{FLOCI_HOST}/000000000000/app"
+
 
 @pytest.fixture(scope="module")
 def monkeypatch_module():
@@ -51,11 +54,15 @@ def cleanup_logging_handlers():
 
 
 @pytest_asyncio.fixture(loop_scope="session", scope="session", autouse=True)
-async def reset_motoserver():
-    """Reset the moto server before each test session"""
+async def reset_floci_queue():
+    """Clear the Floci SQS queue before each test session"""
     async with aiohttp.ClientSession() as session:
-        async with session.post("http://motoserver:5000/moto-api/reset"):
-            pass
+        params = {"QueueUrl": FLOCI_QUEUE_URL}
+        async with session.delete(f"{FLOCI_HOST}/_aws/sqs/messages", params=params) as response:
+            if response.status != 200:
+                result = await response.json()
+                if result["__type"] != "QueueDoesNotExist":
+                    response.raise_for_status()
 
 
 @pytest_asyncio.fixture(loop_scope="session", scope="session", autouse=True)

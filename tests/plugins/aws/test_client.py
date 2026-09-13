@@ -94,9 +94,7 @@ async def test_get_aws_config_no_secret_access_key(monkeypatch):
 
 
 async def test_aws_client():
-    """'aws_client' should create a AWS client context manager. As motoserver do not execute the
-    query, we don't care about the result"""
+    """'aws_client' should create a AWS client context manager and execute a request"""
     async with aws_client.aws_client("application", "athena") as client:
         response = await client.start_query_execution(QueryString="select 1")
-        result = await client.get_query_results(QueryExecutionId=response["QueryExecutionId"])
-        assert result["ResultSet"]["Rows"] == []
+        assert response["QueryExecutionId"]

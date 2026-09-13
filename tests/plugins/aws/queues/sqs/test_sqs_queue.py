@@ -10,6 +10,8 @@ import pytest_asyncio
 import plugins.aws.client as aws_client
 import plugins.aws.queues.sqs as sqs_queue
 
+AWS_HOST = "http://floci:4566"
+
 pytestmark = pytest.mark.asyncio(loop_scope="session")
 
 
@@ -23,7 +25,7 @@ async def clean_queue() -> None:
     }
     try:
         async with aws_client.aws_client(**aws_client_params) as client:
-            await client.purge_queue(QueueUrl="http://motoserver:5000/123456789012/app")
+            await client.purge_queue(QueueUrl=f"{AWS_HOST}/000000000000/app")
     except botocore.exceptions.ClientError as e:
         assert e.response["Error"]["Code"] == "AWS.SimpleQueueService.NonExistentQueue"
 
@@ -48,7 +50,7 @@ async def delete_queue(queue_url: str) -> None:
         {
             "type": "plugin.aws.queues.sqs",
             "name": "app",
-            "url": "http://motoserver:5000/123456789012/app",
+            "url": f"{AWS_HOST}/000000000000/app",
             "region": "us-east-1",
             "create_queue": True,
             "queue_wait_message_time": 2,
@@ -83,7 +85,7 @@ async def test_queue_wait_message_time(queue_wait_message_time):
         config={
             "type": "plugin.aws.queues.sqs",
             "name": "app",
-            "url": "http://motoserver:5000/123456789012/app",
+            "url": f"{AWS_HOST}/000000000000/app",
             "region": "us-east-1",
             "create_queue": True,
             "queue_wait_message_time": queue_wait_message_time,
@@ -99,7 +101,7 @@ async def test_init_already_exists(mocker):
         config={
             "type": "plugin.aws.queues.sqs",
             "name": "app",
-            "url": "http://motoserver:5000/123456789012/app",
+            "url": f"{AWS_HOST}/000000000000/app",
             "region": "us-east-1",
             "create_queue": True,
             "queue_wait_message_time": 2,
@@ -120,13 +122,13 @@ async def test_init_queue_not_exists(mocker):
     """'init' should create the queue if it doesn't exists and if configured to"""
     create_queue_spy: AsyncMock = mocker.spy(sqs_queue.sqs_queue, "_create_queue")
 
-    await delete_queue("http://motoserver:5000/123456789012/new_queue")
+    await delete_queue(f"{AWS_HOST}/000000000000/new_queue")
 
     queue = sqs_queue.Queue(
         config={
             "type": "plugin.aws.queues.sqs",
             "name": "new_queue",
-            "url": "http://motoserver:5000/123456789012/new_queue",
+            "url": f"{AWS_HOST}/000000000000/new_queue",
             "region": "us-east-1",
             "create_queue": True,
             "queue_wait_message_time": 2,
@@ -143,13 +145,13 @@ async def test_init_queue_not_exists_not_create(mocker):
     it"""
     create_queue_spy: AsyncMock = mocker.spy(sqs_queue.sqs_queue, "_create_queue")
 
-    await delete_queue("http://motoserver:5000/123456789012/other_queue")
+    await delete_queue(f"{AWS_HOST}/000000000000/other_queue")
 
     queue = sqs_queue.Queue(
         config={
             "type": "plugin.aws.queues.sqs",
             "name": "other_queue",
-            "url": "http://motoserver:5000/123456789012/other_queue",
+            "url": f"{AWS_HOST}/000000000000/other_queue",
             "region": "us-east-1",
             "create_queue": False,
             "queue_wait_message_time": 2,
@@ -178,7 +180,7 @@ async def test_send_message_and_get_message(message_type, message_payload):
         config={
             "type": "plugin.aws.queues.sqs",
             "name": "app",
-            "url": "http://motoserver:5000/123456789012/app",
+            "url": f"{AWS_HOST}/000000000000/app",
             "region": "us-east-1",
             "create_queue": True,
             "queue_wait_message_time": 2,
@@ -209,7 +211,7 @@ async def test_send_message_after_get_message(message_type, message_payload):
         config={
             "type": "plugin.aws.queues.sqs",
             "name": "app",
-            "url": "http://motoserver:5000/123456789012/app",
+            "url": f"{AWS_HOST}/000000000000/app",
             "region": "us-east-1",
             "create_queue": True,
             "queue_wait_message_time": 2,
@@ -237,7 +239,7 @@ async def test_get_message_timeout():
         config={
             "type": "plugin.aws.queues.sqs",
             "name": "app",
-            "url": "http://motoserver:5000/123456789012/app",
+            "url": f"{AWS_HOST}/000000000000/app",
             "region": "us-east-1",
             "create_queue": True,
             "queue_wait_message_time": 1,
@@ -263,7 +265,7 @@ async def test_get_message_not_deleted():
         config={
             "type": "plugin.aws.queues.sqs",
             "name": "app",
-            "url": "http://motoserver:5000/123456789012/app",
+            "url": f"{AWS_HOST}/000000000000/app",
             "region": "us-east-1",
             "create_queue": True,
             "queue_wait_message_time": 0,
@@ -295,7 +297,7 @@ async def test_change_visibility():
         config={
             "type": "plugin.aws.queues.sqs",
             "name": "app",
-            "url": "http://motoserver:5000/123456789012/app",
+            "url": f"{AWS_HOST}/000000000000/app",
             "region": "us-east-1",
             "create_queue": True,
             "queue_wait_message_time": 0,
@@ -327,7 +329,7 @@ async def test_delete_message():
         config={
             "type": "plugin.aws.queues.sqs",
             "name": "app",
-            "url": "http://motoserver:5000/123456789012/app",
+            "url": f"{AWS_HOST}/000000000000/app",
             "region": "us-east-1",
             "create_queue": True,
             "queue_wait_message_time": 0,

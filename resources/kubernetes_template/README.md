@@ -16,9 +16,9 @@ kubectl apply -f config_map.yaml
 kubectl apply -f secrets.yaml
 ```
 
-**3. Create the Motoserver AWS mock**
+**3. Create the Floci AWS mock**
 ```bash
-kubectl apply -f motoserver.yaml
+kubectl apply -f floci.yaml
 ```
 
 **4. Create the PostgreSQL database**
@@ -52,7 +52,7 @@ kubectl apply -f executor.yaml
 ```bash
 kubectl delete -f controller.yaml
 kubectl delete -f executor.yaml
-kubectl delete -f motoserver.yaml
+kubectl delete -f floci.yaml
 kubectl delete -f postgres.yaml
 kubectl delete -f secrets.yaml
 kubectl delete -f config_map.yaml

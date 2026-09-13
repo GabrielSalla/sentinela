@@ -6,12 +6,14 @@ services:
     environment:
       - POSTGRES_PASSWORD=postgres
 
-  motoserver:
-    image: ghcr.io/getmoto/motoserver:latest
+  floci:
+    image: floci/floci:latest-compat
     ports:
-      - 5000:5000
+      - 4566:4566
+    environment:
+      FLOCI_HOSTNAME: floci
     healthcheck:
-      test: curl --fail localhost:5000 || exit 1
+      test: curl --fail localhost:4566/_localstack/health || exit 1
       interval: 1s
       timeout: 1s
       retries: 5
@@ -40,6 +42,7 @@ services:
       start_period: 2s
     environment:
       CONFIGS_FILE: configs/configs-scalable.yaml
+      AWS_ENDPOINT_URL: http://floci:4566
       EXAMPLE_SLACK_CHANNEL: C07NCL94SDT
       EXAMPLE_SLACK_MENTION: U07NFGGMB98
       SLACK_WEBSOCKET_ENABLED: true
@@ -49,7 +52,7 @@ services:
       - .env.secrets
     depends_on:
       - postgres
-      - motoserver
+      - floci
     command: sentinela run controller
 
   sentinela-executor:
@@ -86,5 +89,5 @@ services:
       - .env.secrets
     depends_on:
       - postgres
-      - motoserver
+      - floci
     command: sentinela run executor
