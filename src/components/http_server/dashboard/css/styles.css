@@ -754,6 +754,15 @@ option.monitor-disabled {
     margin-right: 10px;
 }
 
+.checkbox-group .switch input[type="checkbox"] {
+    width: 0;
+    margin-right: 0;
+}
+
+.checkbox-group .switch {
+    margin-right: 10px;
+}
+
 .toggle-button {
     padding: 10px 20px;
     border: none;

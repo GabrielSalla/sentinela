@@ -225,6 +225,10 @@ function dashboardApp() {
         },
 
         async dropIssues() {
+            if (!this.canExecuteCommand('issue_drop')) {
+                showToast('Issue drop not available (disabled or insufficient role)', 'error');
+                return;
+            }
             const issueIds = [...new Set(this.dropIssueIds.split(/[\s,]+/).filter(Boolean))];
             if (issueIds.length === 0) {
                 showToast('At least one issue ID is required', 'error');
@@ -580,6 +584,16 @@ function dashboardApp() {
         },
 
         async performAlertAction(alert, action, successMessage) {
+            const commandByAction = {
+                acknowledge: 'alert_acknowledge',
+                lock: 'alert_lock',
+                solve: 'alert_solve',
+            };
+            const command = commandByAction[action];
+            if (command && !this.canExecuteCommand(command)) {
+                showToast(`Failed to ${action} alert`, 'error');
+                return false;
+            }
             const response = await fetchWithAuth(`/alert/${alert.id}/${action}`, { method: 'POST' });
 
             if (response.ok) {
@@ -676,6 +690,20 @@ function dashboardApp() {
 
         getStatusBadgeClass(isActive) {
             return isActive ? 'badge-status-active' : 'badge-status-inactive';
+        },
+
+        canExecuteCommand(command) {
+            const config = this.sentinela_configs?.http_server?.commands?.[command];
+            if (config?.enabled === false) return false;
+            if (!this.currentUser) return false;
+            if (this.currentUser.role === 'admin') return true;
+            return (config?.required_role ?? 'user') === 'user';
+        },
+
+        canToggleMonitorEnabled() {
+            if (!this.currentMonitor || this.currentMonitor.isNew) return false;
+            const target = this.currentMonitor.enabled ? 'monitor_disable' : 'monitor_enable';
+            return this.canExecuteCommand(target);
         },
 
         async loadMonitorsForEditor() {
@@ -810,6 +838,10 @@ function dashboardApp() {
         },
 
         async validateMonitor() {
+            if (!this.canExecuteCommand('monitor_validate')) {
+                showValidationErrors('Monitor validation not available (disabled or insufficient role)');
+                return;
+            }
             const code = document.getElementById('monitor-code').value;
 
             if (!code.trim()) {
@@ -839,6 +871,10 @@ function dashboardApp() {
         },
 
         async saveMonitor() {
+            if (!this.canExecuteCommand('monitor_register')) {
+                showValidationErrors('Monitor registration not available (disabled or insufficient role)');
+                return;
+            }
             const monitorName = document.getElementById('monitor-select').value;
             const code = document.getElementById('monitor-code').value;
             const enabled = this.currentMonitor?.enabled ?? document.getElementById('monitor-enabled').checked;
@@ -865,8 +901,12 @@ function dashboardApp() {
                 if (response.ok) {
                     showToast('Monitor saved successfully!');
                     const endpoint = enabled ? 'enable' : 'disable';
-                    await fetchWithAuth(`${window.location.origin}/monitor/${monitorName}/${endpoint}`, { method: 'POST' })
-                        .catch(error => console.error(`Error ${endpoint}ing monitor:`, error));
+                    if (!this.canExecuteCommand(`monitor_${endpoint}`)) {
+                        console.warn(`Monitor ${endpoint} not available (disabled or insufficient role)`);
+                    } else {
+                        await fetchWithAuth(`${window.location.origin}/monitor/${monitorName}/${endpoint}`, { method: 'POST' })
+                            .catch(error => console.error(`Error ${endpoint}ing monitor:`, error));
+                    }
 
                     this.monitorHasPendingChanges = false;
                     await this.loadMonitorsForEditor();
@@ -879,10 +919,26 @@ function dashboardApp() {
             }
         },
 
-        toggleMonitorEnabled() {
-            if (this.currentMonitor) {
-                this.currentMonitor.enabled = !this.currentMonitor.enabled;
-                this.monitorHasPendingChanges = true;
+        async toggleMonitorEnabled(event) {
+            const checkbox = event.target;
+            const action = checkbox.checked ? 'enable' : 'disable';
+            try {
+                const response = await fetchWithAuth(`${window.location.origin}/monitor/${this.currentMonitor.name}/${action}`, { method: 'POST' });
+                if (response.ok) {
+                    this.currentMonitor.enabled = checkbox.checked;
+                    if (this.editorMonitors[this.currentMonitor.name]) {
+                        this.editorMonitors[this.currentMonitor.name].enabled = checkbox.checked;
+                    }
+                    showToast(`Monitor ${checkbox.checked ? 'enabled' : 'disabled'} successfully`);
+                } else {
+                    checkbox.checked = this.currentMonitor.enabled;
+                    const result = await response.json().catch(() => ({}));
+                    showToast(result.message || `Failed to ${action} monitor`, 'error');
+                }
+            } catch (error) {
+                checkbox.checked = this.currentMonitor.enabled;
+                console.error(`Error ${action}ing monitor:`, error);
+                showToast('Connection failed', 'error');
             }
         },
     };
