@@ -56,8 +56,14 @@ async def test_issue_drop(admin_cookies, clear_queue, sample_monitor: Monitor):
     }
 
 
-async def test_issue_drop_forbidden(user_cookies, clear_queue):
+async def test_issue_drop_forbidden(monkeypatch, user_cookies, clear_queue):
     """The 'issue drop' route should reject non-admin users"""
+    monkeypatch.setattr(
+        configs.http_server,
+        "commands",
+        {"issue_drop": CommandConfig(enabled=True, required_role="admin")},
+    )
+
     async with aiohttp.ClientSession(cookies=user_cookies) as session:
         async with session.post(BASE_URL + "/0/drop") as response:
             assert response.status == 403

@@ -11,6 +11,8 @@ import commands
 from components.http_server.auth import service
 from components.http_server.command_config import (
     disabled_command_response,
+    forbidden_command_response,
+    is_command_allowed,
     is_command_enabled,
 )
 from components.http_server.format_monitor_name import format_monitor_name
@@ -158,6 +160,8 @@ async def get_monitor(request: Request) -> Response:
 @monitor_routes.post(base_route + "/{monitor_name}/disable/")
 async def monitor_disable(request: Request) -> Response:
     """Route to disable a monitor"""
+    if not is_command_allowed("monitor_disable", request[service.USER_REQUEST_KEY].role):
+        return forbidden_command_response()
     if not is_command_enabled("monitor_disable"):
         return disabled_command_response("monitor_disable")
 
@@ -190,6 +194,8 @@ async def monitor_disable(request: Request) -> Response:
 @monitor_routes.post(base_route + "/{monitor_name}/enable/")
 async def monitor_enable(request: Request) -> Response:
     """Route to enable a monitor"""
+    if not is_command_allowed("monitor_enable", request[service.USER_REQUEST_KEY].role):
+        return forbidden_command_response()
     if not is_command_enabled("monitor_enable"):
         return disabled_command_response("monitor_enable")
 
@@ -222,6 +228,8 @@ async def monitor_enable(request: Request) -> Response:
 @monitor_routes.post(base_route + "/{monitor_name}/refresh/")
 async def monitor_refresh(request: Request) -> Response:
     """Route to refresh a monitor."""
+    if not is_command_allowed("monitor_refresh", request[service.USER_REQUEST_KEY].role):
+        return forbidden_command_response()
     if not is_command_enabled("monitor_refresh"):
         return disabled_command_response("monitor_refresh")
 
@@ -253,6 +261,8 @@ async def monitor_refresh(request: Request) -> Response:
 @monitor_routes.post(base_route + "/validate/")
 async def monitor_validate(request: Request) -> Response:
     """Route to check a monitor without registering it"""
+    if not is_command_allowed("monitor_validate", request[service.USER_REQUEST_KEY].role):
+        return forbidden_command_response()
     if not is_command_enabled("monitor_validate"):
         return disabled_command_response("monitor_validate")
 
@@ -318,6 +328,8 @@ async def format_name(request: Request) -> Response:
 @monitor_routes.post(base_route + "/register/{monitor_name}/")
 async def monitor_register(request: Request) -> Response:
     """Route to register a monitor"""
+    if not is_command_allowed("monitor_register", request[service.USER_REQUEST_KEY].role):
+        return forbidden_command_response()
     if not is_command_enabled("monitor_register"):
         return disabled_command_response("monitor_register")
 

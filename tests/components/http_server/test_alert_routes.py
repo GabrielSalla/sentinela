@@ -174,6 +174,44 @@ async def test_alert_acknowledge_invalid_alert_id(admin_cookies, clear_queue):
     assert len(queue_items) == 0
 
 
+async def test_alert_acknowledge_forbidden(monkeypatch, user_cookies, clear_queue):
+    """The 'alert acknowledge' route should return a forbidden error if the user lacks the
+    required role"""
+    monkeypatch.setattr(
+        configs.http_server,
+        "commands",
+        {"alert_acknowledge": CommandConfig(enabled=True, required_role="admin")},
+    )
+
+    async with aiohttp.ClientSession(cookies=user_cookies) as session:
+        async with session.post(BASE_URL + "/0/acknowledge") as response:
+            assert response.status == 403
+            assert await response.json() == {"status": "forbidden"}
+
+    queue_items = get_queue_items()
+    assert len(queue_items) == 0
+
+
+async def test_alert_acknowledge_config_disabled(monkeypatch, admin_cookies, clear_queue):
+    """The 'alert acknowledge' route should return a forbidden error if the command is disabled
+    in the config"""
+    monkeypatch.setattr(
+        configs.http_server, "commands", {"alert_acknowledge": CommandConfig(enabled=False)}
+    )
+
+    async with aiohttp.ClientSession(cookies=admin_cookies) as session:
+        async with session.post(BASE_URL + "/0/acknowledge") as response:
+            assert await response.json() == {
+                "status": "error",
+                "message": "Command `alert_acknowledge` is disabled",
+                "error": "Command `alert_acknowledge` is disabled in the configuration",
+            }
+            assert response.status == 403
+
+    queue_items = get_queue_items()
+    assert len(queue_items) == 0
+
+
 async def test_alert_lock(user_cookies, clear_queue, sample_monitor: Monitor):
     """The 'alert lock' route should queue an request to lock the provided alert"""
     alert = await Alert.create(monitor_id=sample_monitor.id)
@@ -221,6 +259,44 @@ async def test_alert_lock_invalid_alert_id(admin_cookies, clear_queue):
                 "message": "Invalid request data",
                 "errors": [f"alert_id: {INT_PARSING_ERROR}"],
             }
+
+    queue_items = get_queue_items()
+    assert len(queue_items) == 0
+
+
+async def test_alert_lock_forbidden(monkeypatch, user_cookies, clear_queue):
+    """The 'alert lock' route should return a forbidden error if the user lacks the required
+    role"""
+    monkeypatch.setattr(
+        configs.http_server,
+        "commands",
+        {"alert_lock": CommandConfig(enabled=True, required_role="admin")},
+    )
+
+    async with aiohttp.ClientSession(cookies=user_cookies) as session:
+        async with session.post(BASE_URL + "/0/lock") as response:
+            assert response.status == 403
+            assert await response.json() == {"status": "forbidden"}
+
+    queue_items = get_queue_items()
+    assert len(queue_items) == 0
+
+
+async def test_alert_lock_config_disabled(monkeypatch, admin_cookies, clear_queue):
+    """The 'alert lock' route should return a forbidden error if the command is disabled in the
+    config"""
+    monkeypatch.setattr(
+        configs.http_server, "commands", {"alert_lock": CommandConfig(enabled=False)}
+    )
+
+    async with aiohttp.ClientSession(cookies=admin_cookies) as session:
+        async with session.post(BASE_URL + "/0/lock") as response:
+            assert await response.json() == {
+                "status": "error",
+                "message": "Command `alert_lock` is disabled",
+                "error": "Command `alert_lock` is disabled in the configuration",
+            }
+            assert response.status == 403
 
     queue_items = get_queue_items()
     assert len(queue_items) == 0
@@ -279,27 +355,37 @@ async def test_alert_solve_invalid_alert_id(admin_cookies, clear_queue):
     assert len(queue_items) == 0
 
 
-@pytest.mark.parametrize(
-    "command, endpoint",
-    [
-        ("alert_acknowledge", "acknowledge"),
-        ("alert_lock", "lock"),
-        ("alert_solve", "solve"),
-    ],
-)
-async def test_alert_command_config_disabled(
-    monkeypatch, admin_cookies, clear_queue, command, endpoint
-):
-    """The alert command routes should return a forbidden error if the command is disabled in
-    the config"""
-    monkeypatch.setattr(configs.http_server, "commands", {command: CommandConfig(enabled=False)})
+async def test_alert_solve_forbidden(monkeypatch, user_cookies, clear_queue):
+    """The 'alert solve' route should return a forbidden error if the user lacks the required
+    role"""
+    monkeypatch.setattr(
+        configs.http_server,
+        "commands",
+        {"alert_solve": CommandConfig(enabled=True, required_role="admin")},
+    )
+
+    async with aiohttp.ClientSession(cookies=user_cookies) as session:
+        async with session.post(BASE_URL + "/0/solve") as response:
+            assert response.status == 403
+            assert await response.json() == {"status": "forbidden"}
+
+    queue_items = get_queue_items()
+    assert len(queue_items) == 0
+
+
+async def test_alert_solve_config_disabled(monkeypatch, admin_cookies, clear_queue):
+    """The 'alert solve' route should return a forbidden error if the command is disabled in the
+    config"""
+    monkeypatch.setattr(
+        configs.http_server, "commands", {"alert_solve": CommandConfig(enabled=False)}
+    )
 
     async with aiohttp.ClientSession(cookies=admin_cookies) as session:
-        async with session.post(BASE_URL + f"/0/{endpoint}") as response:
+        async with session.post(BASE_URL + "/0/solve") as response:
             assert await response.json() == {
                 "status": "error",
-                "message": f"Command `{command}` is disabled",
-                "error": f"Command `{command}` is disabled in the configuration",
+                "message": "Command `alert_solve` is disabled",
+                "error": "Command `alert_solve` is disabled in the configuration",
             }
             assert response.status == 403
 

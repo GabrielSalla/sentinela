@@ -26,6 +26,8 @@ Exposes Prometheus-formatted metrics, enabling external monitoring and observabi
 # Interaction routes
 These routes are available only when the container deployment includes the **Controller** component.
 
+Command routes check `http_server.commands` in `configs.yaml` (see [Configuration file](configuration_file.md)). Users without the required role receive `403 {"status": "forbidden"}`. Disabled commands receive `403` with `Command '<command>' is disabled`.
+
 ## Dashboard
 **`/dashboard`**
 
