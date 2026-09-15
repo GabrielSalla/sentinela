@@ -39,22 +39,31 @@ http_server:
   commands:
     alert_acknowledge:
       enabled: true
+      required_role: user
     alert_lock:
       enabled: true
+      required_role: user
     alert_solve:
       enabled: true
+      required_role: user
     issue_drop:
       enabled: true
+      required_role: admin
     monitor_disable:
       enabled: true
+      required_role: user
     monitor_enable:
       enabled: true
+      required_role: user
     monitor_refresh:
       enabled: true
+      required_role: user
     monitor_register:
       enabled: true
+      required_role: user
     monitor_validate:
       enabled: true
+      required_role: user
 
 time_zone: America/Sao_Paulo
 
