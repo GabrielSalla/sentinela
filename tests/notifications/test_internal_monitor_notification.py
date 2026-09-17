@@ -15,18 +15,14 @@ pytestmark = pytest.mark.asyncio(loop_scope="session")
 class MockNotification:
     """Mock notification class that implements BaseNotification protocol"""
 
-    name: str
-    issues_fields: list[str]
+    title: str
     params: dict[str, Any] = {}
     min_priority_to_send: AlertPriority = AlertPriority.informational
 
     @classmethod
-    def create(
-        cls, name: str, issues_fields: list[str], params: dict[str, Any]
-    ) -> "MockNotification":
+    def create(cls, title: str, params: dict[str, Any]) -> "MockNotification":
         instance = cls()
-        instance.name = name
-        instance.issues_fields = issues_fields
+        instance.title = title
         instance.params = params
         return instance
 
@@ -35,14 +31,14 @@ class MockNotification:
 
 
 @pytest.mark.parametrize(
-    "name, issues_fields, params",
+    "title, issues_fields, params",
     [
         ("Monitor 1", ["id", "name", "status"], {}),
         ("Monitor 2", ["id", "name", "status"], {"param1": "value1"}),
         ("Monitor 3", ["id", "name", "status"], {"param1": "value1", "param2": "value2"}),
     ],
 )
-async def test_internal_monitor_notification_enabled(monkeypatch, name, issues_fields, params):
+async def test_internal_monitor_notification_enabled(monkeypatch, title, issues_fields, params):
     """'internal_monitor_notification' should create notification when enabled, following the
     configs settings"""
     mock_config = MagicMock()
@@ -59,15 +55,15 @@ async def test_internal_monitor_notification_enabled(monkeypatch, name, issues_f
     )
 
     result = internal_monitor_notification.internal_monitor_notification(
-        name=name, issues_fields=issues_fields
+        title=title, issues_fields=issues_fields
     )
 
     get_plugin_attribute_mock.assert_called_once_with("plugin.test.MockNotification")
 
     assert len(result) == 1
     assert isinstance(result[0], MockNotification)
-    assert result[0].name == name
-    assert result[0].issues_fields == issues_fields
+    assert result[0].title == title
+    assert result[0].params.pop("issues_fields") == issues_fields
     assert result[0].params == params
 
 
@@ -79,7 +75,7 @@ async def test_internal_monitor_notification_disabled(monkeypatch):
     monkeypatch.setattr(configs, "internal_monitors_notification", mock_config)
 
     result = internal_monitor_notification.internal_monitor_notification(
-        name="Test Monitor", issues_fields=["id", "name", "status"]
+        title="Test Monitor", issues_fields=["id", "name", "status"]
     )
 
     assert result == []
@@ -107,7 +103,7 @@ async def test_internal_monitor_notification_invalid_notification_class(monkeypa
     expected_msg = "Attribute 'plugin.test.NotANotification' is not a valid notification"
     with pytest.raises(TypeError, match=expected_msg):
         internal_monitor_notification.internal_monitor_notification(
-            name="Test Monitor", issues_fields=["id", "name", "status"]
+            title="Test Monitor", issues_fields=["id", "name", "status"]
         )
 
     get_plugin_attribute_mock.assert_called_once_with("plugin.test.NotANotification")
@@ -134,7 +130,7 @@ async def test_internal_monitor_notification_exception_handling(caplog, monkeypa
     )
 
     result = internal_monitor_notification.internal_monitor_notification(
-        name="Test Monitor", issues_fields=["id", "name", "status"]
+        title="Test Monitor", issues_fields=["id", "name", "status"]
     )
 
     assert result == []

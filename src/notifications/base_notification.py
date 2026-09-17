@@ -11,8 +11,7 @@ class BaseNotification(Protocol):  # pragma: no cover
     @classmethod
     def create(
         cls: type["BaseNotification"],
-        name: str,
-        issues_fields: list[str],
+        title: str,
         params: dict[str, Any],
     ) -> "BaseNotification": ...
 
