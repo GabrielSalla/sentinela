@@ -352,6 +352,38 @@ async def test_register_monitor_with_documentation():
     assert code_module.code == monitor_code
 
 
+async def test_register_monitor_clear_documentation():
+    """'register_monitor' function should clear the monitor documentation when re-registered
+    without a 'README.md' file in the additional files"""
+    monitor_name = "test_register_monitor_clear_documentation"
+
+    with open("tests/example_monitors/others/monitor_1/monitor_1.py", "r") as file:
+        monitor_code = file.read()
+
+    monitor = await monitors_loader.register_monitor(
+        monitor_name,
+        monitor_code,
+        additional_files={"README.md": "monitor docs"},
+    )
+
+    await monitor.refresh()
+    assert monitor.documentation == "monitor docs"
+
+    monitor = await monitors_loader.register_monitor(
+        monitor_name,
+        monitor_code,
+        additional_files={"file1.py": "content1"},
+    )
+
+    await monitor.refresh()
+    assert monitor.documentation is None
+
+    code_module = await CodeModule.get(CodeModule.monitor_id == monitor.id)
+    assert code_module is not None
+    assert code_module.additional_files == {"file1.py": "content1"}
+    assert code_module.code == monitor_code
+
+
 async def test_register_monitor_validation_error():
     """'register_monitor' function should raise a 'MonitorValidationError' if the monitor module
     does not pass the validation"""

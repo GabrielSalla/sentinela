@@ -740,7 +740,15 @@ function dashboardApp() {
         async loadExistingMonitor(monitorName) {
             const data = await this.fetchData(`${window.location.origin}/monitor/${monitorName}`);
             this.currentMonitor = data;
-            this.additionalFiles = data.additional_files || {};
+            Object.keys(this.additionalFiles).forEach(fileName => {
+                deleteCodeEditor(fileName);
+            });
+            const files = {};
+            if (data.documentation != null) {
+                files['README.md'] = data.documentation;
+            }
+            Object.assign(files, data.additional_files || {});
+            this.additionalFiles = files;
             this.activeTab = 'code-tab';
 
             await this.$nextTick();
@@ -760,6 +768,9 @@ function dashboardApp() {
 
         async setNewMonitor() {
             this.currentMonitor = { enabled: true, code: MONITOR_TEMPLATE, additional_files: {} };
+            Object.keys(this.additionalFiles).forEach(fileName => {
+                deleteCodeEditor(fileName);
+            });
             this.additionalFiles = {};
             this.activeTab = 'code-tab';
 
@@ -810,6 +821,9 @@ function dashboardApp() {
                 document.getElementById('new-monitor-name-input').value = '';
 
                 this.currentMonitor = { name: formattedName, enabled: true, code: MONITOR_TEMPLATE, additional_files: {} };
+                Object.keys(this.additionalFiles).forEach(fileName => {
+                    deleteCodeEditor(fileName);
+                });
                 this.additionalFiles = {};
                 this.activeTab = 'code-tab';
 

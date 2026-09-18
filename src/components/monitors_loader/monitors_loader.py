@@ -109,9 +109,15 @@ async def register_monitor(
 
     monitor = await Monitor.get_or_create(name=monitor_name)
 
-    if additional_files is not None and "README.md" in additional_files:
-        monitor.documentation = additional_files.pop("README.md")
-        await monitor.save()
+    if additional_files is None:
+        monitor.documentation = None
+    else:
+        if "README.md" in additional_files:
+            monitor.documentation = additional_files.pop("README.md")
+        else:
+            monitor.documentation = None
+
+    await monitor.save()
 
     code_module = await CodeModule.get_or_create(monitor_id=monitor.id)
     await code_module.register(code=monitor_code, additional_files=additional_files or {})
