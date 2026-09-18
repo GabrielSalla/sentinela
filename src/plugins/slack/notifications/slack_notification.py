@@ -80,8 +80,7 @@ class SlackNotification:
     @classmethod
     def create(
         cls: type["SlackNotification"],
-        name: str,
-        issues_fields: list[str],
+        title: str,
         params: dict[str, Any] = {},
     ) -> "SlackNotification":
         """Create a new instance of the 'SlackNotification' class from the notification protocol."""
@@ -93,10 +92,16 @@ class SlackNotification:
                 "Unable to create 'SlackNotification' instance"
             )
 
+        if "issues_fields" not in params:
+            raise KeyError(
+                "Param 'issues_fields' is not set. "
+                + "Unable to create 'SlackNotification' instance"
+            )
+
         init_params: dict[str, Any] = {
             "channel": channel,
-            "title": name,
-            "issues_fields": issues_fields,
+            "title": title,
+            "issues_fields": params["issues_fields"],
             "mention": os.environ.get("SLACK_MAIN_MENTION"),
         }
 

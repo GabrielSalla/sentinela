@@ -57,56 +57,50 @@ async def test_slacknotification_get_main_mention_none(monkeypatch):
 
 
 @pytest.mark.parametrize(
-    "channel, mention, name, issues_fields, params",
+    "channel, mention, title, params",
     [
         (
             "C1234567890",
             "U1234567890",
             "Test Monitor",
-            ["id", "name", "value"],
-            {},
+            {"issues_fields": ["id", "name", "value"]},
         ),
         (
             "C0987654321",
             "U0987654321",
             "Another Monitor",
-            ["other_id", "other_value"],
-            {},
+            {"issues_fields": ["other_id", "other_value"]},
         ),
         (
             "C1234567890",
             "U1234567890",
             "Priority to send test",
-            ["id"],
-            {"min_priority_to_send": "moderate"},
+            {"issues_fields": ["id"], "min_priority_to_send": "moderate"},
         ),
         (
             "C1234567890",
             "U1234567890",
             "Mention on update test",
-            ["id"],
-            {"mention_on_update": True},
+            {"issues_fields": ["id"], "mention_on_update": True},
         ),
         (
             "C1234567890",
             "U1234567890",
             "Priority to mention test",
-            ["id"],
-            {"min_priority_to_mention": "high"},
+            {"issues_fields": ["id"], "min_priority_to_mention": "high"},
         ),
         (
             "C1234567890",
             "U1234567890",
             "Issue show limit test",
-            ["id"],
-            {"issue_show_limit": 25},
+            {"issues_fields": ["id"], "issue_show_limit": 25},
         ),
         (
             "C1234567890",
             "U1234567890",
             "All parameters test",
-            ["id"],
             {
+                "issues_fields": ["id"],
                 "min_priority_to_send": "critical",
                 "min_priority_to_mention": "high",
                 "mention_on_update": True,
@@ -115,7 +109,7 @@ async def test_slacknotification_get_main_mention_none(monkeypatch):
         ),
     ],
 )
-async def test_slacknotification_create(monkeypatch, channel, mention, name, issues_fields, params):
+async def test_slacknotification_create(monkeypatch, channel, mention, title, params):
     """'SlackNotification.create' should create a SlackNotification instance with correct
     default values and properly apply custom parameters"""
     # Set up environment variables that the create method expects
@@ -123,16 +117,15 @@ async def test_slacknotification_create(monkeypatch, channel, mention, name, iss
     monkeypatch.setenv("SLACK_MAIN_MENTION", mention)
 
     result = slack_notification.SlackNotification.create(
-        name=name,
-        issues_fields=issues_fields,
+        title=title,
         params=params,
     )
 
     assert isinstance(result, slack_notification.SlackNotification)
 
     assert result.channel == channel
-    assert result.title == name
-    assert result.issues_fields == issues_fields
+    assert result.title == title
+    assert result.issues_fields == params["issues_fields"]
 
     if "min_priority_to_send" in params:
         assert result.min_priority_to_send == AlertPriority[params["min_priority_to_send"]]
@@ -165,7 +158,19 @@ async def test_slacknotification_create_without_channel(monkeypatch):
         "Unable to create 'SlackNotification' instance"
     )
     with pytest.raises(KeyError, match=expected_error):
-        slack_notification.SlackNotification.create(name="Test", issues_fields=["id"])
+        slack_notification.SlackNotification.create(title="Test", params={"issues_fields": ["id"]})
+
+
+async def test_slacknotification_create_without_issues_fields(monkeypatch):
+    """'SlackNotification.create' should raise KeyError if the 'issues_fields' param is not
+    set"""
+    monkeypatch.setenv("SLACK_MAIN_CHANNEL", "C1234567890")
+
+    expected_error = (
+        "Param 'issues_fields' is not set. Unable to create 'SlackNotification' instance"
+    )
+    with pytest.raises(KeyError, match=expected_error):
+        slack_notification.SlackNotification.create(title="Test", params={})
 
 
 async def test_slacknotification_reactions_list():

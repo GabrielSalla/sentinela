@@ -7,7 +7,7 @@ from plugins.attribute_select import get_plugin_attribute
 _logger = logging.getLogger("internal_monitor_notification")
 
 
-def internal_monitor_notification(name: str, issues_fields: list[str]) -> list[BaseNotification]:
+def internal_monitor_notification(title: str, issues_fields: list[str]) -> list[BaseNotification]:
     """Create a notification instance for internal monitors, using the settings in the configs
     file."""
     internal_monitors_notification = configs.internal_monitors_notification
@@ -17,13 +17,13 @@ def internal_monitor_notification(name: str, issues_fields: list[str]) -> list[B
 
     notification_class_path = internal_monitors_notification.notification_class
     notification_class = get_plugin_attribute(notification_class_path)
-    params = internal_monitors_notification.params
+    params = {"issues_fields": issues_fields, **internal_monitors_notification.params}
 
     if not isinstance(notification_class, BaseNotification):
         raise TypeError(f"Attribute {notification_class_path!r} is not a valid notification")
 
     try:
-        return [notification_class.create(name=name, issues_fields=issues_fields, params=params)]
+        return [notification_class.create(title=title, params=params)]
     except Exception as e:
         _logger.error(e.args[0])
         return []

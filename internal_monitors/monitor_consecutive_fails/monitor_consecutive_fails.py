@@ -66,6 +66,6 @@ def is_solved(issue_data: IssueDataType) -> bool:
 
 
 notification_options = internal_monitor_notification(
-    name="Monitor with high consecutive fails",
+    title="Monitor with high consecutive fails",
     issues_fields=["monitor_id", "monitor_name", "failed_count"],
 )

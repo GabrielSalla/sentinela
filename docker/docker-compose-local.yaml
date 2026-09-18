@@ -27,14 +27,8 @@ services:
       timeout: 1s
       retries: 3
       start_period: 2s
-    environment:
-      CONFIGS_FILE: configs/configs.yaml
-      EXAMPLE_SLACK_CHANNEL: C07NCL94SDT
-      EXAMPLE_SLACK_MENTION: U07NFGGMB98
-      SLACK_WEBSOCKET_ENABLED: true
-      SLACK_MAIN_CHANNEL: C07NCL94SDT
-      SLACK_MAIN_MENTION: U07NFGGMB98
     env_file:
+      - .env.general
       - .env.secrets
     depends_on:
       - postgres
