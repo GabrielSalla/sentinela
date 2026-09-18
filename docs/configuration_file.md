@@ -68,25 +68,9 @@ application_queue:
   - `port`: Integer. Port for the HTTP server.
   - `log_level`: String. Log level for the HTTP server. Can be `default`, `warning`, `error` or `none`. Defaults to `default`.
   - `dashboard_enabled`: Boolean. Flag to enable the Sentinela dashboard. Defaults to `false`.
-  - `commands`: Map. Configuration settings for each HTTP command, allowing commands to be disabled. When a command is not configured, it will be considered as enabled.
-    - `alert_acknowledge`: Map. Settings for the alert acknowledge command.
-      - `enabled`: Boolean. Flag to enable the command. Defaults to `true`.
-    - `alert_lock`: Map. Settings for the alert lock command.
-      - `enabled`: Boolean. Flag to enable the command. Defaults to `true`.
-    - `alert_solve`: Map. Settings for the alert solve command.
-      - `enabled`: Boolean. Flag to enable the command. Defaults to `true`.
-    - `issue_drop`: Map. Settings for the issue drop command.
-      - `enabled`: Boolean. Flag to enable the command. Defaults to `true`.
-    - `monitor_disable`: Map. Settings for the monitor disable command.
-      - `enabled`: Boolean. Flag to enable the command. Defaults to `true`.
-    - `monitor_enable`: Map. Settings for the monitor enable command.
-      - `enabled`: Boolean. Flag to enable the command. Defaults to `true`.
-    - `monitor_refresh`: Map. Settings for the monitor refresh command.
-      - `enabled`: Boolean. Flag to enable the command. Defaults to `true`.
-    - `monitor_register`: Map. Settings for the monitor register command.
-      - `enabled`: Boolean. Flag to enable the command. Defaults to `true`.
-    - `monitor_validate`: Map. Settings for the monitor validate command.
-      - `enabled`: Boolean. Flag to enable the command. Defaults to `true`.
+  - `commands`: Map. Configuration settings for each HTTP command, allowing commands to be disabled or restricted by role. Each key is a command name with the same fields below. When a command is not configured, it will use the default values defined below. Available commands: `alert_acknowledge`, `alert_lock`, `alert_solve`, `issue_drop`, `monitor_disable`, `monitor_enable`, `monitor_refresh`, `monitor_register`, `monitor_validate`.
+    - `enabled`: Boolean. Flag to enable the command. Defaults to `true`.
+    - `required_role`: String. Minimum role required to execute the command. Can be `user` or `admin`. `admin` can execute any command. Defaults to `user`.
   - `auth`: Map. Settings for dashboard authentication.
     - `session_expire_hours`: Integer. Session lifetime in hours. Defaults to `24`.
     - `invite_expire_hours`: Integer. Invite link lifetime in hours. Defaults to `1`.
@@ -103,22 +87,12 @@ application_queue:
     commands:
       alert_acknowledge:
         enabled: true
-      alert_lock:
-        enabled: true
-      alert_solve:
-        enabled: true
+        required_role: user
       issue_drop:
         enabled: true
-      monitor_disable:
-        enabled: true
-      monitor_enable:
-        enabled: true
-      monitor_refresh:
-        enabled: true
+        required_role: admin
       monitor_register:
-        enabled: true
-      monitor_validate:
-        enabled: true
+        enabled: false
   ```
 
   > [!WARNING]

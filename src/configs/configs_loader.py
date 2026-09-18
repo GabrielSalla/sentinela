@@ -32,7 +32,8 @@ class ApplicationDatabaseConfig:
 
 @dataclass
 class CommandConfig:
-    enabled: bool
+    enabled: bool = True
+    required_role: Literal["user", "admin"] = "user"
 
 
 @dataclass

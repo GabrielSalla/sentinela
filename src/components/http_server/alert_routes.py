@@ -7,6 +7,8 @@ import commands as commands
 from components.http_server.auth import service
 from components.http_server.command_config import (
     disabled_command_response,
+    forbidden_command_response,
+    is_command_allowed,
     is_command_enabled,
 )
 from exceptions.http_server import AlertNotFoundError
@@ -79,6 +81,8 @@ async def list_alert_active_issues(request: Request) -> Response:
 @alert_routes.post(base_route + "/{alert_id}/acknowledge/")
 async def alert_acknowledge(request: Request) -> Response:
     """Route to acknowledge an alert"""
+    if not is_command_allowed("alert_acknowledge", request[service.USER_REQUEST_KEY].role):
+        return forbidden_command_response()
     if not is_command_enabled("alert_acknowledge"):
         return disabled_command_response("alert_acknowledge")
 
@@ -103,6 +107,8 @@ async def alert_acknowledge(request: Request) -> Response:
 @alert_routes.post(base_route + "/{alert_id}/lock/")
 async def alert_lock(request: Request) -> Response:
     """Route to lock an alert"""
+    if not is_command_allowed("alert_lock", request[service.USER_REQUEST_KEY].role):
+        return forbidden_command_response()
     if not is_command_enabled("alert_lock"):
         return disabled_command_response("alert_lock")
 
@@ -127,6 +133,8 @@ async def alert_lock(request: Request) -> Response:
 @alert_routes.post(base_route + "/{alert_id}/solve/")
 async def alert_solve(request: Request) -> Response:
     """Route to solve an alert's issues"""
+    if not is_command_allowed("alert_solve", request[service.USER_REQUEST_KEY].role):
+        return forbidden_command_response()
     if not is_command_enabled("alert_solve"):
         return disabled_command_response("alert_solve")
 
