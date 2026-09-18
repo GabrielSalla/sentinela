@@ -185,6 +185,57 @@ async def test_check_monitor_validation_error(caplog, log_error):
 
 
 @pytest.mark.parametrize(
+    "case, documentation, initial_enabled, expected_enabled",
+    [
+        ("true", "# docs\n# FLAGS\nMONITOR_REGISTER_ENABLED=true", True, True),
+        ("false", "# docs\n# FLAGS\nMONITOR_REGISTER_ENABLED=false", True, False),
+        ("upper_true", "# docs\n# FLAGS\nMONITOR_REGISTER_ENABLED=TRUE", False, True),
+        ("upper_false", "# docs\n# FLAGS\nMONITOR_REGISTER_ENABLED=FALSE", False, False),
+        ("no_marker_true_true", "# docs\n# FLAGS\nSOMETHING=1", True, True),
+        ("no_marker_true_false", "# docs\n# FLAGS\nSOMETHING=1", True, True),
+        ("no_marker_false_true", "# docs\n# FLAGS\nSOMETHING=1", False, False),
+        ("no_marker_false_false", "# docs\n# FLAGS\nSOMETHING=1", False, False),
+        ("no_flags_enabled", "# docs without marker", True, True),
+        ("no_flags_disabled", "# docs without marker", False, False),
+        ("no_flsgs2_enabled", "# docs\n# NOT FLAGS\nMONITOR_REGISTER_ENABLED=TRUE", True, True),
+        ("no_flsgs2_disabled", "# docs\n# NOT FLAGS\nMONITOR_REGISTER_ENABLED=FALSE", False, False),
+        ("no_docs_enabled", None, True, True),
+        ("no_docs_disabled", None, False, False),
+    ],
+)
+async def test_monitor_first_setup(caplog, case, documentation, initial_enabled, expected_enabled):
+    """'_monitor_first_setup' should apply 'MONITOR_REGISTER_ENABLED' from the monitor
+    documentation when present, and leave 'enabled' unchanged otherwise"""
+    monitor = await Monitor.create(
+        name=f"test_monitor_first_setup_{case}", documentation=documentation
+    )
+    monitor.enabled = initial_enabled
+    await monitor.save()
+
+    await monitors_loader._monitor_first_setup(monitor)
+    await monitor.refresh()
+
+    assert monitor.enabled == expected_enabled
+    assert_message_not_in_log(caplog, "Error in setup for")
+
+
+async def test_monitor_first_setup_invalid_value(caplog):
+    """'_monitor_first_setup' should log an error and leave 'enabled' unchanged if
+    'MONITOR_REGISTER_ENABLED' has an invalid value"""
+    monitor = await Monitor.create(
+        name="test_monitor_first_setup_invalid_value",
+        documentation="# docs\n# FLAGS\nMONITOR_REGISTER_ENABLED=maybe",
+    )
+    initial_enabled = monitor.enabled
+
+    await monitors_loader._monitor_first_setup(monitor)
+    await monitor.refresh()
+
+    assert monitor.enabled == initial_enabled
+    assert_message_in_log(caplog, "Error in setup for")
+
+
+@pytest.mark.parametrize(
     "additional_files",
     [
         None,
@@ -382,6 +433,58 @@ async def test_register_monitor_clear_documentation():
     assert code_module is not None
     assert code_module.additional_files == {"file1.py": "content1"}
     assert code_module.code == monitor_code
+
+
+async def test_register_monitor_first_setup(mocker):
+    """'register_monitor' should run the first setup when the monitor is registered for the
+    first time, applying 'MONITOR_REGISTER_ENABLED' from the documentation"""
+    first_setup_spy = mocker.spy(monitors_loader, "_monitor_first_setup")
+    monitor_name = "test_register_monitor_first_setup"
+
+    with open("tests/example_monitors/others/monitor_1/monitor_1.py", "r") as file:
+        monitor_code = file.read()
+
+    monitor = await monitors_loader.register_monitor(
+        monitor_name,
+        monitor_code,
+        additional_files={"README.md": "# docs\n# FLAGS\nMONITOR_REGISTER_ENABLED=false"},
+    )
+
+    first_setup_spy.assert_called_once()
+    await monitor.refresh()
+    assert monitor.enabled is False
+
+
+async def test_register_monitor_first_setup_only_once(mocker):
+    """'register_monitor' should not run the first setup again when the monitor is already
+    registered, preserving the previous 'enabled' value"""
+    first_setup_spy = mocker.spy(monitors_loader, "_monitor_first_setup")
+    monitor_name = "test_register_monitor_first_setup_only_once"
+
+    with open("tests/example_monitors/others/monitor_1/monitor_1.py", "r") as file:
+        monitor_code = file.read()
+
+    monitor = await monitors_loader.register_monitor(
+        monitor_name,
+        monitor_code,
+        additional_files={"README.md": "# docs\n# FLAGS\nMONITOR_REGISTER_ENABLED=false"},
+    )
+    await monitor.refresh()
+    assert monitor.enabled is False
+
+    monitor.enabled = True
+    await monitor.save()
+
+    new_monitor_code = monitor_code.replace("b: str", "c: str")
+    monitor = await monitors_loader.register_monitor(
+        monitor_name,
+        new_monitor_code,
+        additional_files={"README.md": "# docs\n# FLAGS\nMONITOR_REGISTER_ENABLED=false"},
+    )
+
+    first_setup_spy.assert_called_once()
+    await monitor.refresh()
+    assert monitor.enabled is True
 
 
 async def test_register_monitor_validation_error():

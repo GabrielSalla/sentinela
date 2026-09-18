@@ -1,6 +1,7 @@
 import ast
 import asyncio
 import logging
+import re
 import shutil
 from datetime import datetime, timedelta
 from pathlib import Path
@@ -89,6 +90,33 @@ def check_monitor(
         raise exception
 
 
+async def _monitor_first_setup(monitor: Monitor) -> None:
+    # Execute the monitor first setup based on flags that can be configured in the documentation
+    if monitor.documentation is None:
+        return
+
+    if "# FLAGS" not in monitor.documentation:
+        return
+
+    flags_section = monitor.documentation.split("# FLAGS")[1]
+
+    match = re.search(r"^MONITOR_REGISTER_ENABLED=(\w+)$", flags_section, re.MULTILINE)
+    if match is None:
+        return
+
+    try:
+        value = match.group(1).lower()
+        if value == "true":
+            monitor.enabled = True
+        elif value == "false":
+            monitor.enabled = False
+        else:
+            raise ValueError(f"Invalid configuration for MONITOR_REGISTER_ENABLED {value!r}")
+        await monitor.save()
+    except Exception:
+        _logger.error(f"Error in setup for {monitor}", exc_info=True)
+
+
 async def register_monitor(
     monitor_name: str,
     monitor_code: str,
@@ -107,7 +135,13 @@ async def register_monitor(
         log_error=log_error,
     )
 
-    monitor = await Monitor.get_or_create(name=monitor_name)
+    monitor = await Monitor.get(Monitor.name == monitor_name)
+
+    if monitor is None:
+        first_register = True
+        monitor = await Monitor.create(name=monitor_name)
+    else:
+        first_register = False
 
     if additional_files is None:
         monitor.documentation = None
@@ -121,6 +155,9 @@ async def register_monitor(
 
     code_module = await CodeModule.get_or_create(monitor_id=monitor.id)
     await code_module.register(code=monitor_code, additional_files=additional_files or {})
+
+    if first_register:
+        await _monitor_first_setup(monitor)
 
     return monitor
 

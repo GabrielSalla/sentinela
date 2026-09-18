@@ -44,6 +44,26 @@ monitors/
     └── README.md
 ```
 
+# Monitor documentation
+The `README.md` for the monitor provides documentation about the monitor context and gives whoever handles an alert:
+- what the monitor watches and why it matters
+- what each issue means
+- how to verify the problem
+- what steps fix it
+
+The documentation should include links to dashboards and runbooks whenever possible.
+
+The documentation also support **flags**, that can be used to include some initial settings for a monitor when it's being first registered. These flags must be inserted in a `# FLAGS` section.
+
+Example:
+```
+# FLAGS
+MONITOR_REGISTER_ENABLED=false
+```
+
+Available flags are:
+- `MONITOR_REGISTER_ENABLED`: Enabled value for the monitor when it's registered. If not defined, the monitor will be enabled by default.
+
 # Importing the dependencies
 To create a monitor, import specific dependencies from `monitor_utils`. Available objects are:
 
