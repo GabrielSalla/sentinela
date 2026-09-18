@@ -19,7 +19,7 @@
             <h1>Sentinela</h1>
             <button class="nav-btn" :class="{ 'active': currentSection === 'overview' }" @click="showSection('overview')">Overview</button>
             <button class="nav-btn" :class="{ 'active': currentSection === 'editor' }" @click="showSection('editor')">Editor</button>
-            <button class="nav-btn" x-show="currentUser?.role === 'admin'" :class="{ 'active': currentSection === 'drop-issues' }" @click="showSection('drop-issues')">Drop Issues</button>
+            <button class="nav-btn" x-show="canExecuteCommand('issue_drop')" :class="{ 'active': currentSection === 'drop-issues' }" @click="showSection('drop-issues')">Drop Issues</button>
             <button class="nav-btn" x-show="currentUser?.role === 'admin'" :class="{ 'active': currentSection === 'users' }" @click="showSection('users')">Users</button>
         </div>
         <div class="top-bar-right">
@@ -134,13 +134,14 @@
                                     </div>
                                     <div class="alert-actions" x-show="selectedAlert?.id === alert.id">
                                         <button class="alert-action-btn"
-                                                :disabled="isAlertAcknowledged(alert)"
+                                                :disabled="isAlertAcknowledged(alert) || !canExecuteCommand('alert_acknowledge')"
                                                 @click="acknowledgeAlert(alert, $event)">Ack</button>
                                         <button class="alert-action-btn"
-                                                :disabled="isAlertLocked(alert)"
+                                                :disabled="isAlertLocked(alert) || !canExecuteCommand('alert_lock')"
                                                 @click="lockAlert(alert, $event)">Lock</button>
                                         <button x-show="alert.can_solve === true"
                                                 class="alert-action-btn"
+                                                :disabled="!canExecuteCommand('alert_solve')"
                                                 @click="solveAlert(alert, $event)">Solve</button>
                                     </div>
                                 </div>
@@ -209,9 +210,11 @@
 
                     <div id="monitor-controls" x-show="currentMonitor && !currentMonitor.isNew">
                         <div class="checkbox-group">
-                            <button class="toggle-button" :class="currentMonitor?.enabled ? 'enabled' : 'disabled'" @click="toggleMonitorEnabled()">
-                                <span x-text="currentMonitor?.enabled ? 'Enabled' : 'Disabled'"></span>
-                            </button>
+                            <label class="switch" title="Monitor enabled">
+                                <input id="monitor-enabled" type="checkbox" :checked="currentMonitor?.enabled" :disabled="!canToggleMonitorEnabled()" @change="toggleMonitorEnabled($event)">
+                                <span class="slider"></span>
+                            </label>
+                            <span x-text="currentMonitor?.enabled ? 'Enabled' : 'Disabled'"></span>
                         </div>
                     </div>
 
@@ -231,12 +234,10 @@
                     </div>
 
                     <div id="monitor-actions" x-show="currentMonitor && !currentMonitor.isNew" class="monitor-actions">
-                        <span class="pending-change-message" x-show="monitorHasPendingChanges && sentinela_configs?.http_server?.commands?.monitor_register?.enabled">Changes will be applied on save</span>
-                        <span class="pending-change-message" x-show="!sentinela_configs?.http_server?.commands?.monitor_register?.enabled">Monitor registration disabled on server configuration</span>
-                        <span class="pending-change-message" x-show="!sentinela_configs?.http_server?.commands?.monitor_validate?.enabled">Monitor validation disabled on server configuration</span>
+                        <span class="pending-change-message" x-show="monitorHasPendingChanges && canExecuteCommand('monitor_register')">Changes will be applied on save</span>
                         <div class="button-group">
-                            <button class="btn btn-secondary" @click="validateMonitor()" :disabled="!sentinela_configs?.http_server?.commands?.monitor_validate?.enabled">Validate</button>
-                            <button class="btn" @click="saveMonitor()" :disabled="!monitorHasPendingChanges || !sentinela_configs?.http_server?.commands?.monitor_register?.enabled">Save</button>
+                            <button class="btn btn-secondary" @click="validateMonitor()" :disabled="!canExecuteCommand('monitor_validate')">Validate</button>
+                            <button class="btn" @click="saveMonitor()" :disabled="!monitorHasPendingChanges || !canExecuteCommand('monitor_register')">Save</button>
                         </div>
                     </div>
                 </div>
@@ -362,7 +363,7 @@
         </div>
     </div>
 
-    <div id="drop-issues-section" class="section-content" x-show="currentSection === 'drop-issues' && currentUser?.role === 'admin'" x-cloak>
+    <div id="drop-issues-section" class="section-content" x-show="currentSection === 'drop-issues' && canExecuteCommand('issue_drop')" x-cloak>
         <div class="drop-issues-container">
             <h2>Drop Issues</h2>
             <div class="user-card">
@@ -370,7 +371,7 @@
                 <p class="drop-issues-help">Enter one issue ID per line, or separate IDs with spaces or commas.</p>
                 <textarea class="drop-issues-input" x-model="dropIssueIds" placeholder="12345&#10;12346"></textarea>
                 <div class="button-group">
-                    <button class="btn" @click="dropIssues()" :disabled="droppingIssues">Drop Issues</button>
+                    <button class="btn" @click="dropIssues()" :disabled="droppingIssues || !canExecuteCommand('issue_drop')">Drop Issues</button>
                 </div>
             </div>
             <div class="users-list drop-issues-list" x-show="dropResults.length > 0">
