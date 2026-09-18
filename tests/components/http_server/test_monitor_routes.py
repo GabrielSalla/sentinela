@@ -281,6 +281,22 @@ async def test_monitor_disable_error(mocker, admin_cookies):
     }
 
 
+async def test_monitor_disable_forbidden(monkeypatch, user_cookies):
+    """The 'monitor disable' route should return a forbidden error if the user lacks the required
+    role"""
+    monkeypatch.setattr(
+        configs.http_server,
+        "commands",
+        {"monitor_disable": CommandConfig(enabled=True, required_role="admin")},
+    )
+
+    url = BASE_URL + "/not_found/disable"
+    async with aiohttp.ClientSession(cookies=user_cookies) as session:
+        async with session.post(url) as response:
+            assert await response.json() == {"status": "forbidden"}
+            assert response.status == 403
+
+
 async def test_monitor_disable_config_disabled(monkeypatch, admin_cookies):
     """The 'monitor disable' route should return a forbidden error if the command is disabled in
     the config"""
@@ -348,6 +364,22 @@ async def test_monitor_enable_error(mocker, admin_cookies):
         "message": "Unexpected error",
         "error": "Something went wrong",
     }
+
+
+async def test_monitor_enable_forbidden(monkeypatch, user_cookies):
+    """The 'monitor enable' route should return a forbidden error if the user lacks the required
+    role"""
+    monkeypatch.setattr(
+        configs.http_server,
+        "commands",
+        {"monitor_enable": CommandConfig(enabled=True, required_role="admin")},
+    )
+
+    url = BASE_URL + "/not_found/enable"
+    async with aiohttp.ClientSession(cookies=user_cookies) as session:
+        async with session.post(url) as response:
+            assert await response.json() == {"status": "forbidden"}
+            assert response.status == 403
 
 
 async def test_monitor_enable_config_disabled(monkeypatch, admin_cookies):
@@ -465,6 +497,22 @@ async def test_monitor_refresh_queued_running(
         "message": "Unexpected error",
         "error": f"Monitor {sample_monitor.name!r} already running or queued",
     }
+
+
+async def test_monitor_refresh_forbidden(monkeypatch, user_cookies):
+    """The 'monitor refresh' route should return a forbidden error if the user lacks the required
+    role"""
+    monkeypatch.setattr(
+        configs.http_server,
+        "commands",
+        {"monitor_refresh": CommandConfig(enabled=True, required_role="admin")},
+    )
+
+    url = BASE_URL + "/not_found/refresh"
+    async with aiohttp.ClientSession(cookies=user_cookies) as session:
+        async with session.post(url, json={"tasks": ["search"]}) as response:
+            assert await response.json() == {"status": "forbidden"}
+            assert response.status == 403
 
 
 async def test_monitor_refresh_config_disabled(monkeypatch, admin_cookies):
@@ -621,6 +669,22 @@ async def test_monitor_validate_invalid_monitor_code(
                 "message": "Unexpected error",
                 "error": expected_error,
             }
+
+
+async def test_monitor_validate_forbidden(monkeypatch, user_cookies):
+    """The 'monitor validate' route should return a forbidden error if the user lacks the required
+    role"""
+    monkeypatch.setattr(
+        configs.http_server,
+        "commands",
+        {"monitor_validate": CommandConfig(enabled=True, required_role="admin")},
+    )
+
+    url = BASE_URL + "/validate"
+    async with aiohttp.ClientSession(cookies=user_cookies) as session:
+        async with session.post(url, json={"monitor_code": ""}) as response:
+            assert await response.json() == {"status": "forbidden"}
+            assert response.status == 403
 
 
 async def test_monitor_validate_config_disabled(monkeypatch, admin_cookies):
@@ -861,6 +925,23 @@ async def test_monitor_register_invalid_monitor_code(admin_cookies, monitor_code
                 "message": "Unexpected error",
                 "error": expected_error,
             }
+
+
+async def test_monitor_register_forbidden(monkeypatch, user_cookies):
+    """The 'monitor register' route should return a forbidden error if the user lacks the required
+    role"""
+    monkeypatch.setattr(
+        configs.http_server,
+        "commands",
+        {"monitor_register": CommandConfig(enabled=True, required_role="admin")},
+    )
+    request_payload = {"monitor_code": ""}
+
+    url = BASE_URL + "/register/test_monitor_register_forbidden"
+    async with aiohttp.ClientSession(cookies=user_cookies) as session:
+        async with session.post(url, json=request_payload) as response:
+            assert await response.json() == {"status": "forbidden"}
+            assert response.status == 403
 
 
 async def test_monitor_register_config_disabled(monkeypatch, admin_cookies):

@@ -7,10 +7,11 @@ import commands as commands
 from components.http_server.auth import service
 from components.http_server.command_config import (
     disabled_command_response,
+    forbidden_command_response,
+    is_command_allowed,
     is_command_enabled,
 )
 from exceptions.http_server import IssueNotFoundError
-from models import UserRole
 
 issue_routes = web.RouteTableDef()
 base_route = "/issue"
@@ -24,8 +25,8 @@ class _IssueIdPathParams(BaseModel):
 @issue_routes.post(base_route + "/{issue_id}/drop/")
 async def issue_drop(request: Request) -> Response:
     """Route to drop an issue"""
-    if request[service.USER_REQUEST_KEY].role != UserRole.admin:
-        return web.json_response({"status": "forbidden"}, status=403)
+    if not is_command_allowed("issue_drop", request[service.USER_REQUEST_KEY].role):
+        return forbidden_command_response()
 
     if not is_command_enabled("issue_drop"):
         return disabled_command_response("issue_drop")
