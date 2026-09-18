@@ -23,7 +23,7 @@ See [Monitor lifecycle](docs/monitor_lifecycle.md) and [Building a Monitor](docs
 - **Custom Python monitors**: any logic, any library, SQL/API/multi-step validation, state machines.
 - **Entity-level issue tracking**: one issue per order/user/transaction, with full history, auto-update, auto-resolve.
 - **Flexible alerting**: `AgeRule`, `CountRule`, `ValueRule`, priority levels, acknowledge, lock.
-- **Flexible notifications**: be notified in many different ways through customizable notification plugins. Slack notification plugin already available.
+- **Flexible notifications**: be notified in many different ways through customizable notification plugins. Some notification plugins already available.
 - **Reactions**: async callbacks on events. Customize monitor behavior per monitor/issue/alert/notification events.
 - **Plugins**: extend Sentinela functionality (AWS SQS, Postgres, ODBC, Slack, custom). See [Plugins](docs/plugins/plugins.md).
 - **Web dashboard (`:8000`)**: monitors/alerts/issues overview + in-browser monitor editor.
@@ -177,9 +177,10 @@ The dashboard provides two main views: an overview of monitors, alerts, and issu
 9. [Monitoring Sentinela](docs/monitoring_sentinela.md)
 10. [Plugins](docs/plugins/plugins.md)
     1. [AWS](docs/plugins/aws.md)
-    2. [ODBC](docs/plugins/odbc.md)
-    3. [Postgres](docs/plugins/postgres.md)
-    4. [Slack](docs/plugins/slack.md)
+    2. [ntfy](docs/plugins/ntfy.md)
+    3. [ODBC](docs/plugins/odbc.md)
+    4. [Postgres](docs/plugins/postgres.md)
+    5. [Slack](docs/plugins/slack.md)
 11. Interacting with Sentinela
     1. [HTTP server](docs/http_server.md)
 12. Special cases
