@@ -273,7 +273,7 @@ async def _alerts_routine(monitor: Monitor) -> None:
             if alert_priority is None:
                 alert = None
             else:
-                alert = await Alert().create(monitor_id=monitor.id)
+                alert = await Alert().create(monitor_id=monitor.id, priority=alert_priority)
                 monitor.add_alert(alert)
 
         # If got an alert, link the issues to it
