@@ -45,8 +45,24 @@ Demonstrates configuring issues as non-solvable. Non-solvable issues require man
 
 **Monitor code**: [Non-Solvable Issues Monitor](/example_monitors/non_solvable_issues_monitor/non_solvable_issues_monitor.py)
 
+## Plugin ntfy Notification Monitor
+Demonstrates how to configure ntfy notifications for alerts.
+
+> [!IMPORTANT]
+> Monitor disabled by default
+
+**How it works**: A single issue's error rate climbs every cycle, escalating the alert priority up to critical (P1) as the value crosses the configured thresholds. Once the error rate reaches the top, the issue is solved in the next cycle, solving the alert, and the cycle starts over. It sends a short summary message to the configured ntfy topic on alert creation, priority increase, acknowledgement and solution.
+
+> [!WARNING]
+> Change the `topic` in the monitor's `notification_options` to your own topic before enabling it. The shipped `sentinela-example` topic is public so anyone subscribed to it receives these demo alerts. Also change `NTFY_SERVER_URL` in the `.env.general` file to point to the correct ntfy server instead of the fake host.
+
+**Monitor code**: [Plugin ntfy Notification Monitor](/example_monitors/plugin_ntfy_notification_monitor/plugin_ntfy_notification_monitor.py)
+
 ## Plugin Slack Notification Monitor
 Demonstrates how to configure Slack notifications for alerts.
+
+> [!IMPORTANT]
+> Monitor disabled by default
 
 **How it works**: This monitor is similar to the Count Rule Monitor but includes Slack notification configuration. It sends alerts to a configured Slack channel with customizable fields and optional mentions, showing how to integrate Sentinela alerts with Slack.
 

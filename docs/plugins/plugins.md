@@ -189,6 +189,7 @@ When the databases are being initialized, Sentinela will search for pools provid
 ## Built-in plugins
 Sentinela comes with some built-in plugins that can be used to extend the application's functionality.
 - [AWS](aws.md)
+- [ntfy](ntfy.md)
 - [ODBC](odbc.md)
 - [Postgres](postgres.md)
 - [Slack](slack.md)
@@ -200,6 +201,7 @@ Example:
 ```yaml
 plugins:
   - aws
+  - ntfy
   - odbc
   - postgres
   - slack

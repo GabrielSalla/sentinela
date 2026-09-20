@@ -2,6 +2,7 @@
 plugins:
   - aws
   - odbc
+  - ntfy
   - postgres
   - slack
 
