@@ -55,6 +55,8 @@ Notifications are used by monitors, usually to notify about an event. Each notif
 
 Notifications must have the structure defined by the `src.notifications.base_notification.BaseNotification` **protocol**. The method `reactions_list` returns a list of reactions that will trigger an action. Each reaction is a tuple with the reaction name and a list of coroutines that must be called when the reaction is triggered.
 
+The `hash` method must return a stable identifier for the notification configuration. Sentinela stores this value in the notification object's `options_hash` field and uses it with the monitor, alert, and target to find the matching notification. This allows a monitor to define multiple notifications of the same type, as long as their configurations produce different hashes.
+
 Notification base structure must be as follows:
 ```python
 from data_models.monitor_options import reaction_function_type
@@ -65,6 +67,9 @@ class Notification:
     min_priority_to_send: AlertPriority = AlertPriority.low
 
     def reactions_list(self) -> list[tuple[str, list[reaction_function_type]]]:
+        ...
+
+    def hash(self) -> str:
         ...
 ```
 

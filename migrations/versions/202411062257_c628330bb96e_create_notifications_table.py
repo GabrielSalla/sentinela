@@ -29,13 +29,16 @@ def upgrade() -> None:
         sa.Column("monitor_id", sa.Integer()),
         sa.Column("alert_id", sa.Integer(), nullable=True),
         sa.Column("target", sa.String(255)),
+        sa.Column("options_hash", sa.String(32)),
         sa.Column("status", sa.Enum(NotificationStatus, native_enum=False)),
         sa.Column("data", postgresql.JSONB, nullable=True),
         sa.Column("created_at", sa.DateTime(timezone=True)),
         sa.Column("closed_at", sa.DateTime(timezone=True), nullable=True),
 
         sa.ForeignKeyConstraint(("monitor_id",), ["Monitors.id"]),
-        sa.UniqueConstraint("alert_id", "target", name="Notifications_alert_id_target_key")
+        sa.UniqueConstraint(
+            "alert_id", "target", "options_hash", name="Notifications_alert_id_target_key"
+        )
     )
     op.create_index(
         "ix_Notifications_monitor_id_alert_id_target_status_active",
