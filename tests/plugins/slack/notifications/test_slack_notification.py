@@ -193,6 +193,28 @@ async def test_slacknotification_reactions_list():
     assert events_names == expected_events_names
 
 
+async def test_slacknotification_hash():
+    """'SlackNotification.hash' should identify notification options"""
+    notification_options = slack_notification.SlackNotification(
+        channel="channel",
+        title="title",
+        issues_fields=["col"],
+    )
+    same_options = slack_notification.SlackNotification(
+        channel="channel",
+        title="title",
+        issues_fields=["col"],
+    )
+    different_options = slack_notification.SlackNotification(
+        channel="other-channel",
+        title="title",
+        issues_fields=["col"],
+    )
+
+    assert notification_options.hash() == same_options.hash()
+    assert notification_options.hash() != different_options.hash()
+
+
 @pytest.mark.parametrize(
     "priority, acknowledge_priority, expected_result",
     [
@@ -1495,9 +1517,6 @@ async def test_handle_slack_notification_alert_solved(sample_monitor: Monitor):
         priority=2,
         solved_at=time_utils.now(),
     )
-    notification = await Notification.create(
-        monitor_id=alert.monitor_id, alert_id=alert.id, target="slack"
-    )
     notification_options = slack_notification.SlackNotification(
         channel="channel",
         title="title",
@@ -1505,6 +1524,12 @@ async def test_handle_slack_notification_alert_solved(sample_monitor: Monitor):
         min_priority_to_send=3,
         mention="mention",
         min_priority_to_mention=2,
+    )
+    notification = await Notification.create(
+        monitor_id=alert.monitor_id,
+        alert_id=alert.id,
+        target="slack",
+        options_hash=notification_options.hash(),
     )
 
     await slack_notification._handle_slack_notification(
@@ -1523,9 +1548,6 @@ async def test_handle_slack_notification_not_solved(sample_monitor: Monitor):
         monitor_id=sample_monitor.id,
         priority=2,
     )
-    notification = await Notification.create(
-        monitor_id=alert.monitor_id, alert_id=alert.id, target="slack"
-    )
     notification_options = slack_notification.SlackNotification(
         channel="channel",
         title="title",
@@ -1533,6 +1555,12 @@ async def test_handle_slack_notification_not_solved(sample_monitor: Monitor):
         min_priority_to_send=3,
         mention="mention",
         min_priority_to_mention=2,
+    )
+    notification = await Notification.create(
+        monitor_id=alert.monitor_id,
+        alert_id=alert.id,
+        target="slack",
+        options_hash=notification_options.hash(),
     )
 
     await slack_notification._handle_slack_notification(
@@ -1570,6 +1598,9 @@ async def test_handle_slack_notification_first_send(mocker, sample_monitor: Moni
 
     send_notification_spy.assert_called_once()
     update_notification_spy.assert_not_called()
+    notification = await Notification.get(Notification.alert_id == alert.id)
+    assert notification is not None
+    assert notification.options_hash == notification_options.hash()
 
 
 @pytest.mark.parametrize(
@@ -1588,9 +1619,6 @@ async def test_handle_slack_notification_update(mocker, sample_monitor: Monitor,
         monitor_id=sample_monitor.id,
         priority=2,
     )
-    await Notification.create(
-        monitor_id=alert.monitor_id, alert_id=alert.id, target="slack", data=notification_data
-    )
     notification_options = slack_notification.SlackNotification(
         channel="channel",
         title="title",
@@ -1598,6 +1626,13 @@ async def test_handle_slack_notification_update(mocker, sample_monitor: Monitor,
         min_priority_to_send=3,
         mention="mention",
         min_priority_to_mention=2,
+    )
+    await Notification.create(
+        monitor_id=alert.monitor_id,
+        alert_id=alert.id,
+        target="slack",
+        options_hash=notification_options.hash(),
+        data=notification_data,
     )
 
     await slack_notification._handle_slack_notification(
@@ -1619,12 +1654,6 @@ async def test_handle_slack_notification_update_lower_priority(mocker, sample_mo
         monitor_id=sample_monitor.id,
         priority=4,
     )
-    await Notification.create(
-        monitor_id=alert.monitor_id,
-        alert_id=alert.id,
-        target="slack",
-        data={"channel": "channel", "ts": "11.22"},
-    )
     notification_options = slack_notification.SlackNotification(
         channel="channel",
         title="title",
@@ -1632,6 +1661,13 @@ async def test_handle_slack_notification_update_lower_priority(mocker, sample_mo
         min_priority_to_send=3,
         mention="mention",
         min_priority_to_mention=2,
+    )
+    await Notification.create(
+        monitor_id=alert.monitor_id,
+        alert_id=alert.id,
+        target="slack",
+        options_hash=notification_options.hash(),
+        data={"channel": "channel", "ts": "11.22"},
     )
 
     await slack_notification._handle_slack_notification(
@@ -1641,6 +1677,34 @@ async def test_handle_slack_notification_update_lower_priority(mocker, sample_mo
 
     send_notification_spy.assert_not_called()
     update_notification_spy.assert_called_once()
+
+
+async def test_handle_slack_notification_multiple_options(mocker, sample_monitor: Monitor):
+    """'_handle_slack_notification' should create one notification per option set"""
+    send_notification_spy: MagicMock = mocker.spy(slack_notification, "send_notification")
+
+    alert = await Alert.create(monitor_id=sample_monitor.id, priority=2)
+    notification_options = [
+        slack_notification.SlackNotification(
+            channel="channel-1", title="title", issues_fields=["col"]
+        ),
+        slack_notification.SlackNotification(
+            channel="channel-2", title="title", issues_fields=["col"]
+        ),
+    ]
+
+    for options in notification_options:
+        await slack_notification._handle_slack_notification(
+            alert_id=alert.id,
+            notification_options=options,
+        )
+
+    assert send_notification_spy.call_count == 2
+    notifications = await Notification.get_all(Notification.alert_id == alert.id)
+    assert len(notifications) == 2
+    assert {notification.options_hash for notification in notifications} == {
+        options.hash() for options in notification_options
+    }
 
 
 @pytest.mark.parametrize("alert_id", [1, 10, 20, 123])

@@ -29,6 +29,9 @@ class MockNotification:
     def reactions_list(self) -> list[tuple[str, list[reaction_function_type]]]:
         return []
 
+    def hash(self) -> str:
+        return "hash"
+
 
 @pytest.mark.parametrize(
     "title, issues_fields, params",

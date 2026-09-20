@@ -24,6 +24,7 @@ class Notification(Base):
     monitor_id: Mapped[int] = mapped_column(ForeignKey("Monitors.id"))
     alert_id: Mapped[int] = mapped_column(ForeignKey("Alerts.id"))
     target: Mapped[str] = mapped_column(String(255))
+    options_hash: Mapped[str] = mapped_column(String(32))
     status: Mapped[NotificationStatus] = mapped_column(
         Enum(NotificationStatus, native_enum=False), insert_default=NotificationStatus.active
     )

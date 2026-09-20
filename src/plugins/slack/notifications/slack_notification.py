@@ -2,6 +2,7 @@ import json
 import logging
 import os
 from functools import partial
+from hashlib import md5
 from typing import Any
 
 from pydantic.dataclasses import dataclass
@@ -36,7 +37,9 @@ PRIORITY_COLOR = {
 class SlackNotification:
     """
     The **SlackNotification** class manages sending notifications for alerts to a specified Slack
-    channel.
+    channel. SlackNotification objects with a different combination of `channel`, `title`,
+    `min_priority_to_send`, `mention`, and `min_priority_to_mention` are considered different
+    notification targets.
     - `channel`: The Slack channel where notifications will be sent (e.g., `C0011223344`).
     - `title`: A title for the notification to help users to identify the problem.
     - `issues_fields`: A list of fields from the issue data to include in the notification.
@@ -132,6 +135,19 @@ class SlackNotification:
             ("alert_unlocked", [handle_notification_function]),
             ("alert_updated", [handle_notification_function]),
         ]
+
+    def hash(self) -> str:
+        """Return identifier for this notification configuration."""
+        value = "|".join(
+            [
+                self.channel,
+                self.title,
+                str(self.min_priority_to_send),
+                self.mention or "no_mention",
+                str(self.min_priority_to_mention),
+            ]
+        )
+        return md5(value.encode()).hexdigest()
 
 
 def _alert_priority_info(alert: Alert) -> str:
@@ -476,6 +492,7 @@ async def _handle_slack_notification(
         Notification.monitor_id == alert.monitor_id,
         Notification.alert_id == alert.id,
         Notification.target == "slack",
+        Notification.options_hash == notification_options.hash(),
     )
 
     # Only continue if the notification already exists or if the alert priority triggers a new
@@ -488,7 +505,10 @@ async def _handle_slack_notification(
             return
 
         notification = await Notification.create(
-            monitor_id=alert.monitor_id, alert_id=alert.id, target="slack"
+            monitor_id=alert.monitor_id,
+            alert_id=alert.id,
+            target="slack",
+            options_hash=notification_options.hash(),
         )
 
     if alert.status == AlertStatus.solved:

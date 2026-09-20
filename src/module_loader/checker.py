@@ -26,6 +26,9 @@ ERROR_MISSING_FUNCTION = "'{display_name}' function is required"
 ERROR_FUNCTION_MUST_HAVE_NO_ARGUMENTS = "'{display_name}' function must have no arguments"
 ERROR_FUNCTION_WRONG_ARGUMENTS = "'{display_name}' function must have arguments '{expected_args}'"
 ERROR_FUNCTION_WRONG_RETURN_TYPE = "'{display_name}' function must return '{expected_type}'"
+ERROR_DUPLICATE_NOTIFICATION_OPTIONS = (
+    "'notification_options[{index}]' has the same hash as 'notification_options[{duplicate_index}]'"
+)
 
 
 def _check_async_function(
@@ -181,8 +184,7 @@ def _check_reaction_options(module: ModuleType) -> list[str]:
 
 
 def _check_notification_options(module: ModuleType) -> list[str]:
-    """Check if the monitor's 'notification_options' attribute is defined and if it's a
-    'BaseNotification' dataclass instance"""
+    """Check monitor notification options types and duplicate configuration hashes."""
     errors: list[str] = []
 
     try:
@@ -199,6 +201,7 @@ def _check_notification_options(module: ModuleType) -> list[str]:
         )
         return errors
 
+    notification_hashes: dict[tuple[type[BaseNotification], str], int] = {}
     for i, notification in enumerate(module.notification_options):
         if not isinstance(notification, BaseNotification):
             errors.append(
@@ -207,6 +210,16 @@ def _check_notification_options(module: ModuleType) -> list[str]:
                 )
             )
             return errors
+
+        hash_key = (type(notification), notification.hash())
+        if hash_key in notification_hashes:
+            errors.append(
+                ERROR_DUPLICATE_NOTIFICATION_OPTIONS.format(
+                    index=i, duplicate_index=notification_hashes[hash_key]
+                )
+            )
+            return errors
+        notification_hashes[hash_key] = i
 
     return errors
 

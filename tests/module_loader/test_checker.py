@@ -268,6 +268,9 @@ class BaseNotification:
 
     min_priority_to_send: AlertPriority = AlertPriority.informational
 
+    def __init__(self, options_hash: str = "hash"):
+        self.options_hash = options_hash
+
     @classmethod
     def create(
         cls: type["BaseNotification"],
@@ -279,11 +282,14 @@ class BaseNotification:
     def reactions_list(self) -> list[tuple[str, list[Coroutine[Any, Any, Any]]]]:
         return []
 
+    def hash(self) -> str:
+        return self.options_hash
+
 
 def test_check_notification_options_defined(monitor_mock):
     """'_check_notification_options' should return no erros if the 'notification_options' field is
     defined"""
-    monitor_mock.notification_options = [BaseNotification()]
+    monitor_mock.notification_options = [BaseNotification("hash_1"), BaseNotification("hash_2")]
 
     assert checker._check_notification_options(monitor_mock) == []
 
@@ -327,6 +333,33 @@ def test_check_notification_options_notifications_wrong_type(monitor_mock, notif
     assert checker._check_notification_options(monitor_mock) == [
         f"'notification_options[{index}]' must be an instance of 'Notification'"
     ]
+
+
+def test_check_notification_options_duplicate_hash(monitor_mock):
+    """'_check_notification_options' should reject duplicate hashes for the same notification
+    type"""
+    monitor_mock.notification_options = [
+        BaseNotification("same_hash"),
+        BaseNotification("same_hash"),
+    ]
+
+    assert checker._check_notification_options(monitor_mock) == [
+        "'notification_options[1]' has the same hash as 'notification_options[0]'"
+    ]
+
+
+def test_check_notification_options_same_hash_different_types(monitor_mock):
+    """'_check_notification_options' should allow equal hashes for different notification types"""
+
+    class OtherNotification(BaseNotification):
+        pass
+
+    monitor_mock.notification_options = [
+        BaseNotification("same_hash"),
+        OtherNotification("same_hash"),
+    ]
+
+    assert checker._check_notification_options(monitor_mock) == []
 
 
 # Test _check_issue_data_type

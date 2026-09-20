@@ -103,7 +103,7 @@ Slack plugin implements a single action to handle the `resend notification` comm
 from plugins.slack.notifications import SlackNotification
 ```
 
-The **SlackNotification** class manages sending notifications for alerts to a specified Slack channel.
+The **SlackNotification** class manages sending notifications for alerts to a specified Slack channel. SlackNotification objects with a different combination of `channel`, `title`, `min_priority_to_send`, `mention`, and `min_priority_to_mention` are considered different notification targets.
 
 ```python
 class SlackNotification:
