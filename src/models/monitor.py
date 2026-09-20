@@ -10,7 +10,7 @@ import message_queue
 import utils.time as time_utils
 from data_models.monitor_options import AlertOptions, IssueOptions, MonitorOptions, ReactionOptions
 from exceptions.controller import MonitorQueueException
-from registry import get_monitor_module
+from registry import get_monitor_module, wait_monitor_loaded
 
 from .alert import Alert, AlertStatus
 from .base import Base
@@ -235,10 +235,13 @@ class Monitor(Base):
             return
 
         self.enabled = value
+        await self.save()
+
+        await wait_monitor_loaded(self.id)
+
         event_name = "monitor_enabled" if value else "monitor_disabled"
         extra_payload = {"context": context} if context is not None else None
         await self._create_event(event_name, extra_payload=extra_payload)
-        await self.save()
 
     @Base.lock_change
     async def set_queued(self, value: bool) -> None:

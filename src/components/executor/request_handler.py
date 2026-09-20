@@ -51,9 +51,9 @@ async def monitor_enable(message_payload: RequestPayload) -> None:
     if monitor is None:
         _logger.warning(f"Monitor {monitor_id!r} not found")
         return
-    await registry.wait_monitor_loaded(monitor.id)
     context = message_payload.params.get("context", None)
     await monitor.set_enabled(True, context=context)
+    await registry.wait_monitor_loaded(monitor.id)
 
 
 async def monitor_refresh(message_payload: RequestPayload) -> None:
