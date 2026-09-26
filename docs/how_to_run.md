@@ -1,4 +1,7 @@
 # How to Run
+The following steps show how to run Sentinela locally or in a production environment. Local execution assumes you have cloned the repository and will use the provided `make` commands.
+
+If you don't want to clone the Sentinela repository, [Production Deployment](#production-deployment) describes how to build a Docker image and run Sentinela without cloning it yourself. The `Dockerfile` downloads the selected Sentinela release from GitHub during the build. Follow its instructions to create your own image recipe.
 
 ## Development Execution
 Development execution should be used when developing or testing the platform features. **It is not intended for developing monitors**, as it might set variables that interfere with monitor execution.
@@ -107,34 +110,26 @@ For production deployment, it is recommended to use a more complex setup with mu
 - Requires an external database and message queue.
 
 ### Building the Image
-The [Dockerfile](/docker/Dockerfile) is a starting point for building the application image. This file implements the logic to install all dependencies for the enabled plugins.
-
-1. Install the dependencies for the application and enabled plugins.
-    ```shell
-    poetry install --only main
-
-    plugins=$(get_plugins_list)
-
-    if ! [ "x$plugins" = "x" ]; then
-        poetry install --only $plugins
-    fi
-    ```
+For production, build the image from your own repository — no Sentinela checkout required. Start with the [Image template](/resources/image_template/README.md), it shows the expected repository structure (your `Dockerfile` copy plus your own `configs.yaml`), downloads the selected Sentinela release from GitHub at build time, and installs the dependencies matching the `plugins` list in your config.
 
 ### Deploying the Application
 In production deployment, it is recommended to deploy the controller and executors in separate containers or pods (in the case of a Kubernetes deployment). This method requires an external queue to allow communication between the controller and executors. A persistent database is also recommended to prevent data loss.
 
-The files provided in the [Kubernetes template](/resources/kubernetes_template) directory can be used as a reference for a Kubernetes deployment.
+The files provided in the [Kubernetes template](/resources/kubernetes_template) directory can be used as a reference for a Kubernetes deployment. Use the image built via the [Image template](/resources/image_template/README.md) (for example your ECR image) in the controller and executor manifests.
 
 All services must have the environment variables set as specified in the [Configuration](configuration.md) documentation.
 
-Controllers and executors can be run by specifying them as parameters when starting the application:
-1. Run the controller.
+1. Migrate the database to the latest version. This is only necessary when running for the first time or after updates. Run once with the same production image. The `DATABASE_APPLICATION` variable must be available:
     ```shell
-    sentinela run controller
+    docker run --rm your-image:tag alembic upgrade head
     ```
-2. Run the executor.
+2. Run the controller.
     ```shell
-    sentinela run executor
+    docker run --rm your-image:tag sentinela run controller
+    ```
+3. Run the executor.
+    ```shell
+    docker run --rm your-image:tag sentinela run executor
     ```
 
 # Gracefully Stopping Sentinela
