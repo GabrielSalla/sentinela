@@ -65,7 +65,7 @@ class Configs:
     load_example_monitors: bool
     example_monitors_path: str
     internal_monitors_path: str
-    internal_monitors_notification: InternalMonitorsNotificationConfig
+    internal_monitors_notifications: list[InternalMonitorsNotificationConfig]
 
     monitors_load_schedule: str
 
