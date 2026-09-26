@@ -4,6 +4,7 @@ from .configs_loader import (
     ControllerProcedureConfig,
     FriendlyLogConfig,
     HttpServerConfig,
+    InternalMonitorsNotificationConfig,
     JsonLogConfig,
     configs,
 )
@@ -15,5 +16,6 @@ __all__ = [
     "ControllerProcedureConfig",
     "FriendlyLogConfig",
     "HttpServerConfig",
+    "InternalMonitorsNotificationConfig",
     "JsonLogConfig",
 ]
