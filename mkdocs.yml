@@ -1,0 +1,40 @@
+site_name: Sentinela
+site_description: Open-source business-logic monitoring in Python. Detect business rule violations and data inconsistencies across databases and APIs.
+site_url: https://gabrielsalla.github.io/sentinela/
+repo_url: https://github.com/GabrielSalla/sentinela
+copyright: Copyright 2024 Gabriel Salla — MIT License
+
+theme:
+  name: material
+
+markdown_extensions:
+  - admonition
+  - toc:
+      permalink: true
+  - pymdownx.superfences
+
+nav:
+  - Home: index.md
+  - When to use Sentinela: when_to_use_sentinela.md
+  - Overview: overview.md
+  - Building a Monitor: monitor.md
+  - Monitor lifecycle: monitor_lifecycle.md
+  - Example Monitors: example_monitors.md
+  - Querying databases: querying.md
+  - Validating a monitor: monitor_validating.md
+  - Registering a monitor: monitor_registering.md
+  - Configuration: configuration.md
+  - Configuration file: configuration_file.md
+  - How to run: how_to_run.md
+  - Recommendations: recommendations.md
+  - CLI: command_line_interface.md
+  - HTTP server: http_server.md
+  - Monitoring Sentinela: monitoring_sentinela.md
+  - Dropping issues: dropping_issues.md
+  - Plugins:
+      - Overview: plugins/plugins.md
+      - AWS: plugins/aws.md
+      - Postgres: plugins/postgres.md
+      - ODBC: plugins/odbc.md
+      - Slack: plugins/slack.md
+      - ntfy: plugins/ntfy.md

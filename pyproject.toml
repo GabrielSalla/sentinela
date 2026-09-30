@@ -1,12 +1,40 @@
 [project]
-name = "Sentinela"
+name = "sentinela"
 version = "0.8.9"
-description = "Sentinela Monitoring Platform"
+description = "Open-source business-logic monitoring in Python: detect business rule violations and data inconsistencies across databases and APIs"
 authors = [
     { name = "Gabriel Salla", email = "gabriel.c.salla@gmail.com" },
 ]
-license = { file = "LICENSE.txt" }
+license = { text = "MIT" }
 readme = "README.md"
+requires-python = ">=3.12"
+keywords = [
+    "monitoring",
+    "business-monitoring",
+    "business-invariant-monitoring",
+    "data-quality",
+    "data-consistency",
+    "database-monitoring",
+    "reconciliation",
+    "order-monitoring",
+    "state-machine",
+    "entity-tracking",
+    "alerting",
+    "postgres",
+    "observability",
+]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Developers",
+    "Intended Audience :: Information Technology",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Database",
+    "Topic :: System :: Monitoring",
+    "Typing :: Typed",
+]
+urls = { Homepage = "https://github.com/GabrielSalla/sentinela", Repository = "https://github.com/GabrielSalla/sentinela", Documentation = "https://gabrielsalla.github.io/sentinela/", Issues = "https://github.com/GabrielSalla/sentinela/issues" }
 
 [tool.poetry]
 name = "sentinela"
@@ -107,7 +135,7 @@ disallow_untyped_defs = false
 [tool.pytest.ini_options]
 pythonpath = "src"
 testpaths = "tests"
-addopts = "-rf --show-capture=all --color=yes --cov=src --cov-report=term-missing --cov-fail-under=100"
+addopts = "-rf --show-capture=all --color=yes --cov=src --cov-report=term-missing --cov-report=xml:coverage.xml --cov-fail-under=100"
 
 asyncio_default_fixture_loop_scope = "session"
 

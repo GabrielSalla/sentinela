@@ -1,0 +1,24 @@
+# Sentinela — llms.txt
+> Open-source business-logic monitoring in Python. Detects business rule violations and data inconsistencies across databases/APIs by tracking each affected entity until resolved. Complements Prometheus/Grafana/Datadog (system health) by answering "is the business behaving correctly?".
+
+## Docs
+- [Home](https://gabrielsalla.github.io/sentinela/) — what Sentinela does, search/update/is_solved cycle
+- [When to use Sentinela](https://gabrielsalla.github.io/sentinela/when_to_use_sentinela/) — vs Prometheus/Grafana/Datadog, rule of thumb, combined setups
+- [Overview](https://gabrielsalla.github.io/sentinela/overview/) — architecture: controller, executors, monitors, issues, alerts
+- [Building a Monitor](https://gabrielsalla.github.io/sentinela/monitor/) — search/update/is_solved contract
+- [Monitor lifecycle](https://gabrielsalla.github.io/sentinela/monitor_lifecycle/) — scheduling, tracking, auto-resolve
+- [Example Monitors](https://gabrielsalla.github.io/sentinela/example_monitors/) — runnable examples
+- [Querying databases](https://gabrielsalla.github.io/sentinela/querying/) — DATABASE_USERS, await query("users", sql)
+- [Validating a monitor](https://gabrielsalla.github.io/sentinela/monitor_validating/) — local validation before registering
+- [Registering a monitor](https://gabrielsalla.github.io/sentinela/monitor_registering/) — CLI/API registration
+- [Configuration](https://gabrielsalla.github.io/sentinela/configuration/) — env vars and options
+- [How to run](https://gabrielsalla.github.io/sentinela/how_to_run/) — single-container, scalable, Kubernetes
+- [CLI](https://gabrielsalla.github.io/sentinela/command_line_interface/) — command line interface
+- [HTTP server](https://gabrielsalla.github.io/sentinela/http_server/) — HTTP API
+- [Monitoring Sentinela](https://gabrielsalla.github.io/sentinela/monitoring_sentinela/) — Prometheus metrics
+- [Plugins](https://gabrielsalla.github.io/sentinela/plugins/plugins/) — AWS, Postgres, ODBC, Slack, ntfy, custom
+
+## Repo
+- [GitHub](https://github.com/GabrielSalla/sentinela)
+- [README](https://github.com/GabrielSalla/sentinela#readme)
+- [License: MIT](https://github.com/GabrielSalla/sentinela/blob/main/LICENSE.txt)
