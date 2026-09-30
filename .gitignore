@@ -8,5 +8,6 @@ _monitors_load
 .ruff_cache
 .vscode
 **/__pycache__
+coverage.xml
 sentinela_tools
 tmp

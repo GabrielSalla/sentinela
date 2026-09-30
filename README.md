@@ -1,5 +1,9 @@
 # Sentinela: Business-Logic, Data-Consistency and State-Machine Monitoring with Python
 
+[![CI](https://github.com/GabrielSalla/sentinela/actions/workflows/ci.yaml/badge.svg)](https://github.com/GabrielSalla/sentinela/actions/workflows/ci.yaml)
+[![coverage](https://codecov.io/gh/GabrielSalla/sentinela/branch/main/graph/badge.svg)](https://codecov.io/gh/GabrielSalla/sentinela)
+[![license MIT](https://img.shields.io/badge/license-MIT-blue)](LICENSE.txt)
+
 **Sentinela answers "Is the business behaving correctly?"**
 
 Sentinela is a monitoring platform for **business invariant monitoring**: detect business rule violations and data inconsistencies that require correlating data across databases/APIs, applying custom logic, and tracking each affected entity until resolved.
@@ -14,7 +18,7 @@ Write three Python functions per monitor: Sentinela schedules, tracks, alerts, a
 2. **`update(issues)`**: refresh data for active issues by ID (fast, keyed lookup).
 3. **`is_solved(issue)`**: return `True` when the entity is back to normal. Issue auto-closes.
 
-Each issue is one entity: one order, one user, one transaction, one payment provider. Alerts aggregate issues by age, count, or value, with P5 to P1 priority levels, acknowledge/lock, and notifications.
+Each issue is one entity: one order, one user, one transaction, one payment provider. Issues roll up into one alert per monitor. Priority escalates P5 → P1 based on the rule you choose: oldest issue age, issue count, or a numeric field in the issue. You can acknowledge an alert (mark as seen) or lock it (freeze it so new issues open a fresh alert). Notifications go out via plugins (Slack, ntfy, AWS, custom).
 
 See [Monitor lifecycle](docs/monitor_lifecycle.md) and [Building a Monitor](docs/monitor.md).
 
@@ -30,6 +34,7 @@ See [Monitor lifecycle](docs/monitor_lifecycle.md) and [Building a Monitor](docs
 - **HTTP API, CLI, variables, file helpers**: automate monitor registration, persist monitor-level state.
 - **Resilient restarts**: with persistent PostgreSQL storage, monitor and issue state survives application restarts, while Sentinela's internal monitoring detects and repairs eventual inconsistencies.
 - **Production-ready ops**: controller + horizontally scalable executors, cron scheduling, Docker / Kubernetes templates, Prometheus metrics and structured logs.
+- **100% test coverage enforced in CI**: build fails below 100% (`--cov-fail-under=100` in `pyproject.toml`).
 
 ## Use cases: when to use Sentinela
 

@@ -28,7 +28,7 @@ jobs:
             exit 0
           fi
 
-          IGNORED_PATTERNS="configs/ docs/ example_monitors/ resources/ .gitignore FUNDING.yml LICENSE.txt *.md"
+          IGNORED_PATTERNS="configs/ docs/ example_monitors/ resources/ .github/workflows/docs.yml mkdocs.yml llms.txt .gitignore FUNDING.yml LICENSE.txt *.md"
           BASE_SHA=${{ github.event.pull_request.base.sha }}
           HEAD_SHA=${{ github.sha }}
           CHANGED_FILES=$(git diff --name-only "$BASE_SHA" "$HEAD_SHA")
@@ -128,6 +128,18 @@ jobs:
         run: |
           make pull-dev
           make test-dev
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v5
+        with:
+          files: ./coverage.xml
+          fail_ci_if_error: false
+          verbose: true
+      - name: Upload coverage artifact
+        uses: actions/upload-artifact@v7
+        with:
+          name: coverage-xml-${{ github.sha }}
+          path: coverage.xml
+          if-no-files-found: error
 
   delete-artifacts:
     name: Delete artifacts
