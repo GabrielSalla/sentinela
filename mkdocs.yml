@@ -13,6 +13,10 @@ markdown_extensions:
       permalink: true
   - pymdownx.superfences
 
+plugins:
+  - search
+  - callouts
+
 nav:
   - Home: index.md
   - When to use Sentinela: when_to_use_sentinela.md
