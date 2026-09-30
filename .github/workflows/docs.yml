@@ -33,7 +33,7 @@ jobs:
           python-version: '3.12'
 
       - name: Install MkDocs
-        run: pip install --no-cache-dir mkdocs mkdocs-material
+        run: pip install --no-cache-dir mkdocs mkdocs-material mkdocs-callouts
 
       - name: Build docs
         run: mkdocs build --strict
