@@ -20,6 +20,7 @@ plugins:
 nav:
   - Home: index.md
   - When to use Sentinela: when_to_use_sentinela.md
+  - Real Use Cases: real_use_cases.md
   - Overview: overview.md
   - Building a Monitor: monitor.md
   - Monitor lifecycle: monitor_lifecycle.md

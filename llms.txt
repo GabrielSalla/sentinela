@@ -4,6 +4,7 @@
 ## Docs
 - [Home](https://gabrielsalla.github.io/sentinela/) — what Sentinela does, search/update/is_solved cycle
 - [When to use Sentinela](https://gabrielsalla.github.io/sentinela/when_to_use_sentinela/) — vs Prometheus/Grafana/Datadog, rule of thumb, combined setups
+- [Real Use Cases](https://gabrielsalla.github.io/sentinela/real_use_cases/) — production stories from payments processing and data engineering
 - [Overview](https://gabrielsalla.github.io/sentinela/overview/) — architecture: controller, executors, monitors, issues, alerts
 - [Building a Monitor](https://gabrielsalla.github.io/sentinela/monitor/) — search/update/is_solved contract
 - [Monitor lifecycle](https://gabrielsalla.github.io/sentinela/monitor_lifecycle/) — scheduling, tracking, auto-resolve
