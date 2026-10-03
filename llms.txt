@@ -1,5 +1,5 @@
 # Sentinela — llms.txt
-> Open-source business-logic monitoring in Python. Detects business rule violations and data inconsistencies across databases/APIs by tracking each affected entity until resolved. Complements Prometheus/Grafana/Datadog (system health) by answering "is the business behaving correctly?".
+> Open-source application-logic monitoring in Python. Detects application rule violations and data inconsistencies across databases/APIs by tracking each affected entity until resolved. Complements Prometheus/Grafana/Datadog (system health) by answering "is the application behaving correctly?".
 
 ## Docs
 - [Home](https://gabrielsalla.github.io/sentinela/) — what Sentinela does, search/update/is_solved cycle

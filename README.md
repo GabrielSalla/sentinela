@@ -1,12 +1,12 @@
-# Sentinela: Business-Logic, Data-Consistency and State-Machine Monitoring with Python
+# Sentinela: Application-Logic, Data-Consistency and State-Machine Monitoring with Python
 
 [![CI](https://github.com/GabrielSalla/sentinela/actions/workflows/ci.yaml/badge.svg)](https://github.com/GabrielSalla/sentinela/actions/workflows/ci.yaml)
 [![coverage](https://codecov.io/gh/GabrielSalla/sentinela/branch/main/graph/badge.svg)](https://codecov.io/gh/GabrielSalla/sentinela)
 [![license MIT](https://img.shields.io/badge/license-MIT-blue)](LICENSE.txt)
 
-**Sentinela answers "Is the business behaving correctly?"**
+**Sentinela answers "Is the application behaving correctly?"**
 
-Sentinela is a monitoring platform for **business invariant monitoring**: detect business rule violations and data inconsistencies that require correlating data across databases/APIs, applying custom logic, and tracking each affected entity until resolved.
+Sentinela is a monitoring platform for **application invariant monitoring**: detect application rule violations and data inconsistencies that require correlating data across databases/APIs, applying custom logic, and tracking each affected entity until resolved.
 
 If the problem can be expressed as *"a Python function returning a list of failing entities"*, via SQL, API calls, files, or any Python code joining multiple sources, Sentinela fits.
 
@@ -38,11 +38,11 @@ See [Monitor lifecycle](docs/monitor_lifecycle.md) and [Building a Monitor](docs
 
 ## Use cases: when to use Sentinela
 
-Search terms people use for this category: *business invariant monitoring, business process monitoring, data quality monitoring, database consistency monitoring, entity-level issue tracking, cross-system validation, automated reconciliation, state-machine monitoring*.
+Search terms people use for this category: *application invariant monitoring, application logic monitoring, business invariant monitoring, business process monitoring, data quality monitoring, database consistency monitoring, entity-level issue tracking, cross-system validation, automated reconciliation, state-machine monitoring*.
 
 Sentinela excels when:
 
-- Data comes from **DB rows, API responses, business events**: not CPU/latency/logs.
+- Data comes from **DB rows, API responses, application events**: not CPU/latency/logs.
 - Each occurrence is a **distinct entity to track**: e.g. "user 123 charged twice".
 - Logic needs **joins across 2+ sources, state machines, multi-step checks**.
 - Resolution is detectable: e.g. invoice appears → issue closes.
@@ -126,11 +126,11 @@ Rule of thumb ([details](docs/when_to_use_sentinela.md)):
 
 1. Single SQL/API call returns failing entities? → Sentinela.
 2. Specific entity (order/user/transaction) vs aggregate (p95/avg/rate)? Entity → Sentinela.
-3. Multi-state business logic? → Sentinela.
+3. Multi-state application logic? → Sentinela.
 4. Join across 2+ systems? → Sentinela.
 5. Silent failure, no metric? → Sentinela.
 
-Best setup: both. Prometheus catches latency/DB saturation; Sentinela catches slipped business invariant. Example in [When to use both together](docs/when_to_use_sentinela.md#when-to-use-both-together).
+Best setup: both. Prometheus catches latency/DB saturation; Sentinela catches slipped application invariant. Example in [When to use both together](docs/when_to_use_sentinela.md#when-to-use-both-together).
 
 ## Quickstart
 
