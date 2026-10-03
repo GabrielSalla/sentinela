@@ -1,6 +1,6 @@
 [project]
 name = "sentinela"
-version = "0.8.9"
+version = "0.8.10"
 description = "Open-source application-logic monitoring in Python: detect application rule violations and data inconsistencies across databases and APIs"
 authors = [
     { name = "Gabriel Salla", email = "gabriel.c.salla@gmail.com" },
