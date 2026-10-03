@@ -1,17 +1,17 @@
 # When to use Sentinela
 
-> **Sentinela answers "Is the business behaving correctly?"**  
+> **Sentinela answers "Is the application behaving correctly?"**  
 > **Traditional observability tools answer "Is the system behaving correctly?"**  
 > Both are complementary, not competing solutions.
 
-Sentinela is optimized for **business invariant monitoring** -- detecting violations of business rules that require correlating data across multiple sources, applying custom logic, and tracking individual entities over time. It is not designed for real-time metric collection, log aggregation, or infrastructure health checks.
+Sentinela is optimized for **application invariant monitoring** -- detecting violations of application rules that require correlating data across multiple sources, applying custom logic, and tracking individual entities over time. It is not designed for real-time metric collection, log aggregation, or infrastructure health checks.
 
-## Business invariants vs infrastructure observability
+## Application invariants vs infrastructure observability
 
-| | Business invariant monitoring | Infrastructure observability |
+| | Application invariant monitoring | Infrastructure observability |
 |---|---|---|
-| **Question** | Is the business process correct? | Is the system healthy? |
-| **Data** | Database records, API responses, business events | CPU, memory, latency, error rates, logs |
+| **Question** | Is the application behavior correct? | Is the system healthy? |
+| **Data** | Database records, API responses, application events | CPU, memory, latency, error rates, logs |
 | **Granularity** | Entity-level (per order, per user, per transaction) | Aggregate (p95 latency, avg CPU, error count) |
 | **Logic** | Complex, multi-step, state-aware | Thresholds on time-series |
 | **Lifecycle** | Track issue until resolved | Alert while condition holds |
@@ -68,10 +68,10 @@ The most robust setups use Sentinela alongside traditional observability. They c
 
 **Example: orders stuck in processing**
 
-1. **Sentinela** monitors the business invariant: an order is stuck in `awaiting_delivery` while the shipment is `completed`. It tracks each affected order, periodically refreshes its status, and resolves the issue when the order transitions to `completed`.
+1. **Sentinela** monitors the application invariant: an order is stuck in `awaiting_delivery` while the shipment is `completed`. It tracks each affected order, periodically refreshes its status, and resolves the issue when the order transitions to `completed`.
 2. **Prometheus/Grafana** monitors the system: API latency for the order update endpoint, error rate on the shipment webhook, database connection pool saturation, queue depth for the order processing worker.
 
-If the order processing pipeline slows down, Prometheus catches the latency spike and DB saturation. If an order slips through without being updated, Sentinela catches the business logic failure. The two tools together provide full coverage from infrastructure to business logic.
+If the order processing pipeline slows down, Prometheus catches the latency spike and DB saturation. If an order slips through without being updated, Sentinela catches the application logic failure. The two tools together provide full coverage from infrastructure to application logic.
 
 **Example: users charged twice**
 
@@ -90,17 +90,17 @@ Ask these questions when deciding which tool to use:
 
    No: consider observability tools.
 
-2. **Is the problem about a specific business entity (order, user, transaction) rather than an aggregate metric?**
+2. **Is the problem about a specific application entity (order, user, transaction) rather than an aggregate metric?**
 
    Entity: Sentinela.
 
    Aggregate (p95, avg, rate): observability tools.
 
-3. **Does the problem involve a business logic state machine with multiple state transitions?**
+3. **Does the problem involve an application logic state machine with multiple state transitions?**
 
-   Business state machines are a strong signal for Sentinela. When an entity moves through states like `pending -> approved -> invoiced -> paid -> reconciled`, traditional tools can only alert on error rates at the API level. They cannot tell you that entity X is stuck in `approved` while entity Y skipped `invoiced` entirely. Sentinela models the exact state machine, detects every deviation, tracks each entity individually, and resolves when the state normalizes.
+   Application state machines are a strong signal for Sentinela. When an entity moves through states like `pending -> approved -> invoiced -> paid -> reconciled`, traditional tools can only alert on error rates at the API level. They cannot tell you that entity X is stuck in `approved` while entity Y skipped `invoiced` entirely. Sentinela models the exact state machine, detects every deviation, tracks each entity individually, and resolves when the state normalizes.
 
-   Yes (multi-state business logic): Sentinela.
+   Yes (multi-state application logic): Sentinela.
 
    No (simple threshold or static condition): either tool may work.
 

@@ -1,7 +1,7 @@
 [project]
 name = "sentinela"
 version = "0.8.9"
-description = "Open-source business-logic monitoring in Python: detect business rule violations and data inconsistencies across databases and APIs"
+description = "Open-source application-logic monitoring in Python: detect application rule violations and data inconsistencies across databases and APIs"
 authors = [
     { name = "Gabriel Salla", email = "gabriel.c.salla@gmail.com" },
 ]
@@ -10,6 +10,8 @@ readme = "README.md"
 requires-python = ">=3.12"
 keywords = [
     "monitoring",
+    "application-monitoring",
+    "application-invariant-monitoring",
     "business-monitoring",
     "business-invariant-monitoring",
     "data-quality",

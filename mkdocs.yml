@@ -1,5 +1,5 @@
 site_name: Sentinela
-site_description: Open-source business-logic monitoring in Python. Detect business rule violations and data inconsistencies across databases and APIs.
+site_description: Open-source application-logic monitoring in Python. Detect application rule violations and data inconsistencies across databases and APIs.
 site_url: https://gabrielsalla.github.io/sentinela/
 repo_url: https://github.com/GabrielSalla/sentinela
 copyright: Copyright 2024 Gabriel Salla — MIT License
