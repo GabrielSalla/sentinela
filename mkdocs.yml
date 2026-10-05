@@ -20,21 +20,22 @@ plugins:
 nav:
   - Home: index.md
   - When to use Sentinela: when_to_use_sentinela.md
+  - Real Use Cases: real_use_cases.md
   - Overview: overview.md
-  - Building a Monitor: monitor.md
-  - Monitor lifecycle: monitor_lifecycle.md
-  - Example Monitors: example_monitors.md
+  - Building a Monitor:
+      - Building a Monitor: monitor.md
+      - Monitor lifecycle: monitor_lifecycle.md
+      - Example Monitors: example_monitors.md
   - Querying databases: querying.md
   - Validating a monitor: monitor_validating.md
   - Registering a monitor: monitor_registering.md
-  - Configuration: configuration.md
-  - Configuration file: configuration_file.md
-  - How to run: how_to_run.md
-  - Recommendations: recommendations.md
+  - Deployment:
+      - Configuration: configuration.md
+      - Configuration file: configuration_file.md
+      - How to run: how_to_run.md
+      - Recommendations: recommendations.md
   - CLI: command_line_interface.md
-  - HTTP server: http_server.md
   - Monitoring Sentinela: monitoring_sentinela.md
-  - Dropping issues: dropping_issues.md
   - Plugins:
       - Overview: plugins/plugins.md
       - AWS: plugins/aws.md
@@ -42,3 +43,7 @@ nav:
       - ODBC: plugins/odbc.md
       - Slack: plugins/slack.md
       - ntfy: plugins/ntfy.md
+  - Interacting with Sentinela:
+      - HTTP server: http_server.md
+  - Special cases:
+      - Dropping issues: dropping_issues.md

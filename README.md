@@ -57,7 +57,7 @@ Common examples:
 - **Invalid registration data**: users with `NULL` / malformed fields.
 - **State-transition violations**: entity skipped `invoiced`, stuck in `approved`, entered invalid state.
 
-See [When to use Sentinela](docs/when_to_use_sentinela.md) for a detailed comparison with traditional observability tools and guidance on choosing the right combination.
+See [When to use Sentinela](docs/when_to_use_sentinela.md) for a detailed comparison with traditional observability tools and guidance on choosing the right combination. [Real Use Cases](docs/real_use_cases.md) also provides some examples of using the same strategy in a real workplace, solving real problems.
 
 ## Example: pending orders with completed shipments
 
@@ -166,6 +166,7 @@ The dashboard provides two main views: an overview of monitors, alerts, and issu
 ## Documentation
 
 1. [When to use Sentinela](docs/when_to_use_sentinela.md)
+    1. [Real Use Cases](docs/real_use_cases.md)
 2. [Overview](docs/overview.md)
 3. [Building a Monitor](docs/monitor.md)
     1. [Monitor lifecycle](docs/monitor_lifecycle.md)
