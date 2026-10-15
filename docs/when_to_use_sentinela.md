@@ -116,3 +116,5 @@ Ask these questions when deciding which tool to use:
 
    No (e.g., the system silently fails without error logs): Sentinela.
 
+See [Real Use Cases](real_use_cases.md) for production stories from payments processing and data engineering showing these patterns in practice.
+
