@@ -5,7 +5,7 @@ If the problem can be expressed as *"a Python function returning a list of faili
 
 Typical cases: **stuck orders** (paid but never shipped), **missing invoices**, **double charges**, **failed reconciliation**, **invalid registration data**, **state-transition violations**.
 
-Traditional observability (Prometheus / Grafana / Datadog) answers *"is the system healthy?"* (CPU, latency, error rates). Sentinela answers *"is the application correct?"* (per order / user / transaction). Most setups run both. See [When to use Sentinela](when_to_use_sentinela.md).
+Traditional observability (Prometheus / Grafana / Datadog) answers *"is the system healthy?"* (CPU, latency, error rates). Sentinela answers *"is the application correct?"* (per order / user / transaction). Most setups run both. See [When to use Sentinela](when_to_use_sentinela.md) and [Real Use Cases](real_use_cases.md).
 
 ## How it works
 Write three Python functions per monitor — Sentinela schedules, tracks, alerts, and auto-resolves:
