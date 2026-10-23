@@ -7,7 +7,7 @@ authors = [
 ]
 license = { text = "MIT" }
 readme = "README.md"
-requires-python = ">=3.12"
+requires-python = ">=3.15"
 keywords = [
     "monitoring",
     "application-monitoring",
@@ -31,7 +31,7 @@ classifiers = [
     "Intended Audience :: Information Technology",
     "License :: OSI Approved :: MIT License",
     "Programming Language :: Python :: 3",
-    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.15",
     "Topic :: Database",
     "Topic :: System :: Monitoring",
     "Typing :: Typed",
@@ -52,10 +52,10 @@ health_check = "tools.health_check:main"
 register_monitor = "tools.register_monitor:main"
 
 [tool.poetry.dependencies]
-python = "^3.12"
+python = "^3.15"
 aiohttp = "^3.11.11"
 alembic = "^1.14.0"
-asyncpg = "^0.30.0"
+asyncpg = "^0.32.0"
 certifi = "*"
 croniter = "^5.0.1"
 prometheus-client = "^0.21.1"
@@ -85,7 +85,7 @@ aiobotocore = "^2.19.0"
 [tool.poetry.group.plugin-aws-tests.dependencies]
 
 [tool.poetry.group.plugin-postgres.dependencies]
-asyncpg = "^0.30.0"
+asyncpg = "^0.32.0"
 
 [tool.poetry.group.plugin-postgres-tests.dependencies]
 

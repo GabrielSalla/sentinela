@@ -44,7 +44,7 @@ async def get_asset(request: Request) -> Response:
     try:
         with open(path, "r") as file:
             content = file.read()
-    except (FileNotFoundError, IsADirectoryError):
+    except FileNotFoundError, IsADirectoryError:
         return web.Response(text="Asset not found", status=404)
 
     content_type = EXTENSIONS_TYPE.get(path.suffix, "text/plain")

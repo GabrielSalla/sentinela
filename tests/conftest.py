@@ -23,6 +23,7 @@ import utils.app as app
 from models import CodeModule, Monitor
 from registry import registry
 from tests.message_queue.utils import get_queue_items
+from tests.mocker_spy_compat import patch_mocker_spy as patch_mocker_spy
 
 FLOCI_HOST = "http://floci:4566"
 FLOCI_QUEUE_URL = f"{FLOCI_HOST}/000000000000/app"

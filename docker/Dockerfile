@@ -1,4 +1,4 @@
-ARG PYTHON_VERSION=3.12
+ARG PYTHON_VERSION=3.15
 
 # Base image
 FROM python:${PYTHON_VERSION}-alpine AS base
@@ -10,10 +10,12 @@ ENV VIRTUAL_ENV=/opt/venv \
 WORKDIR /app
 COPY . /app/
 
-RUN python3 -m venv $VIRTUAL_ENV \
+RUN apk add --no-cache --virtual .build-deps build-base unixodbc-dev \
+    && python3 -m venv $VIRTUAL_ENV \
     && pip install --no-cache-dir --upgrade pip \
     && pip install --no-cache-dir poetry \
-    && sh tools/install_dependencies.sh
+    && sh tools/install_dependencies.sh \
+    && apk del .build-deps
 
 
 # Sentinela image

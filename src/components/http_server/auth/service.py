@@ -134,7 +134,7 @@ async def get_request_user(request: Request) -> User | None:
 
     try:
         claims = decode_token(raw_token, get_secret())
-    except (ExpiredTokenError, InvalidTokenError):
+    except ExpiredTokenError, InvalidTokenError:
         return None
 
     if claims.get("type") != "session":
@@ -142,7 +142,7 @@ async def get_request_user(request: Request) -> User | None:
 
     try:
         user_id = int(claims["sub"])
-    except (KeyError, TypeError, ValueError):
+    except KeyError, TypeError, ValueError:
         return None
 
     user = await User.get_by_id(user_id)

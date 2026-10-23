@@ -10,7 +10,7 @@ DOCKER_COMPOSE_FILE_LOCAL = ./docker/docker-compose-local.yaml
 DOCKER_COMPOSE_FILE_SCALABLE = ./docker/docker-compose-scalable.yaml
 
 # Environment variable + docker compose command
-DOCKER_COMPOSE = docker compose --project-directory .
+DOCKER_COMPOSE = docker compose --progress plain --project-directory .
 DOCKER_COMPOSE_DEV = COMPOSE_FILE=$(DOCKER_COMPOSE_FILE_DEV) $(DOCKER_COMPOSE)
 DOCKER_COMPOSE_LOCAL = COMPOSE_FILE=$(DOCKER_COMPOSE_FILE_LOCAL) $(DOCKER_COMPOSE)
 DOCKER_COMPOSE_SCALABLE = COMPOSE_FILE=$(DOCKER_COMPOSE_FILE_SCALABLE) $(DOCKER_COMPOSE)
