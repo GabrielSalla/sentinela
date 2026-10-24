@@ -37,7 +37,7 @@ async def test_run(mocker, monkeypatch):
     await asyncio.sleep(0.05)
     assert heartbeat_logger_warning_spy.call_count == 0
     time.sleep(0.15)
-    await asyncio.sleep(0)
+    await asyncio.sleep(0.001)
     assert heartbeat_logger_warning_spy.call_count == 1
 
     app.stop()
