@@ -26,7 +26,7 @@ def create_task(
 ) -> asyncio.Task[Any]:
     """Create a task that will be executed in the background with an optional 'parent' attribute. If
     the parent task is done while the child task is running, the child task will be canceled"""
-    task = asyncio.create_task(protected_task(_logger, coro), name=coro.__name__)
+    task = asyncio.create_task(protected_task(_logger, coro), name=getattr(coro, "__name__", None))
     _tasks.setdefault(parent_task, []).append(task)
 
     if parent_task is not None:

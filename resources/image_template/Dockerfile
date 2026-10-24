@@ -1,4 +1,4 @@
-ARG PYTHON_VERSION=3.12
+ARG PYTHON_VERSION=3.15
 
 ARG SENTINELA_REPO=https://github.com/GabrielSalla/sentinela
 ARG SENTINELA_VERSION=0.8.8
@@ -24,10 +24,12 @@ RUN wget -qO- "${SENTINELA_REPO}/archive/refs/tags/${SENTINELA_VERSION}.tar.gz" 
 
 COPY ${USER_CONFIG} /app/configs.yaml
 
-RUN python3 -m venv $VIRTUAL_ENV \
+RUN apk add --no-cache --virtual .build-deps build-base unixodbc-dev \
+    && python3 -m venv $VIRTUAL_ENV \
     && pip install --no-cache-dir --upgrade pip \
     && pip install --no-cache-dir poetry \
-    && sh tools/install_dependencies.sh
+    && sh tools/install_dependencies.sh \
+    && apk del .build-deps
 
 
 # Sentinela image
